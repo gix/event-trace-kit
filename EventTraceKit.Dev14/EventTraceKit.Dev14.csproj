@@ -54,84 +54,8 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="CommandId.cs" />
-    <Compile Include="CustomTypeDescriptor.cs" />
-    <Compile Include="DynamicWindowPane.cs" />
-    <Compile Include="DynamicWindowWPFControl.xaml.cs">
-      <DependentUpon>DynamicWindowWPFControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Misc\GlobalSuppressions.cs" />
-    <Compile Include="Misc\Guids.cs" />
-    <Compile Include="PackageToolWindow.cs" />
-    <Compile Include="PersistedWindowPane.cs" />
-    <Compile Include="PersistedWindowWPFControl.xaml.cs">
-      <DependentUpon>PersistedWindowWPFControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="PkgCmdId.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Provider.cs" />
-    <Compile Include="Resources.Designer.cs" />
-    <Compile Include="SelectionProperties.cs" />
-    <Compile Include="TraceLogWindow.cs" />
-    <Compile Include="TraceLogWindowCommand.cs" />
-    <Compile Include="TraceLogWindowControl.xaml.cs">
-      <DependentUpon>TraceLogWindowControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="EventTraceKitPackage.cs" />
-    <Compile Include="WindowList.cs" />
-    <Compile Include="WindowStatus.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Key.snk" />
-    <None Include="packages.config" />
-    <None Include="source.extension.vsixmanifest">
-      <SubType>Designer</SubType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="PkgCmd.vsct" />
-    <Content Include="Resources\ToolWindow1Command.png" />
-    <Content Include="Resources\ToolWindow1Package.ico" />
-    <VSCTCompile Include="ToolWindow1Package.vsct">
-      <ResourceName>Menus.ctmenu</ResourceName>
-    </VSCTCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Include="DynamicWindowWPFControl.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="ListViewStyle.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="PersistedWindowWPFControl.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="TraceLogWindowControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="EnvDTE, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="EnvDTE100, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="EnvDTE80, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="EnvDTE90, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
     <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Microsoft.VisualStudio.CommandBars, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
     <Reference Include="Microsoft.VisualStudio.ImageCatalog, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.VisualStudio.ImageCatalog.14.1.24720\lib\net45\Microsoft.VisualStudio.ImageCatalog.dll</HintPath>
       <Private>True</Private>
@@ -187,6 +111,11 @@
       <HintPath>..\packages\Microsoft.VisualStudio.Shell.Interop.12.0.12.0.30110\lib\Microsoft.VisualStudio.Shell.Interop.12.0.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.14.0.DesignTime, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <HintPath>..\packages\Microsoft.VisualStudio.Shell.Interop.14.0.DesignTime.14.1.24720\lib\Microsoft.VisualStudio.Shell.Interop.14.0.DesignTime.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <HintPath>..\packages\Microsoft.VisualStudio.Shell.Interop.8.0.8.0.50727\lib\Microsoft.VisualStudio.Shell.Interop.8.0.dll</HintPath>
       <Private>True</Private>
@@ -194,7 +123,6 @@
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <HintPath>..\packages\Microsoft.VisualStudio.Shell.Interop.9.0.9.0.30729\lib\Microsoft.VisualStudio.Shell.Interop.9.0.dll</HintPath>
       <Private>True</Private>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <HintPath>..\packages\Microsoft.VisualStudio.TextManager.Interop.7.10.6070\lib\Microsoft.VisualStudio.TextManager.Interop.dll</HintPath>
@@ -218,18 +146,37 @@
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
-    <Reference Include="stdole, Version=7.0.3300.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="CustomTypeDescriptor.cs" />
+    <Compile Include="DynamicWindowPane.cs" />
+    <Compile Include="DynamicWindowWPFControl.xaml.cs">
+      <DependentUpon>DynamicWindowWPFControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Misc\Guids.cs" />
+    <Compile Include="PackageToolWindow.cs" />
+    <Compile Include="PersistedWindowPane.cs" />
+    <Compile Include="PersistedWindowWPFControl.xaml.cs">
+      <DependentUpon>PersistedWindowWPFControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PkgCmdId.cs" />
+    <Compile Include="Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Misc\GlobalSuppressions.cs" />
+    <Compile Include="SelectionProperties.cs" />
+    <Compile Include="WindowList.cs" />
+    <Compile Include="WindowStatus.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources.resx">
@@ -239,6 +186,37 @@
       <MergeWithCTO>true</MergeWithCTO>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="source.extension.vsixmanifest">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <VSCTCompile Include="PkgCmd.vsct">
+      <ResourceName>1000</ResourceName>
+    </VSCTCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="DynamicWindowWPFControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="ListViewStyle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="PersistedWindowWPFControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+  <PropertyGroup>
+    <UseCodebase>true</UseCodebase>
+  </PropertyGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
@@ -249,11 +227,4 @@
     <Error Condition="!Exists('..\packages\Microsoft.VSSDK.BuildTools.14.1.24720\build\Microsoft.VSSDK.BuildTools.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.VSSDK.BuildTools.14.1.24720\build\Microsoft.VSSDK.BuildTools.targets'))" />
   </Target>
   <Import Project="..\packages\Microsoft.VSSDK.BuildTools.14.1.24720\build\Microsoft.VSSDK.BuildTools.targets" Condition="Exists('..\packages\Microsoft.VSSDK.BuildTools.14.1.24720\build\Microsoft.VSSDK.BuildTools.targets')" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>
