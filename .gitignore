@@ -1,0 +1,11 @@
+bin/
+obj/
+Debug/
+Release/
+/packages/
+
+.vs/
+*.VC.db
+*.VC.opendb
+
+*.user
