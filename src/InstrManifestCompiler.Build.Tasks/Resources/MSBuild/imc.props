@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <ItemDefinitionGroup>
+    <EventManifestCompile>
+      <OutputBaseName             Condition="'%(EventManifestCompile.OutputBaseName)'             == ''">%(RelativeDir)%(Filename).Generated</OutputBaseName>
+      <UseCustomEnabledChecks     Condition="'%(EventManifestCompile.UseCustomEnabledChecks)'     == ''">false</UseCustomEnabledChecks>
+      <SkipDefines                Condition="'%(EventManifestCompile.SkipDefines)'                == ''">true</SkipDefines>
+      <LoggingMacroPrefix         Condition="'%(EventManifestCompile.LoggingMacroPrefix)'         == ''">EventEnabled</LoggingMacroPrefix>
+
+      <TrackerLogDirectory        Condition="'%(EventManifestCompile.TrackerLogDirectory)'        == ''">$(TLogLocation)</TrackerLogDirectory>
+      <MinimalRebuildFromTracking Condition="'%(EventManifestCompile.MinimalRebuildFromTracking)' == ''">true</MinimalRebuildFromTracking>
+    </EventManifestCompile>
+  </ItemDefinitionGroup>
+</Project>

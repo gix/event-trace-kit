@@ -2,10 +2,11 @@ bin/
 obj/
 Debug/
 Release/
-/packages/
+/src/packages/
 
 .vs/
 *.VC.db
 *.VC.opendb
+*.sdf
 
 *.user

@@ -1,0 +1,75 @@
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ImcBuildTasksPath>$(MSBuildThisFileDirectory)InstrManifestCompiler.Build.Tasks.dll</ImcBuildTasksPath>
+    <ImcToolPath>$(MSBuildThisFileDirectory)imc.exe</ImcToolPath>
+  </PropertyGroup>
+
+  <UsingTask TaskName="InstrManifestCompiler.Build.Tasks.Imc" AssemblyFile="$(ImcBuildTasksPath)"/>
+  <UsingTask TaskName="InstrManifestCompiler.Build.Tasks.InprocImc" AssemblyFile="$(ImcBuildTasksPath)"/>
+
+  <!-- Property pages -->
+  <ItemGroup Condition="'$(UseDefaultPropertyPageSchemas)' != 'false'">
+    <!-- Property pages that always apply -->
+    <PropertyPageSchema Include="$(MSBuildThisFileDirectory)$(LangID)\ProjectItemsSchema.xml"/>
+
+    <PropertyPageSchema
+        Condition="'$(ConfigurationType)' != 'Utility'"
+        Include="$(MSBuildThisFileDirectory)$(LangID)\imc.xml"/>
+
+    <AvailableItemName Include="EventManifestCompile">
+      <Targets>EventManifestCompile</Targets>
+    </AvailableItemName>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(UseDefaultProjectTools)' != 'false'">
+    <ProjectTools Include="EventManifestCompile"/>
+  </ItemGroup>
+
+  <!-- Selective Build: Remove unselected build items from the project. -->
+  <Target Name="SelectEventManifestCompile" DependsOnTargets="_SelectedFiles;SelectCustomBuild">
+    <ItemGroup Condition="'@(SelectedFiles)'!=''">
+      <EventManifestCompile Remove="@(SelectEventManifestCompile)" Condition="'%(Identity)'!='@(SelectedFiles)'"/>
+      <EventManifestCompile>
+        <MinimalRebuildFromTracking>false</MinimalRebuildFromTracking>
+      </EventManifestCompile>
+    </ItemGroup>
+  </Target>
+
+  <!-- EventManifestCompile -->
+  <Target
+      Name             = "EventManifestCompile"
+      Condition        = "'@(EventManifestCompile)' != ''"
+      BeforeTargets    = "BeforeClCompile"
+      DependsOnTargets = "SelectEventManifestCompile">
+    <ItemGroup>
+      <EventManifestCompile>
+        <MinimalRebuildFromTracking Condition="'$(BuildType)' != 'Build' or '$(ForceRebuild)' == 'true'">false</MinimalRebuildFromTracking>
+      </EventManifestCompile>
+    </ItemGroup>
+
+    <Imc Condition="'%(EventManifestCompile.ExcludedFromBuild)' != 'true'"
+        ImcToolPath                = "$(ImcToolPath)"
+        Source                     = "%(Identity)"
+
+        OutputBaseName             = "%(EventManifestCompile.OutputBaseName)"
+        HeaderFile                 = "%(EventManifestCompile.HeaderFile)"
+        SourceFile                 = "%(EventManifestCompile.SourceFile)"
+        MessageTableFile           = "%(EventManifestCompile.MessageTableFile)"
+        EventTemplateFile          = "%(EventManifestCompile.EventTemplateFile)"
+
+        CodeGenerator              = "%(EventManifestCompile.CodeGenerator)"
+        LogNamespace               = "%(EventManifestCompile.LogNamespace)"
+        EtwNamespace               = "%(EventManifestCompile.EtwNamespace)"
+        LogCallPrefix              = "%(EventManifestCompile.LogCallPrefix)"
+        UseCustomEnabledChecks     = "%(EventManifestCompile.UseCustomEnabledChecks)"
+        SkipDefines                = "%(EventManifestCompile.SkipDefines)"
+        GenerateStubs              = "%(EventManifestCompile.GenerateStubs)"
+        AlwaysInlineAttribute      = "%(EventManifestCompile.AlwaysInlineAttribute)"
+        NoinlineAttribute          = "%(EventManifestCompile.NoinlineAttribute)"
+
+        TrackerLogDirectory        = "%(EventManifestCompile.TrackerLogDirectory)"
+        TrackFileAccess            = "$(TrackFileAccess)"
+        MinimalRebuildFromTracking = "%(EventManifestCompile.MinimalRebuildFromTracking)"
+    />
+  </Target>
+</Project>

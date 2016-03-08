@@ -1,0 +1,74 @@
+﻿<ResourceDictionary
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:Controls="clr-namespace:EventTraceKit.Dev14.Controls">
+  <Style TargetType="{x:Type Controls:ActivityRing}">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Foreground" Value="#FF007ACC"/>
+    <Setter Property="IsHitTestVisible" Value="False"/>
+    <Setter Property="HorizontalAlignment" Value="Center"/>
+    <Setter Property="VerticalAlignment" Value="Center"/>
+    <Setter Property="MinHeight" Value="10"/>
+    <Setter Property="MinWidth" Value="10"/>
+    <Setter Property="IsTabStop" Value="False"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Controls:ActivityRing">
+          <Border Background="{TemplateBinding Background}"
+                  BorderThickness="{TemplateBinding BorderThickness}"
+                  BorderBrush="{TemplateBinding BorderBrush}">
+            <VisualStateManager.VisualStateGroups>
+              <VisualStateGroup x:Name="ActiveStates">
+                <VisualState x:Name="Inactive"/>
+                <VisualState x:Name="Active">
+                  <Storyboard RepeatBehavior="Forever">
+                    <ObjectAnimationUsingKeyFrames Duration="0"
+                                                   Storyboard.TargetName="Ring"
+                                                   Storyboard.TargetProperty="Visibility">
+                      <DiscreteObjectKeyFrame KeyTime="0">
+                        <DiscreteObjectKeyFrame.Value>
+                          <Visibility>Visible</Visibility>
+                        </DiscreteObjectKeyFrame.Value>
+                      </DiscreteObjectKeyFrame>
+                    </ObjectAnimationUsingKeyFrames>
+                    <DoubleAnimation
+                        Storyboard.TargetName="Rotation"
+                        Storyboard.TargetProperty="Angle"
+                        From="0" To="360" Duration="0:0:2"
+                        RepeatBehavior="Forever"/>
+                  </Storyboard>
+                </VisualState>
+              </VisualStateGroup>
+            </VisualStateManager.VisualStateGroups>
+            <Grid x:Name="Ring"
+                  Margin="{TemplateBinding Padding}"
+                  MaxWidth="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.MaxSideLength}"
+                  MaxHeight="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.MaxSideLength}"
+                  Visibility="Collapsed"
+                  RenderTransformOrigin=".5,.5"
+                  FlowDirection="LeftToRight">
+              <Canvas RenderTransformOrigin=".5,.5">
+                <Canvas.RenderTransform>
+                  <RotateTransform x:Name="Rotation"/>
+                </Canvas.RenderTransform>
+                <Path Stroke="{TemplateBinding Foreground}"
+                      StrokeThickness="{Binding TemplateSettings.ArcThickness, RelativeSource={RelativeSource TemplatedParent}}">
+                  <Path.Data>
+                    <PathGeometry>
+                      <PathFigure StartPoint="{Binding TemplateSettings.ArcStartPoint, RelativeSource={RelativeSource TemplatedParent}}">
+                        <ArcSegment Size="{Binding TemplateSettings.ArcSize, RelativeSource={RelativeSource TemplatedParent}}"
+                                    Point="{Binding TemplateSettings.ArcEndPoint, RelativeSource={RelativeSource TemplatedParent}}"
+                                    IsLargeArc="{Binding TemplateSettings.IsLargeArc, RelativeSource={RelativeSource TemplatedParent}}"
+                                    SweepDirection="{Binding TemplateSettings.SweepDirection, RelativeSource={RelativeSource TemplatedParent}}"/>
+                      </PathFigure>
+                    </PathGeometry>
+                  </Path.Data>
+                </Path>
+              </Canvas>
+            </Grid>
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+</ResourceDictionary>

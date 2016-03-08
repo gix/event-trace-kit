@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ProjectSchemaDefinitions
+    xmlns="http://schemas.microsoft.com/build/2009/properties">
+  <ContentType
+      Name="EventManifest"
+      DisplayName="Event Manifest"
+      ItemType="EventManifestCompile"/>
+  <ItemType Name="EventManifestCompile" DisplayName="Event Manifest"/>
+  <FileExtension Name=".man" ContentType="EventManifest"/>
+</ProjectSchemaDefinitions>
