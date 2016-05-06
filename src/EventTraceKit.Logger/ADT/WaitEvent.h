@@ -15,8 +15,6 @@ using WaitHandle = Handle<NullIsInvalidHandleTraits>;
 
 class WaitEvent
 {
-    typedef std::chrono::duration<unsigned, std::milli> TimeoutDuration;
-
 public:
     WaitEvent() {}
 
@@ -56,10 +54,7 @@ public:
     HRESULT Set();
     HRESULT Wait(unsigned timeoutInMillis = INFINITE) const;
 
-    HANDLE Handle() const
-    {
-        return handle.Get();
-    }
+    HANDLE Handle() const { return handle.Get(); }
 
     template<typename Rep, typename Period>
     bool Wait(std::chrono::duration<Rep, Period> const& timeout)

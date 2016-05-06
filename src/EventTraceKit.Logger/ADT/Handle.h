@@ -9,7 +9,7 @@ namespace etk
 template<typename Traits>
 class Handle
 {
-    typedef typename Traits::HandleType HandleType;
+    using HandleType = typename Traits::HandleType;
 
 public:
     explicit Handle(HandleType handle = Traits::InvalidHandle()) noexcept
@@ -104,9 +104,15 @@ private:
     HandleType handle;
 };
 
+/// Prevent accidentally calling CloseHandle(HANDLE) with a scoped handle.
+/// Scoped handles must be closed by calling Close().
+template<typename T>
+void CloseHandle(Handle<T> const&) = delete;
+
+
 struct HandleTraits
 {
-    typedef HANDLE HandleType;
+    using HandleType = HANDLE;
 
     static HandleType InvalidHandle() noexcept { return INVALID_HANDLE_VALUE; }
     static bool IsValid(HandleType h) noexcept { return h != InvalidHandle(); }
@@ -115,7 +121,7 @@ struct HandleTraits
 
 struct NullIsInvalidHandleTraits : HandleTraits
 {
-    static HandleType InvalidHandle() { return NULL; }
+    static HandleType InvalidHandle() { return nullptr; }
     static bool IsValid(HandleType h) noexcept { return h != InvalidHandle(); }
 };
 
@@ -125,15 +131,10 @@ struct ThreadHandleTraits : NullIsInvalidHandleTraits {};
 struct TimerHandleTraits : NullIsInvalidHandleTraits {};
 struct TokenHandleTraits : NullIsInvalidHandleTraits {};
 
-typedef Handle<FileHandleTraits> FileHandle;
-typedef Handle<ProcessHandleTraits> ProcessHandle;
-typedef Handle<ThreadHandleTraits> ThreadHandle;
-typedef Handle<TimerHandleTraits> TimerHandle;
-typedef Handle<TokenHandleTraits> TokenHandle;
-
-/// Prevent accidentally calling CloseHandle(HANDLE) with a scoped handle.
-/// Scoped handles must be closed by calling Close().
-template<typename T>
-void CloseHandle(Handle<T> const&) = delete;
+using FileHandle = Handle<FileHandleTraits>;
+using ProcessHandle = Handle<ProcessHandleTraits>;
+using ThreadHandle = Handle<ThreadHandleTraits>;
+using TimerHandle = Handle<TimerHandleTraits>;
+using TokenHandle = Handle<TokenHandleTraits>;
 
 } // namespace etk

@@ -34,23 +34,20 @@ public:
 };
 
 class NotSupportedException
+    : public Exception
 {
 public:
-    NotSupportedException(wstring_view) {}
+    NotSupportedException(wstring_view msg)
+        : Exception(msg) {}
 };
 
 class AbandonedMutexException
+    : public Exception
 {
+public:
+    AbandonedMutexException()
+        : Exception(L"Abandoned mutex.") {}
 };
-
-template<typename T>
-T bool_cast(bool value);
-
-template<>
-BOOL bool_cast<BOOL>(bool value)
-{
-    return value ? TRUE : FALSE;
-}
 
 WaitEvent::WaitEvent(bool initialState, bool manualReset)
 {

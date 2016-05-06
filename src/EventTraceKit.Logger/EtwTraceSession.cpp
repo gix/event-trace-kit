@@ -89,7 +89,7 @@ std::unique_ptr<EventTraceProperties> EventTraceProperties::Create(wstring_view 
 
     std::unique_ptr<EventTraceProperties> p(new(name) EventTraceProperties());
     p->Wnode.BufferSize = static_cast<ULONG>(bufferSize);
-    // NB: The actual name is copied late by StartTraceW().
+    // NB: The actual name is copied later by StartTraceW().
     p->LoggerNameOffset = sizeof(EVENT_TRACE_PROPERTIES);
     return p;
 }
