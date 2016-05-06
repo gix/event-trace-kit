@@ -5,8 +5,6 @@ VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EventTraceKit.Logger", "EventTraceKit.Logger\EventTraceKit.Logger.vcxproj", "{3EDE8E61-F8E3-4645-A940-337F91A9DF65}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EventTraceKit.Logger.Interop", "EventTraceKit.Logger.Interop\EventTraceKit.Logger.Interop.vcxproj", "{6069A96E-C1D0-4CA3-833C-027E5C19B18B}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EventTraceKit.Logger.WatchDog", "EventTraceKit.Logger.WatchDog\EventTraceKit.Logger.WatchDog.vcxproj", "{32C0585A-5DB9-457C-9E69-1621BC3547A5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventTraceKit.VsExtension", "EventTraceKit.VsExtension\EventTraceKit.VsExtension.csproj", "{6D3D2D02-2D86-4FBF-9CC6-A0D7D37D5BA1}"
