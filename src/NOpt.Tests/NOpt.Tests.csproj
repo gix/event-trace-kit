@@ -69,6 +69,6 @@
       <Name>NOpt</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="..\Common\Common.props" />
+  <Import Project="..\Common\CommonProjectNet.props" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

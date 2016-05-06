@@ -256,7 +256,7 @@
       <LastGenOutput>Strings.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-  <Import Project="..\Common\Common.props" />
+  <Import Project="..\Common\CommonProjectNet.props" />
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
