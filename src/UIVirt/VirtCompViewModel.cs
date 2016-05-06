@@ -7,33 +7,13 @@
     using System.Collections.Specialized;
     using System.ComponentModel;
     using System.Diagnostics;
-    using System.Globalization;
     using System.Runtime.CompilerServices;
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Input;
     using System.Windows.Threading;
-
-    public class ViewModel : INotifyPropertyChanged
-    {
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected void SetProperty<T>(
-            ref T field, T value, [CallerMemberName] string propertyName = null)
-        {
-            if (Equals(field, value))
-                return;
-
-            field = value;
-            RaisePropertyChanged(propertyName);
-        }
-
-        protected void RaisePropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-    }
+    using EventTraceKit.VsExtension;
 
     public struct RawEvent
     {
@@ -51,203 +31,6 @@
         event Action<int> CountChanged;
         int Count { get; }
         T[] GetItems(int offset, int count);
-    }
-
-    public class MyCollectionView<T>
-        : DispatcherObject
-        , ICollectionView
-        , INotifyPropertyChanged
-        , IComparer
-    //, ICollectionViewLiveShaping
-    //, IItemProperties
-    {
-        private readonly IList<T> source;
-        private int deferLevel;
-        private int timestamp;
-        private int _currentPosition;
-        private object _currentItem;
-
-        public MyCollectionView(IList<T> source)
-        {
-            this.source = source;
-        }
-
-        public IEnumerator GetEnumerator()
-        {
-            return source.GetEnumerator();
-        }
-
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
-
-        public bool Contains(object item)
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual int Count
-        {
-            get
-            {
-                //this.VerifyRefreshNotDeferred();
-                return source.Count;
-            }
-        }
-
-        private void AdjustCurrencyForAdd(int index)
-        {
-            if (Count == 1) {
-                _currentPosition = -1;
-            } else if (index <= _currentPosition) {
-                _currentPosition++;
-                if (_currentPosition < Count) {
-                    _currentItem = source[this._currentPosition];
-                }
-            }
-        }
-
-        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs args)
-        {
-            if (args == null)
-                throw new ArgumentNullException(nameof(args));
-
-            ++timestamp;
-            CollectionChanged?.Invoke(this, args);
-
-            if (args.Action != NotifyCollectionChangedAction.Replace &&
-                args.Action != NotifyCollectionChangedAction.Move)
-                OnPropertyChanged("Count");
-
-            bool isEmpty = IsEmpty;
-            if (isEmpty != CachedIsEmpty) {
-                CachedIsEmpty = true;
-                this.OnPropertyChanged("IsEmpty");
-            }
-        }
-
-        private bool CachedIsEmpty { get; set; }
-
-        private void OnPropertyChanged(string propertyName)
-        {
-            this.OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
-        }
-
-        protected virtual void OnPropertyChanged(PropertyChangedEventArgs e)
-        {
-            PropertyChanged?.Invoke(this, e);
-        }
-
-        public void Refresh()
-        {
-        }
-
-        public IDisposable DeferRefresh()
-        {
-            ++deferLevel;
-            return new DeferHelper(this);
-        }
-
-        private class DeferHelper : IDisposable
-        {
-            private MyCollectionView<T> collectionView;
-
-            public DeferHelper(MyCollectionView<T> collectionView)
-            {
-                this.collectionView = collectionView;
-            }
-
-            public void Dispose()
-            {
-                if (collectionView != null) {
-                    collectionView.EndDefer();
-                    collectionView = null;
-                }
-                GC.SuppressFinalize(this);
-            }
-        }
-
-        private void EndDefer()
-        {
-            --deferLevel;
-            if ((deferLevel == 0) && NeedsRefresh) {
-                Refresh();
-            }
-        }
-
-        private bool NeedsRefresh { get; set; }
-
-        public bool MoveCurrentToFirst()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool MoveCurrentToLast()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool MoveCurrentToNext()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool MoveCurrentToPrevious()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool MoveCurrentTo(object item)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool MoveCurrentToPosition(int position)
-        {
-            throw new NotImplementedException();
-        }
-
-        public CultureInfo Culture { get; set; }
-
-        public IEnumerable SourceCollection => source;
-
-        public Predicate<object> Filter
-        {
-            get { throw new NotSupportedException(); }
-            set { throw new NotSupportedException(); }
-        }
-
-        public bool CanFilter => false;
-
-        public SortDescriptionCollection SortDescriptions => SortDescriptionCollection.Empty;
-
-        public bool CanSort => false;
-
-        public bool CanGroup => false;
-
-        public ObservableCollection<GroupDescription> GroupDescriptions => null;
-
-        public ReadOnlyObservableCollection<object> Groups => null;
-
-        public bool IsEmpty
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public object CurrentItem => _currentItem;
-
-        public int CurrentPosition { get; private set; }
-
-        public bool IsCurrentAfterLast { get; private set; }
-
-        public bool IsCurrentBeforeFirst { get; private set; }
-
-        public event CurrentChangingEventHandler CurrentChanging;
-        public event EventHandler CurrentChanged;
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public int Compare(object x, object y)
-        {
-            throw new NotImplementedException();
-        }
     }
 
     public class VirtualList : IList<Event>, IList, INotifyPropertyChanged, INotifyCollectionChanged
@@ -471,14 +254,14 @@
         }
     }
 
-    public class MainWindowViewModel : ViewModel
+    public class VirtCompViewModel : ViewModel
     {
         private CancellationTokenSource cts;
         private List<RawEvent> eventSource = new List<RawEvent>();
         private EventProvider2 provider;
         private VirtualList list;
 
-        public MainWindowViewModel()
+        public VirtCompViewModel()
         {
             ClearCommand = new DelegateCommand(Clear);
             StartCommand = new DelegateCommand(Start);
@@ -487,15 +270,23 @@
             provider = new EventProvider2(eventSource);
             list = new VirtualList(provider);
             //Items = new MyCollectionView<Event>(list);
-            Events = new ObservableCollection<TraceEvent>();
+            Events = new ObservableCollection<VirtCompTraceEvent>();
 
+            GenerateEvents(Events, 100000);
+        }
+
+        private void GenerateEvents(IList<VirtCompTraceEvent> events, int count)
+        {
             var random = new Random();
             var providerId = new Guid("045791A4-4F03-4394-A37F-F83BD04251C7");
             var providerName = "FFMF-FFMF-Sculptor";
             var processId = Process.GetCurrentProcess().Id;
             var threadId = Thread.CurrentThread.ManagedThreadId;
-            for (int i = 0; i < 5000; ++i) {
-                var evt = new TraceEvent {
+
+            var names = new Dictionary<KeyValuePair<int, int>, string>();
+
+            for (int i = 0; i < count; ++i) {
+                var evt = new VirtCompTraceEvent {
                     ProviderId = providerId,
                     Id = (ushort)random.Next(1, 4000),
                     Version = 1,
@@ -507,10 +298,10 @@
                 };
 
                 evt.Provider = providerName;
-                evt.Channel = "Channel" + evt.ChannelId;
-                evt.Level = "Level" + evt.LevelId;
-                evt.Opcode = "Opcode" + evt.OpcodeId;
-                evt.Task = "Task" + evt.TaskId;
+                evt.Channel = names.GetOrDefault(0, evt.ChannelId, () => "Channel" + evt.ChannelId);
+                evt.Level = names.GetOrDefault(0, evt.ChannelId, () => "Level" + evt.LevelId);
+                evt.Opcode = names.GetOrDefault(0, evt.ChannelId, () => "Opcode" + evt.OpcodeId);
+                evt.Task = names.GetOrDefault(0, evt.ChannelId, () => "Task" + evt.TaskId);
                 evt.Keywords = string.Empty;
 
                 evt.Time = DateTime.Now;
@@ -519,14 +310,15 @@
                 evt.ProcessorTime = 0;
                 evt.Message = $"EVR Queue Sample Tag={random.Next(1, 50000)} Object=%2 Sample=%3 Target QPC=%4 Submitted QPC=%5";
                 evt.Formatted = true;
-                Events.Add(evt);
+
+                events.Add(evt);
             }
         }
 
         public DelegateCommand ClearCommand { get; }
         public DelegateCommand StartCommand { get; }
         public DelegateCommand StopCommand { get; }
-        public ObservableCollection<TraceEvent> Events { get; }
+        public ObservableCollection<VirtCompTraceEvent> Events { get; }
 
         private void Clear()
         {
@@ -566,7 +358,37 @@
         }
     }
 
-    public class TraceEvent
+    public static class Extensions
+    {
+        public static TValue GetOrDefault<TKey, TValue>(
+            this IDictionary<TKey, TValue> dict, TKey key,
+            Func<TValue> defaultFactory)
+        {
+            TValue value;
+            if (!dict.TryGetValue(key, out value)) {
+                value = defaultFactory();
+                dict[key] = value;
+            }
+
+            return value;
+        }
+
+        public static TValue GetOrDefault<TValue>(
+            this IDictionary<KeyValuePair<int, int>, TValue> dict, int key1, int key2,
+            Func<TValue> defaultFactory)
+        {
+            var key = new KeyValuePair<int, int>(key1, key2);
+            TValue value;
+            if (!dict.TryGetValue(key, out value)) {
+                value = defaultFactory();
+                dict[key] = value;
+            }
+
+            return value;
+        }
+    }
+
+    public class VirtCompTraceEvent
     {
         public Guid ProviderId { get; set; }
         public ushort Id { get; set; }

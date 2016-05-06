@@ -1,5 +1,8 @@
 ﻿namespace UIVirt
 {
+    using System;
+    using EventTraceKit.VsExtension;
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -8,7 +11,7 @@
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new MainWindowViewModel();
+            DataContext = new VirtCompViewModel();
         }
     }
 }

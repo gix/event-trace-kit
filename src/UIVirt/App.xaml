@@ -1,9 +1,5 @@
 ﻿<Application x:Class="UIVirt.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:UIVirt"
-             StartupUri="MainWindow.xaml">
-    <Application.Resources>
-         
-    </Application.Resources>
+             StartupUri="TraceLogTestWindow.xaml">
 </Application>
