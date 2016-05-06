@@ -1,0 +1,27 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:Aero2="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2"
+                    xmlns:Primitives="clr-namespace:EventTraceKit.VsExtension.Controls.Primitives"
+                    xmlns:Controls="clr-namespace:EventTraceKit.VsExtension.Controls">
+  <DataTemplate x:Key="Aero2DataGridHeaderBorder"
+                DataType="{x:Type Controls:VirtualizedDataGridColumnViewModel}">
+    <FrameworkTemplate.Resources>
+      <RelativeSource x:Key="parentSource" Mode="FindAncestor"
+                      AncestorType="{x:Type Primitives:VirtualizedDataGridColumnHeader}"/>
+    </FrameworkTemplate.Resources>
+    <!--
+    SortDirection="{Binding SortOrder, Converter={x:Static mpudp:SortOrderToSortDirectionValueConverter.Instance}, Mode=OneWay}"
+    -->
+    <Aero2:DataGridHeaderBorder
+      Focusable="true"
+      IsClickable="{Binding CanSort, Mode=OneWay}"
+      IsHovered="{Binding IsMouseOver, RelativeSource={StaticResource parentSource}}"
+      IsPressed="{Binding IsPressed, RelativeSource={StaticResource parentSource}}"
+      Background="{Binding Background, RelativeSource={StaticResource parentSource}}"
+      BorderBrush="{Binding BorderBrush, RelativeSource={StaticResource parentSource}}"
+      BorderThickness="{Binding BorderThickness, RelativeSource={StaticResource parentSource}}"
+      Padding="{Binding Padding, RelativeSource={StaticResource parentSource}}"
+      SeparatorVisibility="{Binding SeparatorVisibility, RelativeSource={StaticResource parentSource}}"
+      SeparatorBrush="{Binding SeparatorBrush, RelativeSource={StaticResource parentSource}}"/>
+  </DataTemplate>
+</ResourceDictionary>
