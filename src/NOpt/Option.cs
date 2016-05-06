@@ -12,17 +12,12 @@ namespace NOpt
     [DebuggerDisplay("[{Id}] {Name} ({Kind})")]
     public abstract class Option
     {
-        private readonly int id;
         private readonly string[] prefixes;
         private readonly string name;
-        private readonly string helpText;
-        private readonly string metaVar;
-        private readonly int flags;
         private readonly int groupId;
         private readonly int aliasId;
 
         private OptTable owner;
-        private OptionKind kind;
 
         protected Option(
             OptSpecifier id,
@@ -39,14 +34,14 @@ namespace NOpt
             Contract.Requires<ArgumentException>(!string.IsNullOrWhiteSpace(prefix));
             Contract.Requires<ArgumentNullException>(name != null);
 
-            this.id = id.Id;
-            this.prefixes = new[] { prefix };
+            Id = id.Id;
+            prefixes = new[] { prefix };
             this.name = name;
-            this.helpText = helpText;
-            this.metaVar = metaVar;
+            HelpText = helpText;
+            MetaVar = metaVar;
             this.aliasId = aliasId.GetValueOrDefault().Id;
             this.groupId = groupId.GetValueOrDefault().Id;
-            this.flags = flags;
+            Flags = flags;
         }
 
         protected Option(
@@ -65,14 +60,14 @@ namespace NOpt
             Contract.Requires<ArgumentException>(!prefixes.Any(string.IsNullOrWhiteSpace));
             Contract.Requires<ArgumentNullException>(name != null);
 
-            this.id = id.Id;
+            Id = id.Id;
             this.prefixes = (string[])prefixes.Clone();
             this.name = name;
             this.aliasId = aliasId.GetValueOrDefault().Id;
             this.groupId = groupId.GetValueOrDefault().Id;
-            this.helpText = helpText;
-            this.metaVar = metaVar;
-            this.flags = flags;
+            HelpText = helpText;
+            MetaVar = metaVar;
+            Flags = flags;
         }
 
         internal Option(
@@ -86,13 +81,13 @@ namespace NOpt
             Contract.Requires<ArgumentException>(id.IsValid);
             Contract.Requires<ArgumentNullException>(name != null);
 
-            this.id = id.Id;
-            this.prefixes = new string[0];
+            Id = id.Id;
+            prefixes = new string[0];
             this.name = name;
             this.aliasId = aliasId.GetValueOrDefault().Id;
             this.groupId = groupId.GetValueOrDefault().Id;
-            this.helpText = helpText;
-            this.metaVar = metaVar;
+            HelpText = helpText;
+            MetaVar = metaVar;
         }
 
         internal void InitializeOwner(OptTable newOwner)
@@ -104,16 +99,9 @@ namespace NOpt
         }
 
         /// <summary>Gets the unique option id.</summary>
-        public int Id
-        {
-            get { return id; }
-        }
+        public int Id { get; }
 
-        public OptionKind Kind
-        {
-            get { return kind; }
-            internal set { kind = value; }
-        }
+        public OptionKind Kind { get; internal set; }
 
         /// <summary>
         ///   Gets the main prefix of the option, or an empty <see cref="string"/>
@@ -158,26 +146,17 @@ namespace NOpt
         ///   Gets the option flags. These may include flags defined by
         ///   <see cref="OptionFlag"/> or custom flags.
         /// </summary>
-        public int Flags
-        {
-            get { return flags; }
-        }
+        public int Flags { get; }
 
         /// <summary>
         ///   Gets the optional help text. May be <see langword="null"/>.
         /// </summary>
-        public string HelpText
-        {
-            get { return helpText; }
-        }
+        public string HelpText { get; }
 
         /// <summary>
         ///   Gets the optional meta variable. May be <see langword="null"/>.
         /// </summary>
-        public string MetaVar
-        {
-            get { return metaVar; }
-        }
+        public string MetaVar { get; }
 
         /// <summary>
         ///   Gets the list of prefixes. Returns an empty list if the option has
@@ -192,15 +171,9 @@ namespace NOpt
             }
         }
 
-        public Option Alias
-        {
-            get { return owner.GetOption(aliasId); }
-        }
+        public Option Alias => owner.GetOption(aliasId);
 
-        public Option Group
-        {
-            get { return owner.GetOption(groupId); }
-        }
+        public Option Group => owner.GetOption(groupId);
 
         public Option UnaliasedOption
         {
@@ -218,9 +191,9 @@ namespace NOpt
         {
             get
             {
-                if (((OptionFlag)flags & OptionFlag.RenderJoined) != 0)
+                if (((OptionFlag)Flags & OptionFlag.RenderJoined) != 0)
                     return OptionRenderStyle.Joined;
-                if (((OptionFlag)flags & OptionFlag.RenderSeparate) != 0)
+                if (((OptionFlag)Flags & OptionFlag.RenderSeparate) != 0)
                     return OptionRenderStyle.Separate;
 
                 return OptionRenderStyle.Values;
@@ -282,7 +255,7 @@ namespace NOpt
             return new Arg(this, argStr, argIndex++, argStr);
         }
 
-        internal protected virtual void RenderArg(Arg arg, IList<string> output)
+        protected internal virtual void RenderArg(Arg arg, IList<string> output)
         {
             switch (RenderStyle) {
                 case OptionRenderStyle.Values:

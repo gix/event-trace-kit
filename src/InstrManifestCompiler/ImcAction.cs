@@ -79,10 +79,8 @@ namespace InstrManifestCompiler
 
             var parser = EventManifestParser.CreateWithWinmeta(
                 diags, opts.SchemaPath, opts.WinmetaPath);
-            if (parser == null)
-                return null;
 
-            return parser.ParseManifest(inputManifest);
+            return parser?.ParseManifest(inputManifest);
         }
 
         private bool Generate(EventManifest manifest)

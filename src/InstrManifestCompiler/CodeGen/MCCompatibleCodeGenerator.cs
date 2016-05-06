@@ -28,20 +28,11 @@ namespace InstrManifestCompiler.CodeGen
 
         private sealed class Nomenclature : BaseCodeGenNomenclature
         {
-            public override string EventDataDescriptorId
-            {
-                get { return "EventData"; }
-            }
+            public override string EventDataDescriptorId => "EventData";
 
-            public override string RegHandleId
-            {
-                get { return "RegHandle"; }
-            }
+            public override string RegHandleId => "RegHandle";
 
-            public override string EventDescriptorId
-            {
-                get { return "Descriptor"; }
-            }
+            public override string EventDescriptorId => "Descriptor";
 
             public override string GetIdentifier(Provider provider)
             {

@@ -51,8 +51,8 @@ namespace NOpt
         public static int CompareLongest(
             string left, string right, StringComparison comparison)
         {
-            int leftLength = left != null ? left.Length : 0;
-            int rightLength = right != null ? right.Length : 0;
+            int leftLength = left?.Length ?? 0;
+            int rightLength = right?.Length ?? 0;
 
             int length = Math.Min(leftLength, rightLength);
             int cmp = string.Compare(left, 0, right, 0, length, comparison);

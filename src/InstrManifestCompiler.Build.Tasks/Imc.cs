@@ -8,15 +8,13 @@ namespace InstrManifestCompiler.Build.Tasks
     /// <summary>Event Manifest Compiler task.</summary>
     public sealed class Imc : NOptTrackedToolTask
     {
-        private readonly List<OptSpecifier> optionOrder;
-
         /// <summary>
         ///   Initializes a new instance of the <see cref="Imc"/> class.
         /// </summary>
         public Imc()
             : base(new ImcOptTable())
         {
-            optionOrder = new List<OptSpecifier> {
+            OptionOrder = new List<OptSpecifier> {
                 Opt.out_eq,
                 Opt.header_file_eq,
                 Opt.source_file_eq,
@@ -45,16 +43,10 @@ namespace InstrManifestCompiler.Build.Tasks
         }
 
         /// <inheritdoc/>
-        protected override List<OptSpecifier> OptionOrder
-        {
-            get { return optionOrder; }
-        }
+        protected override List<OptSpecifier> OptionOrder { get; }
 
         /// <inheritdoc/>
-        protected override ITaskItem[] TrackedInputFiles
-        {
-            get { return new[] { Source }; }
-        }
+        protected override ITaskItem[] TrackedInputFiles => new[] { Source };
 
         /// <inheritdoc/>
         protected override string[] ReadTLogNames

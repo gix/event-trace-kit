@@ -295,15 +295,9 @@ namespace NOpt
             return default(bool);
         }
 
-        int ICollection<Arg>.Count
-        {
-            get { return default(int); }
-        }
+        int ICollection<Arg>.Count => default(int);
 
-        bool ICollection<Arg>.IsReadOnly
-        {
-            get { return default(bool); }
-        }
+        bool ICollection<Arg>.IsReadOnly => default(bool);
 
         int IList<Arg>.IndexOf(Arg item)
         {
@@ -324,15 +318,9 @@ namespace NOpt
             set { }
         }
 
-        int IReadOnlyCollection<Arg>.Count
-        {
-            get { return default(int); }
-        }
+        int IReadOnlyCollection<Arg>.Count => default(int);
 
-        Arg IReadOnlyList<Arg>.this[int index]
-        {
-            get { return default(Arg); }
-        }
+        Arg IReadOnlyList<Arg>.this[int index] => default(Arg);
 
         IEnumerable<Arg> IArgumentList.Matching(OptSpecifier id)
         {

@@ -14,10 +14,7 @@ namespace NOpt
     {
         private readonly List<Arg> args = new List<Arg>();
 
-        public int Count
-        {
-            get { return args.Count; }
-        }
+        public int Count => args.Count;
 
         public Arg this[int index]
         {
@@ -30,10 +27,7 @@ namespace NOpt
             return args.Remove(arg);
         }
 
-        bool ICollection<Arg>.IsReadOnly
-        {
-            get { return false; }
-        }
+        bool ICollection<Arg>.IsReadOnly => false;
 
         int IList<Arg>.IndexOf(Arg arg)
         {
@@ -219,10 +213,7 @@ namespace NOpt
         /// <devdoc>
         ///   This explicit implementations exists to silence the contract rewriter.
         /// </devdoc>
-        Arg IReadOnlyList<Arg>.this[int index]
-        {
-            get { return args[index]; }
-        }
+        Arg IReadOnlyList<Arg>.this[int index] => args[index];
 
         /// <devdoc>
         ///   This explicit implementations exists to silence the contract rewriter.

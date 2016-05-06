@@ -89,7 +89,7 @@
                 return null;
             Option opt;
             if (!optionMap.TryGetValue(id.Id, out opt))
-                throw new ArgumentOutOfRangeException("id");
+                throw new ArgumentOutOfRangeException(nameof(id));
             return opt;
         }
 
