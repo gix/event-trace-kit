@@ -3,12 +3,11 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
     using System.Xml.Linq;
     using InstrManifestCompiler.Extensions;
     using Xunit;
-    using Xunit.Extensions;
 
     public class OpcodeValidationTest : ValidationTest
     {
         [Theory]
-        [PropertyData("ValidQNames")]
+        [MemberData("ValidQNames")]
         public void Name_Valid(object name)
         {
             var opcode = E("opcode", A("name", name), A("value", 16));
@@ -19,7 +18,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [PropertyData("InvalidQNames")]
+        [MemberData("InvalidQNames")]
         public void Name_Invalid(object name)
         {
             var opcode = E("opcode", A("name", name), A("value", 16));
@@ -107,7 +106,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [PropertyData("ValidSymbolNames")]
+        [MemberData("ValidSymbolNames")]
         public void Symbol_Valid(string symbol)
         {
             var opcode = E("opcode", A("name", "Opcode1"), A("value", 16), A("symbol", symbol));
@@ -118,7 +117,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [PropertyData("InvalidSymbolNames")]
+        [MemberData("InvalidSymbolNames")]
         public void Symbol_Invalid(string symbol)
         {
             var opcode = E("opcode", A("name", "Opcode1"), A("value", 16), A("symbol", symbol));
@@ -142,7 +141,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [PropertyData("ValidMessageRefs")]
+        [MemberData("ValidMessageRefs")]
         public void Message_Valid(string message)
         {
             var opcode = E("opcode", A("name", "Opcode1"), A("value", 16), A("message", message));
@@ -153,7 +152,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [PropertyData("InvalidMessageRefs")]
+        [MemberData("InvalidMessageRefs")]
         public void Message_Invalid(string message)
         {
             var opcode = E("opcode", A("name", "Opcode1"), A("value", 16), A("message", message));

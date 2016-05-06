@@ -3,7 +3,6 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
     using System.Xml.Linq;
     using InstrManifestCompiler.Extensions;
     using Xunit;
-    using Xunit.Extensions;
 
     public class EventValidationTest : ValidationTest
     {
@@ -108,7 +107,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [PropertyData("ValidSymbolNames")]
+        [MemberData("ValidSymbolNames")]
         public void Symbol_Valid(string symbol)
         {
             var @event = E("event", A("value", 16), A("symbol", symbol));
@@ -119,7 +118,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [PropertyData("InvalidSymbolNames")]
+        [MemberData("InvalidSymbolNames")]
         public void Symbol_Invalid(string symbol)
         {
             var @event = E("event", A("value", 16), A("symbol", symbol));
@@ -143,7 +142,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [PropertyData("ValidMessageRefs")]
+        [MemberData("ValidMessageRefs")]
         public void Message_Valid(string message)
         {
             var @event = E("event", A("value", 16), A("message", message));
@@ -154,7 +153,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [PropertyData("InvalidMessageRefs")]
+        [MemberData("InvalidMessageRefs")]
         public void Message_Invalid(string message)
         {
             var @event = E("event", A("value", 16), A("message", message));

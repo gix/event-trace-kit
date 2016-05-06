@@ -322,7 +322,7 @@ namespace NOpt.Tests
         }
 
         [Theory]
-        [PropertyData("ParseMultiArgData")]
+        [MemberData("ParseMultiArgData")]
         public void ParseMultiArg(string prefix, string name, string[] extraArgs)
         {
             OptTable optTable = new OptTableBuilder()
@@ -357,7 +357,7 @@ namespace NOpt.Tests
         }
 
         [Theory]
-        [PropertyData("ParseMultiArgMissingArgsData")]
+        [MemberData("ParseMultiArgMissingArgsData")]
         public void ParseMultiArgMissingArgs(
             string prefix, string name, int argCount, string[] preArgs, string[] postArgs)
         {
