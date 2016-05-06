@@ -69,16 +69,6 @@ Global
 		{9BF497FA-9F6C-44F7-8513-5C7171AAB564}.Debug|x86.Build.0 = Debug|Any CPU
 		{9BF497FA-9F6C-44F7-8513-5C7171AAB564}.Release|x86.ActiveCfg = Release|Any CPU
 		{9BF497FA-9F6C-44F7-8513-5C7171AAB564}.Release|x86.Build.0 = Release|Any CPU
-		{6069A96E-C1D0-4CA3-833C-027E5C19B18B}.Debug|Any CPU.ActiveCfg = Debug|Win32
-		{6069A96E-C1D0-4CA3-833C-027E5C19B18B}.Debug|x64.ActiveCfg = Debug|x64
-		{6069A96E-C1D0-4CA3-833C-027E5C19B18B}.Debug|x64.Build.0 = Debug|x64
-		{6069A96E-C1D0-4CA3-833C-027E5C19B18B}.Debug|x86.ActiveCfg = Debug|Win32
-		{6069A96E-C1D0-4CA3-833C-027E5C19B18B}.Debug|x86.Build.0 = Debug|Win32
-		{6069A96E-C1D0-4CA3-833C-027E5C19B18B}.Release|Any CPU.ActiveCfg = Release|Win32
-		{6069A96E-C1D0-4CA3-833C-027E5C19B18B}.Release|x64.ActiveCfg = Release|x64
-		{6069A96E-C1D0-4CA3-833C-027E5C19B18B}.Release|x64.Build.0 = Release|x64
-		{6069A96E-C1D0-4CA3-833C-027E5C19B18B}.Release|x86.ActiveCfg = Release|Win32
-		{6069A96E-C1D0-4CA3-833C-027E5C19B18B}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
