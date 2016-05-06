@@ -73,16 +73,16 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkKeyFile>$(ProjectDir)..\EventTraceKit.Dev14\Key.snk</LinkKeyFile>
+    <LinkKeyFile>$(ProjectDir)..\Common\EventTraceKit.snk</LinkKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LinkKeyFile>$(ProjectDir)..\EventTraceKit.Dev14\Key.snk</LinkKeyFile>
+    <LinkKeyFile>$(ProjectDir)..\Common\EventTraceKit.snk</LinkKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LinkKeyFile>$(ProjectDir)..\EventTraceKit.Dev14\Key.snk</LinkKeyFile>
+    <LinkKeyFile>$(ProjectDir)..\Common\EventTraceKit.snk</LinkKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LinkKeyFile>$(ProjectDir)..\EventTraceKit.Dev14\Key.snk</LinkKeyFile>
+    <LinkKeyFile>$(ProjectDir)..\Common\EventTraceKit.snk</LinkKeyFile>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

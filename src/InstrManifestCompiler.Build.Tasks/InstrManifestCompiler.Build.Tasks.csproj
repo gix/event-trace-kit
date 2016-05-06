@@ -103,7 +103,7 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>..\Common\Imc.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>..\Common\EventTraceKit.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Build.Framework, Version=12.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -134,8 +134,8 @@
     <Compile Include="TrackedToolTask.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Common\Imc.snk">
-      <Link>Properties\Imc.snk</Link>
+    <None Include="..\Common\EventTraceKit.snk">
+      <Link>Properties\EventTraceKit.snk</Link>
     </None>
     <None Include="Resources\MSBuild\imc.props" />
     <None Include="Resources\MSBuild\imc.targets" />
