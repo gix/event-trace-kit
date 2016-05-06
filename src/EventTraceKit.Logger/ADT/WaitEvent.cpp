@@ -195,8 +195,8 @@ HRESULT WaitEvent::Wait(unsigned timeoutInMillis /*= INFINITE*/) const
     }
 }
 
-bool WaitEvent::DoWait(ArrayRef<HANDLE> handles,
-                       TimeoutDuration const& timeout, bool waitAll)
+unsigned details::WaitFor(WaitTimeoutDuration const& timeout,
+                          ArrayRef<HANDLE> handles, bool waitAll)
 {
     if (handles.size() > MAXIMUM_WAIT_OBJECTS)
         throw NotSupportedException(L"The number of WaitEvent handles must be less than or equal to 64.");
@@ -207,7 +207,8 @@ bool WaitEvent::DoWait(ArrayRef<HANDLE> handles,
     if (result >= WAIT_ABANDONED && (result - WAIT_ABANDONED) < handles.size())
         throw AbandonedMutexException();
 
-    return result != WAIT_TIMEOUT;
+    static_assert(sizeof(DWORD) == sizeof(unsigned), "Invariant violated.");
+    return static_cast<unsigned>(result);
 }
 
 } // namespace etk

@@ -62,76 +62,84 @@ public:
         return Wait(GetTimeout(timeout).count()) == S_OK;
     }
 
-    static bool WaitAll(ArrayRef<WaitEvent> handles)
-    {
-        using namespace std::chrono;
-        return DoWait(handles, duration<unsigned, std::milli>(INFINITE), true);
-    }
-
-    template<typename Rep, typename Period>
-    static bool WaitAll(ArrayRef<WaitEvent> handles,
-                        std::chrono::duration<Rep, Period> const& timeout)
-    {
-        return DoWait(handles, GetTimeout(timeout), true);
-    }
-
-    template<typename T>
-    static bool WaitAny(WaitEvent const& e1, WaitEvent const& e2)
-    {
-        using namespace std::chrono;
-        HANDLE handles[] = { e1.handle.Get(), e2.handle.Get() };
-        return DoWait(handles, duration<unsigned, std::milli>(INFINITE), false);
-    }
-
-    static bool WaitAny(ArrayRef<WaitEvent> handles)
-    {
-        using namespace std::chrono;
-        return DoWait(handles, duration<unsigned, std::milli>(INFINITE), false);
-    }
-
-    template<typename Rep, typename Period>
-    static bool WaitAny(ArrayRef<WaitEvent> handles,
-                        std::chrono::duration<Rep, Period> const& timeout)
-    {
-        return DoWait(handles, GetTimeout(timeout), false);
-    }
-
 protected:
     static std::wstring const Empty;
 
 private:
-    static bool DoWait(
-        ArrayRef<WaitEvent> events, TimeoutDuration const& timeout, bool waitAll)
-    {
-        std::vector<HANDLE> handles;
-        std::transform(events.begin(), events.end(), std::back_inserter(handles),
-                       [](WaitEvent const& e) { return e.Handle(); });
-        return DoWait(handles, GetTimeout(timeout), waitAll);
-    }
-
-    static bool DoWait(
-        ArrayRef<HANDLE> handles, TimeoutDuration const& timeout, bool waitAll);
-
     WaitEvent(WaitHandle handle)
         : handle(std::move(handle))
     {
     }
 
-    template<typename Rep, typename Period>
-    static TimeoutDuration GetTimeout(
-        std::chrono::duration<Rep, Period> const& timeout)
-    {
-        TimeoutDuration t = std::chrono::duration_cast<TimeoutDuration>(timeout);
-        // When converting from a smaller to a larger unit (e.g. 100 micros
-        // to millis), precision decreases. We add one to ensure a timeout
-        // that is equal or larger than the requested one.
-        if (t < timeout)
-            ++t;
-        return t;
-    }
-
     WaitHandle handle;
 };
+
+using WaitTimeoutDuration = std::chrono::duration<unsigned, std::milli>;
+
+namespace details
+{
+
+unsigned WaitFor(WaitTimeoutDuration const& timeout, ArrayRef<HANDLE> handles, bool waitAll);
+
+template<typename Rep, typename Period>
+WaitTimeoutDuration GetWaitTimeout(std::chrono::duration<Rep, Period> const& timeout)
+{
+    WaitTimeoutDuration t = std::chrono::duration_cast<WaitTimeoutDuration>(timeout);
+    // When converting from a smaller to a larger unit (e.g. 100 micros
+    // to millis), precision decreases. We add one to ensure a timeout
+    // that is equal or larger than the requested one.
+    if (t < timeout)
+        ++t;
+    return t;
+}
+
+inline HANDLE GetWaitHandle(WaitEvent const& event)
+{
+    return event.Handle();
+}
+
+inline HANDLE GetWaitHandle(ProcessHandle const& process)
+{
+    return process.Get();
+}
+
+} // namespace details
+
+enum WaitResult : unsigned
+{
+    Timeout = WAIT_TIMEOUT
+};
+
+template<typename Rep, typename Period, typename... Ts>
+bool WaitForAll(std::chrono::duration<Rep, Period> const& timeout,
+                Ts const&... events)
+{
+    HANDLE handles[] = { details::GetWaitHandle(events)... };
+    return details::WaitFor(handles, GetWaitTimeout(timeout), true) != WAIT_TIMEOUT;
+}
+
+template<typename... Ts>
+bool WaitForAll(Ts const&... events)
+{
+    HANDLE handles[] = { details::GetWaitHandle(events)... };
+    return details::WaitFor(WaitTimeoutDuration(INFINITE), handles, true) != WAIT_TIMEOUT;
+}
+
+template<typename Rep, typename Period, typename... Ts>
+unsigned WaitForAny(std::chrono::duration<Rep, Period> const& timeout,
+                    Ts const&... events)
+{
+    HANDLE handles[] = { details::GetWaitHandle(events)... };
+    return details::WaitFor(GetWaitTimeout(timeout), handles, false);
+}
+
+template<typename... Ts>
+unsigned WaitForAny(Ts const&... events)
+{
+    HANDLE handles[] = { details::GetWaitHandle(events)... };
+    return details::WaitFor(WaitTimeoutDuration(INFINITE), handles, false);
+}
+
 
 class AutoResetEvent
     : public WaitEvent

@@ -24,6 +24,7 @@ class IEventSink
 public:
     virtual ~IEventSink() {};
     virtual void ProcessEvent(FormattedEvent const& event) = 0;
+    virtual void NotifyNewEvents(size_t newEventCount) = 0;
 };
 
 class ITraceProcessor
@@ -34,6 +35,10 @@ public:
     virtual void StartProcessing() = 0;
     virtual void StopProcessing() = 0;
     virtual bool IsEndOfTracing() = 0;
+
+    virtual void ClearEvents() = 0;
+    virtual size_t GetEventCount() = 0;
+    virtual EVENT_RECORD const* GetEvent(size_t index) = 0;
 };
 
 } // namespace etk

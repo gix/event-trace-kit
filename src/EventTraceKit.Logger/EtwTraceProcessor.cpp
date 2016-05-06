@@ -4,17 +4,18 @@
 #include "ADT/Guid.h"
 #include "ADT/ResPtr.h"
 #include "ADT/VarStructPtr.h"
+#include "ITraceSession.h"
 #include "Support/DllExport.h"
 #include "Support/ErrorHandling.h"
 #include "Support/SetThreadName.h"
 
 #include <cwchar>
-#include <system_error>
+#include <new>
 #include <vector>
+#include <system_error>
 
 #include <Tdh.h>
 #include <in6addr.h>
-#include "ITraceSession.h"
 
 namespace etk
 {
@@ -123,7 +124,7 @@ DWORD GetPropertyLength(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
         DWORD Length = 0;  // Expects the length to be defined by a UINT16 or UINT32
         DWORD j = propInfo.lengthPropertyIndex;
         ZeroMemory(&DataDescriptor, sizeof(PROPERTY_DATA_DESCRIPTOR));
-        DataDescriptor.PropertyName = (ULONGLONG)((PBYTE)(info.info)+info->EventPropertyInfoArray[j].NameOffset);
+        DataDescriptor.PropertyName = (ULONGLONG)((PBYTE)(info.info) + info->EventPropertyInfoArray[j].NameOffset);
         DataDescriptor.ArrayIndex = ULONG_MAX;
         st = TdhGetPropertySize(info.record, 0, NULL, 1, &DataDescriptor, &PropertySize);
         st = TdhGetProperty(info.record, 0, NULL, 1, &DataDescriptor, PropertySize, (PBYTE)&Length);
@@ -479,40 +480,47 @@ bool EtwTraceProcessor::IsEndOfTracing()
     return st == WAIT_OBJECT_0;
 }
 
+template<typename Allocator>
+static EVENT_RECORD* CopyEvent(Allocator& alloc, EVENT_RECORD const* event)
+{
+    auto copy = alloc.Allocate<EVENT_RECORD>();
+    *copy = *event;
+    // Explicitly clear any supplied context as it may not be valid later on.
+    copy->UserContext = nullptr;
+
+    copy->UserData = alloc.Allocate(event->UserDataLength, Alignment(1));
+    std::memcpy(copy->UserData, event->UserData, event->UserDataLength);
+
+    copy->ExtendedData =
+        alloc.Allocate<EVENT_HEADER_EXTENDED_DATA_ITEM>(event->ExtendedDataCount);
+    std::copy_n(event->ExtendedData, event->ExtendedDataCount, copy->ExtendedData);
+
+    for (unsigned i = 0; i < event->ExtendedDataCount; ++i) {
+        auto const& src = event->ExtendedData[i];
+        auto& dst = copy->ExtendedData[i];
+
+        void* mem = alloc.Allocate(src.DataSize, Alignment(1));
+        std::memcpy(mem, reinterpret_cast<void const*>(src.DataPtr),
+                    src.DataSize);
+
+        dst.DataSize = src.DataSize;
+        dst.DataPtr = reinterpret_cast<uintptr_t>(mem);
+    }
+
+    return copy;
+}
+
 void EtwTraceProcessor::OnEvent(EVENT_RECORD* event)
 {
-    if (!sink || IsEventTraceHeader(event))
+    if (IsEventTraceHeader(event))
         return;
 
-    if (event->ExtendedDataCount > 0) {
-        auto const& ext = event->ExtendedData[0];
-        if (ext.ExtType == EVENT_HEADER_EXT_TYPE_RELATED_ACTIVITYID) {
-        } else if (ext.ExtType == EVENT_HEADER_EXT_TYPE_SID) {
-        } else if (ext.ExtType == EVENT_HEADER_EXT_TYPE_TS_ID) {
-        } else if (ext.ExtType == EVENT_HEADER_EXT_TYPE_INSTANCE_INFO) {
-        } else if (ext.ExtType == EVENT_HEADER_EXT_TYPE_STACK_TRACE32) {
-        } else if (ext.ExtType == EVENT_HEADER_EXT_TYPE_STACK_TRACE64) {
-            //wprintf(L"  EVENT_HEADER_EXT_TYPE_STACK_TRACE64\n");
-            //auto st64 = reinterpret_cast<EVENT_EXTENDED_ITEM_STACK_TRACE64 const*>(ext.DataPtr);
-            //unsigned count = (ext.DataSize - sizeof(ULONG64)) / sizeof(ULONG64);
+    events.push_back(CopyEvent(eventRecordAllocator, event));
+    size_t newCount = ++eventCount;
 
-            //for (unsigned i = 0; i < count; ++i) {
-            //    uint64_t addr = st64->Address[i];
-            //    uint64_t disp = 0;
-            //    SYMBOL_INFO_PACKAGEW sip;
-            //    sip.si.SizeOfStruct = sizeof(SYMBOL_INFOW);
-            //    sip.si.MaxNameLen = sizeof(sip.name);
-
-            //    BOOL ret = SymFromAddrW(symProcess, addr, &disp, &sip.si);
-            //    if (!ret)
-            //        fwprintf(stderr, L"  [%08llX] %ls\n", addr, L"<unknown>");
-            //    else if (disp == 0)
-            //        fwprintf(stderr, L"  [%08llX] %ls\n", addr, sip.si.Name);
-            //    else
-            //        fwprintf(stderr, L"  [%08llX] (%ls+%llu)\n", addr, sip.si.Name, disp);
-            //}
-        }
-    }
+    if (sink)
+        sink->NotifyNewEvents(newCount);
+    return;
 
     EventInfo eventInfo = eventInfoCache.Get(*event);
     if (!eventInfo) {

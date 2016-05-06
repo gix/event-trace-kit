@@ -1,10 +1,12 @@
 #pragma once
 #include "ADT/ArrayRef.h"
-#include "ADT/LruCache.h"
 #include "EventInfoCache.h"
 #include "ITraceProcessor.h"
 #include "ITraceSession.h"
+#include "Support/Allocator.h"
 
+#include <atomic>
+#include <deque>
 #include <windows.h>
 #include <thread>
 #include <evntcons.h>
@@ -34,6 +36,21 @@ public:
     virtual void StopProcessing() override;
     virtual bool IsEndOfTracing() override;
 
+    virtual void ClearEvents() override
+    {
+        eventCount = 0;
+        events.clear();
+        if (sink)
+            sink->NotifyNewEvents(0);
+    }
+
+    virtual size_t GetEventCount() override { return eventCount; }
+    virtual EVENT_RECORD const* GetEvent(size_t index) override
+    {
+        if (index >= eventCount) return nullptr;
+        return events[index];
+    }
+
 private:
     static DWORD WINAPI ProcessTraceProc(_In_ LPVOID lpParameter);
     static VOID WINAPI EventRecordCallback(_In_ PEVENT_RECORD EventRecord);
@@ -51,6 +68,12 @@ private:
     EventInfoCache eventInfoCache;
     std::vector<std::wstring> manifests;
     std::vector<std::wstring> providerBinaries;
+
+    using EventRecordAllocator = BumpPtrAllocator<MallocAllocator>;
+    EventRecordAllocator eventRecordAllocator;
+
+    std::deque<EVENT_RECORD const*> events;
+    std::atomic<size_t> eventCount;
 
     IEventSink* sink = nullptr;
     TraceFormatter formatter;
