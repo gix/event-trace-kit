@@ -2,7 +2,6 @@ namespace EventTraceKit.VsExtension.Controls
 {
     using System;
     using System.Collections.Generic;
-    using System.Collections.ObjectModel;
     using System.Globalization;
     using System.Windows;
     using System.Windows.Media;
@@ -10,6 +9,7 @@ namespace EventTraceKit.VsExtension.Controls
 
     public class VirtualizedDataGridCellsDrawingVisual : DrawingVisual
     {
+        private VirtualizedDataGrid parentGrid;
         private readonly VirtualizedDataGridCellsPresenter cellsPresenter;
         private SolidColorBrush backgroundBrush1;
         private SolidColorBrush backgroundBrush2;
@@ -20,6 +20,9 @@ namespace EventTraceKit.VsExtension.Controls
             this.cellsPresenter = cellsPresenter;
             VisualTextHintingMode = TextHintingMode.Fixed;
         }
+
+        private VirtualizedDataGrid ParentGrid =>
+            parentGrid ?? (parentGrid = cellsPresenter.FindAncestor<VirtualizedDataGrid>());
 
         public Rect RenderedViewport { get; private set; }
 
@@ -93,97 +96,71 @@ namespace EventTraceKit.VsExtension.Controls
                 }
 
                 for (int row = firstVisibleRow; row <= lastVisibleRow; ++row) {
-                    double y = (row * rowHeight) - verticalOffset;
+                    double topEdge = (row * rowHeight) - verticalOffset;
                     var background = row % 2 == 0
                         ? (backgroundBrush1 ?? (backgroundBrush1 = new SolidColorBrush(Color.FromRgb(0xFF, 0xFF, 0xFF))))
                         : (backgroundBrush2 ?? (backgroundBrush2 = new SolidColorBrush(Color.FromRgb(0xF7, 0xF7, 0xF7))));
                     context.DrawRectangle(
                         background, null,
-                        new Rect(0, y, actualWidth, rowHeight));
+                        new Rect(0, topEdge, actualWidth, rowHeight));
                 }
 
-                Pen pen = cellsPresenter.HorizontalGridLinesPen;
-                if (pen != null) {
+                Brush selectionForeground = cellsPresenter.SelectionForeground;
+                Brush selectionBackground = cellsPresenter.SelectionBackground;
+                Pen selectionBorderPen = cellsPresenter.SelectionBorderPen;
+                if (!ParentGrid.IsSelectionActive) {
+                    selectionForeground = cellsPresenter.InactiveSelectionForeground;
+                    selectionBackground = cellsPresenter.InactiveSelectionBackground;
+                    selectionBorderPen = cellsPresenter.InactiveSelectionBorderPen;
+                }
+
+                bool hasVisibleSelection =
+                    selectionForeground != null ||
+                    selectionBackground != null ||
+                    selectionBorderPen != null;
+
+                if (hasVisibleSelection) {
+                    var rowSelection = viewModel.RowSelection;
+
                     for (int row = firstVisibleRow; row <= lastVisibleRow; ++row) {
-                        double y = ((row + 1) * rowHeight) - verticalOffset;
-                        context.DrawLineSnapped(
-                            pen, new Point(0.0, y), new Point(actualWidth, y));
+                        if (!rowSelection.Contains(row))
+                            continue;
+
+                        double topEdge = (row * rowHeight) - verticalOffset;
+                        double bottomEdge = topEdge + rowHeight;
+
+                        context.DrawRectangle(
+                            selectionBackground, null,
+                            new Rect(
+                                new Point(0, topEdge),
+                                new Point(actualWidth, bottomEdge)));
+
+                        if (!rowSelection.Contains(row - 1)) {
+                            context.DrawLineSnapped(
+                                selectionBorderPen,
+                                new Point(0, topEdge),
+                                new Point(actualWidth, topEdge));
+                        }
+
+                        if (!rowSelection.Contains(row + 1)) {
+                            context.DrawLineSnapped(
+                                selectionBorderPen,
+                                new Point(0, bottomEdge),
+                                new Point(actualWidth, bottomEdge));
+                        }
                     }
                 }
 
-                //        Brush selectionForeground = this.cellsPresenter.SelectionForeground;
-                //        Brush selectionBackground = this.cellsPresenter.SelectionBackground;
-                //        Brush pITHighlightBackground = this.cellsPresenter.PITHighlightBackground;
-                //        Brush highlightBackground = this.cellsPresenter.HighlightBackground;
-                //        Pen pen2 = this.cellsPresenter.SelectionBorderPenCache.GetValue();
-                //        bool flag2 = ((selectionBackground != null) || (selectionForeground != null)) ||
-                //                     (pen2 != null);
-                //        RowHighlight pITRowHighlight = viewModel.PITRowHighlight;
-                //        RowHighlight rowHighlight = viewModel.RowHighlight;
-                //        CellsPresenterRowSelection rowSelection = viewModel.RowSelection;
-                //        if (((pITRowHighlight != null) || (rowHighlight != null)) || flag2) {
-                //            for (int m = firstVisibleRowIndex; m <= lastVisibleRowIndex; m++) {
-                //                double num21 = ((m + 1) * rowHeight) - verticalOffset;
-                //                float highlightForRow = 0f;
-                //                Brush brush = null;
-                //                if (pITRowHighlight != null) {
-                //                    highlightForRow = pITRowHighlight.GetHighlightForRow(m);
-                //                    if (highlightForRow != 0f) {
-                //                        brush = this.GetBlendedBrush(
-                //                            pITHighlightBackground, 0.25, 1.0, (double)highlightForRow);
-                //                        context.DrawRectangle(
-                //                            brush, null,
-                //                            new Rect(
-                //                                new Point(0.0, num21 - rowHeight),
-                //                                new Point(actualWidth, num21)));
-                //                    }
-                //                }
-                //                if (rowHighlight != null) {
-                //                    highlightForRow = rowHighlight.GetHighlightForRow(m);
-                //                    if (highlightForRow != 0f) {
-                //                        brush = this.GetBlendedBrush(
-                //                            highlightBackground, 0.25, 1.0, (double)highlightForRow);
-                //                        context.DrawRectangle(
-                //                            brush, null,
-                //                            new Rect(
-                //                                new Point(0.0, num21 - rowHeight),
-                //                                new Point(actualWidth, num21)));
-                //                    }
-                //                }
-                //                if (flag2 && rowSelection.Contains(m)) {
-                //                    float percentSelected = rowSelection.GetPercentSelected(m);
-                //                    Brush brush7 = this.GetBlendedBrush(
-                //                        selectionBackground, 0.25, 1.0, (double)percentSelected);
-                //                    context.DrawRectangle(
-                //                        brush7, null,
-                //                        new Rect(
-                //                            new Point(0.0, num21 - rowHeight),
-                //                            new Point(actualWidth, num21)));
-                //                    if (!rowSelection.Contains(m - 1)) {
-                //                        context.DrawLineSnapped(
-                //                            pen2, new Point(0.0, num21 - rowHeight),
-                //                            new Point(actualWidth, num21 - rowHeight));
-                //                    }
-                //                    if (!rowSelection.Contains(m + 1)) {
-                //                        context.DrawLineSnapped(
-                //                            pen2, new Point(0.0, num21), new Point(actualWidth, num21));
-                //                    }
-                //                }
-                //            }
-                //        }
-
-                //int focusIndex = viewModel.FocusIndex;
-                //if (focusIndex >= firstVisibleRowIndex && focusIndex <= lastVisibleRowIndex) {
-                //    Pen pen3 = this.cellsPresenter.FocusBorderPenCache.GetValue();
-                //    if (pen3 != null) {
-                //        double num25 = ((focusIndex + 1) * rowHeight) - verticalOffset;
-                //        context.DrawLineSnapped(
-                //            pen3, new Point(0.0, num25 - rowHeight),
-                //            new Point(actualWidth, num25 - rowHeight));
-                //        context.DrawLineSnapped(
-                //            pen3, new Point(0.0, num25), new Point(actualWidth, num25));
-                //    }
-                //}
+                Pen horizontalGridLinesPen = cellsPresenter.HorizontalGridLinesPen;
+                if (horizontalGridLinesPen != null) {
+                    for (int row = firstVisibleRow; row <= lastVisibleRow; ++row) {
+                        double bottomEdge = ((row + 1) * rowHeight) - verticalOffset;
+                        context.DrawLineSnapped(
+                            horizontalGridLinesPen,
+                            new Point(0, bottomEdge),
+                            new Point(actualWidth, bottomEdge));
+                    }
+                }
 
                 if (visibleColumns.Count > 0) {
                     RenderCells(
@@ -191,18 +168,30 @@ namespace EventTraceKit.VsExtension.Controls
                         firstVisibleColumn, lastVisibleColumn,
                         firstVisibleRow, lastVisibleRow);
                 }
+
+                int focusIndex = viewModel.FocusIndex;
+                Pen focusBorderPen = cellsPresenter.FocusBorderPen;
+                if (ParentGrid.IsSelectionActive
+                    && focusBorderPen != null
+                    && focusIndex >= firstVisibleRow
+                    && focusIndex <= lastVisibleRow) {
+                    double topEdge = (focusIndex * rowHeight) - verticalOffset;
+                    var bounds = new Rect(0, topEdge, actualWidth - 1, rowHeight);
+                    context.DrawRectangleSnapped(null, focusBorderPen, bounds);
+                }
             }
         }
 
         private void RenderCells(
-            DrawingContext context, Rect viewport, double height, double[] columnBoundaries,
+            DrawingContext context, Rect viewport, double height,
+            double[] columnBoundaries,
             int firstVisibleColumn, int lastVisibleColumn,
             int firstVisibleRow, int lastVisibleRow)
         {
             double horizontalOffset = cellsPresenter.HorizontalOffset;
             double verticalOffset = cellsPresenter.VerticalOffset;
-            var visibleColumns = cellsPresenter.VisibleColumns;
             double rowHeight = cellsPresenter.RowHeight;
+            var visibleColumns = cellsPresenter.VisibleColumns;
 
             Typeface typeface = cellsPresenter.Typeface;
             double fontSize = cellsPresenter.FontSize;
@@ -211,114 +200,70 @@ namespace EventTraceKit.VsExtension.Controls
             Pen verticalGridLinesPen = cellsPresenter.VerticalGridLinesPen;
             Brush separatorBrush = cellsPresenter.SeparatorBrush;
             Brush freezableAreaSeparatorBrush = cellsPresenter.FreezableAreaSeparatorBrush;
+            Brush selectionForeground = cellsPresenter.SelectionForeground;
+            if (!ParentGrid.IsSelectionActive)
+                selectionForeground = cellsPresenter.InactiveSelectionForeground;
+            var rowSelection = cellsPresenter.ViewModel.RowSelection;
 
             double padding = rowHeight * 0.1;
             double totalPadding = 2 * padding;
 
-            for (int n = firstVisibleColumn; n <= lastVisibleColumn; n++) {
-                double leftEdge = columnBoundaries[n] - horizontalOffset;
-                double rightEdge = columnBoundaries[n + 1] - horizontalOffset;
+            for (int col = firstVisibleColumn; col <= lastVisibleColumn; ++col) {
+                double leftEdge = columnBoundaries[col] - horizontalOffset;
+                double rightEdge = columnBoundaries[col + 1] - horizontalOffset;
 
                 if (verticalGridLinesPen != null) {
                     context.DrawLineSnapped(
                         verticalGridLinesPen,
-                        new Point(leftEdge, 0.0),
+                        new Point(leftEdge, 0),
                         new Point(leftEdge, height));
                 }
 
                 double cellWidth = rightEdge - leftEdge;
-                var column = visibleColumns[n];
+                var column = visibleColumns[col];
 
                 if (column.IsSeparator) {
                     context.DrawRectangle(
                         separatorBrush, null,
-                        new Rect(leftEdge, 0.0, cellWidth, height));
+                        new Rect(leftEdge, 0, cellWidth, height));
                 } else if (column.IsFreezableAreaSeparator) {
                     context.DrawRectangle(
                         freezableAreaSeparatorBrush, null,
-                        new Rect(leftEdge, 0.0, cellWidth, height));
+                        new Rect(leftEdge, 0, cellWidth, height));
                 } else if (column.IsSafeToReadCellValuesFromUIThread) {
                     int viewportSizeHint = lastVisibleRow - firstVisibleRow + 1;
                     for (int row = firstVisibleRow; row <= lastVisibleRow; ++row) {
                         double topEdge = (row * rowHeight) - verticalOffset;
-                        CellValue value = column.GetCellValue(row, viewportSizeHint);
-                        bool xf = true;// !cellValue.Info.IsReplicatedKey || cellValue.UsesAsciiGraphics) {
-                        if (xf) {
-                            Brush averageForeground = GetAverageForegroundBrush(column, value);
-                            //     if (rowSelection.Contains(num35) &&
-                            //         (rowSelection.GetPercentSelected(num35) > 0.5))
-                            //         averageForeground = selectionForeground;
+                        Brush foreground = cellsPresenter.Foreground;
+                        if (rowSelection.Contains(row))
+                            foreground = selectionForeground;
 
-                            //     int indentationPerLevel =
-                            //         this.cellsPresenter.ViewModel.IndentationPerLevel;
-                            //     if ((indentationPerLevel > 0) && cellValue.Info.IsKey) {
-                            //         num37 += (cellValue.Info.AsKey.Indent *
-                            //                   indentationPerLevel) * 0x10;
-                            //     }
+                        var value = column.GetCellValue(row, viewportSizeHint);
+                        var formatted = new FormattedText(
+                            value.ToString(), currentCulture, flowDirection,
+                            typeface, fontSize, foreground, null,
+                            TextFormattingMode.Display);
+                        formatted.MaxTextWidth = Math.Max(cellWidth - totalPadding, 0.0);
+                        formatted.MaxTextHeight = rowHeight - padding;
+                        formatted.TextAlignment = column.TextAlignment;
+                        formatted.Trimming = TextTrimming.CharacterEllipsis;
 
-
-                            string text = value.ToString();
-                            var formatted = new FormattedText(
-                                text, currentCulture, flowDirection, typeface,
-                                fontSize, averageForeground, null,
-                                TextFormattingMode.Display);
-                            formatted.MaxTextWidth = Math.Max(cellWidth - totalPadding, 0.0);
-                            formatted.MaxTextHeight = rowHeight - padding;
-                            formatted.TextAlignment = column.TextAlignment;
-                            formatted.Trimming = TextTrimming.CharacterEllipsis;
-
-                            if (totalPadding < cellWidth) {
-                                var point = new Point(leftEdge + padding, topEdge + padding);
-                                var origin = point.Round(MidpointRounding.AwayFromZero);
-                                context.DrawText(formatted, origin);
-                            }
+                        if (totalPadding < cellWidth) {
+                            var point = new Point(leftEdge + padding, topEdge + padding);
+                            var origin = point.Round(MidpointRounding.AwayFromZero);
+                            context.DrawText(formatted, origin);
                         }
                     }
                 }
             }
 
-            double lastEdge = columnBoundaries[columnBoundaries.Length - 1];
-            if (lastEdge <= viewport.Right && verticalGridLinesPen != null) {
+            double lastRightEdge = columnBoundaries[columnBoundaries.Length - 1];
+            if (lastRightEdge <= viewport.Right && verticalGridLinesPen != null) {
                 context.DrawLineSnapped(
                     verticalGridLinesPen,
-                    new Point(lastEdge, 0.0),
-                    new Point(lastEdge, height));
+                    new Point(lastRightEdge, 0),
+                    new Point(lastRightEdge, height));
             }
-        }
-
-        private Brush GetAverageForegroundBrush(
-            VirtualizedDataGridColumnViewModel column, CellValue value)
-        {
-            Brush averageForeground = cellsPresenter.Foreground;
-
-            //if (!value.Info.IsAggregated)
-            //    return averageForeground;
-
-            //switch (column.AggregationMode) {
-            //    case AggregationMode.Average:
-            //        averageForeground = cellsPresenter.AverageForeground;
-            //        break;
-            //    case AggregationMode.Sum:
-            //        averageForeground = cellsPresenter.SumForeground;
-            //        break;
-            //    case AggregationMode.Count:
-            //        averageForeground = cellsPresenter.CountForeground;
-            //        break;
-            //    case AggregationMode.Min:
-            //        averageForeground = cellsPresenter.MinForeground;
-            //        break;
-            //    case AggregationMode.Max:
-            //        averageForeground = cellsPresenter.MaxForeground;
-            //        break;
-            //    case AggregationMode.UniqueCount:
-            //        averageForeground = cellsPresenter.UniqueCountForeground;
-            //        break;
-            //    case AggregationMode.Peak:
-            //        averageForeground = cellsPresenter.PeakForeground;
-            //        break;
-            //}
-
-            return averageForeground;
         }
 
         private double[] ComputeColumnBoundaries(
@@ -345,25 +290,26 @@ namespace EventTraceKit.VsExtension.Controls
             if (viewModel == null || viewModel.RowCount <= 0)
                 return width;
 
-            int firstVisibleRowIndex = cellsPresenter.FirstVisibleRowIndex;
-            int lastVisibleRowIndex = cellsPresenter.LastVisibleRowIndex;
+            int firstVisibleRow = cellsPresenter.FirstVisibleRowIndex;
+            int lastVisibleRow = cellsPresenter.LastVisibleRowIndex;
             Typeface typeface = cellsPresenter.Typeface;
             double fontSize = cellsPresenter.FontSize;
             Brush foreground = cellsPresenter.Foreground;
             FlowDirection flowDirection = cellsPresenter.FlowDirection;
             CultureInfo currentCulture = CultureInfo.CurrentCulture;
 
-            double num8 = 2 * (cellsPresenter.RowHeight * 0.1);
-            int viewportSizeHint = lastVisibleRowIndex - firstVisibleRowIndex + 1;
+            double padding = cellsPresenter.RowHeight * 0.1;
+            double totalPadding = 2 * padding;
+            int viewportSizeHint = lastVisibleRow - firstVisibleRow + 1;
 
-            for (int i = firstVisibleRowIndex; i <= lastVisibleRowIndex; ++i) {
-                string text = column.GetCellValue(i, viewportSizeHint).ToString();
+            for (int row = firstVisibleRow; row <= lastVisibleRow; ++row) {
+                var value = column.GetCellValue(row, viewportSizeHint);
                 var formatted = new FormattedText(
-                    text, currentCulture, flowDirection, typeface,
+                    value.ToString(), currentCulture, flowDirection, typeface,
                     fontSize, foreground, null, TextFormattingMode.Display);
 
                 double num11 = column.IsKey ? 16.0 : 0.0;
-                width = Math.Max(width, formatted.Width + num8 + num11 + 1.0);
+                width = Math.Max(width, formatted.Width + totalPadding + num11 + 1);
             }
 
             return width;

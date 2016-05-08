@@ -178,7 +178,6 @@
     <Compile Include="Controls\Primitives\VirtualizedDataGridColumnHeader.cs" />
     <Compile Include="Controls\FrameworkExtensions.cs" />
     <Compile Include="Controls\PropertyMetadataUtils.cs" />
-    <Compile Include="Controls\ReorderStackPanel.cs" />
     <Compile Include="Controls\SizeUtils.cs" />
     <Compile Include="Controls\TableControl.xaml.cs">
       <DependentUpon>TableControl.xaml</DependentUpon>

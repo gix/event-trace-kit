@@ -722,6 +722,17 @@
             {
                 Updated?.Invoke(this, new ItemEventArgs<bool>(refreshViewModelFromModel));
             }
+
+            public bool RequestUpdate(bool refreshViewModelFromModel = true)
+            {
+                //if (this.IsReady) {
+                RaiseUpdate(refreshViewModelFromModel);
+                return true;
+                //}
+
+                //this.refreshViewModelOnUpdateRequest |= refreshViewModelFromModel;
+                return false;
+            }
         }
 
         public TableControlViewModel EventsTable { get; }

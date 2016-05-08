@@ -1,6 +1,8 @@
 ﻿namespace EventTraceKit.VsExtension.Controls
 {
     using System;
+    using System.Collections.Generic;
+    using System.Collections.Specialized;
     using System.ComponentModel;
     using System.Globalization;
     using System.Windows;
@@ -8,6 +10,7 @@
     using System.Windows.Controls.Primitives;
     using System.Windows.Data;
     using System.Windows.Input;
+    using System.Windows.Media;
     using Primitives;
 
     [TemplatePart(Name = PART_CenterCellsScrollViewer, Type = typeof(ScrollViewer))]
@@ -36,6 +39,9 @@
             Type forType = typeof(VirtualizedDataGrid);
             DefaultStyleKeyProperty.OverrideMetadata(
                 forType, new FrameworkPropertyMetadata(forType));
+            IsEnabledProperty.OverrideMetadata(
+                forType, new FrameworkPropertyMetadata(
+                    (d, e) => ((VirtualizedDataGrid)d).OnIsEnabledChanged(e)));
 
             var commandBinding = new CommandBinding(
                 CopyCell, OnCopyCellExecuted,
@@ -245,13 +251,85 @@
                 scrollViewer.SizeChanged += CenterScrollViewerSizeChanged;
 
             if (CellsPresenterPartCenter != null)
-                CellsPresenterPartCenter.MouseUp += OnMouseUp;
+                CellsPresenterPartCenter.MouseUp += OnCellsPresenterMouseUp;
 
             cellsPresenter = CellsPresenterPartCenter;
             UpdateStates(false);
         }
 
-        private void OnMouseUp(object sender, MouseButtonEventArgs e)
+        protected virtual void OnIsEnabledChanged(
+            DependencyPropertyChangedEventArgs e)
+        {
+        }
+
+        #region public bool IsSelectionActive { get; set; }
+
+        /// <summary>
+        ///   Identifies the <see cref="IsSelectionActive"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty IsSelectionActiveProperty =
+            DependencyProperty.Register(
+                nameof(IsSelectionActive),
+                typeof(bool),
+                typeof(VirtualizedDataGrid),
+                new PropertyMetadata(Boxed.False, OnIsSelectionActiveChanged));
+
+        /// <summary>
+        ///   Gets or sets a value indicating whether the selection is active.
+        /// </summary>
+        public bool IsSelectionActive
+        {
+            get { return (bool)GetValue(IsSelectionActiveProperty); }
+            set { SetValue(IsSelectionActiveProperty, Boxed.Bool(value)); }
+        }
+
+        private static void OnIsSelectionActiveChanged(
+            DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var source = (VirtualizedDataGrid)d;
+            source.CellsPresenterPartCenter?.PostUpdateRendering();
+        }
+
+        #endregion
+
+        protected override void OnIsKeyboardFocusWithinChanged(
+            DependencyPropertyChangedEventArgs e)
+        {
+            base.OnIsKeyboardFocusWithinChanged(e);
+
+            bool isSelectionActive = false;
+            if ((bool)e.NewValue) {
+                isSelectionActive = true;
+            } else {
+                var currentFocus = Keyboard.FocusedElement as DependencyObject;
+                    var root = GetVisualRoot(this) as UIElement;
+                if (currentFocus != null && root != null && root.IsKeyboardFocusWithin) {
+                    if (FocusManager.GetFocusScope(currentFocus) !=
+                        FocusManager.GetFocusScope(this))
+                        isSelectionActive = true;
+                }
+            }
+
+            IsSelectionActive = isSelectionActive;
+        }
+
+        internal static Visual GetVisualRoot(DependencyObject d)
+        {
+            var visual = d as Visual;
+            if (visual != null) {
+                var source = PresentationSource.FromVisual(visual);
+                if (source != null)
+                    return source.RootVisual;
+            } else {
+                var element = d as FrameworkContentElement;
+                if (element != null)
+                    return GetVisualRoot(element.Parent);
+            }
+
+            return null;
+        }
+
+        private void OnCellsPresenterMouseUp(object sender, MouseButtonEventArgs e)
         {
             if (e.Handled)
                 return;
@@ -276,8 +354,7 @@
         {
         }
 
-        private void OnCancelButtonPartChanged(
-            DependencyPropertyChangedEventArgs e)
+        private void OnCancelButtonPartChanged(DependencyPropertyChangedEventArgs e)
         {
         }
 
@@ -421,11 +498,175 @@
         void UpdateRowCount(int newCount);
 
         void RaiseUpdate(bool refreshViewModelFromModel);
+
+        bool RequestUpdate(bool updateFromViewModel);
+    }
+
+    public class CellsPresenterRowSelection
+    {
+        private readonly IVirtualizedDataGridCellsPresenterViewModel cellsViewModel;
+        private int selectionAnchorRowIndex;
+        private readonly List<int> selectionChanges = new List<int>();
+        private bool[] selectedIndices = new bool[0];
+        private bool selectionRemoves;
+
+        public CellsPresenterRowSelection(
+            IVirtualizedDataGridCellsPresenterViewModel cellsViewModel)
+        {
+            this.cellsViewModel = cellsViewModel;
+        }
+
+        public event NotifyCollectionChangedEventHandler CollectionChanged;
+
+        public void ToggleSingle(int rowIndex, bool extend)
+        {
+            lock (selectedIndices) {
+                NotifyCollectionChangedAction reset;
+                if (!extend) {
+                    Reset();
+                    SetSelection(rowIndex);
+                    reset = NotifyCollectionChangedAction.Add;
+                    selectionRemoves = false;
+                } else {
+                    selectionRemoves = IsSelectedAtRow(rowIndex);
+                    if (selectionRemoves) {
+                        ClearSelection(rowIndex);
+                        reset = NotifyCollectionChangedAction.Remove;
+                    } else {
+                        SetSelection(rowIndex);
+                        reset = NotifyCollectionChangedAction.Add;
+                    }
+                }
+
+                selectionAnchorRowIndex = rowIndex;
+                cellsViewModel.FocusIndex = rowIndex;
+
+                if (reset != NotifyCollectionChangedAction.Reset)
+                    OnCollectionChanged(reset, rowIndex);
+            }
+        }
+
+        public void ToggleExtent(int rowIndex, bool extend)
+        {
+            lock (selectedIndices) {
+                int min = Math.Min(selectionAnchorRowIndex, rowIndex);
+                int max = Math.Max(selectionAnchorRowIndex, rowIndex);
+                ToggleRange(min, max, !extend, selectionRemoves, !selectionRemoves);
+                cellsViewModel.FocusIndex = rowIndex;
+            }
+        }
+
+        public bool Contains(int row)
+        {
+            lock (selectedIndices)
+                return IsSelectedAtRow(row);
+        }
+
+        private bool IsSelectedAtRow(int row)
+        {
+            return row >= 0 && row < selectedIndices.Length && selectedIndices[row];
+        }
+
+        private void ClearSelection(int row)
+        {
+            SetSelection(row, false);
+        }
+
+        private void SetSelection(int row)
+        {
+            SetSelection(row, true);
+        }
+
+        private void SetSelection(int row, bool selected)
+        {
+            EnsureCapacity(row + 1);
+            selectedIndices[row] = selected;
+        }
+
+        private void EnsureCapacity(int count)
+        {
+            if (selectedIndices.Length < count)
+                Array.Resize(ref selectedIndices, count);
+        }
+
+        private void ToggleRange(
+            int min, int max, bool clearFirst = false, bool shouldRemove = true,
+            bool shouldAdd = true)
+        {
+            min = Math.Max(0, min);
+            max = Math.Min(max, cellsViewModel.RowCount - 1);
+
+            lock (selectedIndices) {
+                if (clearFirst)
+                    Reset();
+
+                selectionChanges.Clear();
+                for (int i = min; i <= max; ++i) {
+                    bool flag = IsSelectedAtRow(i);
+
+                    if (shouldRemove && flag) {
+                        ClearSelection(i);
+                        selectionChanges.Add(i);
+                    }
+
+                    if (shouldAdd && !flag) {
+                        SetSelection(i);
+                        selectionChanges.Add(i);
+                    }
+                }
+
+                if (selectionChanges.Count > 0)
+                    OnCollectionChanged(
+                        NotifyCollectionChangedAction.Remove, selectionChanges);
+
+                selectionChanges.Clear();
+            }
+        }
+
+        public void ClearAll()
+        {
+            for (int i = 0; i < selectedIndices.Length; ++i)
+                selectedIndices[i] = false;
+        }
+
+        private void Reset()
+        {
+            ClearAll();
+            OnCollectionChanged(NotifyCollectionChangedAction.Reset);
+        }
+
+        private void OnCollectionChanged(NotifyCollectionChangedAction action)
+        {
+            CollectionChanged?.Invoke(
+                this, new NotifyCollectionChangedEventArgs(action));
+        }
+
+        private void OnCollectionChanged(
+            NotifyCollectionChangedAction action, int item)
+        {
+            CollectionChanged?.Invoke(
+                this, new NotifyCollectionChangedEventArgs(action, item));
+        }
+
+        private void OnCollectionChanged(
+            NotifyCollectionChangedAction action, IList<int> changes)
+        {
+            CollectionChanged?.Invoke(
+                this, new NotifyCollectionChangedEventArgs(action, changes));
+        }
+
+        public void SelectRange(int min, int max)
+        {
+            ToggleRange(min, max, true, true, true);
+        }
     }
 
     public interface IVirtualizedDataGridCellsPresenterViewModel
     {
+        int FocusIndex { get; set; }
         int RowCount { get; }
+        CellsPresenterRowSelection RowSelection { get; }
+        void RequestUpdate(bool updateFromViewModel);
     }
 
     public interface IVirtualizedDataGridViewColumn
@@ -437,16 +678,60 @@
     }
 
     public class VirtualizedDataGridCellsPresenterViewModel
-        : IVirtualizedDataGridCellsPresenterViewModel
+        : DependencyObject, IVirtualizedDataGridCellsPresenterViewModel
     {
         private readonly IVirtualizedDataGridViewModel parent;
 
         public VirtualizedDataGridCellsPresenterViewModel(IVirtualizedDataGridViewModel parent)
         {
             this.parent = parent;
+
+            RowSelection = new CellsPresenterRowSelection(this);
         }
 
+        public event EventHandler FocusIndexChanged;
+
+        #region public int FocusIndex { get; set; }
+
+        /// <summary>
+        ///   Identifies the <see cref="FocusIndex"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty FocusIndexProperty =
+            DependencyProperty.Register(
+                nameof(FocusIndex),
+                typeof(int),
+                typeof(VirtualizedDataGridCellsPresenterViewModel),
+                new PropertyMetadata(
+                    Boxed.Int32Zero,
+                    (d, e) => ((VirtualizedDataGridCellsPresenterViewModel)d).OnFocusIndexChanged(e)));
+
+        /// <summary>
+        ///   Gets or sets the focux index.
+        /// </summary>
+        public int FocusIndex
+        {
+            get { return (int)GetValue(FocusIndexProperty); }
+            set { SetValue(FocusIndexProperty, value); }
+        }
+
+        private void OnFocusIndexChanged(DependencyPropertyChangedEventArgs e)
+        {
+            FocusIndexChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        #endregion
+
         public int RowCount => parent.RowCount;
+
+        public CellsPresenterRowSelection RowSelection { get; }
+
+        public void RequestUpdate(bool updateFromViewModel)
+        {
+            VerifyAccess();
+            //base.ValidateIsReady();
+            parent.RequestUpdate(updateFromViewModel);
+            //base.hdvViewModel.RequestUpdate(updateFromViewModel);
+        }
     }
 
     public class VirtualizedDataGridViewColumn : IVirtualizedDataGridViewColumn

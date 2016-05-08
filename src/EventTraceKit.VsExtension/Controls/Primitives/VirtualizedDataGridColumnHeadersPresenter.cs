@@ -1,7 +1,6 @@
 namespace EventTraceKit.VsExtension.Controls.Primitives
 {
     using System;
-    using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Diagnostics;
     using System.Windows;
@@ -19,9 +18,9 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         static VirtualizedDataGridColumnHeadersPresenter()
         {
+            Type forType = typeof(VirtualizedDataGridColumnHeadersPresenter);
             DefaultStyleKeyProperty.OverrideMetadata(
-                typeof(VirtualizedDataGridColumnHeadersPresenter),
-                new FrameworkPropertyMetadata(typeof(VirtualizedDataGridColumnHeadersPresenter)));
+                forType, new FrameworkPropertyMetadata(forType));
         }
 
         #region public ReadOnlyObservableCollection<VirtualizedDataGridColumnViewModel> VisibleColumns { get; set; }
@@ -42,13 +41,17 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         /// </summary>
         public ReadOnlyObservableCollection<VirtualizedDataGridColumnViewModel> VisibleColumns
         {
-            get { return (ReadOnlyObservableCollection<VirtualizedDataGridColumnViewModel>)GetValue(VisibleColumnsProperty); }
+            get
+            {
+                return (ReadOnlyObservableCollection<VirtualizedDataGridColumnViewModel>)
+                  GetValue(VisibleColumnsProperty);
+            }
             set { SetValue(VisibleColumnsProperty, value); }
         }
 
         #endregion
 
-        #region public HierarchicalDataGridColumnsViewModel ViewModel { get; set; }
+        #region public VirtualizedDataGridColumnsViewModel ViewModel { get; set; }
 
         /// <summary>
         ///   Identifies the <see cref="ViewModel"/> dependency property.
@@ -94,15 +97,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         #endregion
 
-        internal VirtualizedDataGrid ParentGrid
-        {
-            get
-            {
-                if (parentGrid == null)
-                    parentGrid = this.FindParent<VirtualizedDataGrid>();
-                return parentGrid;
-            }
-        }
+        internal VirtualizedDataGrid ParentGrid =>
+            parentGrid ?? (parentGrid = this.FindParent<VirtualizedDataGrid>());
 
         //protected override Size ArrangeOverride(Size arrangeBounds)
         //{
@@ -358,8 +354,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             {
                 this.header = header;
 
-                var duration = TimeSpan.FromMilliseconds(500);
-                var easingFunction = new CubicEase {
+                var duration = TimeSpan.FromMilliseconds(333);
+                var easingFunction = new QuadraticEase {
                     EasingMode = EasingMode.EaseInOut
                 };
 

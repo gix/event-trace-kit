@@ -61,8 +61,8 @@ namespace EventTraceKit.VsExtension.Controls
         {
             get
             {
-                return (ReadOnlyObservableCollection<VirtualizedDataGridColumnViewModel>)GetValue(
-                    VisibleColumnsProperty);
+                return (ReadOnlyObservableCollection<VirtualizedDataGridColumnViewModel>)
+                    GetValue(VisibleColumnsProperty);
             }
             private set { SetValue(VisibleColumnsPropertyKey, value); }
         }
@@ -95,7 +95,7 @@ namespace EventTraceKit.VsExtension.Controls
 
         #endregion
 
-        #region public HierarchicalDataGridColumnViewModel ExpanderHeaderColumn { get; private set; }
+        #region public VirtualizedDataGridColumnViewModel ExpanderHeaderColumn { get; private set; }
 
         private static readonly DependencyPropertyKey ExpanderHeaderColumnPropertyKey =
             DependencyProperty.RegisterReadOnly(

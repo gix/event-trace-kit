@@ -30,45 +30,38 @@
                     ClipToBounds="true" Height="{Binding ActualHeight, ElementName=PART_ColumnHeadersPresenter}">
               <Primitives:VirtualizedDataGridColumnHeadersPresenter
                 x:Name="PART_ColumnHeadersPresenter"
-                IsTabStop="false"
+                IsTabStop="False"
                 KeyboardNavigation.TabNavigation="None"
                 KeyboardNavigation.DirectionalNavigation="Contained"
                 Canvas.Left="{Binding HorizontalOffset, ElementName=PART_CenterCellsScrollViewer, Converter={x:Static Controls:NegativeDoubleValueConverter.Instance}, Mode=OneWay}"
                 Visibility="{Binding ViewModel.ColumnsViewModel.Visibility, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
                 ViewModel="{Binding ViewModel.ColumnsViewModel, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
                 ExpanderHeaderViewModel="{Binding ViewModel.ColumnsViewModel.ExpanderHeaderColumn, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
-                VisibleColumns="{Binding Path=ViewModel.ColumnsViewModel.VisibleColumns, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}">
+                VisibleColumns="{Binding ViewModel.ColumnsViewModel.VisibleColumns, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}">
               </Primitives:VirtualizedDataGridColumnHeadersPresenter>
             </Canvas>
             <ScrollViewer Name="PART_CenterCellsScrollViewer" Grid.Row="1" Grid.Column="1"
-                          CanContentScroll="true"
-                          HorizontalScrollBarVisibility="Visible"
-                          VerticalScrollBarVisibility="Visible"
-                          Focusable="false">
-              <!--HighlightBackground="{StaticResource selectionHighlightsFill}"
-                PITHighlightBackground="{StaticResource pitSelectionHighlightsFill}"
-              -->
+                          CanContentScroll="True"
+                          HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Auto"
+                          Focusable="False">
               <Primitives:VirtualizedDataGridCellsPresenter
                 x:Name="PART_CellsPresenterCenter"
                 HorizontalGridLinesThickness="0.5"
                 HorizontalGridLinesBrush="Silver"
                 VerticalGridLinesThickness="0.5"
                 VerticalGridLinesBrush="Silver"
-                Focusable="true"
-                ToolTipService.IsEnabled="false"
-                ViewModel="{Binding ViewModel.CellsPresenterViewModel, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}">
-                <Primitives:VirtualizedDataGridCellsPresenter.VisibleColumns>
-                  <Binding Path="ViewModel.ColumnsViewModel.VisibleColumns"
-                           RelativeSource="{RelativeSource TemplatedParent}"
-                           Mode="OneWay"/>
-                </Primitives:VirtualizedDataGridCellsPresenter.VisibleColumns>
-                <!--<Primitives:VirtualizedDataGridCellsPresenter.ToolTip>
+                Focusable="True"
+                ToolTipService.IsEnabled="False"
+                ViewModel="{Binding ViewModel.CellsPresenterViewModel, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
+                VisibleColumns="{Binding ViewModel.ColumnsViewModel.VisibleColumns, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}">
+              </Primitives:VirtualizedDataGridCellsPresenter>
+              <!--<Primitives:VirtualizedDataGridCellsPresenter.ToolTip>
                   <ToolTip>
                     <TextBlock
                       Text="{Binding ViewModel.CellsPresenterViewModel.TextForCurrentCell, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"/>
                   </ToolTip>
                 </Primitives:VirtualizedDataGridCellsPresenter.ToolTip>-->
-              </Primitives:VirtualizedDataGridCellsPresenter>
             </ScrollViewer>
           </Grid>
         </ControlTemplate>

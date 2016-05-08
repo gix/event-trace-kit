@@ -18,7 +18,7 @@
                           ItemsSource="{Binding VisibleColumns, RelativeSource={RelativeSource TemplatedParent}}">
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                  <Controls:ReorderStackPanel Orientation="Horizontal"/>
+                  <StackPanel Orientation="Horizontal"/>
                 </ItemsPanelTemplate>
               </ItemsControl.ItemsPanel>
               <ItemsControl.ItemTemplate>
@@ -34,7 +34,7 @@
               </ItemsControl.ItemTemplate>
             </ItemsControl>
             <Primitives:VirtualizedDataGridColumnHeader
-              Focusable="false" Grid.Column="1"
+              Focusable="False" Grid.Column="1"
               SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}"
               Visibility="{Binding ExpanderHeaderViewModel, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ObjectNullCheckToVisibility}}"
               ViewModel="{Binding ExpanderHeaderViewModel, RelativeSource={RelativeSource TemplatedParent}}"
@@ -42,7 +42,7 @@
           </Grid>
           <ControlTemplate.Triggers>
             <DataTrigger Binding="{Binding VisibleColumns.Count, RelativeSource={RelativeSource TemplatedParent}}" Value="0">
-              <!--<Setter TargetName="itemsControl" Property="UIElement.IsEnabled" Value="false"/>-->
+              <Setter TargetName="itemsControl" Property="UIElement.IsEnabled" Value="False"/>
             </DataTrigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
