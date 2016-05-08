@@ -1,15 +1,14 @@
 namespace EventTraceKit.VsExtension.Controls.Primitives
 {
     using System;
-    using System.Collections.ObjectModel;
     using System.Diagnostics;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Controls.Primitives;
+    using System.Windows.Data;
     using System.Windows.Input;
     using System.Windows.Media;
     using System.Windows.Media.Animation;
-    using Microsoft.VisualStudio.PlatformUI;
 
     public class VirtualizedDataGridColumnHeadersPresenter : ItemsControl
     {
@@ -21,35 +20,14 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             Type forType = typeof(VirtualizedDataGridColumnHeadersPresenter);
             DefaultStyleKeyProperty.OverrideMetadata(
                 forType, new FrameworkPropertyMetadata(forType));
+
+            var panelFactory = new FrameworkElementFactory(typeof(StackPanel));
+            panelFactory.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
+            var panelTemplate = new ItemsPanelTemplate(panelFactory);
+            panelTemplate.Seal();
+            ItemsPanelProperty.OverrideMetadata(
+                forType, new FrameworkPropertyMetadata(panelTemplate));
         }
-
-        #region public ReadOnlyObservableCollection<VirtualizedDataGridColumnViewModel> VisibleColumns { get; set; }
-
-        /// <summary>
-        ///   Identifies the <see cref="VisibleColumns"/> dependency property.
-        /// </summary>
-        public static readonly DependencyProperty VisibleColumnsProperty =
-            DependencyProperty.Register(
-                nameof(VisibleColumns),
-                typeof(ReadOnlyObservableCollection<VirtualizedDataGridColumnViewModel>),
-                typeof(VirtualizedDataGridColumnHeadersPresenter),
-                new PropertyMetadata(
-                    CollectionDefaults<VirtualizedDataGridColumnViewModel>.ReadOnlyObservable));
-
-        /// <summary>
-        ///   Gets or sets the visible columns.
-        /// </summary>
-        public ReadOnlyObservableCollection<VirtualizedDataGridColumnViewModel> VisibleColumns
-        {
-            get
-            {
-                return (ReadOnlyObservableCollection<VirtualizedDataGridColumnViewModel>)
-                  GetValue(VisibleColumnsProperty);
-            }
-            set { SetValue(VisibleColumnsProperty, value); }
-        }
-
-        #endregion
 
         #region public VirtualizedDataGridColumnsViewModel ViewModel { get; set; }
 
@@ -100,34 +78,49 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         internal VirtualizedDataGrid ParentGrid =>
             parentGrid ?? (parentGrid = this.FindParent<VirtualizedDataGrid>());
 
-        //protected override Size ArrangeOverride(Size arrangeBounds)
-        //{
-        //    UIElement element = VisualTreeHelper.GetChildrenCount(this) > 0
-        //        ? VisualTreeHelper.GetChild(this, 0) as UIElement : null;
+        protected override DependencyObject GetContainerForItemOverride()
+        {
+            return new VirtualizedDataGridColumnHeader();
+        }
 
-        //    if (element != null) {
-        //        var finalRect = new Rect(arrangeBounds);
-        //        var parent = ParentGrid;
-        //        if (parent != null) {
-        //            finalRect.X = 0; //-parent.HorizontalScrollOffset;
-        //            finalRect.Width = Math.Max(arrangeBounds.Width, parent.ActualWidth);
-        //        }
+        protected override bool IsItemItsOwnContainerOverride(object item)
+        {
+            return item is VirtualizedDataGridColumnHeader;
+        }
 
-        //        element.Arrange(finalRect);
-        //    }
+        protected override void ClearContainerForItemOverride(
+            DependencyObject element, object item)
+        {
+            base.ClearContainerForItemOverride(element, item);
+            element.ClearValue(WidthProperty);
+            element.ClearValue(ContentControl.ContentProperty);
+        }
 
-        //    return arrangeBounds;
-        //}
+        protected override void PrepareContainerForItemOverride(
+            DependencyObject element, object item)
+        {
+            base.PrepareContainerForItemOverride(element, item);
 
-        //protected override DependencyObject GetContainerForItemOverride()
-        //{
-        //    return new VirtualizedDataGridColumnHeader();
-        //}
+            var viewModel = item as VirtualizedDataGridColumnViewModel;
+            if (viewModel == null)
+                throw new InvalidOperationException("Invalid item type.");
 
-        //protected override bool IsItemItsOwnContainerOverride(object item)
-        //{
-        //    return item is VirtualizedDataGridColumnHeader;
-        //}
+            var header = (VirtualizedDataGridColumnHeader)element;
+            header.SnapsToDevicePixels = SnapsToDevicePixels;
+            header.UseLayoutRounding = UseLayoutRounding;
+            header.ViewModel = viewModel;
+
+            var widthBinding = new Binding(nameof(Width)) {
+                Source = viewModel,
+                Mode = BindingMode.TwoWay
+            };
+            header.SetBinding(WidthProperty, widthBinding);
+
+            var contentBinding = new Binding(nameof(viewModel.ColumnName)) {
+                Source = viewModel
+            };
+            header.SetBinding(ContentControl.ContentProperty, contentBinding);
+        }
 
         internal void OnHeaderMouseLeftButtonDown(
             MouseButtonEventArgs e, VirtualizedDataGridColumnHeader header)
@@ -135,9 +128,9 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             if (ParentGrid == null)
                 return;
 
-            if (header != null) {
+            if (header != null)
                 headerDragCtx.PrepareDrag(header, e.GetPosition(this));
-            } else
+            else
                 ClearColumnHeaderDragInfo();
         }
 
@@ -152,56 +145,37 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         internal void OnHeaderMouseMove(MouseEventArgs e)
         {
-            if (e.LeftButton != MouseButtonState.Pressed ||
-                !headerDragCtx.PrepareDragging)
+            if (e.LeftButton != MouseButtonState.Pressed || !headerDragCtx.IsActive)
                 return;
 
             headerDragCtx.CurrentPosition = e.GetPosition(this);
 
-            if (!headerDragCtx.IsDragging) {
+            if (headerDragCtx.IsPreparing) {
                 if (ShouldStartColumnHeaderDrag(headerDragCtx.CurrentPosition,
                                                 headerDragCtx.StartPosition))
                     StartColumnHeaderDrag();
                 return;
             }
 
-            GetTranslation(headerDragCtx.Header).X =
-                headerDragCtx.CurrentPosition.X - headerDragCtx.StartPosition.X;
+            var deltaX = headerDragCtx.CurrentPosition.X - headerDragCtx.StartPosition.X;
+            GetTranslation(headerDragCtx.DraggedHeader).X = deltaX;
 
-            int sourceIndex = headerDragCtx.HeaderIndex;
             int targetIndex = FindHeaderIndex(headerDragCtx.CurrentPosition);
-
-            if (targetIndex != -1) {
-                for (int i = 0; i < headerDragCtx.Headers.Length; ++i) {
-                    if (i == sourceIndex)
-                        continue;
-
-                    var animation = headerDragCtx.Animations[i];
-                    if ((i <= sourceIndex && i < targetIndex) ||
-                        (i >= sourceIndex && i > targetIndex)) {
-                        animation?.MoveBack();
-                        continue;
-                    }
-
-                    if (animation == null)
-                        animation = headerDragCtx.CreateAnimation(i);
-                    animation.MoveAside();
-                }
-            }
+            if (targetIndex != -1)
+                headerDragCtx.AnimateDrag(targetIndex);
         }
 
         internal void OnHeaderLostMouseCapture(MouseEventArgs e)
         {
-            if (headerDragCtx.IsDragging &&
-                Mouse.LeftButton == MouseButtonState.Pressed) {
+            if (Mouse.LeftButton == MouseButtonState.Pressed &&
+                headerDragCtx.IsDragging)
                 FinishColumnHeaderDrag(true);
-            }
         }
 
         private void StartColumnHeaderDrag()
         {
             var reorderingEventArgs = new VirtualizedDataGridColumnReorderingEventArgs(
-                headerDragCtx.Header.ViewModel);
+                headerDragCtx.DraggedHeader.ViewModel);
 
             ParentGrid.OnColumnReordering(reorderingEventArgs);
             if (reorderingEventArgs.Cancel) {
@@ -214,45 +188,20 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 headerDragCtx.StartPosition.Y);
             ParentGrid.OnColumnHeaderDragStarted(dragStartedEventArgs);
 
-            Panel.SetZIndex(ContainerFromHeader(headerDragCtx.Header), 1);
-
-            int count = ItemContainerGenerator.Items.Count;
-            headerDragCtx.HeaderIndex = IndexFromheader(headerDragCtx.Header);
-            headerDragCtx.Headers = new VirtualizedDataGridColumnHeader[count];
-            headerDragCtx.Animations = new HeaderAnimation[count];
-            for (int i = 0; i < headerDragCtx.Headers.Length; ++i)
-                headerDragCtx.Headers[i] = HeaderFromIndex(i);
-
-            headerDragCtx.IsDragging = true;
-        }
-
-        private UIElement ContainerFromHeader(VirtualizedDataGridColumnHeader header)
-        {
-            return header.FindAncestor<ContentPresenter>();
-        }
-
-        private VirtualizedDataGridColumnHeader HeaderFromContainer(DependencyObject container)
-        {
-            return container.FindDescendantOrSelf<VirtualizedDataGridColumnHeader>();
-        }
-
-        private int IndexFromheader(VirtualizedDataGridColumnHeader header)
-        {
-            var container = ContainerFromHeader(header);
-            return ItemContainerGenerator.IndexFromContainer(container);
+            headerDragCtx.StartDrag(ItemContainerGenerator);
         }
 
         private VirtualizedDataGridColumnHeader HeaderFromIndex(int index)
         {
             var container = ItemContainerGenerator.ContainerFromIndex(index);
-            return HeaderFromContainer(container);
+            return (VirtualizedDataGridColumnHeader)container;
         }
 
         private static bool ShouldStartColumnHeaderDrag(
             Point currentPos, Point originalPos)
         {
-            double delta = Math.Abs(currentPos.X - originalPos.X);
-            return delta.GreaterThan(
+            double deltaX = Math.Abs(currentPos.X - originalPos.X);
+            return deltaX.GreaterThan(
                 SystemParameters.MinimumHorizontalDragDistance);
         }
 
@@ -265,15 +214,11 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 delta.X, delta.Y, isCancel);
             ParentGrid.OnColumnHeaderDragCompleted(dragCompletedEventArgs);
 
-            headerDragCtx.Header.RenderTransform = null;
-            ContainerFromHeader(headerDragCtx.Header).ClearValue(Panel.ZIndexProperty);
+            headerDragCtx.Reset();
 
-            foreach (var animation in headerDragCtx.Animations)
-                animation?.Reset();
-
-            if (!isCancel && targetIndex != headerDragCtx.HeaderIndex) {
-                var srcColumn = headerDragCtx.Header.ViewModel;
-                var dstColumn = headerDragCtx.Headers[targetIndex].ViewModel;
+            if (!isCancel && targetIndex != headerDragCtx.DraggedHeaderIndex) {
+                var srcColumn = headerDragCtx.DraggedHeader.ViewModel;
+                var dstColumn = HeaderFromIndex(targetIndex).ViewModel;
                 ViewModel.TryMoveColumn(srcColumn, dstColumn);
 
                 dragCompletedEventArgs.Handled = true;
@@ -299,11 +244,11 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         private int FindHeaderIndex(Point startPos)
         {
-            if (headerDragCtx.Headers == null)
+            if (ItemContainerGenerator == null)
                 return -1;
 
-            for (int index = 0; index < headerDragCtx.Headers.Length; ++index) {
-                var header = headerDragCtx.Headers[index];
+            for (int index = 0; index < ItemContainerGenerator.Items.Count; ++index) {
+                var header = HeaderFromIndex(index);
                 if (header == null)
                     continue;
 
@@ -321,38 +266,88 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             return -1;
         }
 
+        private enum DragState
+        {
+            None,
+            Preparing,
+            Dragging,
+        }
+
         private struct HeaderDragContext
         {
-            public bool PrepareDragging;
-            public bool IsDragging;
-            public VirtualizedDataGridColumnHeader Header;
-            public int HeaderIndex;
-            public Point StartPosition;
-            public Point CurrentPosition;
-            public VirtualizedDataGridColumnHeader[] Headers;
-            public HeaderAnimation[] Animations;
+            private DragState state;
+            private HeaderAnimation[] animations;
+            private ItemContainerGenerator generator;
+
+            public VirtualizedDataGridColumnHeader DraggedHeader { get; private set; }
+            public int DraggedHeaderIndex { get; private set; }
+            public Point StartPosition { get; private set; }
+            public Point CurrentPosition { get; set; }
+
+            public bool IsActive => state != DragState.None;
+            public bool IsPreparing => state == DragState.Preparing;
+            public bool IsDragging => state == DragState.Dragging;
 
             public void PrepareDrag(
-                VirtualizedDataGridColumnHeader header, Point position)
+                VirtualizedDataGridColumnHeader draggedHeader, Point position)
             {
-                PrepareDragging = true;
-                Header = header;
+                state = DragState.Preparing;
+                DraggedHeader = draggedHeader;
                 StartPosition = position;
             }
 
-            public HeaderAnimation CreateAnimation(int index)
+            public void StartDrag(ItemContainerGenerator generator)
             {
-                double distance = Header.ActualWidth;
-                double to = index > HeaderIndex ? -distance : distance;
-                var animation = new HeaderAnimation(Headers[index], to);
-                Animations[index] = animation;
+                state = DragState.Dragging;
+                this.generator = generator;
+                DraggedHeaderIndex = generator.IndexFromContainer(DraggedHeader);
+                animations = new HeaderAnimation[generator.Items.Count];
+                Panel.SetZIndex(DraggedHeader, 1);
+            }
+
+            public void Reset()
+            {
+                DraggedHeader.RenderTransform = null;
+                DraggedHeader.ClearValue(Panel.ZIndexProperty);
+
+                foreach (var animation in animations)
+                    animation?.Reset();
+            }
+
+            public void AnimateDrag(int targetIndex)
+            {
+                for (int i = 0; i < animations.Length; ++i) {
+                    if (i == DraggedHeaderIndex)
+                        continue;
+
+                    var animation = animations[i];
+                    if ((i <= DraggedHeaderIndex && i < targetIndex) ||
+                        (i >= DraggedHeaderIndex && i > targetIndex)) {
+                        animation?.MoveBack();
+                        continue;
+                    }
+
+                    if (animation == null)
+                        animation = CreateAnimation(i);
+
+                    animation.MoveAside();
+                }
+            }
+
+            private HeaderAnimation CreateAnimation(int index)
+            {
+                var element = (UIElement)generator.ContainerFromIndex(index);
+                double distance = DraggedHeader.ActualWidth;
+                double to = index > DraggedHeaderIndex ? -distance : distance;
+                var animation = new HeaderAnimation(element, to);
+                animations[index] = animation;
                 return animation;
             }
         }
 
         private sealed class HeaderAnimation
         {
-            private readonly VirtualizedDataGridColumnHeader header;
+            private readonly UIElement element;
             private readonly DoubleAnimation animation;
             private AnimationClock clock;
             private State state = State.Origin;
@@ -366,10 +361,9 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 MovingToOrigin
             }
 
-            public HeaderAnimation(
-                VirtualizedDataGridColumnHeader header, double to)
+            public HeaderAnimation(UIElement element, double to)
             {
-                this.header = header;
+                this.element = element;
 
                 var duration = TimeSpan.FromMilliseconds(333);
                 var easingFunction = new QuadraticEase {
@@ -421,7 +415,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
             private void Run()
             {
-                GetTranslation(header).ApplyAnimationClock(
+                GetTranslation(element).ApplyAnimationClock(
                     TranslateTransform.XProperty, clock);
             }
 
@@ -467,7 +461,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
             public void Reset()
             {
-                header.RenderTransform = null;
+                element.RenderTransform = null;
             }
         }
     }

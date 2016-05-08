@@ -264,6 +264,8 @@ namespace EventTraceKit.VsExtension.Controls
 
         public bool IsKey { get; } = false;
 
+        public bool CanSort => false;
+
         private void UpdateAutomationNameProperty()
         {
             //string str;

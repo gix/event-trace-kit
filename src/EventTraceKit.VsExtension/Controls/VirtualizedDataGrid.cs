@@ -302,7 +302,7 @@
                 isSelectionActive = true;
             } else {
                 var currentFocus = Keyboard.FocusedElement as DependencyObject;
-                    var root = GetVisualRoot(this) as UIElement;
+                var root = GetVisualRoot(this) as UIElement;
                 if (currentFocus != null && root != null && root.IsKeyboardFocusWithin) {
                     if (FocusManager.GetFocusScope(currentFocus) !=
                         FocusManager.GetFocusScope(this))

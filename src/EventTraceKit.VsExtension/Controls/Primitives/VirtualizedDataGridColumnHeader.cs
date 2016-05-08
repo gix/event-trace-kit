@@ -21,8 +21,11 @@
             DefaultStyleKeyProperty.OverrideMetadata(
                 forType, new FrameworkPropertyMetadata(forType));
 
+            FocusableProperty.OverrideMetadata(
+                forType, new FrameworkPropertyMetadata(Boxed.False));
+
             ColumnNameMaxWidthConverter = new DelegateValueConverter<double, double>(
-                actualWidth => Math.Max(0.0, actualWidth - 13.0));
+                actualWidth => Math.Max(0, actualWidth - 13));
         }
 
         public static DelegateValueConverter<double, double> ColumnNameMaxWidthConverter { get; }

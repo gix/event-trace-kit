@@ -14,26 +14,7 @@
               <ColumnDefinition Width="Auto"/>
               <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <!--<ItemsControl x:Name="itemsControl" Focusable="false" Grid.Column="0"
-                          ItemsSource="{Binding VisibleColumns, RelativeSource={RelativeSource TemplatedParent}}">
-              <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                  <StackPanel Orientation="Horizontal"/>
-                </ItemsPanelTemplate>
-              </ItemsControl.ItemsPanel>
-              <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                  <Primitives:VirtualizedDataGridColumnHeader
-                    SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}"
-                    UseLayoutRounding="{TemplateBinding FrameworkElement.UseLayoutRounding}"
-                    ViewModel="{Binding}"
-                    Width="{Binding Width, Mode=TwoWay}"
-                    Content="{Binding ColumnName}"
-                    ToolTip="{Binding ColumnToolTip}"/>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>-->
-            <ItemsPresenter/>
+            <ItemsPresenter x:Name="itemsControl"/>
             <Primitives:VirtualizedDataGridColumnHeader
               Focusable="False" Grid.Column="1"
               SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}"
@@ -42,7 +23,7 @@
               Width="{Binding ExpanderHeaderViewModel.Width, RelativeSource={RelativeSource TemplatedParent}}"/>
           </Grid>
           <!--<ControlTemplate.Triggers>
-            <DataTrigger Binding="{Binding VisibleColumns.Count, RelativeSource={RelativeSource TemplatedParent}}" Value="0">
+            <DataTrigger Binding="{Binding ItemsSource.Count, RelativeSource={RelativeSource TemplatedParent}}" Value="0">
               <Setter TargetName="itemsControl" Property="UIElement.IsEnabled" Value="False"/>
             </DataTrigger>
           </ControlTemplate.Triggers>-->

@@ -5,13 +5,10 @@
                     xmlns:Controls="clr-namespace:EventTraceKit.VsExtension.Controls">
   <DataTemplate x:Key="Aero2DataGridHeaderBorder"
                 DataType="{x:Type Controls:VirtualizedDataGridColumnViewModel}">
-    <FrameworkTemplate.Resources>
+    <DataTemplate.Resources>
       <RelativeSource x:Key="parentSource" Mode="FindAncestor"
                       AncestorType="{x:Type Primitives:VirtualizedDataGridColumnHeader}"/>
-    </FrameworkTemplate.Resources>
-    <!--
-    SortDirection="{Binding SortOrder, Converter={x:Static mpudp:SortOrderToSortDirectionValueConverter.Instance}, Mode=OneWay}"
-    -->
+    </DataTemplate.Resources>
     <Aero2:DataGridHeaderBorder
       Focusable="true"
       IsClickable="{Binding CanSort, Mode=OneWay}"

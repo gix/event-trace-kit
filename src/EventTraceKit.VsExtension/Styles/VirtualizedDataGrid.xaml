@@ -36,28 +36,11 @@
                 Canvas.Left="{Binding HorizontalOffset, ElementName=PART_CenterCellsScrollViewer, Converter={x:Static Controls:NegativeDoubleValueConverter.Instance}, Mode=OneWay}"
                 Visibility="{Binding ViewModel.ColumnsViewModel.Visibility, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
                 ViewModel="{Binding ViewModel.ColumnsViewModel, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
-                ExpanderHeaderViewModel="{Binding ViewModel.ColumnsViewModel.ExpanderHeaderColumn, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
                 ItemsSource="{Binding ViewModel.ColumnsViewModel.VisibleColumns, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
-                >
-                <Primitives:VirtualizedDataGridColumnHeadersPresenter.ItemsPanel>
-                  <ItemsPanelTemplate>
-                    <StackPanel Orientation="Horizontal"/>
-                  </ItemsPanelTemplate>
-                </Primitives:VirtualizedDataGridColumnHeadersPresenter.ItemsPanel>
-                <Primitives:VirtualizedDataGridColumnHeadersPresenter.ItemTemplate>
-                  <DataTemplate>
-                    <Primitives:VirtualizedDataGridColumnHeader
-                      SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}"
-                      UseLayoutRounding="{TemplateBinding FrameworkElement.UseLayoutRounding}"
-                      ViewModel="{Binding}"
-                      Width="{Binding Width, Mode=TwoWay}"
-                      Content="{Binding ColumnName}"
-                      ToolTip="{Binding ColumnToolTip}"/>
-                  </DataTemplate>
-                </Primitives:VirtualizedDataGridColumnHeadersPresenter.ItemTemplate>
-              </Primitives:VirtualizedDataGridColumnHeadersPresenter>
+                ExpanderHeaderViewModel="{Binding ViewModel.ColumnsViewModel.ExpanderHeaderColumn, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"/>
             </Canvas>
-            <ScrollViewer Name="PART_CenterCellsScrollViewer" Grid.Row="1" Grid.Column="1"
+            <ScrollViewer Name="PART_CenterCellsScrollViewer"
+                          Grid.Row="1" Grid.Column="1"
                           CanContentScroll="True"
                           HorizontalScrollBarVisibility="Auto"
                           VerticalScrollBarVisibility="Auto"
