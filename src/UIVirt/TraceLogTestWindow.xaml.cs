@@ -1,12 +1,9 @@
 ﻿namespace UIVirt
 {
-    using System.Windows;
-    using System.Windows.Controls;
-
     /// <summary>
     /// Interaction logic for TraceLogTestWindow.xaml
     /// </summary>
-    public partial class TraceLogTestWindow : Window
+    public partial class TraceLogTestWindow
     {
         public TraceLogTestWindow()
         {

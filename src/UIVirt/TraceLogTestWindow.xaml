@@ -5,16 +5,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:Controls="clr-namespace:EventTraceKit.VsExtension.Controls;assembly=EventTraceKit.VsExtension"
         xmlns:local="clr-namespace:UIVirt"
-        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
-        xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance local:TraceLogTestViewModel, IsDesignTimeCreatable=false}"
         UseLayoutRounding="True"
-        Title="TraceLogTestWindow" Height="500" Width="1200">
+        Title="TraceLogTestWindow" Height="500" Width="1000">
   <Window.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="pack://application:,,,/EventTraceKit.VsExtension;component/Styles/Resources.xaml"/>
+        <!--<ResourceDictionary Source="pack://application:,,,/EventTraceKit.VsExtension;component/Styles/VirtualizedDataGrid.xaml"/>-->
       </ResourceDictionary.MergedDictionaries>
     </ResourceDictionary>
   </Window.Resources>
@@ -22,6 +21,9 @@
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
       <RowDefinition/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition/>
+      <RowDefinition Height="Auto"/>
       <RowDefinition/>
     </Grid.RowDefinitions>
     <StackPanel Orientation="Horizontal" Margin="6">
@@ -30,11 +32,30 @@
       <Button Content="Clear" Command="{Binding ClearCommand}"/>
       <TextBlock Text="{Binding GridModel.RowCount}"/>
     </StackPanel>
+
+    <GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch"/>
+    <GridSplitter Grid.Row="4" Height="5" HorizontalAlignment="Stretch"/>
+
     <Controls:VirtualizedDataGrid Grid.Row="1" ViewModel="{Binding GridModel}"/>
-    <DataGrid Grid.Row="2" ItemsSource="{Binding Events}">
+    <DataGrid Grid.Row="3" ItemsSource="{Binding Events}">
       <DataGrid.Columns>
         <DataGridTextColumn Binding="{Binding Id}"/>
       </DataGrid.Columns>
     </DataGrid>
+    <ListView Grid.Row="5" ItemsSource="{Binding Events}">
+      <ListView.View>
+        <GridView>
+          <GridView.Columns>
+            <GridViewColumn Header="Id" DisplayMemberBinding="{Binding Id}"/>
+            <GridViewColumn Header="ChannelId" DisplayMemberBinding="{Binding ChannelId}"/>
+            <GridViewColumn Header="Channel" DisplayMemberBinding="{Binding Channel}"/>
+            <GridViewColumn Header="LevelId" DisplayMemberBinding="{Binding LevelId}"/>
+            <GridViewColumn Header="Level" DisplayMemberBinding="{Binding Level}"/>
+            <GridViewColumn Header="TaskId" DisplayMemberBinding="{Binding TaskId}"/>
+            <GridViewColumn Header="Task" DisplayMemberBinding="{Binding Task}"/>
+          </GridView.Columns>
+        </GridView>
+      </ListView.View>
+    </ListView>
   </Grid>
 </Window>
