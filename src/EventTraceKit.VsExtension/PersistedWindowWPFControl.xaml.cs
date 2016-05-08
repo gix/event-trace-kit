@@ -37,7 +37,7 @@
         /// </summary>
         internal ITrackSelection TrackSelection
         {
-            get { return (ITrackSelection)trackSelection; }
+            get { return trackSelection; }
             set
             {
                 if (value == null)

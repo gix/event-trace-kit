@@ -26,8 +26,7 @@
                             SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
                             HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                             VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                            Focusable="False">
-            </ContentPresenter>
+                            Focusable="False"/>
           </Border>
           <ControlTemplate.Triggers>
             <Trigger Property="IsKeyboardFocused" Value="True">

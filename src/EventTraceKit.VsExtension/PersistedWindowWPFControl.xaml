@@ -19,7 +19,7 @@
       <ListView.View>
         <GridView>
           <GridView.Columns>
-            <GridViewColumn Width="Auto" Header="Tool Windows"></GridViewColumn>
+            <GridViewColumn Width="Auto" Header="Tool Windows"/>
           </GridView.Columns>
         </GridView>
       </ListView.View>
