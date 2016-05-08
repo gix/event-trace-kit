@@ -119,15 +119,15 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         //    return arrangeBounds;
         //}
 
-        protected override DependencyObject GetContainerForItemOverride()
-        {
-            return new VirtualizedDataGridColumnHeader();
-        }
+        //protected override DependencyObject GetContainerForItemOverride()
+        //{
+        //    return new VirtualizedDataGridColumnHeader();
+        //}
 
-        protected override bool IsItemItsOwnContainerOverride(object item)
-        {
-            return item is VirtualizedDataGridColumnHeader;
-        }
+        //protected override bool IsItemItsOwnContainerOverride(object item)
+        //{
+        //    return item is VirtualizedDataGridColumnHeader;
+        //}
 
         internal void OnHeaderMouseLeftButtonDown(
             MouseButtonEventArgs e, VirtualizedDataGridColumnHeader header)
@@ -214,21 +214,38 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 headerDragCtx.StartPosition.Y);
             ParentGrid.OnColumnHeaderDragStarted(dragStartedEventArgs);
 
-            Panel.SetZIndex(headerDragCtx.Header.FindAncestor<ContentPresenter>(), 1);
+            Panel.SetZIndex(ContainerFromHeader(headerDragCtx.Header), 1);
 
-            var generator = headerDragCtx.Header.FindAncestor<ItemsControl>()?.ItemContainerGenerator;
-            if (generator == null)
-                return;
-
-            headerDragCtx.HeaderIndex = VisibleColumns.IndexOf(headerDragCtx.Header.ViewModel);
-            headerDragCtx.Headers = new VirtualizedDataGridColumnHeader[VisibleColumns.Count];
-            headerDragCtx.Animations = new HeaderAnimation[VisibleColumns.Count];
-            for (int i = 0; i < VisibleColumns.Count; ++i) {
-                var c = (ContentPresenter)generator.ContainerFromIndex(i);
-                headerDragCtx.Headers[i] = c.FindDescendant<VirtualizedDataGridColumnHeader>();
-            }
+            int count = ItemContainerGenerator.Items.Count;
+            headerDragCtx.HeaderIndex = IndexFromheader(headerDragCtx.Header);
+            headerDragCtx.Headers = new VirtualizedDataGridColumnHeader[count];
+            headerDragCtx.Animations = new HeaderAnimation[count];
+            for (int i = 0; i < headerDragCtx.Headers.Length; ++i)
+                headerDragCtx.Headers[i] = HeaderFromIndex(i);
 
             headerDragCtx.IsDragging = true;
+        }
+
+        private UIElement ContainerFromHeader(VirtualizedDataGridColumnHeader header)
+        {
+            return header.FindAncestor<ContentPresenter>();
+        }
+
+        private VirtualizedDataGridColumnHeader HeaderFromContainer(DependencyObject container)
+        {
+            return container.FindDescendantOrSelf<VirtualizedDataGridColumnHeader>();
+        }
+
+        private int IndexFromheader(VirtualizedDataGridColumnHeader header)
+        {
+            var container = ContainerFromHeader(header);
+            return ItemContainerGenerator.IndexFromContainer(container);
+        }
+
+        private VirtualizedDataGridColumnHeader HeaderFromIndex(int index)
+        {
+            var container = ItemContainerGenerator.ContainerFromIndex(index);
+            return HeaderFromContainer(container);
         }
 
         private static bool ShouldStartColumnHeaderDrag(
@@ -249,7 +266,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             ParentGrid.OnColumnHeaderDragCompleted(dragCompletedEventArgs);
 
             headerDragCtx.Header.RenderTransform = null;
-            headerDragCtx.Header.FindAncestor<ContentPresenter>().ClearValue(Panel.ZIndexProperty);
+            ContainerFromHeader(headerDragCtx.Header).ClearValue(Panel.ZIndexProperty);
 
             foreach (var animation in headerDragCtx.Animations)
                 animation?.Reset();

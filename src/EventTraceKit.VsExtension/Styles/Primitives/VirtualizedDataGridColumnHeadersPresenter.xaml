@@ -14,7 +14,7 @@
               <ColumnDefinition Width="Auto"/>
               <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <ItemsControl x:Name="itemsControl" Focusable="false" Grid.Column="0"
+            <!--<ItemsControl x:Name="itemsControl" Focusable="false" Grid.Column="0"
                           ItemsSource="{Binding VisibleColumns, RelativeSource={RelativeSource TemplatedParent}}">
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
@@ -32,7 +32,8 @@
                     ToolTip="{Binding ColumnToolTip}"/>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
-            </ItemsControl>
+            </ItemsControl>-->
+            <ItemsPresenter/>
             <Primitives:VirtualizedDataGridColumnHeader
               Focusable="False" Grid.Column="1"
               SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}"
@@ -40,11 +41,11 @@
               ViewModel="{Binding ExpanderHeaderViewModel, RelativeSource={RelativeSource TemplatedParent}}"
               Width="{Binding ExpanderHeaderViewModel.Width, RelativeSource={RelativeSource TemplatedParent}}"/>
           </Grid>
-          <ControlTemplate.Triggers>
+          <!--<ControlTemplate.Triggers>
             <DataTrigger Binding="{Binding VisibleColumns.Count, RelativeSource={RelativeSource TemplatedParent}}" Value="0">
               <Setter TargetName="itemsControl" Property="UIElement.IsEnabled" Value="False"/>
             </DataTrigger>
-          </ControlTemplate.Triggers>
+          </ControlTemplate.Triggers>-->
         </ControlTemplate>
       </Setter.Value>
     </Setter>
