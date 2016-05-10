@@ -221,6 +221,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="ResourceUtils.cs" />
     <Compile Include="SelectionProperties.cs" />
     <Compile Include="TraceLogWindow.cs" />
     <Compile Include="TraceLogWindowCommand.cs" />
@@ -337,6 +338,7 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Controls\Primitives\Split.cur" />
     <Content Include="Resources\ToolWindow1Command.png" />
     <Content Include="Resources\ToolWindow1Package.ico" />
   </ItemGroup>

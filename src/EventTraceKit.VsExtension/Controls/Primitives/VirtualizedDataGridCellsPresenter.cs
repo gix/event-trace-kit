@@ -295,13 +295,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 new FrameworkPropertyMetadata(
                     Brushes.White,
                     FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
-                    FrameworkPropertyMetadataOptions.AffectsRender,
-                    OnPrimaryBackgroundChanged));
-
-        private static void OnPrimaryBackgroundChanged(
-            DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-        }
+                    FrameworkPropertyMetadataOptions.AffectsRender));
 
         /// <summary>
         ///   Gets or sets the primary background.

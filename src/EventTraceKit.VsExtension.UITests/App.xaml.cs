@@ -49,7 +49,7 @@
 
         private List<string> FindAvailableThemes()
         {
-            var assembly = Assembly.GetExecutingAssembly();
+            var assembly = GetType().Assembly;
             return assembly.GetManifestResourceNames()
                 .Select(GetThemeName).Where(n => n != null)
                 .OrderBy(x => x).ToList();

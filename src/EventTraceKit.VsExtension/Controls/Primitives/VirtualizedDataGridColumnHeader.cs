@@ -15,6 +15,8 @@
         private VirtualizedDataGrid parentGrid;
         private VirtualizedDataGridColumnHeadersPresenter parentPresenter;
 
+        private static readonly Lazy<Cursor> SplitCursorCache;
+
         static VirtualizedDataGridColumnHeader()
         {
             Type forType = typeof(VirtualizedDataGridColumnHeader);
@@ -26,9 +28,15 @@
 
             ColumnNameMaxWidthConverter = new DelegateValueConverter<double, double>(
                 actualWidth => Math.Max(0, actualWidth - 13));
+
+            SplitCursorCache = new Lazy<Cursor>(
+                () => ResourceUtils.LoadCursorFromResource(
+                    forType, "Split.cur"));
         }
 
         public static DelegateValueConverter<double, double> ColumnNameMaxWidthConverter { get; }
+
+        public static Cursor SplitCursor => SplitCursorCache.Value;
 
         #region public VirtualizedDataGridColumnViewModel ViewModel
 
@@ -268,24 +276,24 @@
         protected override void OnClick()
         {
             //if (!isDragging) {
-                base.OnClick();
-                //VirtualizedDataGridColumnViewModel viewModel = ViewModel;
-                //if (viewModel != null) {
-                //    Action method = null;
-                //    var grid = this.FindAncestor<VirtualizedDataGrid>();
-                //    viewModel.OnClick(this);
-                //    if (grid != null) {
-                //        if (method == null) {
-                //            method = delegate {
-                //                VirtualizedDataGridColumnHeader header = grid.TryFindColumnHeaderByOldIdentity(viewModel);
-                //                if (header != null) {
-                //                    header.Focus();
-                //                }
-                //            };
-                //        }
-                //        Dispatcher.BeginInvoke(method, DispatcherPriority.Input, new object[0]);
-                //    }
-                //}
+            base.OnClick();
+            //VirtualizedDataGridColumnViewModel viewModel = ViewModel;
+            //if (viewModel != null) {
+            //    Action method = null;
+            //    var grid = this.FindAncestor<VirtualizedDataGrid>();
+            //    viewModel.OnClick(this);
+            //    if (grid != null) {
+            //        if (method == null) {
+            //            method = delegate {
+            //                VirtualizedDataGridColumnHeader header = grid.TryFindColumnHeaderByOldIdentity(viewModel);
+            //                if (header != null) {
+            //                    header.Focus();
+            //                }
+            //            };
+            //        }
+            //        Dispatcher.BeginInvoke(method, DispatcherPriority.Input, new object[0]);
+            //    }
+            //}
             //}
         }
 

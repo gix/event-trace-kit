@@ -13,7 +13,7 @@
   <Style x:Key="DataGridColumnHeaderGripper" TargetType="{x:Type Thumb}">
     <Setter Property="Width" Value="8"/>
     <Setter Property="Background" Value="{DynamicResource {x:Static vsp:HeaderColors.SeparatorLineBrushKey}}"/>
-    <Setter Property="Cursor" Value="SizeWE"/>
+    <Setter Property="Cursor" Value="{x:Static Primitives:VirtualizedDataGridColumnHeader.SplitCursor}"/>
     <Setter Property="Template" Value="{StaticResource DataGridColumnHeaderGripperTemplate}"/>
   </Style>
 
