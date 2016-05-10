@@ -3,31 +3,40 @@ namespace EventTraceKit.VsExtension.Controls
     using System;
     using System.Windows;
 
-    public class VirtualizedDataGridColumnViewModel : DependencyObject
+    public class VirtualizedDataGridColumn : DependencyObject
     {
         private readonly VirtualizedDataGridColumnsViewModel columnsViewModel;
-        private readonly IVirtualizedDataGridViewColumn model;
+        private readonly IDataColumn columnModel;
+        private readonly IDataView dataView;
 
         private bool isResizing;
 
-        public VirtualizedDataGridColumnViewModel(
+        public VirtualizedDataGridColumn(
             VirtualizedDataGridColumnsViewModel columnsViewModel,
-            IVirtualizedDataGridViewColumn model)
+            IDataColumn columnModel,
+            IDataView dataView)
         {
             this.columnsViewModel = columnsViewModel;
-            this.model = model;
+            this.columnModel = columnModel;
+            this.dataView = dataView;
 
-            ColumnName = model.Name;
-            Width = model.Width;
-            IsVisible = model.IsVisible;
-            IsResizable = model.IsResizable;
+            ColumnName = columnModel.Name;
+            Width = columnModel.Width;
+            TextAlignment = columnModel.TextAlignment;
+
+            CoerceValue(WidthProperty);
+            RefreshViewModelFromModel();
         }
 
-        internal bool IsResizing => isResizing;
+        public VirtualizedDataGridColumnsViewModel Columns => columnsViewModel;
 
         public bool CanMove => IsVisible;
 
-        public VirtualizedDataGridColumnsViewModel Columns => columnsViewModel;
+        public int ModelColumnIndex { get; private set; }
+
+        internal bool IsResizing => isResizing;
+
+        public int ModelVisibleColumnIndex { get; set; }
 
         #region public double Width { get; set; }
 
@@ -38,11 +47,11 @@ namespace EventTraceKit.VsExtension.Controls
             DependencyProperty.Register(
                 nameof(Width),
                 typeof(double),
-                typeof(VirtualizedDataGridColumnViewModel),
+                typeof(VirtualizedDataGridColumn),
                 new PropertyMetadata(
                     80.0,
-                    (d, e) => ((VirtualizedDataGridColumnViewModel)d).OnWidthChanged(),
-                    (d, v) => ((VirtualizedDataGridColumnViewModel)d).CoerceWidth((double)v)));
+                    (d, e) => ((VirtualizedDataGridColumn)d).OnWidthChanged(),
+                    (d, v) => ((VirtualizedDataGridColumn)d).CoerceWidth((double)v)));
 
         /// <summary>
         ///   Gets or sets the column width.
@@ -55,8 +64,7 @@ namespace EventTraceKit.VsExtension.Controls
 
         private object CoerceWidth(double baseValue)
         {
-            double num = 16.0 + /*(!this.IsConfigurable ? 5.0 : 16.0) +*/ (IsKey ? 16.0 : 0.0);
-            return Math.Max(baseValue, num);
+            return Math.Max(baseValue, 16);
         }
 
         private void OnWidthChanged()
@@ -79,7 +87,7 @@ namespace EventTraceKit.VsExtension.Controls
             DependencyProperty.Register(
                 nameof(IsVisible),
                 typeof(bool),
-                typeof(VirtualizedDataGridColumnViewModel),
+                typeof(VirtualizedDataGridColumn),
                 new PropertyMetadata(Boxed.False));
 
         /// <summary>
@@ -99,7 +107,7 @@ namespace EventTraceKit.VsExtension.Controls
             DependencyProperty.RegisterReadOnly(
                 nameof(IsSeparator),
                 typeof(bool),
-                typeof(VirtualizedDataGridColumnViewModel),
+                typeof(VirtualizedDataGridColumn),
                 new PropertyMetadata(Boxed.False));
 
         /// <summary>
@@ -125,7 +133,7 @@ namespace EventTraceKit.VsExtension.Controls
             DependencyProperty.RegisterReadOnly(
                 nameof(IsFreezableAreaSeparator),
                 typeof(bool),
-                typeof(VirtualizedDataGridColumnViewModel),
+                typeof(VirtualizedDataGridColumn),
                 new PropertyMetadata(Boxed.False));
 
         /// <summary>
@@ -152,10 +160,10 @@ namespace EventTraceKit.VsExtension.Controls
             DependencyProperty.RegisterReadOnly(
                 nameof(TextAlignment),
                 typeof(TextAlignment),
-                typeof(VirtualizedDataGridColumnViewModel),
+                typeof(VirtualizedDataGridColumn),
                 new PropertyMetadata(
                     TextAlignmentBoxes.Left,
-                    (d, e) => ((VirtualizedDataGridColumnViewModel)d).OnUIPropertyChanged()));
+                    (d, e) => ((VirtualizedDataGridColumn)d).OnUIPropertyChanged()));
 
         /// <summary>
         ///   Identifies the <see cref="TextAlignment"/> dependency property.
@@ -169,7 +177,7 @@ namespace EventTraceKit.VsExtension.Controls
         public TextAlignment TextAlignment
         {
             get { return (TextAlignment)GetValue(TextAlignmentProperty); }
-            private set { SetValue(TextAlignmentPropertyKey, TextAlignmentBoxes.Box(value)); }
+            set { SetValue(TextAlignmentPropertyKey, TextAlignmentBoxes.Box(value)); }
         }
 
         #endregion
@@ -180,7 +188,7 @@ namespace EventTraceKit.VsExtension.Controls
             DependencyProperty.RegisterReadOnly(
                 nameof(IsResizable),
                 typeof(bool),
-                typeof(VirtualizedDataGridColumnViewModel),
+                typeof(VirtualizedDataGridColumn),
                 new PropertyMetadata(Boxed.False));
 
         /// <summary>
@@ -206,7 +214,7 @@ namespace EventTraceKit.VsExtension.Controls
             DependencyProperty.RegisterReadOnly(
                 nameof(IsExpanderHeader),
                 typeof(bool),
-                typeof(VirtualizedDataGridColumnViewModel),
+                typeof(VirtualizedDataGridColumn),
                 new PropertyMetadata(Boxed.False));
 
         /// <summary>
@@ -232,10 +240,10 @@ namespace EventTraceKit.VsExtension.Controls
             DependencyProperty.RegisterReadOnly(
                 nameof(ColumnName),
                 typeof(string),
-                typeof(VirtualizedDataGridColumnViewModel),
+                typeof(VirtualizedDataGridColumn),
                 new PropertyMetadata(
                     null,
-                    (d, e) => ((VirtualizedDataGridColumnViewModel)d).OnColumnNameChanged(e)));
+                    (d, e) => ((VirtualizedDataGridColumn)d).OnColumnNameChanged(e)));
 
         /// <summary>
         ///   Identifies the <see cref="ColumnName"/> dependency property.
@@ -262,9 +270,7 @@ namespace EventTraceKit.VsExtension.Controls
 
         public bool IsSafeToReadCellValuesFromUIThread { get; } = true;
 
-        public bool IsKey { get; } = false;
-
-        public bool CanSort => false;
+        public bool CanSort { get; private set; } = false;
 
         private void UpdateAutomationNameProperty()
         {
@@ -315,14 +321,104 @@ namespace EventTraceKit.VsExtension.Controls
             return GetCachedCellValue(rowIndex, viewportSizeHint);
         }
 
-        private CellValue GetCachedCellValue(int rowIndex, int viewportSizeHint)
+        private CellValue[] cachedRowValues = new CellValue[0];
+        private int startCacheRowValueIndex;
+
+        private void ClearCachedRows()
         {
-            return new CellValue("foo", null, null);
+            Array.Clear(cachedRowValues, 0, cachedRowValues.Length);
+            //this.cachedHdvValidityToken = this.hdvViewModel.DataValidityToken;
+            //this.cachedColumnValidityToken = this.ColumnModel.Column.DataValidityToken;
+        }
+
+        private int GetCacheIndex(int rowIndex)
+        {
+            int offset = rowIndex - startCacheRowValueIndex;
+            if (rowIndex >= startCacheRowValueIndex &&
+                offset < cachedRowValues.Length // &&
+                                                //(this.hdvViewModel.IsValidDataValidityToken(this.cachedHdvValidityToken) &&
+                                                //(this.cachedColumnValidityToken == this.ColumnModel.Column.DataValidityToken))
+                )
+                return offset;
+
+            return -1;
+        }
+
+        private CellValue GetCachedCellValue(int rowIndex, int viewportSize)
+        {
+            int num = viewportSize * 3;
+            if (cachedRowValues.Length < num) {
+                cachedRowValues = new CellValue[num];
+                startCacheRowValueIndex = -1;
+            }
+
+            int cacheIndex = GetCacheIndex(rowIndex);
+            if (cacheIndex == -1) {
+                ClearCachedRows();
+                startCacheRowValueIndex = Math.Max(0, rowIndex - cachedRowValues.Length / 2);
+                cacheIndex = rowIndex - startCacheRowValueIndex;
+            }
+
+            CellValue value = cachedRowValues[cacheIndex];
+            if (value == null) {
+                value = GetCellValueNotCached(rowIndex);
+                cachedRowValues[cacheIndex] = value;
+            }
+
+            return value;
+
+        }
+
+        private CellValue GetCellValueNotCached(int rowIndex)
+        {
+            return dataView.GetCellValue(rowIndex, ModelVisibleColumnIndex);
         }
 
         public bool IsInFreezableArea()
         {
             return false;
+        }
+
+        private int GetModelColumnIndex()
+        {
+            int index = dataView.Columns.IndexOf(columnModel);
+            if (index == -1)
+                throw new Exception("Unable to find the model column index for: " + ColumnName);
+            return index;
+        }
+
+        private int GetModelVisibleColumnIndex()
+        {
+            if (!columnModel.IsVisible)
+                return -1;
+
+            int index = dataView.VisibleColumns.IndexOf(columnModel);
+            if (index == -1)
+                throw new Exception("Unable to find the visible model column index for: " + ColumnName);
+            return index;
+        }
+
+        internal void RefreshViewModelFromModel()
+        {
+            //if (columnModel.DataType == typeof(KeysValuesSeparatorColumn)) {
+            //    IsSeparator = true;
+            //    IsResizable = false;
+            //    Width = 5.0;
+            //} else if (columnModel.DataType == typeof(FreezableAreaSeparatorColumn)) {
+            //    IsFreezableAreaSeparator = true;
+            //    IsResizable = false;
+            //    Width = 5.0;
+            //} else if (columnModel.DataType == typeof(ExpanderHeaderColumn)) {
+            //    IsResizable = false;
+            //    IsExpanderHeader = true;
+            //} else {
+            IsResizable = true;
+            //}
+
+            ClearCachedRows();
+            ModelColumnIndex = GetModelColumnIndex();
+            ModelVisibleColumnIndex = GetModelVisibleColumnIndex();
+            IsVisible = columnModel.IsVisible;
         }
     }
 }

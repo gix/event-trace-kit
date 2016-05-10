@@ -1,42 +1,48 @@
-﻿<Window x:Class="UIVirt.TraceLogTestWindow"
+﻿<Window x:Class="EventTraceKit.VsExtension.UITests.TraceLogTestWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:Controls="clr-namespace:EventTraceKit.VsExtension.Controls;assembly=EventTraceKit.VsExtension"
-        xmlns:local="clr-namespace:UIVirt"
+        xmlns:uit="clr-namespace:EventTraceKit.VsExtension.UITests"
+        xmlns:EtkVs="clr-namespace:EventTraceKit.VsExtension;assembly=EventTraceKit.VsExtension"
+        xmlns:vsp="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
         mc:Ignorable="d"
-        d:DataContext="{d:DesignInstance local:TraceLogTestViewModel, IsDesignTimeCreatable=false}"
+        d:DataContext="{d:DesignInstance uit:TraceLogTestViewModel, IsDesignTimeCreatable=false}"
         UseLayoutRounding="True"
         Title="TraceLogTestWindow" Height="500" Width="1000">
-  <Window.Resources>
-    <ResourceDictionary>
-      <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="pack://application:,,,/EventTraceKit.VsExtension;component/Styles/Resources.xaml"/>
-        <!--<ResourceDictionary Source="pack://application:,,,/EventTraceKit.VsExtension;component/Styles/VirtualizedDataGrid.xaml"/>-->
-      </ResourceDictionary.MergedDictionaries>
-    </ResourceDictionary>
-  </Window.Resources>
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
       <RowDefinition/>
+      <!--
       <RowDefinition Height="Auto"/>
       <RowDefinition/>
       <RowDefinition Height="Auto"/>
-      <RowDefinition/>
+      <RowDefinition/>-->
     </Grid.RowDefinitions>
     <StackPanel Orientation="Horizontal" Margin="6">
-      <Button Content="Start" Command="{Binding StartCommand}"/>
-      <Button Content="Stop" Command="{Binding StopCommand}"/>
-      <Button Content="Clear" Command="{Binding ClearCommand}"/>
-      <TextBlock Text="{Binding GridModel.RowCount}"/>
+      <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding SelectedTheme}"/>
+      <Button Margin="7,0,0,0" Content="Start" Command="{Binding StartCommand}"/>
+      <Button Margin="7,0,0,0" Content="Stop" Command="{Binding StopCommand}"/>
+      <Button Margin="7,0,0,0" Content="Clear" Command="{Binding ClearCommand}"/>
+      <TextBlock Margin="7,0,0,0" Text="{Binding GridModel.RowCount}"/>
     </StackPanel>
 
+    <Controls:VirtualizedDataGrid
+      Grid.Row="1"
+      ViewModel="{Binding GridModel}"
+      Foreground="{DynamicResource {x:Static EtkVs:EtkColors.TraceLogForegroundKey}}"
+      Background="{DynamicResource {x:Static vsp:TreeViewColors.BackgroundBrushKey}}"
+      RowBackground="{DynamicResource {x:Static EtkVs:EtkColors.TraceLogBackgroundKey}}"
+      AlternatingRowBackground="{DynamicResource {x:Static EtkVs:EtkColors.TraceLogBackgroundAltKey}}"
+      RowSelectionBackground="{DynamicResource {x:Static EtkVs:EtkColors.TraceLogSelectedBackgroundKey}}"
+      RowInactiveSelectionBackground="{DynamicResource {x:Static EtkVs:EtkColors.TraceLogInactiveSelectedBackgroundKey}}"
+      RowFocusBorderBrush="{DynamicResource {x:Static EtkVs:CommonControlBrushes.FocusVisualForegroundKey}}"/>
+
+    <!--
     <GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch"/>
     <GridSplitter Grid.Row="4" Height="5" HorizontalAlignment="Stretch"/>
-
-    <Controls:VirtualizedDataGrid Grid.Row="1" ViewModel="{Binding GridModel}"/>
     <DataGrid Grid.Row="3" ItemsSource="{Binding Events}">
       <DataGrid.Columns>
         <DataGridTextColumn Binding="{Binding Id}"/>
@@ -57,5 +63,6 @@
         </GridView>
       </ListView.View>
     </ListView>
+    -->
   </Grid>
 </Window>

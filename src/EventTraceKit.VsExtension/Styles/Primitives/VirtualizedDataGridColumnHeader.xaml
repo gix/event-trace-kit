@@ -4,49 +4,49 @@
   xmlns:Primitives="clr-namespace:EventTraceKit.VsExtension.Controls.Primitives"
   xmlns:vsp="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0">
 
+  <ControlTemplate x:Key="DataGridColumnHeaderGripperTemplate" TargetType="{x:Type Thumb}">
+    <Border Padding="{TemplateBinding Padding}" Background="Transparent">
+      <Rectangle HorizontalAlignment="Center" Width="1" Fill="{TemplateBinding Background}"/>
+    </Border>
+  </ControlTemplate>
+
   <Style x:Key="DataGridColumnHeaderGripper" TargetType="{x:Type Thumb}">
     <Setter Property="Width" Value="8"/>
     <Setter Property="Background" Value="{DynamicResource {x:Static vsp:HeaderColors.SeparatorLineBrushKey}}"/>
-    <Setter Property="Template">
-      <Setter.Value>
-        <ControlTemplate TargetType="{x:Type Thumb}">
-          <Border Padding="{TemplateBinding Padding}" Background="Transparent">
-            <Rectangle HorizontalAlignment="Center" Width="1" Fill="{TemplateBinding Background}"/>
-          </Border>
-        </ControlTemplate>
-      </Setter.Value>
-    </Setter>
+    <Setter Property="Cursor" Value="SizeWE"/>
+    <Setter Property="Template" Value="{StaticResource DataGridColumnHeaderGripperTemplate}"/>
   </Style>
 
   <ControlTemplate x:Key="DataGridColumnHeaderTemplate"
                    TargetType="{x:Type Primitives:VirtualizedDataGridColumnHeader}">
-    <Grid>
-      <Border Name="HeaderBorder"
+    <Grid ToolTipService.ToolTip="{Binding Content.ToolTip, ElementName=HeaderContent}"
+          ToolTipService.IsEnabled="{Binding Content.(ToolTipService.IsEnabled), ElementName=HeaderContent}">
+      <Border x:Name="HeaderBorder"
               Padding="{TemplateBinding Padding}"
               BorderThickness="0,0,0,1"
               BorderBrush="{TemplateBinding BorderBrush}"
               Background="{TemplateBinding Background}"
               Margin="0">
-        <ContentPresenter Name="HeaderContent" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+        <ContentPresenter x:Name="HeaderContent"
                           HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                           RecognizesAccessKey="True"
                           SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
       </Border>
-      <!-- Note the negative margin on the thumb, which gives the gripper a bigger hit area than the actual visual appearance -->
-      <Thumb x:Name="PART_HeaderGripper" HorizontalAlignment="Right" Margin="0,0,-4,0"
+      <!-- Note the negative margin on the thumb, which gives the gripper a
+           bigger hit area than the actual visual appearance -->
+      <Thumb x:Name="PART_RightHeaderGripper" HorizontalAlignment="Right" Margin="0,0,-4,0"
              Style="{StaticResource DataGridColumnHeaderGripper}"/>
     </Grid>
     <ControlTemplate.Triggers>
       <Trigger Property="IsMouseOver" Value="True">
+        <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:EnvironmentColors.CommandBarTextHoverBrushKey}}"/>
         <Setter Property="Background" Value="{DynamicResource {x:Static vsp:HeaderColors.MouseOverBrushKey}}"/>
-        <Setter Property="Foreground"
-                Value="{DynamicResource {x:Static vsp:HeaderColors.MouseOverTextBrushKey}}"/>
       </Trigger>
 
       <Trigger Property="IsPressed" Value="True">
+        <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:EnvironmentColors.CommandBarTextSelectedBrushKey}}"/>
         <Setter Property="Background" Value="{DynamicResource {x:Static vsp:HeaderColors.MouseDownBrushKey}}"/>
-        <Setter Property="Foreground"
-                Value="{DynamicResource {x:Static vsp:HeaderColors.MouseDownTextBrushKey}}"/>
       </Trigger>
 
       <Trigger Property="Primitives:VirtualizedDataGridColumnHeader.IsSeparator" Value="True">
@@ -59,57 +59,19 @@
   </ControlTemplate>
 
   <Style TargetType="{x:Type Primitives:VirtualizedDataGridColumnHeader}">
-    <Setter Property="Template" Value="{StaticResource DataGridColumnHeaderTemplate}"/>
-    <Setter Property="HorizontalContentAlignment" Value="Left"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
     <Setter Property="VerticalContentAlignment" Value="Center"/>
-    <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:HeaderColors.DefaultTextBrushKey}}"/>
+    <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:EnvironmentColors.CommandBarTextActiveBrushKey}}"/>
     <Setter Property="Background" Value="{DynamicResource {x:Static vsp:HeaderColors.DefaultBrushKey}}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource {x:Static vsp:HeaderColors.SeparatorLineBrushKey}}"/>
     <Setter Property="Padding" Value="4,2"/>
-  </Style>
-
-  <!--
-  <Style x:Key="DataGridColumnHeaderGripper" TargetType="{x:Type Thumb}">
-    <Setter Property="Width" Value="6"/>
-    <Setter Property="Background" Value="Transparent"/>
-    <Setter Property="Cursor" Value="SizeWE"/>
-    <Setter Property="Template">
+    <Setter Property="Template" Value="{StaticResource DataGridColumnHeaderTemplate}"/>
+    <Setter Property="ContentTemplate">
       <Setter.Value>
-        <ControlTemplate TargetType="{x:Type Thumb}">
-          <Border Padding="{TemplateBinding Control.Padding}"
-                  Background="{TemplateBinding Control.Background}"/>
-        </ControlTemplate>
+        <DataTemplate>
+          <TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis"/>
+        </DataTemplate>
       </Setter.Value>
     </Setter>
   </Style>
-
-  <ControlTemplate x:Key="DataGridColumnHeaderTemplate"
-                   TargetType="{x:Type Primitives:VirtualizedDataGridColumnHeader}">
-    <Grid x:Name="outerGrid">
-      <Themes:DataGridHeaderBorder
-              Focusable="True"
-              IsClickable="{Binding ViewModel.CanSort, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
-              IsHovered="{TemplateBinding IsMouseOver}"
-              IsPressed="{TemplateBinding IsPressed}"
-              Background="{TemplateBinding Background}"
-              BorderBrush="{TemplateBinding BorderBrush}"
-              BorderThickness="{TemplateBinding BorderThickness}"
-              Padding="{TemplateBinding Padding}"
-              SeparatorVisibility="{TemplateBinding SeparatorVisibility}"
-              SeparatorBrush="{TemplateBinding SeparatorBrush}">
-        <TextBlock x:Name="columnNameText" Text="{TemplateBinding ContentControl.Content}"
-                           TextTrimming="CharacterEllipsis"/>
-      </Themes:DataGridHeaderBorder>
-      <Thumb x:Name="PART_RightHeaderGripper"
-             Visibility="{TemplateBinding Primitives:VirtualizedDataGridColumnHeader.RightHeaderGripperVisibility}"
-             Opacity="0.5" HorizontalAlignment="Right"
-             Style="{StaticResource DataGridColumnHeaderGripper}"/>
-    </Grid>
-  </ControlTemplate>
-
-  <Style TargetType="{x:Type Primitives:VirtualizedDataGridColumnHeader}">
-    <Setter Property="VerticalContentAlignment" Value="Center"/>
-    <Setter Property="Template" Value="{StaticResource DataGridColumnHeaderTemplate}"/>
-  </Style>
-  -->
 </ResourceDictionary>

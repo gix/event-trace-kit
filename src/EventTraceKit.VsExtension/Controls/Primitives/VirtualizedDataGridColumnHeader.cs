@@ -35,13 +35,13 @@
         public static readonly DependencyProperty ViewModelProperty =
             DependencyProperty.Register(
                 nameof(ViewModel),
-                typeof(VirtualizedDataGridColumnViewModel),
+                typeof(VirtualizedDataGridColumn),
                 typeof(VirtualizedDataGridColumnHeader),
                 new UIPropertyMetadata(null, OnViewModelChanged));
 
-        public VirtualizedDataGridColumnViewModel ViewModel
+        public VirtualizedDataGridColumn ViewModel
         {
-            get { return (VirtualizedDataGridColumnViewModel)GetValue(ViewModelProperty); }
+            get { return (VirtualizedDataGridColumn)GetValue(ViewModelProperty); }
             set { SetValue(ViewModelProperty, value); }
         }
 
@@ -49,20 +49,19 @@
             DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             ((VirtualizedDataGridColumnHeader)d).OnViewModelChanged(
-                (VirtualizedDataGridColumnViewModel)e.OldValue,
-                (VirtualizedDataGridColumnViewModel)e.NewValue);
+                (VirtualizedDataGridColumn)e.OldValue,
+                (VirtualizedDataGridColumn)e.NewValue);
         }
 
         private void OnViewModelChanged(
-            VirtualizedDataGridColumnViewModel oldValue,
-            VirtualizedDataGridColumnViewModel newValue)
+            VirtualizedDataGridColumn oldValue,
+            VirtualizedDataGridColumn newValue)
         {
             if (newValue != null) {
                 IsResizable = newValue.IsResizable;
                 IsSeparator = newValue.IsSeparator;
                 IsFreezableAreaSeparator = newValue.IsFreezableAreaSeparator;
                 IsExpanderHeader = newValue.IsExpanderHeader;
-                //    OnSortPriorityInternalChanged(newValue.SortPriority);
             }
 
             RightHeaderGripperVisibility =
@@ -250,9 +249,8 @@
 
         internal VirtualizedDataGridColumnHeadersPresenter ParentPresenter =>
             parentPresenter ??
-            //(parentPresenter = ItemsControl.ItemsControlFromItemContainer(this)
-            //    as VirtualizedDataGridColumnHeadersPresenter);
-            (parentPresenter = this.FindAncestor<VirtualizedDataGridColumnHeadersPresenter>());
+            (parentPresenter = (VirtualizedDataGridColumnHeadersPresenter)
+                ItemsControl.ItemsControlFromItemContainer(this));
 
         public override void OnApplyTemplate()
         {
@@ -346,7 +344,6 @@
         {
             if (!e.Handled) {
                 ViewModel?.BeginPossiblyResizing();
-                RightHeaderGripperPart.Background = Brushes.Orange;
                 e.Handled = true;
             }
         }

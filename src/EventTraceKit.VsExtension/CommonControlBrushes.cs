@@ -3,7 +3,7 @@
     using System;
     using Microsoft.VisualStudio.Shell;
 
-    internal static class CommonControlBrushes
+    public static class CommonControlBrushes
     {
         private static readonly Guid Category = new Guid("C01072A1-A915-4ABF-89B7-E2F9E8EC4C7F");
 

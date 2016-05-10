@@ -30,7 +30,7 @@
         {
             var fcHelper = new FontsAndColorsHelper();
 
-            var outputWindowCategory = new Guid("{9973efdf-317d-431c-8bc1-5e88cbfd4f7f}");
+            var outputWindowCategory = new Guid("9973EFDF-317D-431C-8BC1-5E88CBFD4F7F");
             var itemInfo = new ColorableItemInfo[1];
             var resources = new ResourceDictionary();
 
@@ -46,10 +46,8 @@
             if (fcHelper.GetBackgroundBrush(outputWindowCategory, "Selected Text", resources, itemInfo))
                 Resources[EtkColors.TraceLogSelectedBackgroundKey] = resources["Background"];
 
-            if (fcHelper.GetBackgroundBrush(outputWindowCategory, "Inactive Selected Text", resources, itemInfo)) {
-                Resources[EtkColors.TraceLogSelectedBackgroundKey] = resources["Background"];
+            if (fcHelper.GetBackgroundBrush(outputWindowCategory, "Inactive Selected Text", resources, itemInfo))
                 Resources[EtkColors.TraceLogInactiveSelectedBackgroundKey] = resources["Background"];
-            }
         }
     }
 }

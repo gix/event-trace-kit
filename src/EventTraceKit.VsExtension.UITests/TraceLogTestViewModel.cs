@@ -1,6 +1,7 @@
-namespace UIVirt
+namespace EventTraceKit.VsExtension.UITests
 {
     using System;
+    using System.Collections.ObjectModel;
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows.Input;
@@ -8,6 +9,8 @@ namespace UIVirt
 
     public class TraceLogTestViewModel : TraceLogWindowViewModel
     {
+        private string selectedTheme;
+
         private CancellationTokenSource cts;
 
         public TraceLogTestViewModel()
@@ -16,6 +19,27 @@ namespace UIVirt
             StartCommand = new DelegateCommand(Start);
             StopCommand = new DelegateCommand(Stop);
             ClearCommand = new DelegateCommand(Clear);
+
+            foreach (var name in App.Current.AvailableThemes)
+                Themes.Add(name);
+
+            SelectedTheme = App.Current.ActiveTheme;
+        }
+
+        public ObservableCollection<string> Themes { get; } =
+            new ObservableCollection<string>();
+
+        public string SelectedTheme
+        {
+            get { return selectedTheme; }
+            set
+            {
+                if (selectedTheme == value)
+                    return;
+
+                if (App.Current.TryLoadTheme(value))
+                    selectedTheme = value;
+            }
         }
 
         private void Start()
@@ -42,7 +66,7 @@ namespace UIVirt
         private void Gen(CancellationToken token)
         {
             while (!token.IsCancellationRequested) {
-                GridModel.UpdateRowCount(rows);
+                EventsDataView.UpdateRowCount(rows);
                 Thread.Sleep(TimeSpan.FromMilliseconds(500));
                 rows += 1;
             }

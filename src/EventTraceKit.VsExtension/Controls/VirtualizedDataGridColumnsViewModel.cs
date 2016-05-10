@@ -1,67 +1,50 @@
 namespace EventTraceKit.VsExtension.Controls
 {
-    using System;
     using System.Collections.ObjectModel;
     using System.Windows;
-    using System.Windows.Data;
     using EventTraceKit.VsExtension.Controls.Primitives;
-
-    internal sealed class ExpanderHeaderColumnViewModel : VirtualizedDataGridColumnViewModel
-    {
-        public ExpanderHeaderColumnViewModel(
-            VirtualizedDataGridColumnsViewModel columnsViewModel,
-            IVirtualizedDataGridViewColumn model)
-            : base(columnsViewModel, model)
-        {
-            IsVisible = true;
-
-            //var binding = new Binding {
-            //    Source = columnsViewModel,
-            //    Path = new PropertyPath(nameof(columnsViewModel.ActualWidth)),
-            //    Mode = BindingMode.OneWay
-            //};
-            //BindingOperations.SetBinding(this, WidthProperty, binding);
-        }
-    }
 
     public class VirtualizedDataGridColumnsViewModel : DependencyObject
     {
-        private readonly ObservableCollection<VirtualizedDataGridColumnViewModel> columns;
-        private readonly ObservableCollection<VirtualizedDataGridColumnViewModel> visibleColumns;
+        private readonly IDataView dataView;
+        private readonly ObservableCollection<VirtualizedDataGridColumn> columns;
+        private readonly ObservableCollection<VirtualizedDataGridColumn> visibleColumns;
 
-        public VirtualizedDataGridColumnsViewModel(IVirtualizedDataGridViewModel owner)
+        public VirtualizedDataGridColumnsViewModel(
+            IDataView dataView, VirtualizedDataGridViewModel owner)
         {
+            this.dataView = dataView;
             Owner = owner;
-            columns = new ObservableCollection<VirtualizedDataGridColumnViewModel>();
+            columns = new ObservableCollection<VirtualizedDataGridColumn>();
 
-            visibleColumns = new ObservableCollection<VirtualizedDataGridColumnViewModel>();
-            VisibleColumns = new ReadOnlyObservableCollection<VirtualizedDataGridColumnViewModel>(visibleColumns);
+            visibleColumns = new ObservableCollection<VirtualizedDataGridColumn>();
+            VisibleColumns = new ReadOnlyObservableCollection<VirtualizedDataGridColumn>(visibleColumns);
 
             //ExpanderHeaderColumn = new ExpanderHeaderColumnViewModel(
             //    this, this.GetInternalColumnView<ExpanderHeaderColumn>(DataColumn.Create<ExpanderHeaderColumn>(new ExpanderHeaderColumn()), string.Empty, Guid.Empty), this.hdvViewModel);
         }
 
-        internal IVirtualizedDataGridViewModel Owner { get; }
-        internal ObservableCollection<VirtualizedDataGridColumnViewModel> WritableColumns => columns;
+        internal VirtualizedDataGridViewModel Owner { get; }
+        internal ObservableCollection<VirtualizedDataGridColumn> WritableColumns => columns;
 
         #region public ReadOnlyObservableCollection<VirtualizedDataGridColumnViewModel> VisibleColumns
 
         private static readonly DependencyPropertyKey VisibleColumnsPropertyKey =
             DependencyProperty.RegisterReadOnly(
                 nameof(VisibleColumns),
-                typeof(ReadOnlyObservableCollection<VirtualizedDataGridColumnViewModel>),
+                typeof(ReadOnlyObservableCollection<VirtualizedDataGridColumn>),
                 typeof(VirtualizedDataGridColumnsViewModel),
                 new PropertyMetadata(
-                    CollectionDefaults<VirtualizedDataGridColumnViewModel>.ReadOnlyObservable));
+                    CollectionDefaults<VirtualizedDataGridColumn>.ReadOnlyObservable));
 
         public static readonly DependencyProperty VisibleColumnsProperty =
             VisibleColumnsPropertyKey.DependencyProperty;
 
-        public ReadOnlyObservableCollection<VirtualizedDataGridColumnViewModel> VisibleColumns
+        public ReadOnlyObservableCollection<VirtualizedDataGridColumn> VisibleColumns
         {
             get
             {
-                return (ReadOnlyObservableCollection<VirtualizedDataGridColumnViewModel>)
+                return (ReadOnlyObservableCollection<VirtualizedDataGridColumn>)
                     GetValue(VisibleColumnsProperty);
             }
             private set { SetValue(VisibleColumnsPropertyKey, value); }
@@ -85,7 +68,7 @@ namespace EventTraceKit.VsExtension.Controls
             VisibilityPropertyKey.DependencyProperty;
 
         /// <summary>
-        ///   Gets the visibility.
+        ///   Gets or sets the visibility.
         /// </summary>
         public Visibility Visibility
         {
@@ -100,7 +83,7 @@ namespace EventTraceKit.VsExtension.Controls
         private static readonly DependencyPropertyKey ExpanderHeaderColumnPropertyKey =
             DependencyProperty.RegisterReadOnly(
                 nameof(ExpanderHeaderColumn),
-                typeof(VirtualizedDataGridColumnViewModel),
+                typeof(VirtualizedDataGridColumn),
                 typeof(VirtualizedDataGridColumnsViewModel),
                 new PropertyMetadata(null));
 
@@ -113,9 +96,9 @@ namespace EventTraceKit.VsExtension.Controls
         /// <summary>
         ///   Gets or sets the expander header column.
         /// </summary>
-        protected VirtualizedDataGridColumnViewModel ExpanderHeaderColumn
+        protected VirtualizedDataGridColumn ExpanderHeaderColumn
         {
-            get { return (VirtualizedDataGridColumnViewModel)GetValue(ExpanderHeaderColumnProperty); }
+            get { return (VirtualizedDataGridColumn)GetValue(ExpanderHeaderColumnProperty); }
             set { SetValue(ExpanderHeaderColumnPropertyKey, value); }
         }
 
@@ -141,26 +124,40 @@ namespace EventTraceKit.VsExtension.Controls
             //this.HdvViewModel.ColumnMetadataCollection.FillObservableCollection(this.columnMetadataEntryViewModels);
         }
 
-        protected int FindColumnIndex(VirtualizedDataGridColumnViewModel column)
-        {
-            return columns.IndexOf(column);
-
-            for (int i = 0; i < columns.Count; ++i) {
-                if (columns[i] == column)
-                    return i;
-            }
-            return -1;
-        }
-
         public void TryMoveColumn(
-            VirtualizedDataGridColumnViewModel srcColumn,
-            VirtualizedDataGridColumnViewModel dstColumn)
+            VirtualizedDataGridColumn srcColumn,
+            VirtualizedDataGridColumn dstColumn)
         {
-            int oldIndex = FindColumnIndex(srcColumn);
-            int newIndex = FindColumnIndex(dstColumn);
+            int oldIndex = columns.IndexOf(srcColumn);
+            int newIndex = columns.IndexOf(dstColumn);
             if (oldIndex != newIndex)
                 WritableColumns.Move(oldIndex, newIndex);
             RefreshAllObservableCollections();
+        }
+
+        internal void ApplyPresetAssumeGridModelInSync(/*HdvViewModelPreset preset*/)
+        {
+            //IsApplyingPreset = true;
+            //base.Hdv.BeginDataUpdate();
+            WritableColumns.Clear();
+            int num = 0;
+            foreach (IDataColumn column in dataView.Columns) {
+                var columnViewModel = new VirtualizedDataGridColumn(
+                    this, column, dataView);
+                WritableColumns.Add(columnViewModel);
+
+                //var columnPreset = preset.ConfigurableColumns[num];
+                //columnViewModel.Width = columnPreset.Width;
+                //columnViewModel.TextAlignment = columnPreset.TextAlignment;
+                //columnViewModel.CellFormat = columnPreset.CellFormat;
+                num++;
+            }
+
+            //preset.PlaceSeparatorsInList<HierarchicalDataGridColumnViewModel>(base.ColumnsWriteable, base.LeftFreezableAreaSeparatorColumn, base.RightFreezableAreaSeparatorColumn, this.graphingAreaSeparatorColumn, this.keysValuesSeparatorColumn, forcedColumnLeftCount);
+            //base.Hdv.EndDataUpdate();
+            RefreshAllObservableCollections();
+            //IsApplyingPreset = false;
+            //UpdateFreezableColumnsWidth();
         }
     }
 }

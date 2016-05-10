@@ -18,9 +18,9 @@
             <Primitives:VirtualizedDataGridColumnHeader
               Focusable="False" Grid.Column="1"
               SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}"
-              Visibility="{Binding ExpanderHeaderViewModel, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ObjectNullCheckToVisibility}}"
-              ViewModel="{Binding ExpanderHeaderViewModel, RelativeSource={RelativeSource TemplatedParent}}"
-              Width="{Binding ExpanderHeaderViewModel.Width, RelativeSource={RelativeSource TemplatedParent}}"/>
+              Visibility="{Binding ExpanderHeader, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ObjectNullCheckToVisibility}}"
+              ViewModel="{Binding ExpanderHeader, RelativeSource={RelativeSource TemplatedParent}}"
+              Width="{Binding ExpanderHeader.Width, RelativeSource={RelativeSource TemplatedParent}}"/>
           </Grid>
           <!--<ControlTemplate.Triggers>
             <DataTrigger Binding="{Binding ItemsSource.Count, RelativeSource={RelativeSource TemplatedParent}}" Value="0">

@@ -95,12 +95,12 @@
     <Setter Property="Fill" Value="{DynamicResource {x:Static vsp:HeaderColors.GlyphBrushKey}}"/>
     <Style.Triggers>
       <DataTrigger
-        Binding="{Binding Path=IsMouseOver, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type GridViewColumnHeader}}}"
+        Binding="{Binding IsMouseOver, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type GridViewColumnHeader}}}"
         Value="True">
         <Setter Property="Fill" Value="{DynamicResource {x:Static vsp:HeaderColors.MouseOverGlyphBrushKey}}"/>
       </DataTrigger>
       <DataTrigger
-        Binding="{Binding Path=IsPressed, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type GridViewColumnHeader}}}"
+        Binding="{Binding IsPressed, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type GridViewColumnHeader}}}"
         Value="True">
         <Setter Property="Fill" Value="{DynamicResource {x:Static vsp:HeaderColors.MouseDownGlyphBrushKey}}"/>
       </DataTrigger>

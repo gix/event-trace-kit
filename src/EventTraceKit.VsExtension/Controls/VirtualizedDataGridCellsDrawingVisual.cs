@@ -11,8 +11,6 @@ namespace EventTraceKit.VsExtension.Controls
     {
         private VirtualizedDataGrid parentGrid;
         private readonly VirtualizedDataGridCellsPresenter cellsPresenter;
-        private SolidColorBrush backgroundBrush1;
-        private SolidColorBrush backgroundBrush2;
 
         public VirtualizedDataGridCellsDrawingVisual(
             VirtualizedDataGridCellsPresenter cellsPresenter)
@@ -72,7 +70,7 @@ namespace EventTraceKit.VsExtension.Controls
             RenderedViewport = Rect.Empty;
             //cellsPresenter.RemoveAndReleaseAllUIElements();
 
-            using (DrawingContext context = RenderOpen()) {
+            using (DrawingContext dc = RenderOpen()) {
                 int rowCount = viewModel.RowCount;
                 if (rowCount <= 0)
                     return;
@@ -89,18 +87,19 @@ namespace EventTraceKit.VsExtension.Controls
                     double rightEdge = columnBoundaries[col + 1] - horizontalOffset;
                     double width = rightEdge - leftEdge;
                     if (visibleColumns[col].IsInFreezableArea()) {
-                        context.DrawRectangle(
+                        dc.DrawRectangle(
                             frozenColumnBrush,
                             null, new Rect(leftEdge, 0, width, height));
                     }
                 }
 
+                Brush primaryBackground = cellsPresenter.PrimaryBackground;
+                Brush secondaryBackground = cellsPresenter.SecondaryBackground;
                 for (int row = firstVisibleRow; row <= lastVisibleRow; ++row) {
                     double topEdge = (row * rowHeight) - verticalOffset;
                     var background = row % 2 == 0
-                        ? (backgroundBrush1 ?? (backgroundBrush1 = new SolidColorBrush(Color.FromRgb(0xFF, 0xFF, 0xFF))))
-                        : (backgroundBrush2 ?? (backgroundBrush2 = new SolidColorBrush(Color.FromRgb(0xF7, 0xF7, 0xF7))));
-                    context.DrawRectangle(
+                        ? primaryBackground : secondaryBackground;
+                    dc.DrawRectangle(
                         background, null,
                         new Rect(0, topEdge, actualWidth, rowHeight));
                 }
@@ -129,21 +128,21 @@ namespace EventTraceKit.VsExtension.Controls
                         double topEdge = (row * rowHeight) - verticalOffset;
                         double bottomEdge = topEdge + rowHeight;
 
-                        context.DrawRectangle(
+                        dc.DrawRectangle(
                             selectionBackground, null,
                             new Rect(
                                 new Point(0, topEdge),
                                 new Point(actualWidth, bottomEdge)));
 
                         if (!rowSelection.Contains(row - 1)) {
-                            context.DrawLineSnapped(
+                            dc.DrawLineSnapped(
                                 selectionBorderPen,
                                 new Point(0, topEdge),
                                 new Point(actualWidth, topEdge));
                         }
 
                         if (!rowSelection.Contains(row + 1)) {
-                            context.DrawLineSnapped(
+                            dc.DrawLineSnapped(
                                 selectionBorderPen,
                                 new Point(0, bottomEdge),
                                 new Point(actualWidth, bottomEdge));
@@ -155,7 +154,7 @@ namespace EventTraceKit.VsExtension.Controls
                 if (horizontalGridLinesPen != null) {
                     for (int row = firstVisibleRow; row <= lastVisibleRow; ++row) {
                         double bottomEdge = ((row + 1) * rowHeight) - verticalOffset;
-                        context.DrawLineSnapped(
+                        dc.DrawLineSnapped(
                             horizontalGridLinesPen,
                             new Point(0, bottomEdge),
                             new Point(actualWidth, bottomEdge));
@@ -164,7 +163,7 @@ namespace EventTraceKit.VsExtension.Controls
 
                 if (visibleColumns.Count > 0) {
                     RenderCells(
-                        context, viewport, height, columnBoundaries,
+                        dc, viewport, height, columnBoundaries,
                         firstVisibleColumn, lastVisibleColumn,
                         firstVisibleRow, lastVisibleRow);
                 }
@@ -177,7 +176,7 @@ namespace EventTraceKit.VsExtension.Controls
                     && focusIndex <= lastVisibleRow) {
                     double topEdge = (focusIndex * rowHeight) - verticalOffset;
                     var bounds = new Rect(0, topEdge, actualWidth - 1, rowHeight);
-                    context.DrawRectangleSnapped(null, focusBorderPen, bounds);
+                    dc.DrawRectangleSnapped(null, focusBorderPen, bounds);
                 }
             }
         }
@@ -205,7 +204,7 @@ namespace EventTraceKit.VsExtension.Controls
                 selectionForeground = cellsPresenter.InactiveSelectionForeground;
             var rowSelection = cellsPresenter.ViewModel.RowSelection;
 
-            double padding = rowHeight * 0.1;
+            double padding = rowHeight / 10;
             double totalPadding = 2 * padding;
 
             for (int col = firstVisibleColumn; col <= lastVisibleColumn; ++col) {
@@ -243,14 +242,17 @@ namespace EventTraceKit.VsExtension.Controls
                             value.ToString(), currentCulture, flowDirection,
                             typeface, fontSize, foreground, null,
                             TextFormattingMode.Display);
-                        formatted.MaxTextWidth = Math.Max(cellWidth - totalPadding, 0.0);
-                        formatted.MaxTextHeight = rowHeight - padding;
+                        formatted.MaxTextWidth = Math.Max(cellWidth - totalPadding, 0);
+                        formatted.MaxTextHeight = rowHeight;
                         formatted.TextAlignment = column.TextAlignment;
                         formatted.Trimming = TextTrimming.CharacterEllipsis;
 
                         if (totalPadding < cellWidth) {
-                            var point = new Point(leftEdge + padding, topEdge + padding);
-                            var origin = point.Round(MidpointRounding.AwayFromZero);
+                            var offsetY = (rowHeight - formatted.Height) / 2;
+                            var origin = new Point(
+                                leftEdge + padding,
+                                topEdge + offsetY);
+                            origin = origin.Round(MidpointRounding.AwayFromZero);
                             context.DrawText(formatted, origin);
                         }
                     }
@@ -267,7 +269,7 @@ namespace EventTraceKit.VsExtension.Controls
         }
 
         private double[] ComputeColumnBoundaries(
-            IList<VirtualizedDataGridColumnViewModel> visibleColumns)
+            IList<VirtualizedDataGridColumn> visibleColumns)
         {
             var boundaries = new double[visibleColumns.Count + 1];
             double cumulativeWidth = 0.0;
@@ -279,7 +281,7 @@ namespace EventTraceKit.VsExtension.Controls
             return boundaries;
         }
 
-        internal double GetColumnAutoSize(VirtualizedDataGridColumnViewModel column)
+        internal double GetColumnAutoSize(VirtualizedDataGridColumn column)
         {
             if (!column.IsVisible)// && !column.IsDisconnected)
                 throw new InvalidOperationException();
@@ -290,6 +292,7 @@ namespace EventTraceKit.VsExtension.Controls
             if (viewModel == null || viewModel.RowCount <= 0)
                 return width;
 
+            double rowHeight = cellsPresenter.RowHeight;
             int firstVisibleRow = cellsPresenter.FirstVisibleRowIndex;
             int lastVisibleRow = cellsPresenter.LastVisibleRowIndex;
             Typeface typeface = cellsPresenter.Typeface;
@@ -298,7 +301,7 @@ namespace EventTraceKit.VsExtension.Controls
             FlowDirection flowDirection = cellsPresenter.FlowDirection;
             CultureInfo currentCulture = CultureInfo.CurrentCulture;
 
-            double padding = cellsPresenter.RowHeight * 0.1;
+            double padding = rowHeight / 10;
             double totalPadding = 2 * padding;
             int viewportSizeHint = lastVisibleRow - firstVisibleRow + 1;
 
@@ -308,8 +311,7 @@ namespace EventTraceKit.VsExtension.Controls
                     value.ToString(), currentCulture, flowDirection, typeface,
                     fontSize, foreground, null, TextFormattingMode.Display);
 
-                double num11 = column.IsKey ? 16.0 : 0.0;
-                width = Math.Max(width, formatted.Width + totalPadding + num11 + 1);
+                width = Math.Max(width, formatted.Width + totalPadding + 1);
             }
 
             return width;

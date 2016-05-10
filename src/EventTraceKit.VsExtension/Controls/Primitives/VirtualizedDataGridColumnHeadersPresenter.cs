@@ -21,7 +21,9 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DefaultStyleKeyProperty.OverrideMetadata(
                 forType, new FrameworkPropertyMetadata(forType));
 
-            var panelFactory = new FrameworkElementFactory(typeof(StackPanel));
+            // Arrange the headers in reverse order, i.e. from right to left,
+            // to make the left header's gripper overlay the right header.
+            var panelFactory = new FrameworkElementFactory(typeof(ReversedStackPanel));
             panelFactory.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
             var panelTemplate = new ItemsPanelTemplate(panelFactory);
             panelTemplate.Seal();
@@ -55,22 +57,22 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         #region public VirtualizedDataGridColumnViewModel ExpanderHeaderViewModel { get; set; }
 
         /// <summary>
-        ///   Identifies the <see cref="ExpanderHeaderViewModel"/> dependency property.
+        ///   Identifies the <see cref="ExpanderHeader"/> dependency property.
         /// </summary>
-        public static readonly DependencyProperty ExpanderHeaderViewModelProperty =
+        public static readonly DependencyProperty ExpanderHeaderProperty =
             DependencyProperty.Register(
-                nameof(ExpanderHeaderViewModel),
-                typeof(VirtualizedDataGridColumnViewModel),
+                nameof(ExpanderHeader),
+                typeof(VirtualizedDataGridColumn),
                 typeof(VirtualizedDataGridColumnHeadersPresenter),
                 PropertyMetadataUtils.DefaultNull);
 
         /// <summary>
         ///   Gets or sets the expander header column.
         /// </summary>
-        public VirtualizedDataGridColumnViewModel ExpanderHeaderViewModel
+        public VirtualizedDataGridColumn ExpanderHeader
         {
-            get { return (VirtualizedDataGridColumnViewModel)GetValue(ExpanderHeaderViewModelProperty); }
-            set { SetValue(ExpanderHeaderViewModelProperty, value); }
+            get { return (VirtualizedDataGridColumn)GetValue(ExpanderHeaderProperty); }
+            set { SetValue(ExpanderHeaderProperty, value); }
         }
 
         #endregion
@@ -101,7 +103,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         {
             base.PrepareContainerForItemOverride(element, item);
 
-            var viewModel = item as VirtualizedDataGridColumnViewModel;
+            var viewModel = item as VirtualizedDataGridColumn;
             if (viewModel == null)
                 throw new InvalidOperationException("Invalid item type.");
 
@@ -273,6 +275,28 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             Dragging,
         }
 
+        /// <devdoc>
+        /// <para>
+        ///   There are a lot of options to realize header dragging. Many use
+        ///   ghost elements duplicating the dragged header and showing a drop
+        ///   indicator. These elements can be placed in an adorner layer or
+        ///   arranged explicitly as part of the normal visual tree.
+        /// </para>
+        /// <para>
+        ///   The ghost element is usually rendered using a visual brush of the
+        ///   dragged header. This has the disadvantage of losing the pressed
+        ///   state once the mouse cursor leaves the bounds of the original
+        ///   header.
+        /// </para>
+        /// <para>
+        ///   We want to have Explorer-like real dragging of the header with
+        ///   dragged over columns moving aside. Using ghost elements for this
+        ///   is not practicable. Instead we simply apply a translate transform
+        ///   to the real header while dragging. This also preserves the pressed
+        ///   appearance. While dragging, the other headers are rearranged
+        ///   on-the-fly to show the potential new column order.
+        /// </para>
+        /// </devdoc>
         private struct HeaderDragContext
         {
             private DragState state;
@@ -302,7 +326,14 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 this.generator = generator;
                 DraggedHeaderIndex = generator.IndexFromContainer(DraggedHeader);
                 animations = new HeaderAnimation[generator.Items.Count];
-                Panel.SetZIndex(DraggedHeader, 1);
+
+                // Headers by default have no explicit Z-index thus they are
+                // rendered in the order in which they appear in the visual tree.
+                // To ensure that the dragged header is rendered on top of all
+                // other headers we have to raise its Z-index above the default.
+                // The raised Z-index is negative because the panel used to
+                // arrange the headers has its visual child collection reversed.
+                Panel.SetZIndex(DraggedHeader, -1);
             }
 
             public void Reset()
@@ -345,20 +376,54 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             }
         }
 
+        /// <devdoc>
+        /// <para>
+        ///   Encapsulates the animation of a header moving aside (or back) to
+        ///   make room for the dragged header. Headers have just two resting
+        ///   places: the initial position, or the alternate position. The
+        ///   latter only depends depends on the actual width of the dragged
+        ///   column.
+        ///
+        ///   Initial position:
+        ///     | Header1   | Dragged | Header3       | Header4     |
+        ///       +0                    +0              +0
+        ///                      ------>
+        ///
+        ///   Alternate positions:
+        ///     | Header1   | Header3       | Dragged | Header4     |
+        ///       +0          -10                       +0
+        ///                                      ------>
+        ///
+        ///     | Header1   | Header3       | Header4     | Dragged |
+        ///       +0          -10             -10
+        ///
+        ///     | Dragged | Header1   | Header3       | Header4     |
+        ///                 +10         +0              +0
+        /// </para>
+        /// <para>
+        ///   When a header is still animating has to move back we want to
+        ///   cancel the partially completed animation and reverse it. There
+        ///   seems to be no built-in way to accomplish that. Just applying a an
+        ///   animation from the current offset to the new target offset has the
+        ///   wrong duration and wrong values due to easing. We have to find out
+        ///   how much time passed, reverse the animation and then seek forward
+        ///   before continuing.
+        /// </para>
+        /// </devdoc>
         private sealed class HeaderAnimation
         {
             private readonly UIElement element;
             private readonly DoubleAnimation animation;
             private AnimationClock clock;
-            private State state = State.Origin;
+            private State state = State.Initial;
             private bool needsReverse;
 
             private enum State
             {
-                Origin,
+                Initial,
                 MovingToAlternate,
                 Alternate,
-                MovingToOrigin
+                MovingToInitial
             }
 
             public HeaderAnimation(UIElement element, double to)
@@ -384,12 +449,12 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             public void MoveAside()
             {
                 switch (state) {
-                    case State.Origin:
+                    case State.Initial:
                         state = State.MovingToAlternate;
                         ReverseIfNeeded();
                         Run();
                         break;
-                    case State.MovingToOrigin:
+                    case State.MovingToInitial:
                         state = State.MovingToAlternate;
                         Reverse();
                         Run();
@@ -401,12 +466,12 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             {
                 switch (state) {
                     case State.Alternate:
-                        state = State.MovingToOrigin;
+                        state = State.MovingToInitial;
                         ReverseIfNeeded();
                         Run();
                         break;
                     case State.MovingToAlternate:
-                        state = State.MovingToOrigin;
+                        state = State.MovingToInitial;
                         Reverse();
                         Run();
                         break;
@@ -449,9 +514,9 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                         needsReverse = true;
                         state = State.Alternate;
                         break;
-                    case State.MovingToOrigin:
+                    case State.MovingToInitial:
                         needsReverse = true;
-                        state = State.Origin;
+                        state = State.Initial;
                         break;
                     default:
                         Debug.Fail("Wrong state in OnCompleted callback " + state + ".");

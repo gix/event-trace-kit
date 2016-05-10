@@ -1,4 +1,4 @@
-﻿namespace UIVirt
+﻿namespace EventTraceKit.VsExtension.UITests
 {
     /// <summary>
     /// Interaction logic for TraceLogTestWindow.xaml

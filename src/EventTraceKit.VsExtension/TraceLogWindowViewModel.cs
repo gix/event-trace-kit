@@ -4,574 +4,17 @@
     using System.Collections;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
-    using System.Collections.Specialized;
-    using System.ComponentModel;
     using System.ComponentModel.Design;
-    using System.Globalization;
     using System.Linq;
-    using System.Runtime.CompilerServices;
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows;
-    using System.Windows.Controls;
-    using System.Windows.Data;
     using System.Windows.Threading;
     using EventTraceKit.VsExtension.Controls;
-    using Microsoft.VisualStudio.PlatformUI;
     using Microsoft.VisualStudio.Shell;
-    using Task = System.Threading.Tasks.Task;
-
-    public class TableControlViewModel : ViewModel
-    {
-        public ObservableCollection<TableHeaderViewModel> Headers { get; } =
-            new ObservableCollection<TableHeaderViewModel>();
-
-        //public ObservableCollection<TableEntryViewModel> Entries { get; } =
-        //    new ObservableCollection<TableEntryViewModel>();
-
-        private GridView view;
-
-        public void AddColumn(TableHeaderViewModel header)
-        {
-            var factory = new FrameworkElementFactory(typeof(ContentPresenter));
-            factory.SetBinding(
-                ContentPresenter.ContentProperty,
-                new Binding(header.MemberName));
-            var template = new DataTemplate { VisualTree = factory };
-            var column = new GridViewColumn {
-                Header = header.Header,
-                Width = header.ColumnWidth,
-                //CellTemplate = template
-            };
-
-            int index = Headers.Where(h => h.IsVisible).TakeWhile(h => h != header).Count();
-            view.Columns.Insert(index, column);
-        }
-
-        public void RemoveColumn(TableHeaderViewModel header)
-        {
-            var column = view.Columns.FirstOrDefault(
-                c => (c.Header as FrameworkElement)?.DataContext == header);
-            if (column != null)
-                view.Columns.Remove(column);
-        }
-
-        private MenuItem BuildColumnsMenu()
-        {
-            var menu = new MenuItem();
-            menu.Header = "Show Columns";
-
-            foreach (var header in Headers) {
-                var item = new MenuItem {
-                    Header = header.Header,
-                    Tag = header,
-                    IsCheckable = true,
-                    IsChecked = true
-                };
-                item.Command = new DelegateCommand(obj => {
-                    if (!item.IsChecked)
-                        AddColumn(header);
-                    else
-                        RemoveColumn(header);
-                });
-                menu.Items.Add(item);
-            }
-
-            return menu;
-        }
-    }
-
-    public unsafe class TraceEvent2
-    {
-        private EventRecordCPtr record;
-
-        public TraceEvent2(IntPtr eventPtr)
-        {
-            record = new EventRecordCPtr((EVENT_RECORD*)eventPtr.ToPointer());
-        }
-
-        public int Id => record.EventHeader.EventDescriptor.Id;
-    }
-
-    public class EventsCollection
-        : IReadOnlyList<TraceEvent2>
-        , INotifyPropertyChanged
-        , INotifyCollectionChanged
-        , ICollectionViewFactory
-    {
-        private TraceSession session;
-
-        public void Attach(TraceSession session)
-        {
-            this.session = session;
-        }
-
-        public void Detach(TraceSession session)
-        {
-            this.session = null;
-            Update(0);
-            cache.Clear();
-        }
-
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public IEnumerator<TraceEvent2> GetEnumerator()
-        {
-            int count = Count;
-            for (int i = 0; i < count; ++i)
-                yield return this[i];
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        public int Count { get; private set; }
-
-        public TraceEvent2 this[int index]
-        {
-            get
-            {
-                if (session == null)
-                    throw new ArgumentOutOfRangeException(nameof(index));
-
-                TraceEvent2 evt;
-                if (!cache.TryGetValue(index, out evt))
-                    cache[index] = evt = new TraceEvent2(session.GetEvent(index));
-
-                return evt;
-            }
-        }
-
-        private class VirtualList : IList
-        {
-            private readonly EventsCollection collection;
-            private readonly int offset;
-            private readonly int count;
-
-            public VirtualList(EventsCollection collection, int offset, int count)
-            {
-                this.collection = collection;
-                this.offset = offset;
-                this.count = count;
-            }
-
-            public IEnumerator GetEnumerator()
-            {
-                throw new NotImplementedException();
-            }
-
-            public int Count => count;
-
-            public object SyncRoot => this;
-
-            public bool IsSynchronized => false;
-
-            public bool IsReadOnly => true;
-
-            public bool IsFixedSize => true;
-
-            public object this[int index]
-            {
-                get
-                {
-                    if (index < 0 || index > count)
-                        throw new ArgumentOutOfRangeException(nameof(index));
-                    return collection[offset + index];
-                }
-                set { throw new NotSupportedException(); }
-            }
-
-            public int Add(object value)
-            {
-                throw new NotSupportedException();
-            }
-
-            public bool Contains(object value)
-            {
-                return false;
-            }
-
-            public int IndexOf(object value)
-            {
-                return -1;
-            }
-
-            public void CopyTo(Array array, int index)
-            {
-                if (array.Length - count < index)
-                    throw new ArgumentOutOfRangeException(nameof(array));
-                for (int i = 0; i < count; ++i)
-                    array.SetValue(collection[offset + i], index + i);
-            }
-
-            public void Clear()
-            {
-                throw new NotSupportedException();
-            }
-
-            public void Insert(int index, object value)
-            {
-                throw new NotSupportedException();
-            }
-
-            public void Remove(object value)
-            {
-                throw new NotSupportedException();
-            }
-
-            public void RemoveAt(int index)
-            {
-                throw new NotSupportedException();
-            }
-        }
-
-        public void Update(int newCount)
-        {
-            int oldCount = Count;
-            Count = newCount;
-            RaisePropertyChanged(nameof(Count));
-            RaisePropertyChanged("Item[]");
-
-            if (Count == 0) {
-                var args = new NotifyCollectionChangedEventArgs(
-                    NotifyCollectionChangedAction.Reset);
-                CollectionChanged?.Invoke(this, args);
-            } else if (newCount > oldCount) {
-                int added = newCount - oldCount;
-                var args = new NotifyCollectionChangedEventArgs(
-                    NotifyCollectionChangedAction.Add, new VirtualList(this, oldCount, added));
-                CollectionChanged?.Invoke(this, args);
-            }
-        }
-
-        private readonly Dictionary<int, TraceEvent2> cache = new Dictionary<int, TraceEvent2>();
-
-        public void Clear()
-        {
-        }
-
-        protected virtual void RaisePropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        public ICollectionView CreateView()
-        {
-            return new CollectionView(this);
-        }
-
-        private class CollectionView
-            : DispatcherObject
-            , ICollectionView
-            , INotifyPropertyChanged
-        {
-            private readonly EventsCollection collection;
-            private int deferLevel;
-            private object currentItem;
-            private int currentPosition;
-            private int timestamp;
-
-            public CollectionView(EventsCollection collection)
-            {
-                this.collection = collection;
-
-                var propertyChanged = collection as INotifyPropertyChanged;
-                if (propertyChanged != null) {
-                    propertyChanged.PropertyChanged += OnPropertyChanged;
-                }
-
-                var changed = collection as INotifyCollectionChanged;
-                if (changed != null) {
-                    changed.CollectionChanged += OnCollectionChanged;
-                    //this.SetFlag(CollectionViewFlags.IsDynamic, true);
-                }
-            }
-
-            private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
-            {
-            }
-
-            private void OnCollectionChanged(
-                object sender, NotifyCollectionChangedEventArgs args)
-            {
-                //if (!this.AllowsCrossThreadChanges) {
-                if (!CheckAccess())
-                    throw new NotSupportedException("MultiThreadedCollectionChangeNotSupported");
-
-                ProcessCollectionChanged(args);
-                //} else {
-                //    this.PostChange(args);
-                //}
-            }
-
-            protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs args)
-            {
-                if (args == null)
-                    throw new ArgumentNullException(nameof(args));
-
-                ++timestamp;
-                CollectionChanged?.Invoke(this, args);
-
-                if (args.Action != NotifyCollectionChangedAction.Replace &&
-                    args.Action != NotifyCollectionChangedAction.Move)
-                    RaisePropertyChanged(nameof(Count));
-
-                bool isEmpty = IsEmpty;
-                if (isEmpty != this.CheckFlag(CollectionViewFlags.CachedIsEmpty)) {
-                    SetFlag(CollectionViewFlags.CachedIsEmpty, isEmpty);
-                    RaisePropertyChanged(nameof(IsEmpty));
-                }
-            }
-
-            [Flags]
-            private enum CollectionViewFlags
-            {
-                AllowsCrossThreadChanges = 0x100,
-                CachedIsEmpty = 0x200,
-                IsCurrentAfterLast = 0x10,
-                IsCurrentBeforeFirst = 8,
-                IsDataInGroupOrder = 0x40,
-                IsDynamic = 0x20,
-                NeedsRefresh = 0x80,
-                ShouldProcessCollectionChanged = 4,
-                UpdatedOutsideDispatcher = 2
-            }
-
-            private CollectionViewFlags flags;
-
-            private bool CheckFlag(CollectionViewFlags flag)
-            {
-                return (flags & flag) > 0;
-            }
-
-            private void SetFlag(CollectionViewFlags flag, bool value)
-            {
-                if (value)
-                    flags |= flag;
-                else
-                    flags &= ~flag;
-            }
-
-            protected virtual void ProcessCollectionChanged(NotifyCollectionChangedEventArgs args)
-            {
-                //this.ValidateCollectionChangedEventArgs(args);
-
-                object oldCurrentItem = currentItem;
-                int oldCurrentPosition = currentPosition;
-                bool oldIsCurrentAfterLast = CheckFlag(CollectionViewFlags.IsCurrentAfterLast);
-                bool oldIsCurrentBeforeFirst = CheckFlag(CollectionViewFlags.IsCurrentBeforeFirst);
-
-                bool changed = false;
-                switch (args.Action) {
-                    case NotifyCollectionChangedAction.Add:
-                        changed = true;
-                        //AdjustCurrencyForAdd(args.NewStartingIndex);
-                        break;
-
-                    case NotifyCollectionChangedAction.Remove:
-                        changed = true;
-                        //AdjustCurrencyForRemove(args.OldStartingIndex);
-                        break;
-
-                    case NotifyCollectionChangedAction.Replace:
-                        changed = true;
-                        //AdjustCurrencyForReplace(args.OldStartingIndex);
-                        break;
-
-                    case NotifyCollectionChangedAction.Move:
-                        changed = true;
-                        //AdjustCurrencyForMove(args.OldStartingIndex, args.NewStartingIndex);
-                        break;
-
-                    case NotifyCollectionChangedAction.Reset:
-                        //RefreshOrDefer();
-                        return;
-                }
-
-                if (changed)
-                    OnCollectionChanged(args);
-
-                //if (this._currentElementWasRemovedOrReplaced) {
-                //    this.MoveCurrencyOffDeletedElement();
-                //    this._currentElementWasRemovedOrReplaced = false;
-                //}
-
-                if (IsCurrentAfterLast != oldIsCurrentAfterLast)
-                    RaisePropertyChanged(nameof(IsCurrentAfterLast));
-                if (IsCurrentBeforeFirst != oldIsCurrentBeforeFirst)
-                    RaisePropertyChanged(nameof(IsCurrentBeforeFirst));
-                if (currentPosition != oldCurrentPosition)
-                    RaisePropertyChanged(nameof(CurrentPosition));
-                if (currentItem != oldCurrentItem)
-                    RaisePropertyChanged(nameof(CurrentItem));
-            }
-
-            public IEnumerator GetEnumerator()
-            {
-                return new Enumerator(this);
-            }
-
-            private class Enumerator : IEnumerator
-            {
-                private readonly CollectionView view;
-                private int index;
-
-                public Enumerator(CollectionView view)
-                {
-                    this.view = view;
-                }
-
-                public bool MoveNext()
-                {
-                    if (index == view.collection.Count)
-                        return false;
-                    ++index;
-                    return true;
-                }
-
-                public void Reset()
-                {
-                    index = -1;
-                }
-
-                public object Current
-                {
-                    get { return view.collection[index]; }
-                }
-            }
-
-            public event NotifyCollectionChangedEventHandler CollectionChanged;
-
-            public bool Contains(object item)
-            {
-                return false;
-            }
-
-            public void Refresh()
-            {
-                OnCollectionChanged(
-                    new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-            }
-
-            public IDisposable DeferRefresh()
-            {
-                ++deferLevel;
-                return new DeferRefreshScope(this);
-
-            }
-
-            private sealed class DeferRefreshScope : IDisposable
-            {
-                private CollectionView collectionView;
-
-                public DeferRefreshScope(CollectionView collectionView)
-                {
-                    this.collectionView = collectionView;
-                }
-
-                public void Dispose()
-                {
-                    if (collectionView != null) {
-                        collectionView.EndDeferRefresh();
-                        collectionView = null;
-                    }
-                }
-            }
-
-            private void EndDeferRefresh()
-            {
-                if (--deferLevel == 0)
-                    Refresh();
-            }
-
-            public bool MoveCurrentToFirst()
-            {
-                return false;
-            }
-
-            public bool MoveCurrentToLast()
-            {
-                return false;
-            }
-
-            public bool MoveCurrentToNext()
-            {
-                return false;
-            }
-
-            public bool MoveCurrentToPrevious()
-            {
-                return false;
-            }
-
-            public bool MoveCurrentTo(object item)
-            {
-                return false;
-            }
-
-            public bool MoveCurrentToPosition(int position)
-            {
-                return false;
-            }
-
-            public CultureInfo Culture { get; set; }
-
-            public IEnumerable SourceCollection => collection;
-
-            public bool CanFilter => false;
-            public bool CanSort => false;
-            public bool CanGroup => false;
-
-            public Predicate<object> Filter
-            {
-                get { return null; }
-                set { }
-            }
-
-            public SortDescriptionCollection SortDescriptions
-            {
-                get { return null; }
-            }
-
-            public ObservableCollection<GroupDescription> GroupDescriptions
-            {
-                get { return null; }
-            }
-
-            public ReadOnlyObservableCollection<object> Groups
-            {
-                get { return null; }
-            }
-
-            public bool IsEmpty => collection.Count == 0;
-
-            public object CurrentItem => currentItem;
-
-            public int CurrentPosition => currentPosition;
-
-            public bool IsCurrentAfterLast =>
-                CheckFlag(CollectionViewFlags.IsCurrentAfterLast);
-
-            public bool IsCurrentBeforeFirst =>
-                CheckFlag(CollectionViewFlags.IsCurrentBeforeFirst);
-
-            public event CurrentChangingEventHandler CurrentChanging;
-            public event EventHandler CurrentChanged;
-            public event PropertyChangedEventHandler PropertyChanged;
-
-            private void RaisePropertyChanged([CallerMemberName] string propertyName = null)
-            {
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
-    }
 
     public class TraceLogWindowViewModel : ViewModel
     {
-        private readonly object eventsMutex = new object();
         private readonly DispatcherTimer updateStatisticsTimer;
         private readonly List<TraceProviderSpec> providers = new List<TraceProviderSpec>();
 
@@ -583,60 +26,59 @@
         private bool isCollecting;
         private TraceSession session;
 
+        private DateTime lastUpdateEvent = DateTime.MinValue;
+        private TimeSpan updateThreshold = TimeSpan.FromMilliseconds(50);
+        private DispatcherSynchronizationContext syncCtx;
+        private TaskScheduler scheduler;
+        private TaskFactory taskFactory;
+
         public TraceLogWindowViewModel(IOperationalModeProvider modeProvider)
         {
             if (modeProvider != null)
                 modeProvider.OperationalModeChanged += OnOperationalModeChanged;
 
-            var eventsTable = new TableControlViewModel();
+            //var header = eventsTable.Headers;
+            //header.Add(new TableHeaderViewModel {
+            //    Header = "Time",
+            //    ColumnWidth = 100,
+            //    MemberName = "Time",
+            //    StringFormat = "hh:mm:ss.fffffff"
+            //});
+            //header.Add(new TableHeaderViewModel { Header = "PID", ColumnWidth = 50, MemberName = "ProcessId" });
+            //header.Add(new TableHeaderViewModel { Header = "TID", ColumnWidth = 50, MemberName = "ThreadId" });
+            //header.Add(new TableHeaderViewModel {
+            //    Header = "ProviderId",
+            //    ColumnWidth = 50,
+            //    MemberName = "ProviderId"
+            //});
+            //header.Add(new TableHeaderViewModel { Header = "Provider", ColumnWidth = 50, MemberName = "Provider" });
+            //header.Add(new TableHeaderViewModel { Header = "Id", ColumnWidth = 25, MemberName = "Id" });
+            //header.Add(new TableHeaderViewModel { Header = "Version", ColumnWidth = 20, MemberName = "Version" });
+            //header.Add(new TableHeaderViewModel { Header = "Channel", ColumnWidth = 20, MemberName = "Channel" });
+            //header.Add(new TableHeaderViewModel { Header = "ChannelId", ColumnWidth = 20, MemberName = "ChannelId" });
+            //header.Add(new TableHeaderViewModel { Header = "Level", ColumnWidth = 20, MemberName = "Level" });
+            //header.Add(new TableHeaderViewModel { Header = "LevelId", ColumnWidth = 20, MemberName = "LevelId" });
+            //header.Add(new TableHeaderViewModel { Header = "Task", ColumnWidth = 40, MemberName = "Task" });
+            //header.Add(new TableHeaderViewModel { Header = "TaskId", ColumnWidth = 40, MemberName = "TaskId" });
+            //header.Add(new TableHeaderViewModel { Header = "Opcode", ColumnWidth = 40, MemberName = "Opcode" });
+            //header.Add(new TableHeaderViewModel { Header = "OpcodeId", ColumnWidth = 40, MemberName = "OpcodeId" });
+            //header.Add(new TableHeaderViewModel { Header = "Keywords", ColumnWidth = 50, MemberName = "Keywords" });
+            //header.Add(new TableHeaderViewModel {
+            //    Header = "KeywordMask",
+            //    ColumnWidth = 50,
+            //    MemberName = "KeywordMask",
+            //    StringFormat = "X"
+            //});
+            //header.Add(new TableHeaderViewModel { Header = "Message", ColumnWidth = 500, MemberName = "Message" });
 
-            var header = eventsTable.Headers;
-            header.Add(new TableHeaderViewModel {
-                Header = "Time",
-                ColumnWidth = 100,
-                MemberName = "Time",
-                StringFormat = "hh:mm:ss.fffffff"
-            });
-            header.Add(new TableHeaderViewModel { Header = "PID", ColumnWidth = 50, MemberName = "ProcessId" });
-            header.Add(new TableHeaderViewModel { Header = "TID", ColumnWidth = 50, MemberName = "ThreadId" });
-            header.Add(new TableHeaderViewModel {
-                Header = "ProviderId",
-                ColumnWidth = 50,
-                MemberName = "ProviderId"
-            });
-            header.Add(new TableHeaderViewModel { Header = "Provider", ColumnWidth = 50, MemberName = "Provider" });
-            header.Add(new TableHeaderViewModel { Header = "Id", ColumnWidth = 25, MemberName = "Id" });
-            header.Add(new TableHeaderViewModel { Header = "Version", ColumnWidth = 20, MemberName = "Version" });
-            header.Add(new TableHeaderViewModel { Header = "Channel", ColumnWidth = 20, MemberName = "Channel" });
-            header.Add(new TableHeaderViewModel { Header = "ChannelId", ColumnWidth = 20, MemberName = "ChannelId" });
-            header.Add(new TableHeaderViewModel { Header = "Level", ColumnWidth = 20, MemberName = "Level" });
-            header.Add(new TableHeaderViewModel { Header = "LevelId", ColumnWidth = 20, MemberName = "LevelId" });
-            header.Add(new TableHeaderViewModel { Header = "Task", ColumnWidth = 40, MemberName = "Task" });
-            header.Add(new TableHeaderViewModel { Header = "TaskId", ColumnWidth = 40, MemberName = "TaskId" });
-            header.Add(new TableHeaderViewModel { Header = "Opcode", ColumnWidth = 40, MemberName = "Opcode" });
-            header.Add(new TableHeaderViewModel { Header = "OpcodeId", ColumnWidth = 40, MemberName = "OpcodeId" });
-            header.Add(new TableHeaderViewModel { Header = "Keywords", ColumnWidth = 50, MemberName = "Keywords" });
-            header.Add(new TableHeaderViewModel {
-                Header = "KeywordMask",
-                ColumnWidth = 50,
-                MemberName = "KeywordMask",
-                StringFormat = "X"
-            });
-            header.Add(new TableHeaderViewModel { Header = "Message", ColumnWidth = 500, MemberName = "Message" });
-
-            Events = new ObservableCollection<TraceEvent>();
-            Events.Add(new TraceEvent { Id = 1 });
-            Events.Add(new TraceEvent { Id = 2 });
-            //Events = new EventsCollection();
-            GridModel = new GridViewModel();
-            BindingOperations.EnableCollectionSynchronization(Events, eventsMutex);
+            EventsDataView = new TraceEventsView(); 
+            GridModel = new VirtualizedDataGridViewModel(EventsDataView);
 
             syncCtx = new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher);
             SynchronizationContext.SetSynchronizationContext(syncCtx);
             scheduler = TaskScheduler.FromCurrentSynchronizationContext();
             taskFactory = new TaskFactory(scheduler);
 
-            EventsTable = eventsTable;
             Statistics = new TraceLogStatsModel();
             ShowStatistics = true;
             AutoLog = true;
@@ -653,92 +95,8 @@
             providers.Add(spec);
         }
 
-        public class GridViewModel : ViewModel, IVirtualizedDataGridViewModel
-        {
-            private readonly PropertyChangedEventArgs rowCountChangedArgs =
-                new PropertyChangedEventArgs(nameof(RowCount));
-
-            public GridViewModel()
-            {
-                var col1 = new VirtualizedDataGridViewColumn("Id") {
-                    Width = 200,
-                    IsVisible = true,
-                    IsResizable = true
-                };
-
-                var col2 = new VirtualizedDataGridViewColumn("Channel") {
-                    Width = 200,
-                    IsVisible = true,
-                    IsResizable = true
-                };
-
-                var col3 = new VirtualizedDataGridViewColumn("Level") {
-                    Width = 200,
-                    IsVisible = true,
-                    IsResizable = true
-                };
-
-                var col4 = new VirtualizedDataGridViewColumn("Task") {
-                    Width = 200,
-                    IsVisible = true,
-                    IsResizable = true
-                };
-
-                var columns = new[] { col1, col2, col3, col4 };
-
-                CellsPresenterViewModel = new VirtualizedDataGridCellsPresenterViewModel(this);
-
-                ColumnsViewModel = new VirtualizedDataGridColumnsViewModel(this);
-                foreach (var column in columns)
-                    ColumnsViewModel.WritableColumns.Add(
-                        new VirtualizedDataGridColumnViewModel(ColumnsViewModel, column));
-
-                ColumnsViewModel.RefreshAllObservableCollections();
-
-                RowCount = 40;
-            }
-
-            public event ItemEventHandler<bool> Updated;
-
-            public IVirtualizedDataGridCellsPresenterViewModel CellsPresenterViewModel { get; }
-
-            public VirtualizedDataGridColumnsViewModel ColumnsViewModel { get; }
-
-            public int RowCount { get; private set; }
-
-            public void UpdateRowCount(int newCount)
-            {
-                if (newCount == RowCount)
-                    return;
-
-                RowCount = newCount;
-                //Application.Current.Dispatcher.Invoke(delegate {
-                //    Updated?.Invoke(this, trueEventArgs);
-                //});
-                RaisePropertyChanged(rowCountChangedArgs);
-            }
-
-            public void RaiseUpdate(bool refreshViewModelFromModel = true)
-            {
-                Updated?.Invoke(this, new ItemEventArgs<bool>(refreshViewModelFromModel));
-            }
-
-            public bool RequestUpdate(bool refreshViewModelFromModel = true)
-            {
-                //if (this.IsReady) {
-                RaiseUpdate(refreshViewModelFromModel);
-                return true;
-                //}
-
-                //this.refreshViewModelOnUpdateRequest |= refreshViewModelFromModel;
-                return false;
-            }
-        }
-
-        public TableControlViewModel EventsTable { get; }
-        public ObservableCollection<TraceEvent> Events { get; }
-        //public EventsCollection Events { get; }
-        public IVirtualizedDataGridViewModel GridModel { get; }
+        public TraceEventsView EventsDataView { get; }
+        public VirtualizedDataGridViewModel GridModel { get; }
 
         public TraceLogStatsModel Statistics { get; }
 
@@ -795,7 +153,7 @@
         {
             try {
                 session?.Clear();
-                Events.Clear();
+                EventsDataView.Clear();
                 Statistics.Reset();
             } catch (Exception ex) {
                 Status = ex.ToString();
@@ -819,12 +177,6 @@
                 Status = ex.ToString();
             }
         }
-
-        private DateTime lastUpdateEvent = DateTime.MinValue;
-        private TimeSpan updateThreshold = TimeSpan.FromMilliseconds(50);
-        private DispatcherSynchronizationContext syncCtx;
-        private TaskScheduler scheduler;
-        private TaskFactory taskFactory;
 
         private void OnNewEvents(int newCount)
         {
@@ -884,7 +236,7 @@
 
             var stats = session.Query();
 
-            Statistics.TotalEvents = (uint)Events.Count;
+            Statistics.TotalEvents = (uint)EventsDataView.EventCount;
             Statistics.EventsLost = stats.EventsLost;
             Statistics.NumberOfBuffers = stats.NumberOfBuffers;
             Statistics.BuffersWritten = stats.BuffersWritten;
@@ -1226,6 +578,397 @@
             spec.ProcessIds.AddRange(ProcessIds);
             spec.EventIds.AddRange(EventIds);
             return spec;
+        }
+    }
+
+    public class DataViewColumnsCollection
+        : IDataViewColumnsCollection
+    {
+        private readonly TraceEventsView view;
+
+        public DataViewColumnsCollection(TraceEventsView view)
+        {
+            this.view = view;
+        }
+
+        public int IndexOf(IDataColumn column)
+        {
+            return view.GetDataColumnIndex(column);
+        }
+
+        public int Count => view.ColumnCount;
+
+        public IDataColumn this[int columnIndex] => view.GetDataColumn(columnIndex);
+
+        public IEnumerator<IDataColumn> GetEnumerator()
+        {
+            for (int index = 0; index < Count; ++index)
+                yield return this[index];
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable<IDataColumn>)this).GetEnumerator();
+        }
+    }
+
+    public static class FreezableExtensions
+    {
+        public static T EnsureFrozen<T>(this T freezable)
+            where T : Freezable
+        {
+            if (freezable == null)
+                throw new ArgumentNullException(nameof(freezable));
+
+            if (freezable.IsFrozen)
+                return freezable;
+
+            if (!freezable.CanFreeze)
+                freezable = (T)freezable.CloneCurrentValue();
+
+            freezable.Freeze();
+            return freezable;
+        }
+    }
+
+    public class HdvColumnViewModelPreset : Freezable
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public bool IsVisible { get; set; }
+        public int Width { get; set; }
+
+        public TextAlignment TextAlignment { get; set; }
+
+        public string CellFormat { get; set; }
+
+        public string HelpText { get; set; }
+
+        protected override Freezable CreateInstanceCore()
+        {
+            return new HdvColumnViewModelPreset();
+        }
+    }
+
+    public class TraceEventsView : IDataView
+    {
+        private readonly List<DataColumn> columns = new List<DataColumn>();
+
+        public IDataViewColumnsCollection Columns =>
+            new DataViewColumnsCollection(this);
+
+        public IDataViewColumnsCollection VisibleColumns =>
+            new DataViewColumnsCollection(this);
+
+        public TraceEventsView()
+        {
+            var providerNamePreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("934D2438-65F3-4AE9-8FEA-94B81AA5A4A6"),
+                    Name = "Provider Name",
+                    IsVisible = true,
+                    Width = 200
+                }.EnsureFrozen();
+            var taskNamePreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("730765B3-2E42-43E7-8B26-BAB7F4999E69"),
+                    Name = "Task Name",
+                    IsVisible = true,
+                    Width = 80
+                }.EnsureFrozen();
+            var opcodeOrTypePreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("F08CCD14-FE1E-4D9E-BE6C-B527EA4B25DA"),
+                    Name = "Opcode/Type ",
+                    IsVisible = false,
+                    Width = 80
+                }.EnsureFrozen();
+            var levelPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("388591F3-43B2-4E68-B080-0B1A48D33559"),
+                    Name = "Level",
+                    IsVisible = false,
+                    Width = 80
+                }.EnsureFrozen();
+            var versionPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("215AB0D7-BEC9-4A70-96C4-028EE3404F09"),
+                    Name = "Version",
+                    IsVisible = false,
+                    Width = 80
+                }.EnsureFrozen();
+            var taskPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("CE90F4D8-0FDE-4324-8D39-5BF74C8F4D9B"),
+                    Name = "Task",
+                    IsVisible = false,
+                    Width = 80
+                }.EnsureFrozen();
+            var keywordPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("62DC8843-C7BF-45F0-AC61-644395D53409"),
+                    Name = "Keyword",
+                    IsVisible = false,
+                    Width = 80,
+                    TextAlignment = TextAlignment.Right,
+                    CellFormat = "x"
+                }.EnsureFrozen();
+            var channelPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("CF9373E2-5876-4F84-BB3A-F6C878D36F86"),
+                    Name = "Channel",
+                    IsVisible = false,
+                    Width = 80
+                }.EnsureFrozen();
+            var idPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("0FE03A19-FBCB-4514-9441-2D0B1AB5E2E1"),
+                    Name = "Id",
+                    IsVisible = false,
+                    Width = 80
+                }.EnsureFrozen();
+            var opcodeNamePreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("99C0A192-174F-4DD5-AFD8-32F513506E88"),
+                    Name = "Opcode Name",
+                    IsVisible = true,
+                    Width = 80
+                }.EnsureFrozen();
+            var eventNamePreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("B82277B9-7066-4938-A959-EABF0C689087"),
+                    Name = "Event Name",
+                    IsVisible = true,
+                    Width = 100
+                }.EnsureFrozen();
+            var messagePreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("89F731F6-D4D2-40E8-9615-6EB5A5A68A75"),
+                    Name = "Message",
+                    IsVisible = true,
+                    Width = 100
+                }.EnsureFrozen();
+            var providerIdPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("9B9DAF0F-EAC6-43FE-B68F-EAF0D9A4AFB9"),
+                    Name = "Provider Id",
+                    IsVisible = false,
+                    Width = 100
+                }.EnsureFrozen();
+            var eventTypePreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("AC2A6011-BCB3-4721-BEF1-E1DEC50C073D"),
+                    Name = "Event Type",
+                    IsVisible = false,
+                    Width = 100
+                }.EnsureFrozen();
+            var cpuPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("452A05E3-A1C0-4686-BB6B-C39AFF2F24BE"),
+                    Name = "Cpu",
+                    IsVisible = true,
+                    Width = 30
+                }.EnsureFrozen();
+            var threadIdPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("6BEB4F24-53DC-4A9D-8EEA-ED8F69990349"),
+                    Name = "ThreadId",
+                    IsVisible = true,
+                    Width = 50
+                }.EnsureFrozen();
+            var processIdPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("7600E8FD-D7C2-4BA4-9DE4-AADE5230DC53"),
+                    Name = "Event Header ProcessId",
+                    IsVisible = true,
+                    Width = 50,
+                    HelpText = "(0 = PID Not Found)"
+                }.EnsureFrozen();
+            var userDataLengthPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("813F4638-8D41-4EAD-94DD-9A4AFFEFA701"),
+                    Name = "UserDataLength",
+                    IsVisible = false,
+                    Width = 30
+                }.EnsureFrozen();
+            var activityIdPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("21695563-AC1B-4953-9B9B-991353DBC082"),
+                    Name = "etw:ActivityId",
+                    IsVisible = false,
+                    Width = 60
+                }.EnsureFrozen();
+            var relatedActivityIdPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("83B1BF6F-5E8D-4143-A84B-8C16ED1EF6BD"),
+                    Name = "etw:Related ActivityId",
+                    IsVisible = false,
+                    Width = 60
+                }.EnsureFrozen();
+            var userSecurityIdentifierPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("F979E52D-EE1B-4A7E-950F-28103990D11B"),
+                    Name = "etw:UserSid",
+                    IsVisible = false,
+                    Width = 60
+                }.EnsureFrozen();
+            var sessionIdPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("84FC6D0C-5FFD-40D9-8C3B-F0EB8F8F2D1B"),
+                    Name = "etw:SessionId",
+                    IsVisible = false,
+                    Width = 60
+                }.EnsureFrozen();
+            var eventKeyPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("4F0679D2-B5E7-4AB1-ADF7-FCDEBEEF801B"),
+                    Name = "etw:EventKey",
+                    IsVisible = false,
+                    Width = 80
+                }.EnsureFrozen();
+            var timestampGeneratorPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("9C75AA69-046E-42AE-B594-B4AD24335A0A"),
+                    Name = "Time",
+                    IsVisible = true,
+                    Width = 80,
+                    TextAlignment = TextAlignment.Right,
+                    CellFormat = "sN"
+                }.EnsureFrozen();
+            var datetimeGeneratorPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("8823874B-917D-4D64-ABDF-EA29E6C87789"),
+                    Name = "DateTime (Local)",
+                    Width = 150,
+                }.EnsureFrozen();
+            var modernProcessDataPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("DC7E68B0-E753-47DF-8357-61BEC093E405"),
+                    Name = "Process",
+                    IsVisible = true,
+                    Width = 150
+                }.EnsureFrozen();
+            var processNamePreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("BB09F706-FE79-43AA-A103-120801DAC28F"),
+                    Name = "Process Name",
+                    IsVisible = true,
+                    Width = 150
+                }.EnsureFrozen();
+            var stackTopPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("D55383F4-D0ED-404B-98A8-DC9CF4533FBF"),
+                    Name = "Stack",
+                    IsVisible = false,
+                    Width = 100
+                }.EnsureFrozen();
+            var threadStartModulePreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("D58C42B0-818D-4D83-BD99-9DA872E77B54"),
+                    Name = "Thread Start Module",
+                    IsVisible = false,
+                    Width = 100
+                }.EnsureFrozen();
+            var threadStartFunctionPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("125BB527-34C6-4A33-82B8-05E3B0C7A591"),
+                    Name = "Thread Start Function",
+                    IsVisible = false,
+                    Width = 100
+                }.EnsureFrozen();
+            var countPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("3EF367F3-62FD-453B-88F7-67D97D3F12F8"),
+                    Name = "Count",
+                    IsVisible = true,
+                    Width = 80
+                }.EnsureFrozen();
+
+            AddColumn(providerNamePreset, new DataColumn());
+            AddColumn(taskNamePreset, new DataColumn());
+            AddColumn(opcodeOrTypePreset, new DataColumn());
+            AddColumn(levelPreset, new DataColumn());
+            AddColumn(versionPreset, new DataColumn());
+            AddColumn(taskPreset, new DataColumn());
+            AddColumn(keywordPreset, new DataColumn());
+            AddColumn(channelPreset, new DataColumn());
+            AddColumn(idPreset, new DataColumn());
+            AddColumn(opcodeNamePreset, new DataColumn());
+            AddColumn(eventNamePreset, new DataColumn());
+            AddColumn(messagePreset, new DataColumn());
+            AddColumn(providerIdPreset, new DataColumn());
+            AddColumn(eventTypePreset, new DataColumn());
+            AddColumn(cpuPreset, new DataColumn());
+            AddColumn(threadIdPreset, new DataColumn());
+            AddColumn(processIdPreset, new DataColumn());
+            AddColumn(userDataLengthPreset, new DataColumn());
+            AddColumn(activityIdPreset, new DataColumn());
+            AddColumn(relatedActivityIdPreset, new DataColumn());
+            AddColumn(userSecurityIdentifierPreset, new DataColumn());
+            AddColumn(sessionIdPreset, new DataColumn());
+            AddColumn(eventKeyPreset, new DataColumn());
+            AddColumn(timestampGeneratorPreset, new DataColumn());
+            AddColumn(datetimeGeneratorPreset, new DataColumn());
+            AddColumn(modernProcessDataPreset, new DataColumn());
+            AddColumn(processNamePreset, new DataColumn());
+            AddColumn(stackTopPreset, new DataColumn());
+            AddColumn(threadStartModulePreset, new DataColumn());
+            AddColumn(threadStartFunctionPreset, new DataColumn());
+            AddColumn(countPreset, new DataColumn());
+        }
+
+        private void AddColumn(HdvColumnViewModelPreset preset, DataColumn column)
+        {
+            column.Name = preset.Name;
+            column.Width = preset.Width;
+            column.IsVisible = preset.IsVisible;
+            column.IsResizable = true;
+            column.TextAlignment = preset.TextAlignment;
+            columns.Add(column);
+        }
+
+        public CellValue GetCellValue(int rowIndex, int columnIndex)
+        {
+            var result = new CellValue(string.Format("{0}:{1}", rowIndex, columnIndex), null, null);
+            //this.workManager.BackgroundThread.Send(delegate {
+            //    result = this.hdv.GetCellValue(rowIndex, columnIndex);
+            //    result.PrecomputeString();
+            //});
+            return result;
+        }
+
+        public void UpdateRowCount(int newCount)
+        {
+            if (newCount == RowCount)
+                return;
+
+            RowCount = newCount;
+            //Application.Current.Dispatcher.Invoke(delegate {
+            //    Updated?.Invoke(this, trueEventArgs);
+            //});
+            //RaisePropertyChanged(rowCountChangedArgs);
+        }
+
+        public int EventCount => RowCount;
+
+        public int RowCount { get; private set; }
+        public int ColumnCount => columns.Count;
+
+        public IDataColumn GetDataColumn(int columnIndex)
+        {
+            return columns[columnIndex];
+        }
+
+        public void Clear()
+        {
+        }
+
+        public int GetDataColumnIndex(IDataColumn column)
+        {
+            var dataColumn = column as DataColumn;
+            if (dataColumn == null)
+                return -1;
+            return columns.IndexOf(dataColumn);
         }
     }
 }

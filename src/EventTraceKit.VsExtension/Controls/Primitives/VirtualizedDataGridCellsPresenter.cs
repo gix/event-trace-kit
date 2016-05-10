@@ -56,11 +56,11 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             updateRenderingAction = UpdateRendering;
         }
 
-        #region public IVirtualizedDataGridCellsPresenterViewModel ViewModel { get; set; }
+        #region public VirtualizedDataGridCellsPresenterViewModel ViewModel { get; set; }
 
         public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(
             nameof(ViewModel),
-            typeof(IVirtualizedDataGridCellsPresenterViewModel),
+            typeof(VirtualizedDataGridCellsPresenterViewModel),
             typeof(VirtualizedDataGridCellsPresenter),
             new FrameworkPropertyMetadata(
                 null,
@@ -69,9 +69,9 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 (s, e) => ((VirtualizedDataGridCellsPresenter)s).OnViewModelChanged(e),
                 null));
 
-        public IVirtualizedDataGridCellsPresenterViewModel ViewModel
+        public VirtualizedDataGridCellsPresenterViewModel ViewModel
         {
-            get { return (IVirtualizedDataGridCellsPresenterViewModel)GetValue(ViewModelProperty); }
+            get { return (VirtualizedDataGridCellsPresenterViewModel)GetValue(ViewModelProperty); }
             set { SetValue(ViewModelProperty, value); }
         }
 
@@ -90,19 +90,19 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         public static readonly DependencyProperty VisibleColumnsProperty =
             DependencyProperty.Register(
                 nameof(VisibleColumns),
-                typeof(ReadOnlyObservableCollection<VirtualizedDataGridColumnViewModel>),
+                typeof(ReadOnlyObservableCollection<VirtualizedDataGridColumn>),
                 typeof(VirtualizedDataGridCellsPresenter),
                 new PropertyMetadata(
-                    CollectionDefaults<VirtualizedDataGridColumnViewModel>.ReadOnlyObservable));
+                    CollectionDefaults<VirtualizedDataGridColumn>.ReadOnlyObservable));
 
         /// <summary>
         ///   Gets or sets the visible columns.
         /// </summary>
-        public ReadOnlyObservableCollection<VirtualizedDataGridColumnViewModel> VisibleColumns
+        public ReadOnlyObservableCollection<VirtualizedDataGridColumn> VisibleColumns
         {
             get
             {
-                return (ReadOnlyObservableCollection<VirtualizedDataGridColumnViewModel>)GetValue(
+                return (ReadOnlyObservableCollection<VirtualizedDataGridColumn>)GetValue(
                     VisibleColumnsProperty);
             }
             set { SetValue(VisibleColumnsProperty, value); }
@@ -130,7 +130,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         //            FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
         //            FrameworkPropertyMetadataOptions.AffectsRender));
 
-        #region public double RowHeight { get; internal set; }
+        #region public double RowHeight { get; set; }
 
         public static readonly DependencyProperty RowHeightProperty =
             DependencyProperty.Register(
@@ -143,6 +143,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                         (double)e.OldValue, (double)e.NewValue),
                     (d, v) => ((VirtualizedDataGridCellsPresenter)d).CoerceRowHeight((double)v)));
 
+        [TypeConverter(typeof(LengthConverter))]
         public double RowHeight
         {
             get { return (double)GetValue(RowHeightProperty); }
@@ -160,7 +161,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         private double CoerceRowHeight(double baseValue)
         {
-            return DoubleUtils.Max(FontSize * 1.6, 12.0, baseValue);
+            double rowHeight = DoubleUtils.Max(FontSize * 1.2, 12.0, baseValue);
+            return Math.Ceiling(rowHeight);
         }
 
         #endregion
@@ -193,6 +195,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                     FrameworkPropertyMetadataOptions.Inherits,
                     OnFontSizeChanged));
 
+        [TypeConverter(typeof(FontSizeConverter))]
         public double FontSize
         {
             get { return (double)GetValue(FontSizeProperty); }
@@ -275,6 +278,64 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         {
             get { return (Brush)GetValue(ForegroundProperty); }
             set { SetValue(ForegroundProperty, value); }
+        }
+
+        #endregion
+
+        #region public Brush PrimaryBackground { get; set; }
+
+        /// <summary>
+        ///   Identifies the <see cref="PrimaryBackground"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty PrimaryBackgroundProperty =
+            DependencyProperty.Register(
+                nameof(PrimaryBackground),
+                typeof(Brush),
+                typeof(VirtualizedDataGridCellsPresenter),
+                new FrameworkPropertyMetadata(
+                    Brushes.White,
+                    FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
+                    FrameworkPropertyMetadataOptions.AffectsRender,
+                    OnPrimaryBackgroundChanged));
+
+        private static void OnPrimaryBackgroundChanged(
+            DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+        }
+
+        /// <summary>
+        ///   Gets or sets the primary background.
+        /// </summary>
+        public Brush PrimaryBackground
+        {
+            get { return (Brush)GetValue(PrimaryBackgroundProperty); }
+            set { SetValue(PrimaryBackgroundProperty, value); }
+        }
+
+        #endregion
+
+        #region public Brush SecondaryBackground { get; set; }
+
+        /// <summary>
+        ///   Identifies the <see cref="SecondaryBackground"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty SecondaryBackgroundProperty =
+            DependencyProperty.Register(
+                nameof(SecondaryBackground),
+                typeof(Brush),
+                typeof(VirtualizedDataGridCellsPresenter),
+                new FrameworkPropertyMetadata(
+                    Brushes.WhiteSmoke,
+                    FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
+                    FrameworkPropertyMetadataOptions.AffectsRender));
+
+        /// <summary>
+        ///   Gets or sets the secondary background.
+        /// </summary>
+        public Brush SecondaryBackground
+        {
+            get { return (Brush)GetValue(SecondaryBackgroundProperty); }
+            set { SetValue(SecondaryBackgroundProperty, value); }
         }
 
         #endregion
@@ -717,7 +778,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 typeof(Brush),
                 typeof(VirtualizedDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
-                    Brushes.Black,
+                    SystemColors.ControlTextBrush,
                     FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
                     FrameworkPropertyMetadataOptions.AffectsRender,
                     ClearFocusBorderPenCache));
@@ -986,8 +1047,9 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         private object CoerceHorizontalOffset(object baseValue)
         {
-            return DoubleUtils.SafeClamp(
-                (double)baseValue, 0.0, Math.Max(0.0, ExtentWidth - ViewportWidth));
+            var max = Math.Max(0.0, ExtentWidth - ViewportWidth);
+            var offset = DoubleUtils.SafeClamp((double)baseValue, 0, max);
+            return Math.Ceiling(offset);
         }
 
         private void OnHorizontalOffsetChanged(
@@ -1019,8 +1081,9 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         private object CoerceVerticalOffset(object baseValue)
         {
-            return ((double)baseValue).Clamp(
-                0.0, Math.Max(0.0, ExtentHeight - ViewportHeight));
+            var max = Math.Max(0, ExtentHeight - ViewportHeight);
+            var offset = ((double)baseValue).Clamp(0, max);
+            return Math.Ceiling(offset);
         }
 
         private void OnVerticalOffsetChanged(
@@ -1228,6 +1291,12 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         private int? prevFirst;
         private int? prevLast;
 
+        protected override void OnRender(DrawingContext drawingContext)
+        {
+            base.OnRender(drawingContext);
+            PostUpdateRendering();
+        }
+
         internal void UpdateRendering(bool forceUpdate)
         {
             postedUpdate = false;
@@ -1277,9 +1346,9 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 PostUpdateRendering();
         }
 
-        internal double GetColumnAutoSize(VirtualizedDataGridColumnViewModel viewModelColumn)
+        internal double GetColumnAutoSize(VirtualizedDataGridColumn column)
         {
-            return cellsDrawingVisual.GetColumnAutoSize(viewModelColumn);
+            return cellsDrawingVisual.GetColumnAutoSize(column);
         }
 
         public int? GetRowFromPosition(double y)
@@ -1634,7 +1703,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         {
             if (rowIndex == int.MaxValue)
                 throw new ArgumentOutOfRangeException(
-                    nameof(rowIndex), "rowIndex must be less than Int32.MaxValue");
+                    nameof(rowIndex), "rowIndex must be less than int.MaxValue");
 
             double offset = ComputeScrollOffsetWithMinimalScroll(
                 VerticalOffset, VerticalOffset + ViewportHeight,
@@ -1703,9 +1772,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 !SelectionBorderThickness.GreaterThan(0))
                 return null;
 
-            var pen = new Pen(SelectionBorderBrush, SelectionBorderThickness) {
-                DashStyle = DashStyles.Dash
-            };
+            var pen = new Pen(SelectionBorderBrush, SelectionBorderThickness);
             pen.Freeze();
             return pen;
         }
@@ -1716,9 +1783,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 !SelectionBorderThickness.GreaterThan(0))
                 return null;
 
-            var pen = new Pen(InactiveSelectionBorderBrush, SelectionBorderThickness) {
-                DashStyle = DashStyles.Dash
-            };
+            var pen = new Pen(InactiveSelectionBorderBrush, SelectionBorderThickness);
             pen.Freeze();
             return pen;
         }
@@ -1733,6 +1798,14 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             };
             pen.Freeze();
             return pen;
+        }
+
+        internal void OnIsSelectionActiveChanged()
+        {
+            if (ViewModel == null || ViewModel.RowSelection.Count == 0)
+                return;
+
+            PostUpdateRendering();
         }
     }
 }

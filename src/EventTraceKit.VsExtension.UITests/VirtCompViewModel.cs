@@ -1,4 +1,4 @@
-﻿namespace UIVirt
+﻿namespace EventTraceKit.VsExtension.UITests
 {
     using System;
     using System.Collections;
