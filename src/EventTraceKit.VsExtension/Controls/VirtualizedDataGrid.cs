@@ -1,7 +1,6 @@
 ﻿namespace EventTraceKit.VsExtension.Controls
 {
     using System;
-    using System.Collections;
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Windows;
@@ -113,6 +112,29 @@
 
         #endregion
 
+        #region public Brush RowSelectionForeground { get; set; }
+
+        /// <summary>
+        ///   Identifies the <see cref="RowSelectionForeground"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty RowSelectionForegroundProperty =
+            DependencyProperty.Register(
+                nameof(RowSelectionForeground),
+                typeof(Brush),
+                typeof(VirtualizedDataGrid),
+                new PropertyMetadata(SystemColors.HighlightTextBrush));
+
+        /// <summary>
+        ///   Gets or sets the row selection Foreground brush.
+        /// </summary>
+        public Brush RowSelectionForeground
+        {
+            get { return (Brush)GetValue(RowSelectionForegroundProperty); }
+            set { SetValue(RowSelectionForegroundProperty, value); }
+        }
+
+        #endregion
+
         #region public Brush RowSelectionBackground { get; set; }
 
         /// <summary>
@@ -132,6 +154,29 @@
         {
             get { return (Brush)GetValue(RowSelectionBackgroundProperty); }
             set { SetValue(RowSelectionBackgroundProperty, value); }
+        }
+
+        #endregion
+
+        #region public Brush RowInactiveSelectionForeground { get; set; }
+
+        /// <summary>
+        ///   Identifies the <see cref="RowInactiveSelectionForeground"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty RowInactiveSelectionForegroundProperty =
+            DependencyProperty.Register(
+                nameof(RowInactiveSelectionForeground),
+                typeof(Brush),
+                typeof(VirtualizedDataGrid),
+                new PropertyMetadata(SystemColors.InactiveSelectionHighlightTextBrush));
+
+        /// <summary>
+        ///   Gets or sets the row inactive selection Foreground.
+        /// </summary>
+        public Brush RowInactiveSelectionForeground
+        {
+            get { return (Brush)GetValue(RowInactiveSelectionForegroundProperty); }
+            set { SetValue(RowInactiveSelectionForegroundProperty, value); }
         }
 
         #endregion
@@ -192,9 +237,7 @@
                 nameof(ViewModel),
                 typeof(VirtualizedDataGridViewModel),
                 typeof(VirtualizedDataGrid),
-                new PropertyMetadata(
-                    null,
-                    (s, e) => ((VirtualizedDataGrid)s).OnViewModelChanged(e)));
+                new PropertyMetadata(null, OnViewModelChanged));
 
         public VirtualizedDataGridViewModel ViewModel
         {
@@ -202,9 +245,67 @@
             set { SetValue(ViewModelProperty, value); }
         }
 
-        private void OnViewModelChanged(DependencyPropertyChangedEventArgs e)
+        private static void OnViewModelChanged(
+            DependencyObject s, DependencyPropertyChangedEventArgs e)
         {
-            CoerceValue(ViewModelEventSourceProperty);
+            var source = (VirtualizedDataGrid)s;
+            source.CoerceValue(ViewModelEventSourceProperty);
+        }
+
+        #endregion
+
+        #region private IVirtualizedDataGridViewModel ViewModelEventSource { get; }
+
+        private static readonly DependencyPropertyKey ViewModelEventSourcePropertyKey =
+            DependencyProperty.RegisterReadOnly(
+                nameof(ViewModelEventSource),
+                typeof(VirtualizedDataGridViewModel),
+                typeof(VirtualizedDataGrid),
+                new PropertyMetadata(
+                    null,
+                    (s, e) => ((VirtualizedDataGrid)s).ViewModelEventSourcePropertyChanged(e),
+                    (d, v) => ((VirtualizedDataGrid)d).CoerceViewModelEventSourceProperty(v)));
+
+        /// <summary>
+        ///   Identifies the <see cref="ViewModelEventSource"/> dependency property.
+        /// </summary>
+        private static readonly DependencyProperty ViewModelEventSourceProperty =
+            ViewModelEventSourcePropertyKey.DependencyProperty;
+
+        private VirtualizedDataGridViewModel ViewModelEventSource =>
+            (VirtualizedDataGridViewModel)GetValue(ViewModelEventSourceProperty);
+
+        private object CoerceViewModelEventSourceProperty(object baseValue)
+        {
+            return IsLoaded ? ViewModel : null;
+        }
+
+        private void ViewModelEventSourcePropertyChanged(
+            DependencyPropertyChangedEventArgs e)
+        {
+            var oldValue = (VirtualizedDataGridViewModel)e.OldValue;
+            if (oldValue != null) {
+                viewModel = null;
+                oldValue.Updated -= OnViewModelUpdated;
+                //oldValue.PropertyChanged -= OnViewModelPropertyChanged;
+                //BindingOperations.ClearBinding(oldValue, VirtualizedDataGridColumnsViewModel.ActualWidthProperty);
+            }
+
+            var newValue = (VirtualizedDataGridViewModel)e.NewValue;
+            if (newValue != null) {
+                viewModel = newValue;
+                newValue.Updated += OnViewModelUpdated;
+                //newValue.PropertyChanged += OnViewModelPropertyChanged;
+                var binding = new Binding {
+                    Source = this,
+                    Path = new PropertyPath(ActualWidthProperty.Name),
+                    Mode = BindingMode.OneWay
+                };
+                //BindingOperations.SetBinding(newValue.ColumnsViewModel, VirtualizedDataGridColumnsViewModel.ActualWidthProperty, binding);
+                var templateChild = GetTemplateChild(PART_CenterCellsScrollViewer) as ScrollViewer;
+                if (templateChild != null)
+                    CenterScrollWidthChanged(templateChild.ActualWidth);
+            }
         }
 
         #endregion
@@ -276,63 +377,6 @@
         {
             get { return (VirtualizedDataGridColumnHeadersPresenter)GetValue(ColumnHeadersPresenterProperty); }
             private set { SetValue(ColumnHeadersPresenterPropertyKey, value); }
-        }
-
-        #endregion
-
-        #region private IVirtualizedDataGridViewModel ViewModelEventSource { get; }
-
-        private static readonly DependencyPropertyKey ViewModelEventSourcePropertyKey =
-            DependencyProperty.RegisterReadOnly(
-                nameof(ViewModelEventSource),
-                typeof(VirtualizedDataGridViewModel),
-                typeof(VirtualizedDataGrid),
-                new PropertyMetadata(
-                    null,
-                    (s, e) => ((VirtualizedDataGrid)s).ViewModelEventSourcePropertyChanged(e),
-                    (d, v) => ((VirtualizedDataGrid)d).CoerceViewModelEventSourceProperty(v)));
-
-        /// <summary>
-        ///   Identifies the <see cref="ViewModelEventSource"/> dependency property.
-        /// </summary>
-        private static readonly DependencyProperty ViewModelEventSourceProperty =
-            ViewModelEventSourcePropertyKey.DependencyProperty;
-
-        private VirtualizedDataGridViewModel ViewModelEventSource =>
-            (VirtualizedDataGridViewModel)GetValue(ViewModelEventSourceProperty);
-
-        private object CoerceViewModelEventSourceProperty(object baseValue)
-        {
-            return IsLoaded ? ViewModel : null;
-        }
-
-        private void ViewModelEventSourcePropertyChanged(
-            DependencyPropertyChangedEventArgs e)
-        {
-            var oldValue = (VirtualizedDataGridViewModel)e.OldValue;
-            if (oldValue != null) {
-                viewModel = null;
-                oldValue.Updated -= OnViewModelUpdated;
-                //oldValue.PropertyChanged -= OnViewModelPropertyChanged;
-                //BindingOperations.ClearBinding(oldValue, VirtualizedDataGridColumnsViewModel.ActualWidthProperty);
-            }
-
-            var newValue = (VirtualizedDataGridViewModel)e.NewValue;
-            if (newValue != null) {
-                viewModel = newValue;
-                newValue.Updated += OnViewModelUpdated;
-                //newValue.PropertyChanged += OnViewModelPropertyChanged;
-                var binding = new Binding {
-                    Source = this,
-                    Path = new PropertyPath(ActualWidthProperty.Name),
-                    Mode = BindingMode.OneWay
-                };
-                //BindingOperations.SetBinding(newValue.ColumnsViewModel, VirtualizedDataGridColumnsViewModel.ActualWidthProperty, binding);
-                var templateChild = GetTemplateChild(PART_CenterCellsScrollViewer) as ScrollViewer;
-                if (templateChild != null)
-                    CenterScrollWidthChanged(templateChild.ActualWidth);
-            }
-
         }
 
         #endregion
@@ -480,13 +524,11 @@
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            Loaded -= OnLoaded;
             CoerceValue(ViewModelEventSourceProperty);
         }
 
         private void OnUnloaded(object sender, RoutedEventArgs e)
         {
-            Unloaded -= OnUnloaded;
             CoerceValue(ViewModelEventSourceProperty);
         }
 

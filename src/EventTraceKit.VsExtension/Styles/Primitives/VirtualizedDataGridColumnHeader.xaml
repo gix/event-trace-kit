@@ -19,8 +19,12 @@
 
   <ControlTemplate x:Key="DataGridColumnHeaderTemplate"
                    TargetType="{x:Type Primitives:VirtualizedDataGridColumnHeader}">
+    <!--
+    FIXME
     <Grid ToolTipService.ToolTip="{Binding Content.ToolTip, ElementName=HeaderContent}"
           ToolTipService.IsEnabled="{Binding Content.(ToolTipService.IsEnabled), ElementName=HeaderContent}">
+    -->
+    <Grid>
       <Border x:Name="HeaderBorder"
               Padding="{TemplateBinding Padding}"
               BorderThickness="0,0,0,1"

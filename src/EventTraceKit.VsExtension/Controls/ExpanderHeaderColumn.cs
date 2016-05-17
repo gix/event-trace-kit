@@ -3,9 +3,9 @@ namespace EventTraceKit.VsExtension.Controls
     internal sealed class ExpanderHeaderColumn : VirtualizedDataGridColumn
     {
         public ExpanderHeaderColumn(
-            VirtualizedDataGridColumnsViewModel columnsViewModel,
+            VirtualizedDataGridColumnsViewModel columns,
             IDataColumn columnModel, IDataView dataView)
-            : base(columnsViewModel, columnModel, dataView)
+            : base(columns, columnModel, dataView)
         {
             IsVisible = true;
 

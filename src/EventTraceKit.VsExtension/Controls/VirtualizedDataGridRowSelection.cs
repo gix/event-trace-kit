@@ -3,14 +3,13 @@ namespace EventTraceKit.VsExtension.Controls
     using System;
     using System.Collections.Generic;
     using System.Collections.Specialized;
-    using EventTraceKit.VsExtension.Collections;
 
     public class VirtualizedDataGridRowSelection
     {
         private readonly VirtualizedDataGridCellsPresenterViewModel cellsViewModel;
         private readonly List<int> selectionChanges = new List<int>();
         private readonly MultiRange selectedIndices = new MultiRange();
-        private int selectionAnchorRowIndex;
+        private int anchorRowIndex;
         private bool selectionRemoves;
 
         public VirtualizedDataGridRowSelection(
@@ -23,107 +22,175 @@ namespace EventTraceKit.VsExtension.Controls
 
         public int Count => selectedIndices.Count;
 
-        public bool Contains(int row)
+        public MultiRange GetSnapshot()
         {
             lock (selectedIndices)
-                return IsSelectedAtRow(row);
+                return new MultiRange(selectedIndices);
         }
 
-        public void ClearAll()
+        public void RestoreSnapshot(MultiRange selectedRows)
+        {
+            lock (selectedIndices) {
+                Reset();
+                selectedIndices.UnionWith(selectedRows);
+
+                // FIXME
+                //selectionChanges.Clear();
+                //selectionChanges.AddRange(selectedRows);
+                //OnCollectionChanged(NotifyCollectionChangedAction.Add, selectionChanges);
+                //selectionChanges.Clear();
+            }
+        }
+
+        public bool Contains(int rowIndex)
         {
             lock (selectedIndices)
-                selectedIndices.Clear();
+                return IsSelected(rowIndex);
+        }
+
+        public void Clear()
+        {
+            lock (selectedIndices)
+                Reset();
+        }
+
+        public void SelectAll()
+        {
+            lock (selectedIndices) {
+                Reset();
+                ToggleRange(0, cellsViewModel.RowCount - 1, false, true);
+                // FIXME
+                //OnCollectionChanged(NotifyCollectionChangedAction.Add, selectionChanges);
+            }
         }
 
         public void ToggleSingle(int rowIndex, bool extend)
         {
             lock (selectedIndices) {
-                NotifyCollectionChangedAction reset;
+                NotifyCollectionChangedAction action;
                 if (!extend) {
                     Reset();
-                    SetSelection(rowIndex);
-                    reset = NotifyCollectionChangedAction.Add;
+                    Select(rowIndex);
+                    action = NotifyCollectionChangedAction.Add;
                     selectionRemoves = false;
                 } else {
-                    selectionRemoves = IsSelectedAtRow(rowIndex);
+                    selectionRemoves = IsSelected(rowIndex);
                     if (selectionRemoves) {
-                        ClearSelection(rowIndex);
-                        reset = NotifyCollectionChangedAction.Remove;
+                        Unselect(rowIndex);
+                        action = NotifyCollectionChangedAction.Remove;
                     } else {
-                        SetSelection(rowIndex);
-                        reset = NotifyCollectionChangedAction.Add;
+                        Select(rowIndex);
+                        action = NotifyCollectionChangedAction.Add;
                     }
                 }
 
-                selectionAnchorRowIndex = rowIndex;
+                anchorRowIndex = rowIndex;
                 cellsViewModel.FocusIndex = rowIndex;
 
-                if (reset != NotifyCollectionChangedAction.Reset)
-                    OnCollectionChanged(reset, rowIndex);
+                if (action != NotifyCollectionChangedAction.Reset)
+                    OnCollectionChanged(action, rowIndex);
             }
         }
 
         public void ToggleExtent(int rowIndex, bool extend)
         {
             lock (selectedIndices) {
-                int min = Math.Min(selectionAnchorRowIndex, rowIndex);
-                int max = Math.Max(selectionAnchorRowIndex, rowIndex);
-                ToggleRange(min, max, !extend, selectionRemoves, !selectionRemoves);
+                int min = Math.Min(anchorRowIndex, rowIndex);
+                int max = Math.Max(anchorRowIndex, rowIndex);
+                if (!extend)
+                    Reset();
+                ToggleRange(min, max, selectionRemoves, !selectionRemoves);
+                cellsViewModel.FocusIndex = rowIndex;
+            }
+        }
+
+        public void Select(int rowIndex, bool extend)
+        {
+            lock (selectedIndices) {
+                if (!extend)
+                    Reset();
+
+                Select(rowIndex);
+                selectionRemoves = false;
+                anchorRowIndex = rowIndex;
+                cellsViewModel.FocusIndex = rowIndex;
+                OnCollectionChanged(NotifyCollectionChangedAction.Add, rowIndex);
+            }
+        }
+
+        public void SelectExtent(int rowIndex, bool extend)
+        {
+            lock (selectedIndices) {
+                if (!extend)
+                    Reset();
+
+                int min = Math.Min(anchorRowIndex, rowIndex);
+                int max = Math.Max(anchorRowIndex, rowIndex);
+                ToggleRange(min, max, false, true);
                 cellsViewModel.FocusIndex = rowIndex;
             }
         }
 
         public void SelectRange(int min, int max)
         {
+            lock (selectedIndices) {
+                Reset();
+                ToggleRange(min, max, false, true);
+            }
+        }
+
+        public void SelectRange(int min, int max, bool extend)
+        {
+            lock (selectedIndices) {
+                if (!extend)
+                    Reset();
+                ToggleRange(min, max, false, true);
+            }
+        }
+
+        public void SetRange(int min, int max, bool selected)
+        {
             lock (selectedIndices)
-                ToggleRange(min, max, true, true, true);
+                ToggleRange(min, max, !selected, selected);
         }
 
-        private bool IsSelectedAtRow(int row)
+        private bool IsSelected(int rowIndex)
         {
-            return selectedIndices.Contains(row);
+            return selectedIndices.Contains(rowIndex);
         }
 
-        private void ClearSelection(int row)
+        private void Select(int rowIndex)
         {
-            SetSelection(row, false);
+            selectedIndices.Add(rowIndex);
         }
 
-        private void SetSelection(int row)
+        private void Unselect(int rowIndex)
         {
-            SetSelection(row, true);
+            selectedIndices.Remove(rowIndex);
         }
 
-        private void SetSelection(int row, bool selected)
+        private void UnselectAll()
         {
-            if (selected)
-                selectedIndices.Add(row);
-            else
-                selectedIndices.Remove(row);
+            selectedIndices.Clear();
         }
 
-        private void ToggleRange(
-            int min, int max, bool clearFirst = false, bool shouldRemove = true,
-            bool shouldAdd = true)
+        private void ToggleRange(int min, int max, bool shouldRemove, bool shouldAdd)
         {
             min = Math.Max(0, min);
             max = Math.Min(max, cellsViewModel.RowCount - 1);
 
-            if (clearFirst)
-                Reset();
-
             selectionChanges.Clear();
-            for (int i = min; i <= max; ++i) {
-                bool flag = IsSelectedAtRow(i);
+            for (int index = min; index <= max; ++index) {
+                bool selected = IsSelected(index);
 
-                if (shouldRemove && flag) {
-                    ClearSelection(i);
-                    selectionChanges.Add(i);
+                if (shouldRemove && selected) {
+                    Unselect(index);
+                    selectionChanges.Add(index);
                 }
 
-                if (shouldAdd && !flag) {
-                    SetSelection(i);
-                    selectionChanges.Add(i);
+                if (shouldAdd && !selected) {
+                    Select(index);
+                    selectionChanges.Add(index);
                 }
             }
 
@@ -136,7 +203,7 @@ namespace EventTraceKit.VsExtension.Controls
 
         private void Reset()
         {
-            ClearAll();
+            UnselectAll();
             OnCollectionChanged(NotifyCollectionChangedAction.Reset);
         }
 

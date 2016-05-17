@@ -1,6 +1,7 @@
 namespace EventTraceKit.VsExtension.Controls.Primitives
 {
     using System;
+    using System.Collections.ObjectModel;
     using System.Diagnostics;
     using System.Windows;
     using System.Windows.Controls;
@@ -29,6 +30,20 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             panelTemplate.Seal();
             ItemsPanelProperty.OverrideMetadata(
                 forType, new FrameworkPropertyMetadata(panelTemplate));
+        }
+
+        protected override void OnContextMenuOpening(ContextMenuEventArgs e)
+        {
+            if (!e.Handled) {
+                var chooser = new ColumnChooser(ViewModel.ConfigurableColumns, ViewModel.DataView) {
+                    Placement = PlacementMode.MousePoint,
+                    PlacementTarget = VisualTreeHelper.GetParent(this) as UIElement
+                };
+                chooser.IsOpen = true;
+                e.Handled = true;
+            }
+
+            base.OnContextMenuOpening(e);
         }
 
         #region public VirtualizedDataGridColumnsViewModel ViewModel { get; set; }
@@ -110,7 +125,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             var header = (VirtualizedDataGridColumnHeader)element;
             header.SnapsToDevicePixels = SnapsToDevicePixels;
             header.UseLayoutRounding = UseLayoutRounding;
-            header.ViewModel = viewModel;
+            header.Column = viewModel;
 
             var widthBinding = new Binding(nameof(Width)) {
                 Source = viewModel,
@@ -177,7 +192,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         private void StartColumnHeaderDrag()
         {
             var reorderingEventArgs = new VirtualizedDataGridColumnReorderingEventArgs(
-                headerDragCtx.DraggedHeader.ViewModel);
+                headerDragCtx.DraggedHeader.Column);
 
             ParentGrid.OnColumnReordering(reorderingEventArgs);
             if (reorderingEventArgs.Cancel) {
@@ -219,8 +234,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             headerDragCtx.Reset();
 
             if (!isCancel && targetIndex != headerDragCtx.DraggedHeaderIndex) {
-                var srcColumn = headerDragCtx.DraggedHeader.ViewModel;
-                var dstColumn = HeaderFromIndex(targetIndex).ViewModel;
+                var srcColumn = headerDragCtx.DraggedHeader.Column;
+                var dstColumn = HeaderFromIndex(targetIndex).Column;
                 ViewModel.TryMoveColumn(srcColumn, dstColumn);
 
                 dragCompletedEventArgs.Handled = true;
@@ -528,6 +543,79 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             {
                 element.RenderTransform = null;
             }
+        }
+    }
+
+    public class ColumnChooser : ContextMenu
+    {
+        private ReadOnlyObservableCollection<VirtualizedDataGridColumn> columns;
+        private VirtualizedDataGridColumn[] sortedColumns;
+
+        static ColumnChooser()
+        {
+            Type forType = typeof(ColumnChooser);
+            DefaultStyleKeyProperty.OverrideMetadata(
+                forType, new FrameworkPropertyMetadata(typeof(ContextMenu)));
+        }
+
+        public ColumnChooser(
+            ReadOnlyObservableCollection<VirtualizedDataGridColumn> columns,
+            IDataView viewModel)
+        {
+            if (columns == null)
+                throw new ArgumentNullException(nameof(columns));
+
+            this.columns = columns;
+
+            ViewModel = viewModel;
+            //this.InitializeComponent();
+            //this.columnTemplate = FindResource("columnTemplate") as DataTemplate;
+            sortedColumns = new VirtualizedDataGridColumn[columns.Count];
+            this.columns.CopyTo(sortedColumns, 0);
+            Array.Sort(sortedColumns, CompareColumnNames);
+
+            for (int i = 0; i < sortedColumns.Length; ++i)
+                Items.Insert(i, CreateContainer(sortedColumns[i]));
+
+            //this.RefreshColumns();
+            //this.columns.CollectionChanged += new NotifyCollectionChangedEventHandler(this.ColumnsCollectionChangedHandler);
+
+            CommandBindings.Add(
+                new CommandBinding(ApplicationCommands.Close, CloseCommandExecuted));
+        }
+
+        public IDataView ViewModel { get; }
+
+        private void CloseCommandExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            e.Handled = true;
+        }
+
+        private MenuItem CreateContainer(VirtualizedDataGridColumn column)
+        {
+            var item = new MenuItem();
+            item.IsCheckable = true;
+            item.StaysOpenOnClick = true;
+            item.SetBinding(MenuItem.IsCheckedProperty, new Binding(nameof(column.IsVisible)) {
+                Mode = BindingMode.TwoWay
+            });
+            item.SetBinding(HeaderedItemsControl.HeaderProperty, new Binding(nameof(column.ColumnName)) {
+                Mode = BindingMode.OneWay
+            });
+            item.DataContext = column;
+            return item;
+        }
+
+        private static int CompareColumnNames(
+            VirtualizedDataGridColumn lhs, VirtualizedDataGridColumn rhs)
+        {
+            var comparisonType = StringComparison.CurrentCultureIgnoreCase;
+
+            int cmp = String.Compare(lhs.ColumnName, rhs.ColumnName, comparisonType);
+            if (cmp != 0)
+                return cmp;
+
+            return lhs.ModelVisibleColumnIndex.CompareTo(rhs.ModelVisibleColumnIndex);
         }
     }
 }

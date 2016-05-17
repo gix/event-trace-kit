@@ -19,7 +19,7 @@
               Focusable="False" Grid.Column="1"
               SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}"
               Visibility="{Binding ExpanderHeader, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ObjectNullCheckToVisibility}}"
-              ViewModel="{Binding ExpanderHeader, RelativeSource={RelativeSource TemplatedParent}}"
+              Column="{Binding ExpanderHeader, RelativeSource={RelativeSource TemplatedParent}}"
               Width="{Binding ExpanderHeader.Width, RelativeSource={RelativeSource TemplatedParent}}"/>
           </Grid>
           <!--<ControlTemplate.Triggers>

@@ -1,0 +1,14 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceDictionary Source="../Styles/ActivityRing.xaml"/>
+    <ResourceDictionary Source="../Styles/CommonControls.xaml"/>
+    <ResourceDictionary Source="../Styles/ContextMenu.xaml"/>
+    <ResourceDictionary Source="../Styles/DataGridStyle.xaml"/>
+    <ResourceDictionary Source="../Styles/ListViewStyle.xaml"/>
+    <ResourceDictionary Source="../Styles/Menu.xaml"/>
+    <ResourceDictionary Source="../Styles/Primitives/VirtualizedDataGridColumnHeader.xaml"/>
+    <ResourceDictionary Source="../Styles/Primitives/VirtualizedDataGridColumnHeadersPresenter.xaml"/>
+    <ResourceDictionary Source="../Styles/VirtualizedDataGrid.xaml"/>
+  </ResourceDictionary.MergedDictionaries>
+</ResourceDictionary>

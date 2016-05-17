@@ -6,24 +6,28 @@ namespace EventTraceKit.VsExtension.Controls
 
     public class VirtualizedDataGridColumnsViewModel : DependencyObject
     {
-        private readonly IDataView dataView;
         private readonly ObservableCollection<VirtualizedDataGridColumn> columns;
         private readonly ObservableCollection<VirtualizedDataGridColumn> visibleColumns;
+        private readonly ObservableCollection<VirtualizedDataGridColumn> configurableColumns;
 
         public VirtualizedDataGridColumnsViewModel(
             IDataView dataView, VirtualizedDataGridViewModel owner)
         {
-            this.dataView = dataView;
+            DataView = dataView;
             Owner = owner;
             columns = new ObservableCollection<VirtualizedDataGridColumn>();
 
             visibleColumns = new ObservableCollection<VirtualizedDataGridColumn>();
             VisibleColumns = new ReadOnlyObservableCollection<VirtualizedDataGridColumn>(visibleColumns);
 
+            configurableColumns = new ObservableCollection<VirtualizedDataGridColumn>();
+            ConfigurableColumns = new ReadOnlyObservableCollection<VirtualizedDataGridColumn>(configurableColumns);
+
             //ExpanderHeaderColumn = new ExpanderHeaderColumnViewModel(
             //    this, this.GetInternalColumnView<ExpanderHeaderColumn>(DataColumn.Create<ExpanderHeaderColumn>(new ExpanderHeaderColumn()), string.Empty, Guid.Empty), this.hdvViewModel);
         }
 
+        internal IDataView DataView { get; }
         internal VirtualizedDataGridViewModel Owner { get; }
         internal ObservableCollection<VirtualizedDataGridColumn> WritableColumns => columns;
 
@@ -48,6 +52,33 @@ namespace EventTraceKit.VsExtension.Controls
                     GetValue(VisibleColumnsProperty);
             }
             private set { SetValue(VisibleColumnsPropertyKey, value); }
+        }
+
+        #endregion
+
+        #region public ReadOnlyObservableCollection<VirtualizedDataGridColumn> ConfigurableColumns
+
+        /// <summary>
+        ///   Identifies the <see cref="ConfigurableColumns"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty ConfigurableColumnsProperty =
+            DependencyProperty.Register(
+                nameof(ConfigurableColumns),
+                typeof(ReadOnlyObservableCollection<VirtualizedDataGridColumn>),
+                typeof(VirtualizedDataGridColumnsViewModel),
+                new PropertyMetadata(null));
+
+        /// <summary>
+        ///   Gets or sets the configurable columns.
+        /// </summary>
+        public ReadOnlyObservableCollection<VirtualizedDataGridColumn> ConfigurableColumns
+        {
+            get
+            {
+                return (ReadOnlyObservableCollection<VirtualizedDataGridColumn>)
+                  GetValue(ConfigurableColumnsProperty);
+            }
+            private set { SetValue(ConfigurableColumnsProperty, value); }
         }
 
         #endregion
@@ -107,19 +138,18 @@ namespace EventTraceKit.VsExtension.Controls
         internal void RefreshAllObservableCollections()
         {
             visibleColumns.Clear();
-            foreach (var model in columns) {
-                if (model.IsVisible)
-                    visibleColumns.Add(model);
+            foreach (var column in columns) {
+                if (column.IsVisible)
+                    visibleColumns.Add(column);
             }
 
             //this.AdjustFrozenCounts();
 
-            //this.configurableColumns.Clear();
-            //foreach (var model2 in this.columns) {
-            //    if (model2.IsConfigurable) {
-            //        this.configurableColumns.Add(model2);
-            //    }
-            //}
+            configurableColumns.Clear();
+            foreach (var column in columns) {
+                if (column.IsConfigurable)
+                    configurableColumns.Add(column);
+            }
 
             //this.HdvViewModel.ColumnMetadataCollection.FillObservableCollection(this.columnMetadataEntryViewModels);
         }
@@ -141,9 +171,9 @@ namespace EventTraceKit.VsExtension.Controls
             //base.Hdv.BeginDataUpdate();
             WritableColumns.Clear();
             int num = 0;
-            foreach (IDataColumn column in dataView.Columns) {
+            foreach (IDataColumn column in DataView.Columns) {
                 var columnViewModel = new VirtualizedDataGridColumn(
-                    this, column, dataView);
+                    this, column, DataView);
                 WritableColumns.Add(columnViewModel);
 
                 //var columnPreset = preset.ConfigurableColumns[num];

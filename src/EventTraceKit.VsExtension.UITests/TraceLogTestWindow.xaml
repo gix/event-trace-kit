@@ -7,6 +7,7 @@
         xmlns:uit="clr-namespace:EventTraceKit.VsExtension.UITests"
         xmlns:EtkVs="clr-namespace:EventTraceKit.VsExtension;assembly=EventTraceKit.VsExtension"
         xmlns:vsp="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
+        xmlns:System="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance uit:TraceLogTestViewModel, IsDesignTimeCreatable=false}"
         UseLayoutRounding="True"
@@ -19,7 +20,8 @@
       <RowDefinition Height="Auto"/>
       <RowDefinition/>
       <RowDefinition Height="Auto"/>
-      <RowDefinition/>-->
+      <RowDefinition/>
+      -->
     </Grid.RowDefinitions>
     <StackPanel Orientation="Horizontal" Margin="6">
       <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding SelectedTheme}"/>
@@ -32,22 +34,34 @@
     <Controls:VirtualizedDataGrid
       Grid.Row="1"
       ViewModel="{Binding GridModel}"
-      Foreground="{DynamicResource {x:Static EtkVs:EtkColors.TraceLogForegroundKey}}"
+      Foreground="{DynamicResource {x:Static EtkVs:Colors.TraceLogForegroundKey}}"
       Background="{DynamicResource {x:Static vsp:TreeViewColors.BackgroundBrushKey}}"
-      RowBackground="{DynamicResource {x:Static EtkVs:EtkColors.TraceLogBackgroundKey}}"
-      AlternatingRowBackground="{DynamicResource {x:Static EtkVs:EtkColors.TraceLogBackgroundAltKey}}"
-      RowSelectionBackground="{DynamicResource {x:Static EtkVs:EtkColors.TraceLogSelectedBackgroundKey}}"
-      RowInactiveSelectionBackground="{DynamicResource {x:Static EtkVs:EtkColors.TraceLogInactiveSelectedBackgroundKey}}"
+      RowBackground="{DynamicResource {x:Static EtkVs:Colors.TraceLogBackgroundKey}}"
+      AlternatingRowBackground="{DynamicResource {x:Static EtkVs:Colors.TraceLogBackgroundAltKey}}"
+      RowSelectionForeground="{DynamicResource {x:Static EtkVs:Colors.TraceLogSelectedForegroundKey}}"
+      RowSelectionBackground="{DynamicResource {x:Static EtkVs:Colors.TraceLogSelectedBackgroundKey}}"
+      RowInactiveSelectionForeground="{DynamicResource {x:Static EtkVs:Colors.TraceLogInactiveSelectedForegroundKey}}"
+      RowInactiveSelectionBackground="{DynamicResource {x:Static EtkVs:Colors.TraceLogInactiveSelectedBackgroundKey}}"
       RowFocusBorderBrush="{DynamicResource {x:Static EtkVs:CommonControlBrushes.FocusVisualForegroundKey}}"/>
 
     <!--
     <GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch"/>
-    <GridSplitter Grid.Row="4" Height="5" HorizontalAlignment="Stretch"/>
-    <DataGrid Grid.Row="3" ItemsSource="{Binding Events}">
+    <DataGrid Grid.Row="3" SelectionUnit="FullRow" SelectionMode="Extended" x:Name="grid">
+      <DataGrid.Items>
+        <System:String>Foo</System:String>
+        <System:String>Bar</System:String>
+        <System:String>Baz</System:String>
+        <System:String>Foo</System:String>
+        <System:String>Foo</System:String>
+        <System:String>Foo</System:String>
+        <System:String>Foo</System:String>
+        <System:String>Foo</System:String>
+      </DataGrid.Items>
       <DataGrid.Columns>
-        <DataGridTextColumn Binding="{Binding Id}"/>
+        <DataGridTextColumn Binding="{Binding}"/>
       </DataGrid.Columns>
     </DataGrid>
+    <GridSplitter Grid.Row="4" Height="5" HorizontalAlignment="Stretch"/>
     <ListView Grid.Row="5" ItemsSource="{Binding Events}">
       <ListView.View>
         <GridView>

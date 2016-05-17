@@ -11,7 +11,11 @@
     using System.Xml.Linq;
     using System.Xml.XPath;
     using EventTraceKit.VsExtension;
+    using Microsoft.VisualStudio.Settings;
     using Microsoft.VisualStudio.Shell;
+    using Microsoft.VisualStudio.Shell.Interop;
+    using Colors = EventTraceKit.VsExtension.Colors;
+    using Fonts = EventTraceKit.VsExtension.Fonts;
 
     /// <summary>
     /// Interaction logic for App.xaml
@@ -26,8 +30,211 @@
         {
             base.OnStartup(e);
 
+            //ServiceProvider.GlobalProvider
+
+            var setGlobalProvider = typeof(ServiceProvider)
+                .GetMethod("SetGlobalProvider", BindingFlags.NonPublic | BindingFlags.Static);
+
+            setGlobalProvider.Invoke(null, new object[] { CreateServiceProvider() });
+
+            var sm = ServiceProvider.GlobalProvider.GetService(typeof(SVsSettingsManager)) as IVsSettingsManager;
+
             availableThemes.AddRange(FindAvailableThemes());
             TryLoadTheme("VisualStudio.Dark");
+        }
+
+        private ServiceProvider CreateServiceProvider()
+        {
+            var provider = new ServiceProviderStub();
+            provider.AddService<SVsSettingsManager>(new VsSettingsManagerStub());
+            return new ServiceProvider(provider);
+        }
+
+        private class ServiceProviderStub : Microsoft.VisualStudio.OLE.Interop.IServiceProvider
+        {
+            private readonly Dictionary<Guid, object> services = new Dictionary<Guid, object>();
+
+            public void AddService<TService>(object service)
+            {
+                AddService(typeof(TService).GUID, service);
+            }
+
+            public void AddService(Guid guidService, object service)
+            {
+                services.Add(guidService, service);
+            }
+
+            public int QueryService(ref Guid guidService, ref Guid riid, out IntPtr ppvObject)
+            {
+                object obj;
+                if (services.TryGetValue(guidService, out obj)) {
+                    var punk = Marshal.GetIUnknownForObject(obj);
+                    return Marshal.QueryInterface(punk, ref riid, out ppvObject);
+                }
+
+                ppvObject = new IntPtr();
+                return -1;
+            }
+        }
+
+        private class VsSettingsManagerStub : IVsSettingsManager
+        {
+            private readonly VsSettingsStoreStub readOnlyStore = new VsSettingsStoreStub();
+
+            public int GetCollectionScopes(string collectionPath, out uint scopes)
+            {
+                throw new NotImplementedException();
+            }
+
+            public int GetPropertyScopes(string collectionPath, string propertyName, out uint scopes)
+            {
+                throw new NotImplementedException();
+            }
+
+            public int GetReadOnlySettingsStore(uint scope, out IVsSettingsStore store)
+            {
+                if (scope != (uint)SettingsScope.UserSettings) {
+                    store = null;
+                    return -1;
+                }
+
+                store = readOnlyStore;
+                return 0;
+            }
+
+            public int GetWritableSettingsStore(uint scope, out IVsWritableSettingsStore writableStore)
+            {
+                throw new NotImplementedException();
+            }
+
+            public int GetApplicationDataFolder(uint folder, out string folderPath)
+            {
+                throw new NotImplementedException();
+            }
+
+            public int GetCommonExtensionsSearchPaths(uint paths, string[] commonExtensionsPaths, out uint actualPaths)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        private class VsSettingsStoreStub : IVsSettingsStore
+        {
+            public int GetBool(string collectionPath, string propertyName, out int value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public int GetInt(string collectionPath, string propertyName, out int value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public int GetUnsignedInt(string collectionPath, string propertyName, out uint value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public int GetInt64(string collectionPath, string propertyName, out long value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public int GetUnsignedInt64(string collectionPath, string propertyName, out ulong value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public int GetString(string collectionPath, string propertyName, out string value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public int GetBinary(
+                string collectionPath,
+                string propertyName,
+                uint byteLength,
+                byte[] pBytes = null,
+                uint[] actualByteLength = null)
+            {
+                throw new NotImplementedException();
+            }
+
+            public int GetBoolOrDefault(string collectionPath, string propertyName, int defaultValue, out int value)
+            {
+                value = defaultValue;
+                return 1;
+            }
+
+            public int GetIntOrDefault(string collectionPath, string propertyName, int defaultValue, out int value)
+            {
+                value = defaultValue;
+                return 1;
+            }
+
+            public int GetUnsignedIntOrDefault(string collectionPath, string propertyName, uint defaultValue, out uint value)
+            {
+                value = defaultValue;
+                return 1;
+            }
+
+            public int GetInt64OrDefault(string collectionPath, string propertyName, long defaultValue, out long value)
+            {
+                value = defaultValue;
+                return 1;
+            }
+
+            public int GetUnsignedInt64OrDefault(string collectionPath, string propertyName, ulong defaultValue, out ulong value)
+            {
+                value = defaultValue;
+                return 1;
+            }
+
+            public int GetStringOrDefault(string collectionPath, string propertyName, string defaultValue, out string value)
+            {
+                value = defaultValue;
+                return 1;
+            }
+
+            public int GetPropertyType(string collectionPath, string propertyName, out uint type)
+            {
+                throw new NotImplementedException();
+            }
+
+            public int PropertyExists(string collectionPath, string propertyName, out int pfExists)
+            {
+                throw new NotImplementedException();
+            }
+
+            public int CollectionExists(string collectionPath, out int pfExists)
+            {
+                throw new NotImplementedException();
+            }
+
+            public int GetSubCollectionCount(string collectionPath, out uint subCollectionCount)
+            {
+                throw new NotImplementedException();
+            }
+
+            public int GetPropertyCount(string collectionPath, out uint propertyCount)
+            {
+                throw new NotImplementedException();
+            }
+
+            public int GetLastWriteTime(string collectionPath, SYSTEMTIME[] lastWriteTime)
+            {
+                throw new NotImplementedException();
+            }
+
+            public int GetSubCollectionName(string collectionPath, uint index, out string subCollectionName)
+            {
+                throw new NotImplementedException();
+            }
+
+            public int GetPropertyName(string collectionPath, uint index, out string propertyName)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         public IReadOnlyList<string> AvailableThemes => availableThemes;
@@ -116,20 +323,32 @@
             var inactiveSelectedBackgroundKey = new ThemeResourceKey(
                 id, "Inactive Selected Text", ThemeResourceKeyType.BackgroundBrush);
 
-            Resources[EtkFonts.TraceLogEntryFontFamilyKey] = new FontFamily("Consolas");
-            Resources[EtkFonts.TraceLogEntryFontSizeKey] = 9;
-            Resources[EtkColors.TraceLogForegroundKey] = Resources[foregroundKey];
-            Resources[EtkColors.TraceLogBackgroundKey] = Resources[backgroundKey];
-            Resources[EtkColors.TraceLogBackgroundAltKey] = Darken((SolidColorBrush)Resources[backgroundKey]);
-            Resources[EtkColors.TraceLogSelectedBackgroundKey] = Resources[selectedBackgroundKey];
-            Resources[EtkColors.TraceLogInactiveSelectedBackgroundKey] = Resources[inactiveSelectedBackgroundKey];
+            Resources[Fonts.TraceLogEntryFontFamilyKey] = new FontFamily("Consolas");
+            Resources[Fonts.TraceLogEntryFontSizeKey] = 9;
+            Resources[Colors.TraceLogForegroundKey] = Resources[foregroundKey];
+            Resources[Colors.TraceLogBackgroundKey] = Resources[backgroundKey];
+            Resources[Colors.TraceLogBackgroundAltKey] = GetAlternateBrush((SolidColorBrush)Resources[backgroundKey]);
+            Resources[Colors.TraceLogSelectedBackgroundKey] = Resources[selectedBackgroundKey];
+            Resources[Colors.TraceLogInactiveSelectedBackgroundKey] = Resources[inactiveSelectedBackgroundKey];
         }
 
-        private SolidColorBrush Darken(SolidColorBrush brush)
+        private SolidColorBrush GetAlternateBrush(
+            SolidColorBrush brush, double amount = 0.05)
         {
-            var hsl = brush.Color.ToHslColor();
-            hsl.Lightness = Math.Max(0, hsl.Lightness - 0.05);
-            return new SolidColorBrush(hsl.ToColor());
+            return new SolidColorBrush(GetAlternateColor(brush.Color, amount));
+        }
+
+        private Color GetAlternateColor(Color color, double amount = 0.05)
+        {
+            var hsl = color.ToHslColor();
+
+            bool darken = hsl.Lightness >= 0.5;
+            if (darken)
+                hsl.Lightness -= amount;
+            else
+                hsl.Lightness += amount;
+
+            return hsl.ToColor();
         }
 
         private void SetColor(Guid id, string name, Color color, bool isForeground)
@@ -188,162 +407,6 @@
                 default:
                     return null;
             }
-        }
-    }
-
-    public static class ColorExtensions
-    {
-        public static HsvColor ToHsvColor(this Color color)
-        {
-            double max = Math.Max(color.ScR, Math.Max(color.ScG, color.ScB));
-            double min = Math.Min(color.ScR, Math.Min(color.ScG, color.ScB));
-            double chroma = max - min;
-
-            double hue;
-            double saturation;
-            double value;
-
-            if (chroma == 0 || max == 0) {
-                hue = 0;
-                saturation = 0;
-                value = 0;
-            } else {
-                if (max == color.ScR)
-                    hue = (color.ScG - color.ScB) / chroma;
-                else if (max == color.G)
-                    hue = (color.ScB - color.ScR) / chroma + 2;
-                else
-                    hue = (color.ScR - color.ScG) / chroma + 4;
-
-                hue *= 60;
-                if (hue < 0)
-                    hue += 360;
-
-                saturation = chroma / max;
-                value = max;
-            }
-
-            return new HsvColor(hue, saturation, value);
-        }
-
-        public static HslColor ToHslColor(this Color color)
-        {
-            double r = color.R / 255.0;
-            double g = color.G / 255.0;
-            double b = color.B / 255.0;
-            double max = Math.Max(r, Math.Max(g, b));
-            double min = Math.Min(r, Math.Min(g, b));
-            double chroma = max - min;
-
-            double hue;
-            double saturation;
-            double lightness;
-
-            if (r == g && g == b) {
-                hue = 0;
-                saturation = 0;
-                lightness = max;
-            } else {
-                if (max == r)
-                    hue = (g - b) / chroma;
-                else if (max == g)
-                    hue = (b - r) / chroma + 2;
-                else
-                    hue = (r - g) / chroma + 4;
-
-                hue *= 60;
-                if (hue < 0)
-                    hue += 360;
-
-                saturation = chroma / (1 - Math.Abs(max + min - 1));
-                lightness = (max + min) / 2;
-            }
-
-            return new HslColor(color.A / 255.0, hue, saturation, lightness);
-        }
-    }
-
-    public struct HsvColor
-    {
-        public HsvColor(double hue, double saturation, double value)
-        {
-            Hue = hue;
-            Saturation = saturation;
-            Value = value;
-        }
-
-        public double Hue { get; set; }
-        public double Saturation { get; set; }
-        public double Value { get; set; }
-    }
-
-    public struct HslColor
-    {
-        public HslColor(double alpha, double hue, double saturation, double lightness)
-        {
-            Hue = hue;
-            Saturation = saturation;
-            Lightness = lightness;
-            Alpha = alpha;
-        }
-
-        public double Alpha { get; set; }
-        public double Hue { get; set; }
-        public double Saturation { get; set; }
-        public double Lightness { get; set; }
-
-        public Color ToColor()
-        {
-            double chroma = (1 - Math.Abs(2 * Lightness - 1)) * Saturation;
-            double h = Hue / 60;
-            double m = Lightness - chroma / 2;
-            double x = chroma * (1 - Math.Abs((h % 2) - 1)) + m;
-            double c = chroma + m;
-
-            double red, green, blue;
-            switch ((int)Math.Floor(h) % 6) {
-                case 0:
-                    red = c;
-                    blue = x;
-                    green = m;
-                    break;
-                case 1:
-                    red = x;
-                    blue = c;
-                    green = m;
-                    break;
-                case 2:
-                    red = m;
-                    blue = c;
-                    green = x;
-                    break;
-                case 3:
-                    red = m;
-                    blue = x;
-                    green = c;
-                    break;
-                case 4:
-                    red = x;
-                    blue = m;
-                    green = c;
-                    break;
-                case 5:
-                    red = c;
-                    blue = m;
-                    green = x;
-                    break;
-                default:
-                    red = 0;
-                    blue = 0;
-                    green = 0;
-                    break;
-            }
-
-            return Color.FromArgb(
-                (byte)(Alpha * 255),
-                (byte)(red * 255),
-                (byte)(green * 255),
-                (byte)(blue * 255));
         }
     }
 }

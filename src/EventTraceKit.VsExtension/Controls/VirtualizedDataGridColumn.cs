@@ -5,18 +5,21 @@ namespace EventTraceKit.VsExtension.Controls
 
     public class VirtualizedDataGridColumn : DependencyObject
     {
-        private readonly VirtualizedDataGridColumnsViewModel columnsViewModel;
+        private readonly VirtualizedDataGridColumnsViewModel columns;
         private readonly IDataColumn columnModel;
         private readonly IDataView dataView;
+        private readonly bool isDisconnected;
 
+        private CellValue[] cachedRowValues = new CellValue[0];
+        private int startCacheRowValueIndex;
         private bool isResizing;
 
         public VirtualizedDataGridColumn(
-            VirtualizedDataGridColumnsViewModel columnsViewModel,
+            VirtualizedDataGridColumnsViewModel columns,
             IDataColumn columnModel,
             IDataView dataView)
         {
-            this.columnsViewModel = columnsViewModel;
+            this.columns = columns;
             this.columnModel = columnModel;
             this.dataView = dataView;
 
@@ -28,7 +31,7 @@ namespace EventTraceKit.VsExtension.Controls
             RefreshViewModelFromModel();
         }
 
-        public VirtualizedDataGridColumnsViewModel Columns => columnsViewModel;
+        public VirtualizedDataGridColumnsViewModel Columns => columns;
 
         public bool CanMove => IsVisible;
 
@@ -272,6 +275,11 @@ namespace EventTraceKit.VsExtension.Controls
 
         public bool CanSort { get; private set; } = false;
 
+        public bool IsConfigurable =>
+            !IsSeparator && !IsFreezableAreaSeparator && IsConnected;
+
+        public bool IsConnected => !isDisconnected;
+
         private void UpdateAutomationNameProperty()
         {
             //string str;
@@ -294,7 +302,7 @@ namespace EventTraceKit.VsExtension.Controls
 
         private void OnUIPropertyChanged()
         {
-            columnsViewModel.Owner.RaiseUpdate(false);
+            columns.Owner.RaiseUpdate(false);
         }
 
         public void BeginPossiblyResizing()
@@ -320,9 +328,6 @@ namespace EventTraceKit.VsExtension.Controls
         {
             return GetCachedCellValue(rowIndex, viewportSizeHint);
         }
-
-        private CellValue[] cachedRowValues = new CellValue[0];
-        private int startCacheRowValueIndex;
 
         private void ClearCachedRows()
         {

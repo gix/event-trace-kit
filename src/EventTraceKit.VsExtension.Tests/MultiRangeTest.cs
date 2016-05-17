@@ -3,7 +3,6 @@
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using EventTraceKit.VsExtension.Collections;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -22,7 +21,7 @@
             var range = new MultiRange();
 
             Assert.Equal(0, range.Count);
-            Assert.Equal(new Tuple<int, int>[0], range.GetRanges());
+            Assert.Equal(new Range[0], range.GetRanges());
             Assert.False(range.Contains(42));
         }
 
@@ -95,6 +94,34 @@
         }
 
         [Fact]
+        public void Add_Range()
+        {
+            var range = new MultiRange();
+
+            range.Add(new Range(10, 20));
+
+            Assert.Equal(10, range.Count);
+            Assert.Equal(new[] { R(10, 20) }, range.GetRanges());
+        }
+
+        [Fact]
+        public void Add_Ranges()
+        {
+            var range = new MultiRange();
+
+            range.Add(new Range(20, 30));
+            range.Add(new Range(15, 25));
+            range.Add(new Range(25, 35));
+            range.Add(new Range(10, 40));
+            range.Add(new Range(40, 45));
+            range.Add(new Range(50, 55));
+            range.Add(new Range(5, 6));
+
+            Assert.Equal(41, range.Count);
+            Assert.Equal(new[] { R(5, 6), R(10, 45), R(50, 55) }, range.GetRanges());
+        }
+
+        [Fact]
         public void RemoveNotContained()
         {
             var range = new MultiRange { 10, 11, 12 };
@@ -146,7 +173,46 @@
             range.Clear();
 
             Assert.Equal(0, range.Count);
-            Assert.Equal(new Tuple<int, int>[0], range.GetRanges());
+            Assert.Equal(new Range[0], range.GetRanges());
+        }
+
+        [Fact]
+        public void UnionWith_NonOverlapping()
+        {
+            var range1 = new MultiRange { 23, 24, 25 };
+            var range2 = new MultiRange { 10, 11, 12 };
+
+            range1.UnionWith(range2);
+
+            Assert.Equal(6, range1.Count);
+            Assert.Equal(3, range2.Count);
+            Assert.Equal(new[] { R(10, 13), R(23, 26) }, range1.GetRanges());
+        }
+
+        [Fact]
+        public void UnionWith_Adjacent()
+        {
+            var range1 = new MultiRange { 10, 11, 12 };
+            var range2 = new MultiRange { 13, 14, 15 };
+
+            range1.UnionWith(range2);
+
+            Assert.Equal(6, range1.Count);
+            Assert.Equal(3, range2.Count);
+            Assert.Equal(new[] { R(10, 16) }, range1.GetRanges());
+        }
+
+        [Fact]
+        public void UnionWith_Overlapping()
+        {
+            var range1 = new MultiRange { 10, 11, 12 };
+            var range2 = new MultiRange { 11, 12, 13 };
+
+            range1.UnionWith(range2);
+
+            Assert.Equal(4, range1.Count);
+            Assert.Equal(3, range2.Count);
+            Assert.Equal(new[] { R(10, 14) }, range1.GetRanges());
         }
 
         [Fact]
@@ -206,14 +272,14 @@
             }
         }
 
-        private static Tuple<int, int> R(int value)
+        private static Range R(int value)
         {
-            return Tuple.Create(value, value + 1);
+            return new Range(value, value + 1);
         }
 
-        private static Tuple<int, int> R(int begin, int end)
+        private static Range R(int begin, int end)
         {
-            return Tuple.Create(begin, end);
+            return new Range(begin, end);
         }
     }
 }

@@ -175,7 +175,7 @@ namespace EventTraceKit.VsExtension.Controls
                     && focusIndex >= firstVisibleRow
                     && focusIndex <= lastVisibleRow) {
                     double topEdge = (focusIndex * rowHeight) - verticalOffset;
-                    var bounds = new Rect(0, topEdge, actualWidth - 1, rowHeight);
+                    var bounds = new Rect(0, topEdge, actualWidth - 1, rowHeight - 1);
                     dc.DrawRectangleSnapped(null, focusBorderPen, bounds);
                 }
             }

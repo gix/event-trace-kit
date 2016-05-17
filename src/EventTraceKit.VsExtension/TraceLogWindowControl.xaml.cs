@@ -4,11 +4,8 @@
     using System.Windows;
     using System.Windows.Media;
     using Microsoft.VisualStudio.PlatformUI;
-    using Microsoft.VisualStudio.Shell.Interop;
 
-    /// <summary>
-    /// Interaction logic for TraceLogWindowControl.
-    /// </summary>
+    /// <summary>Interaction logic for TraceLogWindowControl.</summary>
     public partial class TraceLogWindowControl
     {
         /// <summary>
@@ -28,26 +25,47 @@
 
         private void UpdateThemeResources()
         {
-            var fcHelper = new FontsAndColorsHelper();
+            var outputWindow = new Guid("9973EFDF-317D-431C-8BC1-5E88CBFD4F7F");
+            var fch = new FontsAndColorsHelper();
+            var values = new ResourceDictionary();
 
-            var outputWindowCategory = new Guid("9973EFDF-317D-431C-8BC1-5E88CBFD4F7F");
-            var itemInfo = new ColorableItemInfo[1];
-            var resources = new ResourceDictionary();
-
-            if (fcHelper.GetPlainTextItemInfo(outputWindowCategory, resources, itemInfo)) {
-                Resources[EtkColors.TraceLogForegroundKey] = resources["Foreground"];
-                Resources[EtkFonts.TraceLogEntryFontFamilyKey] = ((Typeface)resources["Typeface"]).FontFamily;
-                Resources[EtkFonts.TraceLogEntryFontSizeKey] = resources["FontRenderingSize"];
+            if (fch.GetTextItemInfo(outputWindow, "Plain Text", values, true)) {
+                Resources[Fonts.TraceLogEntryFontFamilyKey] = ((Typeface)values["Typeface"]).FontFamily;
+                Resources[Fonts.TraceLogEntryFontSizeKey] = values["FontRenderingSize"];
+                Resources[Colors.TraceLogForegroundKey] = values["Foreground"];
+                Resources[Colors.TraceLogBackgroundKey] = values["Background"];
+                Resources[Colors.TraceLogBackgroundAltKey] =
+                    GetAlternateBrush((SolidColorBrush)values["Background"]);
             }
 
-            if (fcHelper.GetTextViewBackgroundInfo(outputWindowCategory, resources, itemInfo))
-                Resources[EtkColors.TraceLogBackgroundKey] = resources["Background"];
+            if (fch.GetTextItemInfo(outputWindow, "Selected Text", values)) {
+                Resources[Colors.TraceLogSelectedForegroundKey] = Resources[Colors.TraceLogForegroundKey];
+                Resources[Colors.TraceLogSelectedBackgroundKey] = values["Background"];
+            }
 
-            if (fcHelper.GetBackgroundBrush(outputWindowCategory, "Selected Text", resources, itemInfo))
-                Resources[EtkColors.TraceLogSelectedBackgroundKey] = resources["Background"];
+            if (fch.GetTextItemInfo(outputWindow, "Inactive Selected Text", values)) {
+                Resources[Colors.TraceLogInactiveSelectedForegroundKey] = Resources[Colors.TraceLogForegroundKey];
+                Resources[Colors.TraceLogInactiveSelectedBackgroundKey] = values["Background"];
+            }
+        }
 
-            if (fcHelper.GetBackgroundBrush(outputWindowCategory, "Inactive Selected Text", resources, itemInfo))
-                Resources[EtkColors.TraceLogInactiveSelectedBackgroundKey] = resources["Background"];
+        private SolidColorBrush GetAlternateBrush(
+                SolidColorBrush brush, double amount = 0.05)
+        {
+            return new SolidColorBrush(GetAlternateColor(brush.Color, amount));
+        }
+
+        private Color GetAlternateColor(Color color, double amount = 0.05)
+        {
+            var hsl = color.ToHslColor();
+
+            bool darken = hsl.Lightness >= 0.5;
+            if (darken)
+                hsl.Lightness -= amount;
+            else
+                hsl.Lightness += amount;
+
+            return hsl.ToColor();
         }
     }
 }

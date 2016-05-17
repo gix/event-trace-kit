@@ -22,6 +22,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         private readonly ValueCache<Pen> inactiveSelectionBorderPenCache;
         private readonly ValueCache<Pen> focusBorderPenCache;
 
+        private readonly QueuedDispatcherAction focusIndexUpdate;
+
         private readonly Action<bool> updateRenderingAction;
         private DispatcherOperation updateRenderingActionOperation;
         private bool postedUpdate;
@@ -30,6 +32,9 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public VirtualizedDataGridCellsPresenter()
         {
+            FocusVisualStyle = null;
+            RenderOptions.SetClearTypeHint(this, ClearTypeHint.Enabled);
+
             typefaceCache = new ValueCache<Typeface>(CreateTypeFace);
             horizontalGridLinesPenCache = new ValueCache<Pen>(
                 CreateHorizontalGridLinesPen);
@@ -39,20 +44,19 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 CreateSelectionBorderPen);
             inactiveSelectionBorderPenCache = new ValueCache<Pen>(
                 CreateInactiveSelectionBorderPen);
-            focusBorderPenCache = new ValueCache<Pen>(
-                CreateFocusBorderPen);
+            focusBorderPenCache = new ValueCache<Pen>(CreateFocusBorderPen);
 
-            FocusVisualStyle = null;
-            RenderOptions.SetClearTypeHint(this, ClearTypeHint.Enabled);
+            focusIndexUpdate = new QueuedDispatcherAction(Dispatcher, EnsureVisible);
+
             cellsDrawingVisual = new VirtualizedDataGridCellsDrawingVisual(this);
             AddVisualChild(cellsDrawingVisual);
 
             CoerceValue(FontSizeProperty);
             CoerceValue(RowHeightProperty);
 
-            postUpdateWhenVisible = true;
             SizeChanged += OnSizeChanged;
             IsVisibleChanged += OnIsVisibleChanged;
+            postUpdateWhenVisible = true;
             updateRenderingAction = UpdateRendering;
         }
 
@@ -77,7 +81,15 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         private void OnViewModelChanged(DependencyPropertyChangedEventArgs e)
         {
-            //CoerceValue(ViewModelEventSourceProperty);
+            if (e.OldValue != null) {
+                var oldValue = (VirtualizedDataGridCellsPresenterViewModel)e.OldValue;
+                oldValue.FocusIndexChanged -= OnViewModelFocusIndexChanged;
+            }
+
+            if (e.NewValue != null) {
+                var newValue = (VirtualizedDataGridCellsPresenterViewModel)e.NewValue;
+                newValue.FocusIndexChanged += OnViewModelFocusIndexChanged;
+            }
         }
 
         #endregion
@@ -109,26 +121,6 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         }
 
         #endregion
-
-        //public static readonly DependencyProperty HighlightBackgroundProperty =
-        //    DependencyProperty.Register(
-        //        "HighlightBackground",
-        //        typeof(Brush),
-        //        typeof(VirtualizedDataGridCellsPresenter),
-        //        new FrameworkPropertyMetadata(
-        //            SolidColorBrushCache.GetBrush(Colors.Green),
-        //            FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
-        //            FrameworkPropertyMetadataOptions.AffectsRender));
-
-        //public static readonly DependencyProperty PITHighlightBackgroundProperty =
-        //    DependencyProperty.Register(
-        //        "PITHighlightBackground",
-        //        typeof(Brush),
-        //        typeof(VirtualizedDataGridCellsPresenter),
-        //        new FrameworkPropertyMetadata(
-        //            SolidColorBrushCache.GetBrush(Colors.Purple),
-        //            FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
-        //            FrameworkPropertyMetadataOptions.AffectsRender));
 
         #region public double RowHeight { get; set; }
 
@@ -207,6 +199,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         {
             var source = (VirtualizedDataGridCellsPresenter)d;
             source.CoerceValue(RowHeightProperty);
+            source.typefaceCache.Clear();
         }
 
         #endregion
@@ -1046,8 +1039,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             return Math.Ceiling(offset);
         }
 
-        private void OnHorizontalOffsetChanged(
-            DependencyPropertyChangedEventArgs e)
+        private void OnHorizontalOffsetChanged(DependencyPropertyChangedEventArgs e)
         {
             PostUpdateRendering();
         }
@@ -1080,8 +1072,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             return Math.Ceiling(offset);
         }
 
-        private void OnVerticalOffsetChanged(
-            DependencyPropertyChangedEventArgs e)
+        private void OnVerticalOffsetChanged(DependencyPropertyChangedEventArgs e)
         {
             PostUpdateRendering();
         }
@@ -1212,6 +1203,12 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         private void OnSizeChanged(object sender, EventArgs e)
         {
             PostUpdateRendering();
+        }
+
+        private void OnViewModelFocusIndexChanged(object sender, EventArgs e)
+        {
+            if (ViewModel != null)
+                focusIndexUpdate.Queue(ViewModel.FocusIndex);
         }
 
         private void UpdateScrollInfo()
@@ -1359,38 +1356,95 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
         {
-            if (e.Handled) // || !this.ViewModel.IsReady)
+            var viewModel = ViewModel;
+            if (viewModel == null || e.Handled)
                 return;
 
-            Point position = e.GetPosition(this);
             Keyboard.Focus(this);
 
-            int? rowFromPosition = GetRowFromPosition(position.Y);
-            if (rowFromPosition.HasValue) {
-                int rowIndex = rowFromPosition.Value;
+            Point position = e.GetPosition(this);
+            int? row = GetRowFromPosition(position.Y);
+            if (row != null) {
+                int rowIndex = row.Value;
                 EnsureVisible(rowIndex);
-                var viewModel = ViewModel;
-                if (viewModel != null) {
-                    ModifierKeys modifiers = Keyboard.Modifiers;
-                    bool extend = (modifiers & ModifierKeys.Control) != ModifierKeys.None;
-                    switch (modifiers & ~ModifierKeys.Control) {
-                        case ModifierKeys.None:
-                            viewModel.RowSelection.ToggleSingle(rowIndex, extend);
-                            e.Handled = true;
-                            break;
 
-                        case ModifierKeys.Shift:
-                            viewModel.RowSelection.ToggleExtent(rowIndex, extend);
-                            e.Handled = true;
-                            break;
-                    }
+                ModifierKeys modifiers = Keyboard.Modifiers;
+                bool extend = (modifiers & ModifierKeys.Control) != ModifierKeys.None;
+                switch (modifiers & ~ModifierKeys.Control) {
+                    case ModifierKeys.None:
+                        viewModel.RowSelection.ToggleSingle(rowIndex, extend);
+                        e.Handled = true;
+                        break;
 
-                    if (e.Handled)
-                        viewModel.RequestUpdate(false);
+                    case ModifierKeys.Shift:
+                        viewModel.RowSelection.ToggleExtent(rowIndex, extend);
+                        e.Handled = true;
+                        break;
                 }
+
+                if (e.Handled)
+                    viewModel.RequestUpdate(false);
+
+                BeginDragging(rowIndex);
+            }
+        }
+
+        protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
+        {
+            if (dragSelectionCtx.IsDragging)
+                EndDragging();
+        }
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            var viewModel = ViewModel;
+            if (viewModel == null || !dragSelectionCtx.IsDragging)
+                return;
+
+            Point position = Mouse.GetPosition(this);
+            int? row = GetRowFromPosition(position.Y);
+            if (row != null && row != dragSelectionCtx.LastTargetedRow) {
+                int rowIndex = row.Value;
+                EnsureVisible(rowIndex);
+
+                int min = Math.Min(dragSelectionCtx.AnchorRow, rowIndex);
+                int max = Math.Max(dragSelectionCtx.AnchorRow, rowIndex);
+                viewModel.RowSelection.RestoreSnapshot(dragSelectionCtx.SelectionSnapshot);
+                viewModel.RowSelection.SetRange(min, max, dragSelectionCtx.SelectionRemoves);
+                viewModel.RequestUpdate(false);
             }
 
-            base.OnMouseLeftButtonDown(e);
+            dragSelectionCtx.LastTargetedRow = row;
+        }
+
+        private struct DragSelectionContext
+        {
+            public bool IsDragging;
+            public MultiRange SelectionSnapshot;
+            public bool SelectionRemoves;
+            public int AnchorRow;
+
+            public int? LastTargetedRow;
+        }
+
+        private DragSelectionContext dragSelectionCtx;
+
+        private void BeginDragging(int rowIndex)
+        {
+            if (Mouse.Capture(this, CaptureMode.SubTree)) {
+                dragSelectionCtx.IsDragging = true;
+                dragSelectionCtx.SelectionSnapshot = ViewModel.RowSelection.GetSnapshot();
+                dragSelectionCtx.SelectionRemoves = ViewModel.RowSelection.Contains(rowIndex);
+                dragSelectionCtx.AnchorRow = rowIndex;
+            }
+        }
+
+        private void EndDragging()
+        {
+            if (Mouse.Captured == this)
+                ReleaseMouseCapture();
+
+            dragSelectionCtx = new DragSelectionContext();
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
@@ -1423,7 +1477,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
                     case Key.A:
                         if (e.KeyboardDevice.Modifiers == ModifierKeys.Control) {
-                            viewModel.RowSelection.SelectRange(0, viewModel.RowCount - 1);
+                            viewModel.RowSelection.SelectAll();
                             e.Handled = true;
                         }
                         break;
@@ -1693,6 +1747,14 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             return topView;
         }
 
+        internal void OnIsSelectionActiveChanged()
+        {
+            if (ViewModel == null)
+                return;
+
+            PostUpdateRendering();
+        }
+
         internal void EnsureVisible(int rowIndex)
         {
             if (rowIndex == int.MaxValue)
@@ -1792,14 +1854,6 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             };
             pen.Freeze();
             return pen;
-        }
-
-        internal void OnIsSelectionActiveChanged()
-        {
-            if (ViewModel == null || ViewModel.RowSelection.Count == 0)
-                return;
-
-            PostUpdateRendering();
         }
     }
 }

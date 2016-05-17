@@ -2,7 +2,9 @@
 {
     using System;
     using System.ComponentModel.Design;
+    using System.IO;
     using System.Runtime.InteropServices;
+    using System.Windows.Input;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
 
@@ -52,7 +54,7 @@
             return new SearchTask(dwCookie, pSearchQuery, pSearchCallback, this);
         }
 
-        public override bool SearchEnabled => base.SearchEnabled;
+        public override bool SearchEnabled => true;
 
         public override void ClearSearch()
         {

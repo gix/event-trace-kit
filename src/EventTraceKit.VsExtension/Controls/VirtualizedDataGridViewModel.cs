@@ -1,13 +1,9 @@
 namespace EventTraceKit.VsExtension.Controls
 {
-    using System.ComponentModel;
     using System.Windows;
 
     public class VirtualizedDataGridViewModel : DependencyObject
     {
-        private readonly PropertyChangedEventArgs rowCountChangedArgs =
-            new PropertyChangedEventArgs(nameof(RowCount));
-
         public VirtualizedDataGridViewModel(IDataView dataView)
         {
             CellsPresenterViewModel = new VirtualizedDataGridCellsPresenterViewModel(this);

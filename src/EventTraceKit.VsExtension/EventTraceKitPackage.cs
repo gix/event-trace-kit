@@ -4,7 +4,6 @@
     using System.ComponentModel;
     using System.ComponentModel.Design;
     using System.Diagnostics.CodeAnalysis;
-    using System.IO;
     using System.Runtime.InteropServices;
     using EnvDTE;
     using Microsoft.VisualStudio;

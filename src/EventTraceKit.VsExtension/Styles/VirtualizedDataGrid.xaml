@@ -37,7 +37,7 @@
                 ItemsSource="{Binding ViewModel.ColumnsViewModel.VisibleColumns, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
                 ExpanderHeader="{Binding ViewModel.ColumnsViewModel.ExpanderHeaderColumn, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"/>
             </Canvas>
-            <ScrollViewer Name="PART_CenterCellsScrollViewer"
+            <ScrollViewer x:Name="PART_CenterCellsScrollViewer"
                           Grid.Row="1" Grid.Column="1"
                           CanContentScroll="True"
                           HorizontalScrollBarVisibility="Auto"
@@ -50,8 +50,10 @@
                 Foreground="{TemplateBinding Foreground}"
                 PrimaryBackground="{TemplateBinding RowBackground}"
                 SecondaryBackground="{TemplateBinding AlternatingRowBackground}"
+                SelectionForeground="{TemplateBinding RowSelectionForeground}"
                 SelectionBackground="{TemplateBinding RowSelectionBackground}"
                 SelectionBorderThickness="0"
+                InactiveSelectionForeground="{TemplateBinding RowInactiveSelectionForeground}"
                 InactiveSelectionBackground="{TemplateBinding RowInactiveSelectionBackground}"
                 FocusBorderBrush="{TemplateBinding RowFocusBorderBrush}"
                 FontFamily="Consolas"

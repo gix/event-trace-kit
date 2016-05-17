@@ -38,30 +38,30 @@
 
         public static Cursor SplitCursor => SplitCursorCache.Value;
 
-        #region public VirtualizedDataGridColumnViewModel ViewModel
+        #region public VirtualizedDataGridColumn Column
 
-        public static readonly DependencyProperty ViewModelProperty =
+        public static readonly DependencyProperty ColumnProperty =
             DependencyProperty.Register(
-                nameof(ViewModel),
+                nameof(Column),
                 typeof(VirtualizedDataGridColumn),
                 typeof(VirtualizedDataGridColumnHeader),
-                new UIPropertyMetadata(null, OnViewModelChanged));
+                new UIPropertyMetadata(null, OnColumnChanged));
 
-        public VirtualizedDataGridColumn ViewModel
+        public VirtualizedDataGridColumn Column
         {
-            get { return (VirtualizedDataGridColumn)GetValue(ViewModelProperty); }
-            set { SetValue(ViewModelProperty, value); }
+            get { return (VirtualizedDataGridColumn)GetValue(ColumnProperty); }
+            set { SetValue(ColumnProperty, value); }
         }
 
-        private static void OnViewModelChanged(
+        private static void OnColumnChanged(
             DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((VirtualizedDataGridColumnHeader)d).OnViewModelChanged(
+            ((VirtualizedDataGridColumnHeader)d).OnColumnChanged(
                 (VirtualizedDataGridColumn)e.OldValue,
                 (VirtualizedDataGridColumn)e.NewValue);
         }
 
-        private void OnViewModelChanged(
+        private void OnColumnChanged(
             VirtualizedDataGridColumn oldValue,
             VirtualizedDataGridColumn newValue)
         {
@@ -351,7 +351,7 @@
             object sender, DragStartedEventArgs e)
         {
             if (!e.Handled) {
-                ViewModel?.BeginPossiblyResizing();
+                Column?.BeginPossiblyResizing();
                 e.Handled = true;
             }
         }
@@ -359,8 +359,8 @@
         private void OnRightHeaderGripperPartDragDelta(
             object sender, DragDeltaEventArgs e)
         {
-            if (!e.Handled && ViewModel != null && ViewModel.IsResizing) {
-                ViewModel.Width += e.HorizontalChange;
+            if (!e.Handled && Column != null && Column.IsResizing) {
+                Column.Width += e.HorizontalChange;
                 e.Handled = true;
             }
         }
@@ -371,8 +371,8 @@
             if (e.Handled)
                 return;
 
-            if (ViewModel != null && ViewModel.IsResizing) {
-                ViewModel.EndPossiblyResizing(e.HorizontalChange);
+            if (Column != null && Column.IsResizing) {
+                Column.EndPossiblyResizing(e.HorizontalChange);
                 e.Handled = true;
             }
 
@@ -382,11 +382,11 @@
         private void OnRightHeaderGripperPartMouseDoubleClick(
             object sender, MouseButtonEventArgs e)
         {
-            if (ViewModel == null || e.Handled) // || !ViewModel.HdvViewModel.IsReady)
+            if (Column == null || e.Handled) // || !ViewModel.HdvViewModel.IsReady)
                 return;
 
-            double change = ParentGrid.AutoSize(ViewModel);
-            ViewModel.EndPossiblyResizing(change);
+            double change = ParentGrid.AutoSize(Column);
+            Column.EndPossiblyResizing(change);
             e.Handled = true;
         }
     }
