@@ -65,10 +65,8 @@ namespace EventTraceKit.VsExtension.Controls
             //    lastVisibleRowIndex) || !this.isHighlightDataPrefetched)
             //    return;
 
-            //cellsPresenter.RenderCount++;
             Offset = new Vector();
             RenderedViewport = Rect.Empty;
-            //cellsPresenter.RemoveAndReleaseAllUIElements();
 
             using (DrawingContext dc = RenderOpen()) {
                 int rowCount = viewModel.RowCount;
@@ -175,7 +173,10 @@ namespace EventTraceKit.VsExtension.Controls
                     && focusIndex >= firstVisibleRow
                     && focusIndex <= lastVisibleRow) {
                     double topEdge = (focusIndex * rowHeight) - verticalOffset;
-                    var bounds = new Rect(0, topEdge, actualWidth - 1, rowHeight - 1);
+                    double leftEdge = -horizontalOffset;
+                    double rightEdge = columnBoundaries[columnBoundaries.Length - 1] - 1;
+                    double bottomEdge = rowHeight - 1;
+                    var bounds = new Rect(leftEdge, topEdge, rightEdge, bottomEdge);
                     dc.DrawRectangleSnapped(null, focusBorderPen, bounds);
                 }
             }

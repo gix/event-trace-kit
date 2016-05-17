@@ -1035,13 +1035,15 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         private object CoerceHorizontalOffset(object baseValue)
         {
             var max = Math.Max(0.0, ExtentWidth - ViewportWidth);
-            var offset = DoubleUtils.SafeClamp((double)baseValue, 0, max);
+            var offset = ((double)baseValue).SafeClamp(0, max);
             return Math.Ceiling(offset);
         }
 
         private void OnHorizontalOffsetChanged(DependencyPropertyChangedEventArgs e)
         {
-            PostUpdateRendering();
+            // Update immediately to synchronize scrolling with the column
+            // headers. Otherwise there is a small but noticable delay.
+            UpdateRendering(true);
         }
 
         #endregion

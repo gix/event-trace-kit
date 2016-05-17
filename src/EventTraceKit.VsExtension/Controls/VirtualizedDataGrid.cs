@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
+    using System.Globalization;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Controls.Primitives;
@@ -673,5 +674,117 @@
         public bool IsVisible { get; set; }
         public bool IsResizable { get; set; }
         public TextAlignment TextAlignment { get; set; }
+    }
+
+    public sealed class ScrollOffsetAccessor : FrameworkElement
+    {
+        #region public ScrollViewer ScrollViewer { get; set; }
+
+        /// <summary>
+        ///   Identifies the <see cref="ScrollViewer"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty ScrollViewerProperty =
+            DependencyProperty.Register(
+                nameof(ScrollViewer),
+                typeof(ScrollViewer),
+                typeof(ScrollOffsetAccessor),
+                new PropertyMetadata(null, OnScrollViewerChanged));
+
+        /// <summary>
+        ///   Gets or sets the scroll viewer.
+        /// </summary>
+        public ScrollViewer ScrollViewer
+        {
+            get { return (ScrollViewer)GetValue(ScrollViewerProperty); }
+            set { SetValue(ScrollViewerProperty, value); }
+        }
+
+        private static void OnScrollViewerChanged(
+            DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var source = (ScrollOffsetAccessor)d;
+            source.OnScrollViewerChanged((ScrollViewer)e.NewValue);
+        }
+
+        private void OnScrollViewerChanged(ScrollViewer newValue)
+        {
+            BindingOperations.ClearBinding(this, HorizontalOffsetProperty);
+            BindingOperations.ClearBinding(this, VerticalOffsetProperty);
+            if (newValue == null)
+                return;
+
+            var horzBinding = new Binding("HorizontalOffset") {
+                Source = newValue,
+                Mode = BindingMode.OneWay
+            };
+            var vertBinding = new Binding("VerticalOffset") {
+                Source = newValue,
+                Mode = BindingMode.OneWay
+            };
+            SetBinding(HorizontalOffsetProperty, horzBinding);
+            SetBinding(VerticalOffsetProperty, vertBinding);
+        }
+
+        #endregion
+
+        #region public double HorizontalOffset { get; set; }
+
+        public static readonly DependencyProperty HorizontalOffsetProperty =
+            DependencyProperty.Register(
+                nameof(HorizontalOffset),
+                typeof(double),
+                typeof(ScrollOffsetAccessor),
+                new PropertyMetadata(0.0, OnHorizontalOffsetChanged));
+
+        public double HorizontalOffset
+        {
+            get { return (double)GetValue(HorizontalOffsetProperty); }
+            set { SetValue(HorizontalOffsetProperty, value); }
+        }
+
+        private static void OnHorizontalOffsetChanged(
+            DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var source = (ScrollOffsetAccessor)d;
+            source.OnHorizontalOffsetChanged((double)e.NewValue);
+        }
+
+        private void OnHorizontalOffsetChanged(double value)
+        {
+            if (ScrollViewer != null && value != ScrollViewer.HorizontalOffset)
+                ScrollViewer.ScrollToHorizontalOffset(value);
+        }
+
+        #endregion
+
+        #region public double VerticalOffset { get; set; }
+
+        public static readonly DependencyProperty VerticalOffsetProperty =
+            DependencyProperty.Register(
+                nameof(VerticalOffset),
+                typeof(double),
+                typeof(ScrollOffsetAccessor),
+                new PropertyMetadata(0.0, OnVerticalOffsetChanged));
+
+        public double VerticalOffset
+        {
+            get { return (double)GetValue(VerticalOffsetProperty); }
+            set { SetValue(VerticalOffsetProperty, value); }
+        }
+
+        private static void OnVerticalOffsetChanged(
+            DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var source = (ScrollOffsetAccessor)d;
+            source.OnVerticalOffsetChanged((double)e.NewValue);
+        }
+
+        private void OnVerticalOffsetChanged(double value)
+        {
+            if (ScrollViewer != null && value != ScrollViewer.VerticalOffset)
+                ScrollViewer.ScrollToVerticalOffset(value);
+        }
+
+        #endregion
     }
 }

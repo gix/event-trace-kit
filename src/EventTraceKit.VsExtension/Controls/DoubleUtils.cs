@@ -60,7 +60,7 @@
             return value;
         }
 
-        public static double SafeClamp(double value, double extreme1, double extreme2)
+        public static double SafeClamp(this double value, double extreme1, double extreme2)
         {
             return Clamp(value, Math.Min(extreme1, extreme2), Math.Max(extreme1, extreme2));
         }

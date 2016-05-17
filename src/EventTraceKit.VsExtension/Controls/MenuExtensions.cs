@@ -139,14 +139,9 @@
                 double left = (point.X - bounds.Left) * DpiHelper.DeviceToLogicalUnitsScalingFactorX;
                 double width = (bounds.Left + bounds.Width - point.X) * DpiHelper.DeviceToLogicalUnitsScalingFactorX;
                 border.Margin = new Thickness(left + 1, 0, 0, 0);
-                border.Width = Clamp(width, 0, element.ActualWidth - 2);
+                border.Width = width.Clamp(0, element.ActualWidth - 2);
                 border.Visibility = Visibility.Visible;
             }
-        }
-
-        private static double Clamp(double value, double min, double max)
-        {
-            return Math.Min(Math.Max(value, min), max);
         }
     }
 }

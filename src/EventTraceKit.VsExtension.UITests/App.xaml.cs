@@ -301,8 +301,12 @@
                         SetColor(id, name, foreground.Value, true);
 
                     var background = GetColor(color.Element("Background"));
-                    if (background != null)
-                        SetColor(id, name, background.Value, false);
+                    if (background != null) {
+                        var backgroundColor = background.Value;
+                        if (name.Contains("Selected Text"))
+                            backgroundColor.A = 102;
+                        SetColor(id, name, backgroundColor, false);
+                    }
 
                     if (foreground == null && name == "Plain Text")
                         SetColor(id, name, SystemColors.ControlTextColor, true);
@@ -328,7 +332,9 @@
             Resources[Colors.TraceLogForegroundKey] = Resources[foregroundKey];
             Resources[Colors.TraceLogBackgroundKey] = Resources[backgroundKey];
             Resources[Colors.TraceLogBackgroundAltKey] = GetAlternateBrush((SolidColorBrush)Resources[backgroundKey]);
+            Resources[Colors.TraceLogSelectedForegroundKey] = Resources[foregroundKey];
             Resources[Colors.TraceLogSelectedBackgroundKey] = Resources[selectedBackgroundKey];
+            Resources[Colors.TraceLogInactiveSelectedForegroundKey] = Resources[foregroundKey];
             Resources[Colors.TraceLogInactiveSelectedBackgroundKey] = Resources[inactiveSelectedBackgroundKey];
         }
 
