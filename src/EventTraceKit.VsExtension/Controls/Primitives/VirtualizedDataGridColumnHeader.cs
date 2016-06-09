@@ -7,9 +7,11 @@
     using System.Windows.Input;
     using System.Windows.Media;
 
+    [TemplatePart(Name = PART_LeftHeaderGripper, Type = typeof(Thumb))]
     [TemplatePart(Name = PART_RightHeaderGripper, Type = typeof(Thumb))]
     internal class VirtualizedDataGridColumnHeader : ButtonBase
     {
+        private const string PART_LeftHeaderGripper = "PART_LeftHeaderGripper";
         private const string PART_RightHeaderGripper = "PART_RightHeaderGripper";
 
         private VirtualizedDataGrid parentGrid;
@@ -74,6 +76,26 @@
 
             RightHeaderGripperVisibility =
                 newValue?.IsResizable == true ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        #endregion
+
+        #region public Thumb LeftHeaderGripperPart
+
+        private static readonly DependencyPropertyKey LeftHeaderGripperPartPropertyKey =
+            DependencyProperty.RegisterReadOnly(
+                nameof(LeftHeaderGripperPart),
+                typeof(Thumb),
+                typeof(VirtualizedDataGridColumnHeader),
+                new UIPropertyMetadata(null));
+
+        public static readonly DependencyProperty LeftHeaderGripperPartProperty =
+            LeftHeaderGripperPartPropertyKey.DependencyProperty;
+
+        public Thumb LeftHeaderGripperPart
+        {
+            get { return (Thumb)GetValue(LeftHeaderGripperPartProperty); }
+            private set { SetValue(LeftHeaderGripperPartPropertyKey, value); }
         }
 
         #endregion
@@ -264,6 +286,14 @@
         {
             base.OnApplyTemplate();
 
+            LeftHeaderGripperPart = GetTemplateChild(PART_LeftHeaderGripper) as Thumb;
+            if (LeftHeaderGripperPart != null) {
+                LeftHeaderGripperPart.DragStarted += OnLeftHeaderGripperPartDragStarted;
+                LeftHeaderGripperPart.DragDelta += OnLeftHeaderGripperPartDragDelta;
+                LeftHeaderGripperPart.DragCompleted += OnLeftHeaderGripperPartDragCompleted;
+                LeftHeaderGripperPart.MouseDoubleClick += OnLeftHeaderGripperPartMouseDoubleClick;
+            }
+
             RightHeaderGripperPart = GetTemplateChild(PART_RightHeaderGripper) as Thumb;
             if (RightHeaderGripperPart != null) {
                 RightHeaderGripperPart.DragStarted += OnRightHeaderGripperPartDragStarted;
@@ -347,6 +377,47 @@
             }
         }
 
+        private void OnLeftHeaderGripperPartDragStarted(
+            object sender, DragStartedEventArgs e)
+        {
+            if (!e.Handled) {
+                Column?.BeginPossiblyResizing();
+                e.Handled = true;
+            }
+        }
+
+        private void OnLeftHeaderGripperPartDragDelta(
+            object sender, DragDeltaEventArgs e)
+        {
+            if (!e.Handled && Column != null && Column.IsResizing) {
+                Column.Width -= e.HorizontalChange;
+                e.Handled = true;
+            }
+        }
+
+        private void OnLeftHeaderGripperPartDragCompleted(
+            object sender, DragCompletedEventArgs e)
+        {
+            if (e.Handled)
+                return;
+
+            if (Column != null && Column.IsResizing) {
+                Column.EndPossiblyResizing(-e.HorizontalChange);
+                e.Handled = true;
+            }
+        }
+
+        private void OnLeftHeaderGripperPartMouseDoubleClick(
+            object sender, MouseButtonEventArgs e)
+        {
+            if (Column == null || e.Handled) // || !ViewModel.HdvViewModel.IsReady)
+                return;
+
+            double change = ParentGrid.AutoSize(Column);
+            Column.EndPossiblyResizing(change);
+            e.Handled = true;
+        }
+
         private void OnRightHeaderGripperPartDragStarted(
             object sender, DragStartedEventArgs e)
         {
@@ -375,8 +446,6 @@
                 Column.EndPossiblyResizing(e.HorizontalChange);
                 e.Handled = true;
             }
-
-            RightHeaderGripperPart.ClearValue(BackgroundProperty);
         }
 
         private void OnRightHeaderGripperPartMouseDoubleClick(

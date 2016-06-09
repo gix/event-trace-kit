@@ -2,9 +2,30 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:Controls="clr-namespace:EventTraceKit.VsExtension.Controls"
                     xmlns:Primitives="clr-namespace:EventTraceKit.VsExtension.Controls.Primitives">
+
+  <Style x:Key="UnscrollableScrollViewerStyle" TargetType="{x:Type ScrollViewer}">
+    <Setter Property="Focusable" Value="False"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type ScrollViewer}">
+          <Border Background="{TemplateBinding Background}"
+                  Margin="{TemplateBinding Padding}"
+                  SnapsToDevicePixels="True">
+            <ScrollContentPresenter x:Name="PART_ScrollContentPresenter"
+                                    KeyboardNavigation.DirectionalNavigation="Local"
+                                    Content="{TemplateBinding Content}"
+                                    ContentTemplate="{TemplateBinding ContentTemplate}"
+                                    CanContentScroll="{TemplateBinding CanContentScroll}"
+                                    SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
   <Style TargetType="{x:Type Controls:VirtualizedDataGrid}">
-    <Setter Property="Focusable" Value="false"/>
-    <Setter Property="IsTabStop" Value="false"/>
+    <Setter Property="Focusable" Value="False"/>
+    <Setter Property="IsTabStop" Value="False"/>
     <Setter Property="Foreground"
             Value="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
     <Setter Property="Background"
@@ -12,64 +33,70 @@
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="{x:Type Controls:VirtualizedDataGrid}">
-          <Grid Background="{TemplateBinding Background}">
+          <Grid Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-              <RowDefinition Height="Auto"/>
               <RowDefinition Height="*"/>
               <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="Auto"/>
-              <ColumnDefinition Width="*"/>
-              <ColumnDefinition Width="Auto"/>
-              <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <Canvas x:Name="PART_ColumnHeadersPresenterCanvas" Grid.Row="0" Grid.Column="1"
-                    ClipToBounds="true" Height="{Binding ActualHeight, ElementName=PART_ColumnHeadersPresenter}">
+            <DockPanel Margin="{TemplateBinding Padding}">
               <Primitives:VirtualizedDataGridColumnHeadersPresenter
-                x:Name="PART_ColumnHeadersPresenter"
-                IsTabStop="False"
-                KeyboardNavigation.TabNavigation="None"
-                KeyboardNavigation.DirectionalNavigation="Contained"
-                Canvas.Left="{Binding HorizontalOffset, ElementName=PART_CenterCellsScrollViewer, Converter={x:Static Controls:NegativeDoubleValueConverter.Instance}, Mode=OneWay}"
-                Visibility="{Binding ViewModel.ColumnsViewModel.Visibility, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
-                ViewModel="{Binding ViewModel.ColumnsViewModel, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
-                ItemsSource="{Binding ViewModel.ColumnsViewModel.VisibleColumns, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
-                ExpanderHeader="{Binding ViewModel.ColumnsViewModel.ExpanderHeaderColumn, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"/>
-            </Canvas>
-            <ScrollViewer x:Name="PART_CenterCellsScrollViewer"
-                          Grid.Row="1" Grid.Column="1"
-                          CanContentScroll="True"
-                          HorizontalScrollBarVisibility="Auto"
-                          VerticalScrollBarVisibility="Auto"
-                          Focusable="False">
-              <Primitives:VirtualizedDataGridCellsPresenter
-                x:Name="PART_CellsPresenterCenter"
-                HorizontalGridLinesThickness="0"
-                VerticalGridLinesThickness="0"
-                Foreground="{TemplateBinding Foreground}"
-                PrimaryBackground="{TemplateBinding RowBackground}"
-                SecondaryBackground="{TemplateBinding AlternatingRowBackground}"
-                SelectionForeground="{TemplateBinding RowSelectionForeground}"
-                SelectionBackground="{TemplateBinding RowSelectionBackground}"
-                SelectionBorderThickness="0"
-                InactiveSelectionForeground="{TemplateBinding RowInactiveSelectionForeground}"
-                InactiveSelectionBackground="{TemplateBinding RowInactiveSelectionBackground}"
-                FocusBorderBrush="{TemplateBinding RowFocusBorderBrush}"
-                FontFamily="Consolas"
-                FontSize="9pt"
-                Focusable="True"
-                ToolTipService.IsEnabled="False"
-                ViewModel="{Binding ViewModel.CellsPresenterViewModel, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
-                VisibleColumns="{Binding ViewModel.ColumnsViewModel.VisibleColumns, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}">
-              </Primitives:VirtualizedDataGridCellsPresenter>
-              <!--<Primitives:VirtualizedDataGridCellsPresenter.ToolTip>
+                  x:Name="PART_ColumnHeadersPresenter"
+                  DockPanel.Dock="Top"
+                  IsTabStop="False"
+                  KeyboardNavigation.TabNavigation="None"
+                  KeyboardNavigation.DirectionalNavigation="Contained"
+                  Visibility="{Binding ViewModel.ColumnsViewModel.Visibility, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
+                  ViewModel="{Binding ViewModel.ColumnsViewModel, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
+                  ItemsSource="{Binding ViewModel.ColumnsViewModel.VisibleColumns, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
+                  ExpanderHeader="{Binding ViewModel.ColumnsViewModel.ExpanderHeaderColumn, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"/>
+              <ScrollViewer x:Name="PART_CellsScrollViewer"
+                            CanContentScroll="True"
+                            HorizontalScrollBarVisibility="Auto"
+                            VerticalScrollBarVisibility="Auto"
+                            Style="{StaticResource UnscrollableScrollViewerStyle}">
+                <Primitives:VirtualizedDataGridCellsPresenter
+                    x:Name="PART_CellsPresenter"
+                    HorizontalGridLinesThickness="0"
+                    VerticalGridLinesThickness="0"
+                    Foreground="{TemplateBinding Foreground}"
+                    PrimaryBackground="{TemplateBinding RowBackground}"
+                    SecondaryBackground="{TemplateBinding AlternatingRowBackground}"
+                    SelectionForeground="{TemplateBinding RowSelectionForeground}"
+                    SelectionBackground="{TemplateBinding RowSelectionBackground}"
+                    SelectionBorderThickness="0"
+                    InactiveSelectionForeground="{TemplateBinding RowInactiveSelectionForeground}"
+                    InactiveSelectionBackground="{TemplateBinding RowInactiveSelectionBackground}"
+                    FocusBorderBrush="{TemplateBinding RowFocusBorderBrush}"
+                    FontFamily="{TemplateBinding RowFontFamily}"
+                    FontSize="{TemplateBinding RowFontSize}"
+                    Focusable="True"
+                    ToolTipService.IsEnabled="False"
+                    ViewModel="{Binding ViewModel.CellsPresenterViewModel, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
+                    VisibleColumns="{Binding ViewModel.ColumnsViewModel.VisibleColumns, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}">
+                  <!--<Primitives:VirtualizedDataGridCellsPresenter.ToolTip>
                   <ToolTip>
                     <TextBlock
                       Text="{Binding ViewModel.CellsPresenterViewModel.TextForCurrentCell, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"/>
                   </ToolTip>
                 </Primitives:VirtualizedDataGridCellsPresenter.ToolTip>-->
-            </ScrollViewer>
+                </Primitives:VirtualizedDataGridCellsPresenter>
+              </ScrollViewer>
+            </DockPanel>
+            <Primitives:BindableScrollBar Orientation="Horizontal"
+                                          Grid.Row="1" Grid.Column="0"
+                                          ScrollViewer="{Binding ElementName=PART_CellsScrollViewer}"
+                                          Cursor="Arrow"/>
+            <Primitives:BindableScrollBar x:Name="VerticalScrollBar"
+                                          Orientation="Vertical"
+                                          Grid.Row="0" Grid.Column="1"
+                                          ScrollViewer="{Binding ElementName=PART_CellsScrollViewer}"
+                                          Cursor="Arrow"/>
+            <Border Grid.Row="1" Grid.Column="1"
+                    Background="{Binding Background, ElementName=VerticalScrollBar}"/>
           </Grid>
         </ControlTemplate>
       </Setter.Value>

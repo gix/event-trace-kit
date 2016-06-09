@@ -339,12 +339,12 @@
         }
 
         private SolidColorBrush GetAlternateBrush(
-            SolidColorBrush brush, double amount = 0.05)
+            SolidColorBrush brush, double amount = 0.03)
         {
             return new SolidColorBrush(GetAlternateColor(brush.Color, amount));
         }
 
-        private Color GetAlternateColor(Color color, double amount = 0.05)
+        private Color GetAlternateColor(Color color, double amount = 0.03)
         {
             var hsl = color.ToHslColor();
 

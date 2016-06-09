@@ -2,6 +2,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 {
     using System;
     using System.Collections.ObjectModel;
+    using System.Collections.Specialized;
     using System.Diagnostics;
     using System.Windows;
     using System.Windows.Controls;
@@ -24,10 +25,15 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
             // Arrange the headers in reverse order, i.e. from right to left,
             // to make the left header's gripper overlay the right header.
-            var panelFactory = new FrameworkElementFactory(typeof(ReversedStackPanel));
-            panelFactory.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
+            var panelFactory = new FrameworkElementFactory(
+                typeof(VirtualizedDataGridColumnHeadersPanel));
+            panelFactory.SetValue(
+                VirtualizedDataGridColumnHeadersPanel.OrientationProperty,
+                Orientation.Horizontal);
+
             var panelTemplate = new ItemsPanelTemplate(panelFactory);
             panelTemplate.Seal();
+
             ItemsPanelProperty.OverrideMetadata(
                 forType, new FrameworkPropertyMetadata(panelTemplate));
         }
@@ -94,6 +100,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         internal VirtualizedDataGrid ParentGrid =>
             parentGrid ?? (parentGrid = this.FindParent<VirtualizedDataGrid>());
+
+        public Panel InternalItemsHost { get; set; }
 
         protected override DependencyObject GetContainerForItemOverride()
         {
@@ -233,7 +241,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
             headerDragCtx.Reset();
 
-            if (!isCancel && targetIndex != headerDragCtx.DraggedHeaderIndex) {
+            if (!isCancel && targetIndex != -1 &&
+                targetIndex != headerDragCtx.DraggedHeaderIndex) {
                 var srcColumn = headerDragCtx.DraggedHeader.Column;
                 var dstColumn = HeaderFromIndex(targetIndex).Column;
                 ViewModel.TryMoveColumn(srcColumn, dstColumn);
@@ -578,10 +587,20 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 Items.Insert(i, CreateContainer(sortedColumns[i]));
 
             //this.RefreshColumns();
-            //this.columns.CollectionChanged += new NotifyCollectionChangedEventHandler(this.ColumnsCollectionChangedHandler);
+            ((INotifyCollectionChanged)this.columns).CollectionChanged += ColumnsCollectionChangedHandler;
 
             CommandBindings.Add(
                 new CommandBinding(ApplicationCommands.Close, CloseCommandExecuted));
+        }
+
+        private void ColumnsCollectionChangedHandler(object sender, NotifyCollectionChangedEventArgs e)
+        {
+        }
+
+        protected override void OnClosed(RoutedEventArgs e)
+        {
+            base.OnClosed(e);
+            ((INotifyCollectionChanged)columns).CollectionChanged -= ColumnsCollectionChangedHandler;
         }
 
         public IDataView ViewModel { get; }
@@ -593,16 +612,17 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         private MenuItem CreateContainer(VirtualizedDataGridColumn column)
         {
-            var item = new MenuItem();
-            item.IsCheckable = true;
-            item.StaysOpenOnClick = true;
+            var item = new MenuItem {
+                IsCheckable = true,
+                StaysOpenOnClick = true,
+                DataContext = column
+            };
             item.SetBinding(MenuItem.IsCheckedProperty, new Binding(nameof(column.IsVisible)) {
                 Mode = BindingMode.TwoWay
             });
             item.SetBinding(HeaderedItemsControl.HeaderProperty, new Binding(nameof(column.ColumnName)) {
                 Mode = BindingMode.OneWay
             });
-            item.DataContext = column;
             return item;
         }
 
@@ -611,7 +631,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         {
             var comparisonType = StringComparison.CurrentCultureIgnoreCase;
 
-            int cmp = String.Compare(lhs.ColumnName, rhs.ColumnName, comparisonType);
+            int cmp = string.Compare(lhs.ColumnName, rhs.ColumnName, comparisonType);
             if (cmp != 0)
                 return cmp;
 

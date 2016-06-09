@@ -34,7 +34,7 @@
                   <ItemsPresenter KeyboardNavigation.TabNavigation="Cycle"
                                   KeyboardNavigation.DirectionalNavigation="Cycle"
                                   Margin="3"
-                                  SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}"
+                                  SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
                                   Grid.IsSharedSizeScope="True"/>
                 </Grid>
               </ScrollViewer>
@@ -63,6 +63,7 @@
       </Setter.Value>
     </Setter>
   </Style>
+
   <Style TargetType="{x:Type Primitives:ColumnChooser}"
          BasedOn="{StaticResource {x:Type ContextMenu}}"/>
 </ResourceDictionary>

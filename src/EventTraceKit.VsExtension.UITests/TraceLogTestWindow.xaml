@@ -7,7 +7,6 @@
         xmlns:uit="clr-namespace:EventTraceKit.VsExtension.UITests"
         xmlns:EtkVs="clr-namespace:EventTraceKit.VsExtension;assembly=EventTraceKit.VsExtension"
         xmlns:vsp="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
-        xmlns:System="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance uit:TraceLogTestViewModel, IsDesignTimeCreatable=false}"
         UseLayoutRounding="True"
@@ -16,12 +15,10 @@
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
       <RowDefinition/>
-      <!--
-      <RowDefinition Height="Auto"/>
+      <!--<RowDefinition Height="Auto"/>
       <RowDefinition/>
       <RowDefinition Height="Auto"/>
-      <RowDefinition/>
-      -->
+      <RowDefinition/>-->
     </Grid.RowDefinitions>
     <StackPanel Orientation="Horizontal" Margin="6">
       <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding SelectedTheme}"/>
@@ -29,11 +26,16 @@
       <Button Margin="7,0,0,0" Content="Stop" Command="{Binding StopCommand}"/>
       <Button Margin="7,0,0,0" Content="Clear" Command="{Binding ClearCommand}"/>
       <TextBlock Margin="7,0,0,0" Text="{Binding GridModel.RowCount}"/>
+      <Popup Width="50" Height="100">
+        <Button Content="Foo"/>
+      </Popup>
     </StackPanel>
 
     <Controls:VirtualizedDataGrid
       Grid.Row="1"
       ViewModel="{Binding GridModel}"
+      RowFontFamily="Consolas"
+      RowFontSize="9pt"
       Foreground="{DynamicResource {x:Static EtkVs:Colors.TraceLogForegroundKey}}"
       Background="{DynamicResource {x:Static vsp:TreeViewColors.BackgroundBrushKey}}"
       RowBackground="{DynamicResource {x:Static EtkVs:Colors.TraceLogBackgroundKey}}"
@@ -44,39 +46,39 @@
       RowInactiveSelectionBackground="{DynamicResource {x:Static EtkVs:Colors.TraceLogInactiveSelectedBackgroundKey}}"
       RowFocusBorderBrush="{DynamicResource {x:Static EtkVs:CommonControlBrushes.FocusVisualForegroundKey}}"/>
 
-    <!--
-    <GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch"/>
-    <DataGrid Grid.Row="3" SelectionUnit="FullRow" SelectionMode="Extended" x:Name="grid">
+    <!--<GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch"/>
+    <DataGrid Grid.Row="3" SelectionUnit="FullRow" SelectionMode="Extended"
+              FrozenColumnCount="2">
       <DataGrid.Items>
-        <System:String>Foo</System:String>
-        <System:String>Bar</System:String>
-        <System:String>Baz</System:String>
-        <System:String>Foo</System:String>
-        <System:String>Foo</System:String>
-        <System:String>Foo</System:String>
-        <System:String>Foo</System:String>
-        <System:String>Foo</System:String>
+        <uit:VirtCompTraceEvent Channel="C1" ChannelId="1" Message="Foo"/>
+        <uit:VirtCompTraceEvent Channel="C2" ChannelId="2" Message="Bar"/>
       </DataGrid.Items>
       <DataGrid.Columns>
-        <DataGridTextColumn Binding="{Binding}"/>
+        <DataGridTextColumn Header="ChannelId" Binding="{Binding ChannelId}"/>
+        <DataGridTextColumn Header="Channel" Binding="{Binding Channel}" CanUserResize="False"/>
+        <DataGridTextColumn Header="Message" Binding="{Binding Message}"/>
       </DataGrid.Columns>
     </DataGrid>
     <GridSplitter Grid.Row="4" Height="5" HorizontalAlignment="Stretch"/>
-    <ListView Grid.Row="5" ItemsSource="{Binding Events}">
+    <ListView Grid.Row="5">
       <ListView.View>
         <GridView>
           <GridView.Columns>
-            <GridViewColumn Header="Id" DisplayMemberBinding="{Binding Id}"/>
             <GridViewColumn Header="ChannelId" DisplayMemberBinding="{Binding ChannelId}"/>
             <GridViewColumn Header="Channel" DisplayMemberBinding="{Binding Channel}"/>
-            <GridViewColumn Header="LevelId" DisplayMemberBinding="{Binding LevelId}"/>
-            <GridViewColumn Header="Level" DisplayMemberBinding="{Binding Level}"/>
-            <GridViewColumn Header="TaskId" DisplayMemberBinding="{Binding TaskId}"/>
-            <GridViewColumn Header="Task" DisplayMemberBinding="{Binding Task}"/>
+            <GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}"/>
           </GridView.Columns>
         </GridView>
       </ListView.View>
-    </ListView>
-    -->
+      <ListView.Items>
+        <uit:VirtCompTraceEvent Channel="C1" ChannelId="1" Message="Foo"/>
+        <uit:VirtCompTraceEvent Channel="C2" ChannelId="2" Message="Bar"/>
+        <uit:VirtCompTraceEvent Channel="C2" ChannelId="2" Message="Bar"/>
+        <uit:VirtCompTraceEvent Channel="C2" ChannelId="2" Message="Bar"/>
+        <uit:VirtCompTraceEvent Channel="C2" ChannelId="2" Message="Bar"/>
+        <uit:VirtCompTraceEvent Channel="C2" ChannelId="2" Message="Bar"/>
+      </ListView.Items>
+    </ListView>-->
   </Grid>
 </Window>
+

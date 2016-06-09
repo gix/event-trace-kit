@@ -6,12 +6,14 @@
     using System.Collections.ObjectModel;
     using System.ComponentModel.Design;
     using System.Linq;
+    using System.Runtime.Serialization;
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Threading;
     using EventTraceKit.VsExtension.Controls;
     using Microsoft.VisualStudio.Shell;
+    using Task = System.Threading.Tasks.Task;
 
     public class TraceLogWindowViewModel : ViewModel
     {
@@ -71,7 +73,7 @@
             //});
             //header.Add(new TableHeaderViewModel { Header = "Message", ColumnWidth = 500, MemberName = "Message" });
 
-            EventsDataView = new TraceEventsView(); 
+            EventsDataView = new TraceEventsView();
             GridModel = new VirtualizedDataGridViewModel(EventsDataView);
 
             syncCtx = new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher);
@@ -631,26 +633,184 @@
         }
     }
 
-    public class HdvColumnViewModelPreset : Freezable
+    public class HdvColumnViewModelPreset :
+        FreezableCustomSerializerAccessBase
+        , IComparable<HdvColumnViewModelPreset>
+        , ICloneable
     {
-        public Guid Id { get; set; }
-        public string Name { get; set; }
-        public bool IsVisible { get; set; }
-        public int Width { get; set; }
+        #region public Guid Id
 
-        public TextAlignment TextAlignment { get; set; }
+        public static readonly DependencyProperty IdProperty =
+            DependencyProperty.Register(
+                nameof(Id),
+                typeof(Guid),
+                typeof(HdvColumnViewModelPreset),
+                new PropertyMetadata(Guid.Empty));
 
-        public string CellFormat { get; set; }
+        [SerializePropertyInProfile("Id")]
+        public Guid Id
+        {
+            get { return (Guid)GetValue(IdProperty); }
+            set { SetValue(IdProperty, value); }
+        }
 
-        public string HelpText { get; set; }
+        #endregion
+
+        #region public string Name
+
+        public static readonly DependencyProperty NameProperty =
+            DependencyProperty.Register(
+                nameof(Name),
+                typeof(string),
+                typeof(HdvColumnViewModelPreset),
+                PropertyMetadataUtils.DefaultNull);
+
+        [SerializePropertyInProfile("Name")]
+        public string Name
+        {
+            get { return (string)GetValue(NameProperty); }
+            set { SetValue(NameProperty, value); }
+        }
+
+        #endregion
+
+        #region public string HelpText
+
+        public static readonly DependencyProperty HelpTextProperty =
+            DependencyProperty.Register(
+                nameof(HelpText),
+                typeof(string),
+                typeof(HdvColumnViewModelPreset),
+                PropertyMetadataUtils.DefaultNull);
+
+        [SerializePropertyInProfile("HelpText")]
+        public string HelpText
+        {
+            get { return (string)GetValue(HelpTextProperty); }
+            set { SetValue(HelpTextProperty, value); }
+        }
+
+        #endregion
+
+        #region public int Width
+
+        public static readonly DependencyProperty WidthProperty =
+            DependencyProperty.Register(
+                nameof(Width),
+                typeof(int),
+                typeof(HdvColumnViewModelPreset),
+                new PropertyMetadata(
+                    0, null, CoerceWidth));
+
+        [SerializePropertyInProfile("Width")]
+        public int Width
+        {
+            get { return (int)GetValue(WidthProperty); }
+            set { SetValue(WidthProperty, value); }
+        }
+
+        private static object CoerceWidth(DependencyObject d, object baseValue)
+        {
+            int width = (int)baseValue;
+            return Boxed.Int32(width.Clamp(0, 10000));
+        }
+
+        #endregion
+
+        #region public bool IsVisible
+
+        public static readonly DependencyProperty IsVisibleProperty =
+            DependencyProperty.Register(
+                nameof(IsVisible),
+                typeof(bool),
+                typeof(HdvColumnViewModelPreset),
+                new PropertyMetadata(Boxed.False));
+
+        [SerializePropertyInProfile("IsVisible")]
+        public bool IsVisible
+        {
+            get { return (bool)GetValue(IsVisibleProperty); }
+            set { SetValue(IsVisibleProperty, Boxed.Bool(value)); }
+        }
+
+        #endregion
+
+        #region public TextAlignment TextAlignment
+
+        public static readonly DependencyProperty TextAlignmentProperty =
+            DependencyProperty.Register(
+                nameof(TextAlignment),
+                typeof(TextAlignment),
+                typeof(HdvColumnViewModelPreset),
+                new PropertyMetadata(TextAlignment.Left));
+
+        [SerializePropertyInProfile("TextAlignment")]
+        public TextAlignment TextAlignment
+        {
+            get { return (TextAlignment)GetValue(TextAlignmentProperty); }
+            set { SetValue(TextAlignmentProperty, value); }
+        }
+
+        #endregion
+
+        #region public string CellFormat
+
+        public static readonly DependencyProperty CellFormatProperty =
+            DependencyProperty.Register(
+                nameof(CellFormat),
+                typeof(string),
+                typeof(HdvColumnViewModelPreset),
+                new PropertyMetadata(null));
+
+        [SerializePropertyInProfile("CellFormat")]
+        public string CellFormat
+        {
+            get { return (string)GetValue(CellFormatProperty); }
+            set { SetValue(CellFormatProperty, value); }
+        }
+
+        #endregion
 
         protected override Freezable CreateInstanceCore()
         {
             return new HdvColumnViewModelPreset();
         }
+
+        public new HdvColumnViewModelPreset Clone()
+        {
+            return (HdvColumnViewModelPreset)base.Clone();
+        }
+
+        object ICloneable.Clone()
+        {
+            return Clone();
+        }
+
+        public int CompareTo(HdvColumnViewModelPreset other)
+        {
+            if (other == null)
+                throw new ArgumentNullException(nameof(other));
+            if (ReferenceEquals(this, other))
+                return 0;
+
+            int cmp;
+            bool dummy =
+                ComparisonUtils.CompareValueT(out cmp, IsVisible, other.IsVisible) &&
+                ComparisonUtils.Compare(out cmp, Id, Id) &&
+                ComparisonUtils.Compare(out cmp, TextAlignment, other.TextAlignment) &&
+                ComparisonUtils.CompareT(out cmp, CellFormat, other.CellFormat) &&
+                ComparisonUtils.CompareValueT(out cmp, Width, other.Width);
+
+            return cmp;
+        }
+
+        protected override void CloneCore(Freezable sourceFreezable)
+        {
+            base.CloneCore(sourceFreezable);
+        }
     }
 
-    public class TraceEventsView : IDataView
+    public class TraceEventsView : DependencyObject, IDataView
     {
         private readonly List<DataColumn> columns = new List<DataColumn>();
 
@@ -662,6 +822,8 @@
 
         public TraceEventsView()
         {
+            workManager = new WorkManager(Dispatcher);
+
             var providerNamePreset =
                 new HdvColumnViewModelPreset {
                     Id = new Guid("934D2438-65F3-4AE9-8FEA-94B81AA5A4A6"),
@@ -884,6 +1046,8 @@
                     Width = 80
                 }.EnsureFrozen();
 
+            defaultPreset = new HdvViewModelPreset();
+
             AddColumn(providerNamePreset, new DataColumn());
             AddColumn(taskNamePreset, new DataColumn());
             AddColumn(opcodeOrTypePreset, new DataColumn());
@@ -915,7 +1079,11 @@
             AddColumn(threadStartModulePreset, new DataColumn());
             AddColumn(threadStartFunctionPreset, new DataColumn());
             AddColumn(countPreset, new DataColumn());
+
+            HdvViewModelPreset = defaultPreset;
         }
+
+        private HdvViewModelPreset defaultPreset;
 
         private void AddColumn(HdvColumnViewModelPreset preset, DataColumn column)
         {
@@ -925,6 +1093,7 @@
             column.IsResizable = true;
             column.TextAlignment = preset.TextAlignment;
             columns.Add(column);
+            defaultPreset.ConfigurableColumns.Add(preset);
         }
 
         public CellValue GetCellValue(int rowIndex, int columnIndex)
@@ -969,6 +1138,429 @@
             if (dataColumn == null)
                 return -1;
             return columns.IndexOf(dataColumn);
+        }
+
+        #region
+
+        private static readonly DependencyPropertyKey IsReadyPropertyKey =
+            DependencyProperty.RegisterReadOnly(
+                nameof(IsReady),
+                typeof(bool),
+                typeof(TraceEventsView),
+                new PropertyMetadata(Boxed.True,
+                    OnIsReadyChanged));
+
+        public static readonly DependencyProperty IsReadyProperty = IsReadyPropertyKey.DependencyProperty;
+
+        public bool IsReady
+        {
+            get { return (bool)GetValue(IsReadyProperty); }
+            private set { SetValue(IsReadyPropertyKey, Boxed.Bool(value)); }
+        }
+
+        private static void OnIsReadyChanged(
+            DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((TraceEventsView)d).OnIsReadyChanged(e.NewValue);
+        }
+
+        private void OnIsReadyChanged(object newValue)
+        {
+        }
+
+        #endregion
+
+        #region
+
+        public static readonly DependencyProperty HdvViewModelPresetProperty =
+            DependencyProperty.Register(
+                nameof(HdvViewModelPreset),
+                typeof(HdvViewModelPreset),
+                typeof(TraceEventsView),
+                new PropertyMetadata(
+                    null,
+                    (s, e) => ((TraceEventsView)s).HdvViewModelPresetPropertyChanged(e),
+                    (dO, bV) => ((TraceEventsView)dO).CoerceHdvViewModelPresetProperty(bV)));
+
+        public HdvViewModelPreset HdvViewModelPreset
+        {
+            get { return (HdvViewModelPreset)GetValue(HdvViewModelPresetProperty); }
+            set { SetValue(HdvViewModelPresetProperty, value); }
+        }
+
+        private bool isInitializedWithFirstPreset;
+        private bool shouldApplyPreset;
+        private HdvViewModelPreset presetBeingApplied;
+        private HdvViewModelPreset presetToApplyOnReady;
+
+        private void HdvViewModelPresetPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
+            var preset = (HdvViewModelPreset)e.NewValue;
+            if (preset != null && (!isInitializedWithFirstPreset || shouldApplyPreset)) {
+                if (!preset.IsFrozen)
+                    throw new ArgumentException("Preset must be frozen before being applied");
+
+                if (!IsReady && !isInitializedWithFirstPreset) {
+                    IsReady = true;
+                    isInitializedWithFirstPreset = true;
+                }
+                if (!IsReady) {
+                    var b = presetToApplyOnReady == null &&
+                            presetBeingApplied != null &&
+                            !presetBeingApplied.Equals(preset);
+                    var b1 = presetToApplyOnReady != null &&
+                             !presetToApplyOnReady.Equals(preset);
+                    if (b || b1) {
+                        presetToApplyOnReady = preset;
+                    }
+                    return;
+                }
+                //this.UpdateHelpTextFromPreset(preset.HelpText);
+                //ColumnChangingContext columnChangingContext = HdvViewModel.columnChangingContext;
+                //if (columnChangingContext != null) {
+                //    this.columnMetadataCollection.PresetMetadataEntries = preset.ColumnMetadataEntries;
+                //    if (this.HasAnyVisibleColumnAffectedByChange(preset, columnChangingContext.ColumnChangingPredicate)) {
+                //        this.DisableTableForAsyncOperation();
+                //        this.presetToApplyOnReady = preset;
+                //        AddChangingHdvViewModel(this);
+                //        return;
+                //    }
+                //}
+                presetBeingApplied = preset;
+                //if (this.presenterRowSelectionToUseOnReady == null) {
+                //    this.SaveTableRowSelectionAndFocus();
+                //}
+
+                string presetName = preset.Name ?? string.Empty;
+                //this.Hdv.BeginDataUpdate();
+                ApplyPresetToGridModel(
+                    preset,
+                    () => ContinuePresetAfterGridModelInSync(presetName, preset), -1);
+            }
+            //this.HdvViewModelPresetChanged.Raise<HdvViewModelPreset>(this, e);
+            //this.ResetIsPresetError();
+        }
+
+        private object CoerceHdvViewModelPresetProperty(object baseValue)
+        {
+            var preset = (HdvViewModelPreset)baseValue;
+            if (preset == null)
+                return null;
+
+            //bool includeDynamicColumns = this.IsUnmodifiedBuiltInPreset(preset);
+            //HdvViewModelPreset compatiblePreset = preset.CreateCompatiblePreset(
+            //    this.templatePreset, this.viewCreationInfoCollection, includeDynamicColumns);
+            HdvViewModelPreset compatiblePreset = preset;
+
+            //shouldApplyPreset = !compatiblePreset.IsModifiedFromUI;
+            //compatiblePreset.IsModifiedFromUI = false;
+            compatiblePreset.Freeze();
+            //this.cachedHdvViewModelPreset = compatiblePreset;
+            return compatiblePreset;
+        }
+
+        #endregion
+
+        internal void EnableTableAfterAsyncOperation()
+        {
+            IsReady = true;
+            //this.UpdateSelectionIndicesAfterTableChanged();
+        }
+
+        internal void DisableTableForAsyncOperation()
+        {
+            IsReady = false;
+        }
+
+        private void ApplyPresetToGridModel(
+            HdvViewModelPreset preset, Action callbackOnComplete, int maxPreservedKeyCount = -1)
+        {
+            if (!IsReady)
+                ExceptionUtils.ThrowInvalidOperationException(
+                    "Must be ready before applying preset to grid model.");
+
+            DisableTableForAsyncOperation();
+            //DataColumnViewInfo[] columnViewInfos = this.viewCreationInfoCollection.GetDataColumnViewInfosFromPreset(preset, this).ToArray<DataColumnViewInfo>();
+            //this.WaitForReadOperationToComplete();
+            WorkManager.BackgroundThread.Post(delegate {
+                //this.Hdv.BeginDataUpdate();
+                //int preservedKeyCount = this.hdv.ApplyColumnView(columnViewInfos, maxPreservedKeyCount);
+                //this.columnViewReady = true;
+                //this.Hdv.EndDataUpdate();
+                WorkManager.UIThread.Post(callbackOnComplete);
+            });
+        }
+
+        private void ContinuePresetAfterGridModelInSync(
+            string presetName, HdvViewModelPreset preset)
+        {
+            bool ignoreInitialSelection = false;
+            bool ignoreInitialExpansion = false;
+            columnsViewModel.ApplyPresetAssumeGridModelInSync(preset);
+            ContinueAsyncOperation(
+                () => CompleteApplyPreset(presetName, ignoreInitialSelection, ignoreInitialExpansion), true);
+        }
+
+        private void CompleteApplyPreset(
+            string presetName, bool ignoreInitialSelection,
+            bool ignoreInitialExpansion)
+        {
+
+            //if (!this.Hdv.EndDataUpdate()) {
+            //    ExceptionUtils.ThrowInternalErrorException("Expected data update nesting depth to be 0");
+            //}
+
+            if (!ignoreInitialSelection) {
+                //this.ReapplyInitialSelection();
+            }
+            CompleteAsyncOrSyncUpdate();
+        }
+
+        private WorkManager workManager;
+        private bool refreshViewModelFromModelOnReady;
+        private bool refreshViewModelOnUpdateRequest;
+        private VirtualizedDataGridColumnsViewModel columnsViewModel;
+
+        public VirtualizedDataGridColumnsViewModel ColumnsViewModel
+        {
+            set { columnsViewModel = value; }
+        }
+
+        internal WorkManager WorkManager
+        {
+            get
+            {
+                return workManager;
+            }
+        }
+
+        private void ContinueAsyncOperation(Action callback, bool refreshViewModelFromModelOnReady = true)
+        {
+            if (IsReady)
+                ExceptionUtils.ThrowInvalidOperationException(
+                    "The system is ready, you aren't continuing an async operation?");
+            this.refreshViewModelFromModelOnReady |= refreshViewModelFromModelOnReady;
+            WorkManager.BackgroundThread.Post(callback);
+        }
+
+        private void CompleteAsyncOrSyncUpdate()
+        {
+            WorkManager.UIThread.Send(() => CompleteAsyncUpdate());
+        }
+
+        private bool CompleteAsyncUpdate()
+        {
+            bool flag = false;
+            //this.IsTableRefreshing = true;
+            EnableTableAfterAsyncOperation();
+            //if (this.checkForColumnChangingOnReady) {
+            //    this.checkForColumnChangingOnReady = false;
+            //    ColumnChangingContext columnChangingContext = HdvViewModel.columnChangingContext;
+            //    HdvViewModelPreset preset = presetBeingApplied ?? presetToApplyOnReady;
+            //    if (this.HasAnyVisibleColumnAffectedByChange(preset, columnChangingContext.ColumnChangingPredicate)) {
+            //        this.DisableTableForAsyncOperation();
+            //        AddChangingHdvViewModel(this);
+            //        flag = true;
+            //    }
+            //    countBusyHdvViewModels--;
+            //    CompleteUpdateWhenAllReady();
+            //}
+            if (!flag && (presetToApplyOnReady != null)) {
+                HdvViewModelPreset = presetToApplyOnReady;
+                presetToApplyOnReady = null;
+                flag = true;
+            }
+
+            //if (!flag && (this.hdvViewModelToCopyStateOnReady != null)) {
+            //    this.TryCopyAllStateFrom(this.hdvViewModelToCopyStateOnReady);
+            //    this.hdvViewModelToCopyStateOnReady = null;
+            //    flag = true;
+            //}
+
+            //if (flag) {
+            //    if (this.selectionBookmarkToApplyOnReady != null) {
+            //        this.selectionBookmarkToApplyOnReady.ConvertRowsToRowIds();
+            //    }
+            //    if (this.focusBookmarkToApplyOnReady != null) {
+            //        this.focusBookmarkToApplyOnReady.ConvertRowsToRowIds();
+            //    }
+            //} else {
+            //    flag = this.RestoresSelectionAndFocusFromBookmarksAsync();
+            //}
+
+            if (!flag) {
+                //this.UpdateDynamicHeader();
+                bool refreshViewModelFromModel = refreshViewModelFromModelOnReady && IsReady;
+                if (refreshViewModelFromModel)
+                    refreshViewModelFromModelOnReady = false;
+
+                bool flag3 = this.RequestUpdate(refreshViewModelFromModel);
+                if (refreshViewModelFromModel && !flag3) {
+                    ExceptionUtils.ThrowInternalErrorException("We should have sent an update for the hdvviewmodel, but didn't");
+                }
+                //this.IsTableRefreshing = false;
+            }
+            return !flag;
+        }
+
+        public bool RequestUpdate(bool refreshViewModelFromModel = true)
+        {
+            if (!IsReady) {
+                refreshViewModelOnUpdateRequest |= refreshViewModelFromModel;
+                return false;
+            }
+
+            RaiseUpdate(refreshViewModelFromModel);
+            return true;
+        }
+
+        public event ItemEventHandler<bool> Updated;
+
+        public void RaiseUpdate(bool refreshViewModelFromModel = true)
+        {
+            VerifyAccess();
+
+            Updated?.Invoke(this, new ItemEventArgs<bool>(refreshViewModelFromModel));
+        }
+    }
+
+    public interface IWorkManager
+    {
+        bool CheckAccess();
+        void Post(Action action);
+        void Send(Action action);
+        void VerifyAccess();
+    }
+
+    internal sealed class UIWorkManager : IWorkManager
+    {
+        private readonly Dispatcher dispatcher;
+
+        internal UIWorkManager(Dispatcher dispatcher)
+        {
+            if (dispatcher == null)
+                throw new ArgumentNullException(nameof(dispatcher));
+            this.dispatcher = dispatcher;
+        }
+
+        public bool CheckAccess()
+        {
+            return dispatcher.CheckAccess();
+        }
+
+        public void Post(Action action)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+            dispatcher.BeginInvoke(action, DispatcherPriority.ContextIdle);
+        }
+
+        public void Send(Action action)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            if (CheckAccess())
+                action();
+            else
+                dispatcher.Invoke(action, DispatcherPriority.ContextIdle);
+        }
+
+        public void VerifyAccess()
+        {
+            dispatcher.VerifyAccess();
+        }
+    }
+
+    public sealed class WorkManager
+    {
+        private BackgroundWorkManager backgroundWorkManager;
+        private static readonly object backgroundWorkThreadIDObj;
+        private UIWorkManager uiWorkManager;
+        private static readonly object uiWorkThreadIDObj;
+
+        static WorkManager()
+        {
+            uiWorkThreadIDObj = WorkThreadID.UI;
+            backgroundWorkThreadIDObj = WorkThreadID.Background;
+        }
+
+        public WorkManager(Dispatcher uiDispatcher)
+        {
+            backgroundWorkManager = new BackgroundWorkManager();
+            uiWorkManager = new UIWorkManager(uiDispatcher);
+        }
+
+        public IWorkManager BackgroundThread => backgroundWorkManager;
+        public IWorkManager UIThread => uiWorkManager;
+
+        private enum WorkThreadID
+        {
+            UI,
+            Background
+        }
+    }
+
+    internal class BackgroundWorkManager : IWorkManager
+    {
+        public bool CheckAccess()
+        {
+            return true;
+        }
+
+        public void Post(Action action)
+        {
+            Task.Run(action);
+        }
+
+        public async void Send(Action action)
+        {
+            await Task.Run(action);
+        }
+
+        public void VerifyAccess()
+        {
+        }
+    }
+
+    public static class ExceptionUtils
+    {
+        public static void ThrowInvalidOperationException(string message)
+        {
+            throw new InvalidOperationException(message);
+        }
+
+        public static void ThrowInternalErrorException(string message)
+        {
+            throw new InternalErrorException(message);
+        }
+    }
+
+    [Serializable]
+    public class InternalErrorException : InvalidOperationException
+    {
+        public InternalErrorException()
+        {
+        }
+
+        public InternalErrorException(string message)
+            : base(message)
+        {
+        }
+
+        public InternalErrorException(Exception innerException)
+            : base(innerException?.Message, innerException)
+        {
+        }
+
+        public InternalErrorException(string message, Exception innerException)
+            : base(message, innerException)
+        {
+        }
+
+        protected InternalErrorException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
         }
     }
 }

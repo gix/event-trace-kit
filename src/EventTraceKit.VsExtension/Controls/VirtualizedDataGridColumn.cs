@@ -8,7 +8,7 @@ namespace EventTraceKit.VsExtension.Controls
         private readonly VirtualizedDataGridColumnsViewModel columns;
         private readonly IDataColumn columnModel;
         private readonly IDataView dataView;
-        private readonly bool isDisconnected;
+        private readonly bool isInitializing;
 
         private CellValue[] cachedRowValues = new CellValue[0];
         private int startCacheRowValueIndex;
@@ -23,12 +23,15 @@ namespace EventTraceKit.VsExtension.Controls
             this.columnModel = columnModel;
             this.dataView = dataView;
 
+            isInitializing = true;
+
             ColumnName = columnModel.Name;
             Width = columnModel.Width;
             TextAlignment = columnModel.TextAlignment;
 
             CoerceValue(WidthProperty);
             RefreshViewModelFromModel();
+            isInitializing = false;
         }
 
         public VirtualizedDataGridColumnsViewModel Columns => columns;
@@ -91,7 +94,7 @@ namespace EventTraceKit.VsExtension.Controls
                 nameof(IsVisible),
                 typeof(bool),
                 typeof(VirtualizedDataGridColumn),
-                new PropertyMetadata(Boxed.False));
+                new PropertyMetadata(Boxed.False, OnIsVisibleChanged));
 
         /// <summary>
         ///   Gets or sets whether the column is visible.
@@ -100,6 +103,23 @@ namespace EventTraceKit.VsExtension.Controls
         {
             get { return (bool)GetValue(IsVisibleProperty); }
             set { SetValue(IsVisibleProperty, Boxed.Bool(value)); }
+        }
+
+        private static void OnIsVisibleChanged(
+            DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var source = (VirtualizedDataGridColumn)d;
+            source.OnIsVisibleChanged((bool)e.NewValue);
+        }
+
+        private void OnIsVisibleChanged(bool newValue)
+        {
+            var preset = dataView.HdvViewModelPreset;
+            if (ModelColumnIndex < 0 || dataView == null || isInitializing ||
+                preset.GetColumnVisibility(ModelColumnIndex) == newValue)
+                return;
+
+            dataView.HdvViewModelPreset = preset.SetColumnVisibility(ModelColumnIndex, newValue);
         }
 
         #endregion
@@ -276,9 +296,7 @@ namespace EventTraceKit.VsExtension.Controls
         public bool CanSort { get; private set; } = false;
 
         public bool IsConfigurable =>
-            !IsSeparator && !IsFreezableAreaSeparator && IsConnected;
-
-        public bool IsConnected => !isDisconnected;
+            !IsSeparator && !IsFreezableAreaSeparator;
 
         private void UpdateAutomationNameProperty()
         {
@@ -317,11 +335,11 @@ namespace EventTraceKit.VsExtension.Controls
                 return;
 
             //this.columnsViewModel.UpdateFreezableColumnsWidth();
-            //if (this.hdvViewModel.IsReady) {
-            //    HdvViewModelPreset preset = this.HdvViewModel.CreatePresetFromUIThatHasBeenModified();
-            //    preset.IsModifiedFromUI = true;
-            //    this.hdvViewModel.HdvViewModelPreset = preset;
-            //}
+            if (dataView.IsReady) {
+                //HdvViewModelPreset preset = dataView.CreatePresetFromUIThatHasBeenModified();
+                //preset.IsModifiedFromUI = true;
+                //dataView.HdvViewModelPreset = preset;
+            }
         }
 
         public CellValue GetCellValue(int rowIndex, int viewportSizeHint)
@@ -413,12 +431,14 @@ namespace EventTraceKit.VsExtension.Controls
             //    IsFreezableAreaSeparator = true;
             //    IsResizable = false;
             //    Width = 5.0;
-            //} else if (columnModel.DataType == typeof(ExpanderHeaderColumn)) {
-            //    IsResizable = false;
-            //    IsExpanderHeader = true;
-            //} else {
-            IsResizable = true;
-            //}
+            //} else
+            if (this is ExpanderHeaderColumn) {
+                IsResizable = false;
+                IsExpanderHeader = true;
+                return;
+            } else {
+                IsResizable = true;
+            }
 
             ClearCachedRows();
             ModelColumnIndex = GetModelColumnIndex();

@@ -6,13 +6,13 @@ namespace EventTraceKit.VsExtension.Controls
     {
         public VirtualizedDataGridViewModel(IDataView dataView)
         {
-            CellsPresenterViewModel = new VirtualizedDataGridCellsPresenterViewModel(this);
+            CellsPresenterViewModel = new VirtualizedDataGridCellsPresenterViewModel(dataView, this);
             ColumnsViewModel = new VirtualizedDataGridColumnsViewModel(dataView, this);
-            ColumnsViewModel.ApplyPresetAssumeGridModelInSync();
+            //ColumnsViewModel.ApplyPresetAssumeGridModelInSync(null);
             RowCount = 40;
-        }
 
-        public event ItemEventHandler<bool> Updated;
+            dataView.Updated += (s, e) => RaiseUpdate(e.Item);
+        }
 
         public VirtualizedDataGridCellsPresenterViewModel CellsPresenterViewModel { get; }
 
@@ -20,20 +20,11 @@ namespace EventTraceKit.VsExtension.Controls
 
         public int RowCount { get; private set; }
 
+        public event ItemEventHandler<bool> Updated;
+
         public void RaiseUpdate(bool refreshViewModelFromModel = true)
         {
             Updated?.Invoke(this, new ItemEventArgs<bool>(refreshViewModelFromModel));
-        }
-
-        public bool RequestUpdate(bool refreshViewModelFromModel = true)
-        {
-            //if (this.IsReady) {
-            RaiseUpdate(refreshViewModelFromModel);
-            return true;
-            //}
-
-            //this.refreshViewModelOnUpdateRequest |= refreshViewModelFromModel;
-            return false;
         }
     }
 }

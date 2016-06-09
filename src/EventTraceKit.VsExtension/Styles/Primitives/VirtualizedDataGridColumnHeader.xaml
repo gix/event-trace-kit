@@ -17,6 +17,13 @@
     <Setter Property="Template" Value="{StaticResource DataGridColumnHeaderGripperTemplate}"/>
   </Style>
 
+  <Style x:Key="DataGridColumnHeaderGripper2" TargetType="{x:Type Thumb}">
+    <Setter Property="Width" Value="8"/>
+    <Setter Property="Background" Value="{DynamicResource {x:Static vsp:HeaderColors.SeparatorLineBrushKey}}"/>
+    <Setter Property="Cursor" Value="{x:Static Primitives:VirtualizedDataGridColumnHeader.SplitCursor}"/>
+    <Setter Property="Template" Value="{StaticResource DataGridColumnHeaderGripperTemplate}"/>
+  </Style>
+
   <ControlTemplate x:Key="DataGridColumnHeaderTemplate"
                    TargetType="{x:Type Primitives:VirtualizedDataGridColumnHeader}">
     <!--
@@ -26,11 +33,11 @@
     -->
     <Grid>
       <Border x:Name="HeaderBorder"
+              Margin="0"
               Padding="{TemplateBinding Padding}"
-              BorderThickness="0,0,0,1"
+              BorderThickness="1,0,0,1"
               BorderBrush="{TemplateBinding BorderBrush}"
-              Background="{TemplateBinding Background}"
-              Margin="0">
+              Background="{TemplateBinding Background}">
         <ContentPresenter x:Name="HeaderContent"
                           HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                           VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
@@ -39,10 +46,15 @@
       </Border>
       <!-- Note the negative margin on the thumb, which gives the gripper a
            bigger hit area than the actual visual appearance -->
+      <Thumb x:Name="PART_LeftHeaderGripper" HorizontalAlignment="Left" Margin="-4,0,0,0"
+             Style="{StaticResource DataGridColumnHeaderGripper2}"/>
       <Thumb x:Name="PART_RightHeaderGripper" HorizontalAlignment="Right" Margin="0,0,-4,0"
              Style="{StaticResource DataGridColumnHeaderGripper}"/>
     </Grid>
     <ControlTemplate.Triggers>
+      <Trigger Property="IsEnabled" Value="False">
+      </Trigger>
+
       <Trigger Property="IsMouseOver" Value="True">
         <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:EnvironmentColors.CommandBarTextHoverBrushKey}}"/>
         <Setter Property="Background" Value="{DynamicResource {x:Static vsp:HeaderColors.MouseOverBrushKey}}"/>

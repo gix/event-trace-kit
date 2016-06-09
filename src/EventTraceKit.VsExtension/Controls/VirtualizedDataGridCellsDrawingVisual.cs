@@ -124,13 +124,13 @@ namespace EventTraceKit.VsExtension.Controls
                             continue;
 
                         double topEdge = (row * rowHeight) - verticalOffset;
-                        double bottomEdge = topEdge + rowHeight;
+                        double bottomEdge = topEdge + rowHeight - 1;
 
                         dc.DrawRectangle(
                             selectionBackground, null,
                             new Rect(
                                 new Point(0, topEdge),
-                                new Point(actualWidth, bottomEdge)));
+                                new Point(actualWidth, bottomEdge + 1)));
 
                         if (!rowSelection.Contains(row - 1)) {
                             dc.DrawLineSnapped(

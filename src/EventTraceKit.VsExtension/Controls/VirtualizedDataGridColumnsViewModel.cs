@@ -14,6 +14,7 @@ namespace EventTraceKit.VsExtension.Controls
             IDataView dataView, VirtualizedDataGridViewModel owner)
         {
             DataView = dataView;
+            dataView.ColumnsViewModel = this;
             Owner = owner;
             columns = new ObservableCollection<VirtualizedDataGridColumn>();
 
@@ -23,8 +24,7 @@ namespace EventTraceKit.VsExtension.Controls
             configurableColumns = new ObservableCollection<VirtualizedDataGridColumn>();
             ConfigurableColumns = new ReadOnlyObservableCollection<VirtualizedDataGridColumn>(configurableColumns);
 
-            //ExpanderHeaderColumn = new ExpanderHeaderColumnViewModel(
-            //    this, this.GetInternalColumnView<ExpanderHeaderColumn>(DataColumn.Create<ExpanderHeaderColumn>(new ExpanderHeaderColumn()), string.Empty, Guid.Empty), this.hdvViewModel);
+            ExpanderHeaderColumn = new ExpanderHeaderColumn(this, dataView);
         }
 
         internal IDataView DataView { get; }
@@ -150,8 +150,6 @@ namespace EventTraceKit.VsExtension.Controls
                 if (column.IsConfigurable)
                     configurableColumns.Add(column);
             }
-
-            //this.HdvViewModel.ColumnMetadataCollection.FillObservableCollection(this.columnMetadataEntryViewModels);
         }
 
         public void TryMoveColumn(
@@ -165,22 +163,22 @@ namespace EventTraceKit.VsExtension.Controls
             RefreshAllObservableCollections();
         }
 
-        internal void ApplyPresetAssumeGridModelInSync(/*HdvViewModelPreset preset*/)
+        internal void ApplyPresetAssumeGridModelInSync(HdvViewModelPreset preset)
         {
             //IsApplyingPreset = true;
             //base.Hdv.BeginDataUpdate();
             WritableColumns.Clear();
-            int num = 0;
-            foreach (IDataColumn column in DataView.Columns) {
-                var columnViewModel = new VirtualizedDataGridColumn(
-                    this, column, DataView);
-                WritableColumns.Add(columnViewModel);
+            int index = 0;
+            foreach (IDataColumn dataColumn in DataView.Columns) {
+                var column = new VirtualizedDataGridColumn(
+                    this, dataColumn, DataView);
+                WritableColumns.Add(column);
 
-                //var columnPreset = preset.ConfigurableColumns[num];
-                //columnViewModel.Width = columnPreset.Width;
-                //columnViewModel.TextAlignment = columnPreset.TextAlignment;
-                //columnViewModel.CellFormat = columnPreset.CellFormat;
-                num++;
+                //var columnPreset = preset.ConfigurableColumns[index];
+                //column.Width = columnPreset.Width;
+                //column.TextAlignment = columnPreset.TextAlignment;
+                //column.CellFormat = columnPreset.CellFormat;
+                ++index;
             }
 
             //preset.PlaceSeparatorsInList<HierarchicalDataGridColumnViewModel>(base.ColumnsWriteable, base.LeftFreezableAreaSeparatorColumn, base.RightFreezableAreaSeparatorColumn, this.graphingAreaSeparatorColumn, this.keysValuesSeparatorColumn, forcedColumnLeftCount);

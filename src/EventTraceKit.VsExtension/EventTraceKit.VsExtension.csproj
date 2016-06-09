@@ -165,22 +165,26 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Collections\Extensions.cs" />
     <Compile Include="ColorExtensions.cs" />
+    <Compile Include="Controls\IsEmptyEnumerableConverter.cs" />
     <Compile Include="Controls\MenuExtensions.cs" />
+    <Compile Include="Controls\Primitives\BindableScrollBar.cs" />
     <Compile Include="HslColor.cs" />
     <Compile Include="HsvColor.cs" />
     <Compile Include="MultiRange.cs" />
     <Compile Include="Native\NativeMethods.cs" />
+    <Compile Include="NumberUtils.cs" />
     <Compile Include="QueuedDispatcherAction.cs" />
     <Compile Include="Range.cs" />
     <Compile Include="CommonControlBrushes.cs" />
     <Compile Include="Controls\Boxed.cs" />
     <Compile Include="Controls\ExpanderHeaderColumn.cs" />
-    <Compile Include="Controls\Primitives\ReversedStackPanel.cs" />
+    <Compile Include="Controls\Primitives\VirtualizedDataGridColumnHeadersPanel.cs" />
     <Compile Include="Controls\VirtualizedDataGridRowSelection.cs" />
     <Compile Include="Controls\CellValue.cs" />
     <Compile Include="Controls\DoubleExtensions.cs" />
-    <Compile Include="Controls\DoubleUtils.cs" />
+    <Compile Include="DoubleUtils.cs" />
     <Compile Include="Controls\DrawingContextExtensions.cs" />
     <Compile Include="Controls\NegativeDoubleValueConverter.cs" />
     <Compile Include="Controls\ObjectNullCheckToVisibility.cs" />

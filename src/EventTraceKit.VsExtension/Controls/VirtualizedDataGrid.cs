@@ -3,26 +3,26 @@
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
-    using System.Globalization;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Controls.Primitives;
     using System.Windows.Data;
     using System.Windows.Input;
     using System.Windows.Media;
+    using EventTraceKit.VsExtension.Collections;
     using Primitives;
 
-    [TemplatePart(Name = PART_CenterCellsScrollViewer, Type = typeof(ScrollViewer))]
-    [TemplatePart(Name = PART_CellsPresenterCenter, Type = typeof(VirtualizedDataGridCellsPresenter))]
-    [TemplatePart(Name = PART_ColumnHeadersPresenter, Type = typeof(VirtualizedDataGridColumnHeadersPresenter))]
     [TemplatePart(Name = PART_CancelButton, Type = typeof(Button))]
+    [TemplatePart(Name = PART_CellsScrollViewer, Type = typeof(ScrollViewer))]
+    [TemplatePart(Name = PART_CellsPresenter, Type = typeof(VirtualizedDataGridCellsPresenter))]
+    [TemplatePart(Name = PART_ColumnHeadersPresenter, Type = typeof(VirtualizedDataGridColumnHeadersPresenter))]
     [TemplateVisualState(Name = STATE_Ready, GroupName = STATE_GROUP_Responsiveness)]
     [TemplateVisualState(Name = STATE_Processing, GroupName = STATE_GROUP_Responsiveness)]
     public class VirtualizedDataGrid : Control
     {
         private const string PART_CancelButton = "PART_CancelButton";
-        private const string PART_CellsPresenterCenter = "PART_CellsPresenterCenter";
-        private const string PART_CenterCellsScrollViewer = "PART_CenterCellsScrollViewer";
+        private const string PART_CellsPresenter = "PART_CellsPresenter";
+        private const string PART_CellsScrollViewer = "PART_CellsScrollViewer";
         private const string PART_ColumnHeadersPresenter = "PART_ColumnHeadersPresenter";
         private const string STATE_GROUP_Responsiveness = "ResponsivenessStates";
         private const string STATE_Processing = "Processing";
@@ -66,6 +66,53 @@
 
         public static readonly RoutedCommand CopyCell =
             new RoutedCommand(nameof(CopyCell), typeof(VirtualizedDataGrid));
+
+        #region public FontFamily RowFontFamily { get; set; }
+
+        /// <summary>
+        ///   Identifies the <see cref="RowFontFamily"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty RowFontFamilyProperty =
+            DependencyProperty.Register(
+                nameof(RowFontFamily),
+                typeof(FontFamily),
+                typeof(VirtualizedDataGrid),
+                new PropertyMetadata(SystemFonts.MessageFontFamily));
+
+        /// <summary>
+        ///   Gets or sets the row font family.
+        /// </summary>
+        public FontFamily RowFontFamily
+        {
+            get { return (FontFamily)GetValue(RowFontFamilyProperty); }
+            set { SetValue(RowFontFamilyProperty, value); }
+        }
+
+        #endregion
+
+        #region public double RowFontSize { get; set; }
+
+        /// <summary>
+        ///   Identifies the <see cref="RowFontSize"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty RowFontSizeProperty =
+            DependencyProperty.Register(
+                nameof(RowFontSize),
+                typeof(double),
+                typeof(VirtualizedDataGrid),
+                new PropertyMetadata(SystemFonts.MessageFontSize));
+
+        /// <summary>
+        ///   Gets or sets the row font size.
+        /// </summary>
+        [TypeConverter(typeof(FontSizeConverter))]
+        public double RowFontSize
+        {
+            get { return (double)GetValue(RowFontSizeProperty); }
+            set { SetValue(RowFontSizeProperty, value); }
+        }
+
+        #endregion
 
         #region public Brush RowBackground { get; set; }
 
@@ -303,7 +350,7 @@
                     Mode = BindingMode.OneWay
                 };
                 //BindingOperations.SetBinding(newValue.ColumnsViewModel, VirtualizedDataGridColumnsViewModel.ActualWidthProperty, binding);
-                var templateChild = GetTemplateChild(PART_CenterCellsScrollViewer) as ScrollViewer;
+                var templateChild = GetTemplateChild(PART_CellsScrollViewer) as ScrollViewer;
                 if (templateChild != null)
                     CenterScrollWidthChanged(templateChild.ActualWidth);
             }
@@ -340,20 +387,20 @@
 
         private static readonly DependencyPropertyKey CenterCellsScrollViewerPropertyKey =
             DependencyProperty.RegisterReadOnly(
-                nameof(CenterCellsScrollViewer),
+                nameof(CellsScrollViewer),
                 typeof(ScrollViewer),
                 typeof(VirtualizedDataGrid),
                 PropertyMetadataUtils.DefaultNull);
 
         /// <summary>
-        ///   Identifies the <see cref="CenterCellsScrollViewer"/> dependency property.
+        ///   Identifies the <see cref="CellsScrollViewer"/> dependency property.
         /// </summary>
-        public static readonly DependencyProperty CenterCellsScrollViewerProperty =
+        public static readonly DependencyProperty CellsScrollViewerProperty =
             CenterCellsScrollViewerPropertyKey.DependencyProperty;
 
-        public ScrollViewer CenterCellsScrollViewer
+        public ScrollViewer CellsScrollViewer
         {
-            get { return (ScrollViewer)GetValue(CenterCellsScrollViewerProperty); }
+            get { return (ScrollViewer)GetValue(CellsScrollViewerProperty); }
             private set { SetValue(CenterCellsScrollViewerPropertyKey, value); }
         }
 
@@ -386,18 +433,18 @@
 
         private static readonly DependencyPropertyKey CellsPresenterPartCenterPropertyKey =
             DependencyProperty.RegisterReadOnly(
-                nameof(CellsPresenterPartCenter), typeof(VirtualizedDataGridCellsPresenter),
+                nameof(CellsPresenter), typeof(VirtualizedDataGridCellsPresenter),
                 typeof(VirtualizedDataGrid), PropertyMetadataUtils.DefaultNull);
 
         /// <summary>
-        ///   Identifies the <see cref="CellsPresenterPartCenter"/> dependency property.
+        ///   Identifies the <see cref="CellsPresenter"/> dependency property.
         /// </summary>
-        public static readonly DependencyProperty CellsPresenterPartCenterProperty =
+        public static readonly DependencyProperty CellsPresenterProperty =
             CellsPresenterPartCenterPropertyKey.DependencyProperty;
 
-        public VirtualizedDataGridCellsPresenter CellsPresenterPartCenter
+        public VirtualizedDataGridCellsPresenter CellsPresenter
         {
-            get { return (VirtualizedDataGridCellsPresenter)GetValue(CellsPresenterPartCenterProperty); }
+            get { return (VirtualizedDataGridCellsPresenter)GetValue(CellsPresenterProperty); }
             private set { SetValue(CellsPresenterPartCenterPropertyKey, value); }
         }
 
@@ -407,18 +454,22 @@
         {
             base.OnApplyTemplate();
             ColumnHeadersPresenter = GetTemplateChild(PART_ColumnHeadersPresenter) as VirtualizedDataGridColumnHeadersPresenter;
-            CenterCellsScrollViewer = GetTemplateChild(PART_CenterCellsScrollViewer) as ScrollViewer;
-            CellsPresenterPartCenter = GetTemplateChild(PART_CellsPresenterCenter) as VirtualizedDataGridCellsPresenter;
+            CellsScrollViewer = GetTemplateChild(PART_CellsScrollViewer) as ScrollViewer;
+            CellsPresenter = GetTemplateChild(PART_CellsPresenter) as VirtualizedDataGridCellsPresenter;
             CancelButtonPart = GetTemplateChild(PART_CancelButton) as Button;
 
-            var scrollViewer = GetTemplateChild(PART_CenterCellsScrollViewer) as ScrollViewer;
-            if (scrollViewer != null)
-                scrollViewer.SizeChanged += CenterScrollViewerSizeChanged;
+            if (CellsScrollViewer != null) {
+                CellsScrollViewer.SizeChanged += CenterScrollViewerSizeChanged;
 
-            if (CellsPresenterPartCenter != null)
-                CellsPresenterPartCenter.MouseUp += OnCellsPresenterMouseUp;
+                var horizontalOffsetBinding = new Binding(nameof(CellsScrollViewer.HorizontalOffset));
+                horizontalOffsetBinding.Source = CellsScrollViewer;
+                SetBinding(HorizontalScrollOffsetProperty, horizontalOffsetBinding);
+            }
 
-            cellsPresenter = CellsPresenterPartCenter;
+            if (CellsPresenter != null)
+                CellsPresenter.MouseUp += OnCellsPresenterMouseUp;
+
+            cellsPresenter = CellsPresenter;
             UpdateStates(false);
         }
 
@@ -452,7 +503,7 @@
             DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var source = (VirtualizedDataGrid)d;
-            source.CellsPresenterPartCenter?.OnIsSelectionActiveChanged();
+            source.CellsPresenter?.OnIsSelectionActiveChanged();
         }
 
         #endregion
@@ -519,6 +570,34 @@
         {
         }
 
+        #region internal double HorizontalScrollOffset { get; }
+
+        internal static readonly DependencyProperty HorizontalScrollOffsetProperty =
+            DependencyProperty.Register(
+                nameof(HorizontalScrollOffset),
+                typeof(double),
+                typeof(VirtualizedDataGrid),
+                new FrameworkPropertyMetadata(0.0, OnHorizontalOffsetChanged));
+
+        internal double HorizontalScrollOffset => (double)GetValue(HorizontalScrollOffsetProperty);
+
+        private static void OnHorizontalOffsetChanged(
+            DependencyObject d,
+            DependencyPropertyChangedEventArgs e)
+        {
+            var source = (VirtualizedDataGrid)d;
+            var columnHeadersPresenter = source.ColumnHeadersPresenter;
+            if (columnHeadersPresenter != null) {
+                columnHeadersPresenter.InvalidateArrange();
+
+                var itemsHost = columnHeadersPresenter.InternalItemsHost;
+                itemsHost?.InvalidateMeasure();
+                itemsHost?.InvalidateArrange();
+            }
+        }
+
+        #endregion
+
         private void OnCancelButtonPartChanged(DependencyPropertyChangedEventArgs e)
         {
         }
@@ -541,7 +620,7 @@
 
         private void OnViewModelUpdated(object sender, ItemEventArgs<bool> e)
         {
-            CellsPresenterPartCenter?.PostUpdateRendering();
+            CellsPresenter?.PostUpdateRendering();
         }
 
         private void OnViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -574,8 +653,8 @@
                 return 0;
 
             double newWidth = 0;
-            if (CellsPresenterPartCenter != null)
-                newWidth = CellsPresenterPartCenter.GetColumnAutoSize(column);
+            if (CellsPresenter != null)
+                newWidth = CellsPresenter.GetColumnAutoSize(column);
 
             double adjustment = newWidth - column.Width;
             column.Width = newWidth;
@@ -607,6 +686,48 @@
         protected internal virtual void OnColumnReordered(VirtualizedDataGridColumnEventArgs e)
         {
             ColumnReordered?.Invoke(this, e);
+        }
+    }
+
+    [TemplatePart(Name = PART_ColumnHeadersPresenter, Type = typeof(VirtualizedDataGridColumnHeadersPresenter))]
+    public class VirtualizedDataGridScrollViewer : ScrollViewer
+    {
+        private const string PART_ColumnHeadersPresenter = "PART_ColumnHeadersPresenter";
+
+        static VirtualizedDataGridScrollViewer()
+        {
+            Type forType = typeof(VirtualizedDataGridScrollViewer);
+            DefaultStyleKeyProperty.OverrideMetadata(
+                forType, new FrameworkPropertyMetadata(forType));
+        }
+
+        #region public VirtualizedDataGridColumnHeadersPresenter ColumnHeadersPresenter { get; private set; }
+
+        private static readonly DependencyPropertyKey ColumnHeadersPresenterPropertyKey =
+            DependencyProperty.RegisterReadOnly(
+                nameof(ColumnHeadersPresenter),
+                typeof(VirtualizedDataGridColumnHeadersPresenter),
+                typeof(VirtualizedDataGridScrollViewer),
+                PropertyMetadataUtils.DefaultNull);
+
+        /// <summary>
+        ///   Identifies the <see cref="ColumnHeadersPresenter"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty ColumnHeadersPresenterProperty =
+            ColumnHeadersPresenterPropertyKey.DependencyProperty;
+
+        public VirtualizedDataGridColumnHeadersPresenter ColumnHeadersPresenter
+        {
+            get { return (VirtualizedDataGridColumnHeadersPresenter)GetValue(ColumnHeadersPresenterProperty); }
+            private set { SetValue(ColumnHeadersPresenterPropertyKey, value); }
+        }
+
+        #endregion
+
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+            ColumnHeadersPresenter = GetTemplateChild(PART_ColumnHeadersPresenter) as VirtualizedDataGridColumnHeadersPresenter;
         }
     }
 
@@ -644,12 +765,280 @@
 
     public delegate void ItemEventHandler<T>(object sender, ItemEventArgs<T> e);
 
+    public interface IDependencyObjectCustomSerializerAccess
+    {
+        object GetValue(DependencyProperty dp);
+        bool ShouldSerializeProperty(DependencyProperty dp);
+    }
+
+    public abstract class FreezableCustomSerializerAccessBase
+        : Freezable, IDependencyObjectCustomSerializerAccess
+    {
+        protected FreezableCustomSerializerAccessBase()
+        {
+        }
+
+        object IDependencyObjectCustomSerializerAccess.GetValue(DependencyProperty dp)
+        {
+            return GetValue(dp);
+        }
+
+        bool IDependencyObjectCustomSerializerAccess.ShouldSerializeProperty(DependencyProperty dp)
+        {
+            return ShouldSerializeProperty(dp);
+        }
+    }
+
+    public class SerializePropertyInProfileAttribute : Attribute
+    {
+        public SerializePropertyInProfileAttribute(string name)
+        {
+
+        }
+    }
+
+    public sealed class HdvViewModelPreset
+        : FreezableCustomSerializerAccessBase
+        , IComparable<HdvViewModelPreset>
+        , IEquatable<HdvViewModelPreset>
+        , ICloneable
+        , ISupportInitialize
+    {
+        public HdvViewModelPreset()
+        {
+            ConfigurableColumns = new FreezableCollection<HdvColumnViewModelPreset>();
+        }
+
+        #region public string Name
+
+        public static readonly DependencyProperty NameProperty =
+            DependencyProperty.Register(
+                nameof(Name),
+                typeof(string),
+                typeof(HdvViewModelPreset),
+                PropertyMetadataUtils.DefaultNull);
+
+        [SerializePropertyInProfile("Name")]
+        public string Name
+        {
+            get { return (string)GetValue(NameProperty); }
+            set { SetValue(NameProperty, value); }
+        }
+
+        #endregion
+
+        #region public bool IsModified
+
+        public static readonly DependencyProperty IsModifiedProperty =
+            DependencyProperty.Register(
+                nameof(IsModified),
+                typeof(bool),
+                typeof(HdvViewModelPreset),
+                new PropertyMetadata(Boxed.Bool(false)));
+
+        public bool IsModified
+        {
+            get { return (bool)GetValue(IsModifiedProperty); }
+            set { SetValue(IsModifiedProperty, Boxed.Bool(value)); }
+        }
+
+        #endregion
+
+        #region public int LeftFrozenColumnCount
+
+        public static readonly DependencyProperty LeftFrozenColumnCountProperty =
+            DependencyProperty.Register(
+                nameof(LeftFrozenColumnCount),
+                typeof(int),
+                typeof(HdvViewModelPreset),
+                new PropertyMetadata(Boxed.Int32(0)));
+
+        [SerializePropertyInProfile("LeftFrozenColumnCount")]
+        public int LeftFrozenColumnCount
+        {
+            get { return (int)GetValue(LeftFrozenColumnCountProperty); }
+            set { SetValue(LeftFrozenColumnCountProperty, Boxed.Int32(value)); }
+        }
+
+        #endregion
+
+        #region public int RightFrozenColumnCount
+
+        public static readonly DependencyProperty RightFrozenColumnCountProperty =
+            DependencyProperty.Register(
+                nameof(RightFrozenColumnCount),
+                typeof(int),
+                typeof(HdvViewModelPreset),
+                new PropertyMetadata(Boxed.Int32(0)));
+
+        [SerializePropertyInProfile("RightFrozenColumnCount")]
+        public int RightFrozenColumnCount
+        {
+            get { return (int)GetValue(RightFrozenColumnCountProperty); }
+            set { SetValue(RightFrozenColumnCountProperty, Boxed.Int32(value)); }
+        }
+
+        #endregion
+
+        #region public FreezableCollection<HdvColumnViewModelPreset> ConfigurableColumns
+
+        public static readonly DependencyProperty ConfigurableColumnsProperty =
+            DependencyProperty.Register(
+                nameof(ConfigurableColumns),
+                typeof(FreezableCollection<HdvColumnViewModelPreset>),
+                typeof(HdvViewModelPreset),
+                PropertyMetadataUtils.DefaultNull);
+
+        [SerializePropertyInProfile("Columns")]
+        public FreezableCollection<HdvColumnViewModelPreset> ConfigurableColumns
+        {
+            get
+            {
+                return
+                    (FreezableCollection<HdvColumnViewModelPreset>)GetValue(ConfigurableColumnsProperty);
+            }
+            private set { SetValue(ConfigurableColumnsProperty, value); }
+        }
+
+        #endregion
+
+        public new HdvViewModelPreset Clone()
+        {
+            return (HdvViewModelPreset)base.Clone();
+        }
+
+        object ICloneable.Clone()
+        {
+            return Clone();
+        }
+
+        void ISupportInitialize.BeginInit()
+        {
+        }
+
+        void ISupportInitialize.EndInit()
+        {
+        }
+
+        public bool Equals(HdvViewModelPreset other)
+        {
+            return CompareTo(other) == 0;
+        }
+
+        public int CompareTo(HdvViewModelPreset other)
+        {
+            if (other == null)
+                throw new ArgumentNullException(nameof(other));
+
+            if (ReferenceEquals(this, other))
+                return 0;
+
+            int cmp;
+            bool dummy =
+                ComparisonUtils.CompareT(out cmp, Name, other.Name) &&
+                ComparisonUtils.CompareValueT(
+                    out cmp, LeftFrozenColumnCount, other.LeftFrozenColumnCount) &&
+                ComparisonUtils.CompareValueT(
+                    out cmp, RightFrozenColumnCount, other.RightFrozenColumnCount) &&
+                ComparisonUtils.CombineSequenceComparisonT(
+                    out cmp, ConfigurableColumns.OrderBySelf(), other.ConfigurableColumns.OrderBySelf());
+            return cmp;
+        }
+
+        protected override void CloneCore(Freezable sourceFreezable)
+        {
+            base.CloneCore(sourceFreezable);
+        }
+
+        protected override Freezable CreateInstanceCore()
+        {
+            return new HdvViewModelPreset();
+        }
+
+        public bool GetColumnVisibility(int configurableColumnIndex)
+        {
+            if (configurableColumnIndex >= ConfigurableColumns.Count ||
+                configurableColumnIndex < 0)
+                throw new ArgumentOutOfRangeException(
+                    nameof(configurableColumnIndex), configurableColumnIndex,
+                    "Value should be between 0 and " + ConfigurableColumns.Count);
+
+            return ConfigurableColumns[configurableColumnIndex].IsVisible;
+        }
+
+        public HdvViewModelPreset SetColumnVisibility(
+            int configurableColumnIndex, bool visibility)
+        {
+            if (configurableColumnIndex >= ConfigurableColumns.Count ||
+                configurableColumnIndex < 0)
+                throw new ArgumentOutOfRangeException(
+                    nameof(configurableColumnIndex), configurableColumnIndex,
+                    "Value should be between 0 and " + ConfigurableColumns.Count);
+
+            if (ConfigurableColumns[configurableColumnIndex].IsVisible == visibility)
+                return this;
+
+            HdvViewModelPreset preset = CreatePresetThatHasBeenModified();
+            preset.ConfigurableColumns[configurableColumnIndex].IsVisible = visibility;
+            return preset;
+        }
+
+        public HdvViewModelPreset CreatePresetThatHasBeenModified()
+        {
+            HdvViewModelPreset preset = Clone();
+            preset.IsModified = true;
+            return preset;
+        }
+    }
+
+    internal class ComparisonUtils
+    {
+        public static bool CompareValueT<T>(
+            out int cmp, T first, T second) where T : struct, IComparable<T>
+        {
+            cmp = first.CompareTo(second);
+            return cmp == 0;
+        }
+
+        public static bool Compare<T>(out int cmp, T first, T second)
+            where T : IComparable
+        {
+            cmp = first.CompareTo(second);
+            return cmp == 0;
+        }
+
+        public static bool CompareT<T>(
+            out int cmp, T x, T y) where T : class, IComparable<T>
+        {
+            if (x == null || y == null)
+                cmp = (x == null ? 1 : 0) - (y == null ? 1 : 0);
+            else
+                cmp = x.CompareTo(y);
+
+            return cmp == 0;
+        }
+
+        public static bool CombineSequenceComparisonT<T>(
+            out int cmp, IEnumerable<T> first, IEnumerable<T> second)
+            where T : IComparable<T>
+        {
+            cmp = first.SequenceCompare(second);
+            return cmp == 0;
+        }
+    }
+
     public interface IDataView
     {
         IDataViewColumnsCollection Columns { get; }
         IDataViewColumnsCollection VisibleColumns { get; }
+        bool IsReady { get; }
+        HdvViewModelPreset HdvViewModelPreset { get; set; }
+        VirtualizedDataGridColumnsViewModel ColumnsViewModel { set; }
+
         CellValue GetCellValue(int rowIndex, int columnIndex);
         void UpdateRowCount(int rows);
+        event ItemEventHandler<bool> Updated;
+        bool RequestUpdate(bool updateFromViewModel);
     }
 
     public interface IDataViewColumnsCollection
@@ -674,117 +1063,5 @@
         public bool IsVisible { get; set; }
         public bool IsResizable { get; set; }
         public TextAlignment TextAlignment { get; set; }
-    }
-
-    public sealed class ScrollOffsetAccessor : FrameworkElement
-    {
-        #region public ScrollViewer ScrollViewer { get; set; }
-
-        /// <summary>
-        ///   Identifies the <see cref="ScrollViewer"/> dependency property.
-        /// </summary>
-        public static readonly DependencyProperty ScrollViewerProperty =
-            DependencyProperty.Register(
-                nameof(ScrollViewer),
-                typeof(ScrollViewer),
-                typeof(ScrollOffsetAccessor),
-                new PropertyMetadata(null, OnScrollViewerChanged));
-
-        /// <summary>
-        ///   Gets or sets the scroll viewer.
-        /// </summary>
-        public ScrollViewer ScrollViewer
-        {
-            get { return (ScrollViewer)GetValue(ScrollViewerProperty); }
-            set { SetValue(ScrollViewerProperty, value); }
-        }
-
-        private static void OnScrollViewerChanged(
-            DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var source = (ScrollOffsetAccessor)d;
-            source.OnScrollViewerChanged((ScrollViewer)e.NewValue);
-        }
-
-        private void OnScrollViewerChanged(ScrollViewer newValue)
-        {
-            BindingOperations.ClearBinding(this, HorizontalOffsetProperty);
-            BindingOperations.ClearBinding(this, VerticalOffsetProperty);
-            if (newValue == null)
-                return;
-
-            var horzBinding = new Binding("HorizontalOffset") {
-                Source = newValue,
-                Mode = BindingMode.OneWay
-            };
-            var vertBinding = new Binding("VerticalOffset") {
-                Source = newValue,
-                Mode = BindingMode.OneWay
-            };
-            SetBinding(HorizontalOffsetProperty, horzBinding);
-            SetBinding(VerticalOffsetProperty, vertBinding);
-        }
-
-        #endregion
-
-        #region public double HorizontalOffset { get; set; }
-
-        public static readonly DependencyProperty HorizontalOffsetProperty =
-            DependencyProperty.Register(
-                nameof(HorizontalOffset),
-                typeof(double),
-                typeof(ScrollOffsetAccessor),
-                new PropertyMetadata(0.0, OnHorizontalOffsetChanged));
-
-        public double HorizontalOffset
-        {
-            get { return (double)GetValue(HorizontalOffsetProperty); }
-            set { SetValue(HorizontalOffsetProperty, value); }
-        }
-
-        private static void OnHorizontalOffsetChanged(
-            DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var source = (ScrollOffsetAccessor)d;
-            source.OnHorizontalOffsetChanged((double)e.NewValue);
-        }
-
-        private void OnHorizontalOffsetChanged(double value)
-        {
-            if (ScrollViewer != null && value != ScrollViewer.HorizontalOffset)
-                ScrollViewer.ScrollToHorizontalOffset(value);
-        }
-
-        #endregion
-
-        #region public double VerticalOffset { get; set; }
-
-        public static readonly DependencyProperty VerticalOffsetProperty =
-            DependencyProperty.Register(
-                nameof(VerticalOffset),
-                typeof(double),
-                typeof(ScrollOffsetAccessor),
-                new PropertyMetadata(0.0, OnVerticalOffsetChanged));
-
-        public double VerticalOffset
-        {
-            get { return (double)GetValue(VerticalOffsetProperty); }
-            set { SetValue(VerticalOffsetProperty, value); }
-        }
-
-        private static void OnVerticalOffsetChanged(
-            DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var source = (ScrollOffsetAccessor)d;
-            source.OnVerticalOffsetChanged((double)e.NewValue);
-        }
-
-        private void OnVerticalOffsetChanged(double value)
-        {
-            if (ScrollViewer != null && value != ScrollViewer.VerticalOffset)
-                ScrollViewer.ScrollToVerticalOffset(value);
-        }
-
-        #endregion
     }
 }

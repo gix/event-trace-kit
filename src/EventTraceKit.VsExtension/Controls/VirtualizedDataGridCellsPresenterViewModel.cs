@@ -6,11 +6,13 @@ namespace EventTraceKit.VsExtension.Controls
     public sealed class VirtualizedDataGridCellsPresenterViewModel
         : DependencyObject
     {
+        private readonly IDataView dataView;
         private readonly VirtualizedDataGridViewModel parent;
 
         public VirtualizedDataGridCellsPresenterViewModel(
-            VirtualizedDataGridViewModel parent)
+            IDataView dataView, VirtualizedDataGridViewModel parent)
         {
+            this.dataView = dataView;
             this.parent = parent;
 
             RowSelection = new VirtualizedDataGridRowSelection(this);
@@ -52,12 +54,26 @@ namespace EventTraceKit.VsExtension.Controls
 
         #endregion
 
+        internal bool IsReady
+        {
+            get
+            {
+                VerifyAccess();
+                return dataView.IsReady;
+            }
+        }
+
+        protected void ValidateIsReady()
+        {
+            if (!IsReady)
+                throw new InvalidOperationException();
+        }
+
         public void RequestUpdate(bool updateFromViewModel)
         {
             VerifyAccess();
-            //base.ValidateIsReady();
-            parent.RequestUpdate(updateFromViewModel);
-            //base.hdvViewModel.RequestUpdate(updateFromViewModel);
+            ValidateIsReady();
+            dataView.RequestUpdate(updateFromViewModel);
         }
     }
 }
