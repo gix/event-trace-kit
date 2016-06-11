@@ -6,7 +6,7 @@ namespace EventTraceKit.VsExtension.Controls
     {
         public ExpanderHeaderColumn(
             VirtualizedDataGridColumnsViewModel columns, IDataView dataView)
-            : base(columns, new Column(), dataView)
+            : base(columns, new Column(), dataView, true)
         {
             IsVisible = true;
 

@@ -13,31 +13,26 @@
         <ControlTemplate TargetType="{x:Type Primitives:VirtualizedDataGridColumnHeadersPresenter}">
           <Grid HorizontalAlignment="Stretch">
             <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto"/>
               <ColumnDefinition Width="*"/>
-              <!--<ColumnDefinition Width="*"/>-->
             </Grid.ColumnDefinitions>
-            <Border x:Name="HeaderBorder"
+            <!--<Border x:Name="HeaderBorder"
               Margin="0"
               Padding="{TemplateBinding Padding}"
               BorderThickness="1,0,0,1"
               BorderBrush="{DynamicResource {x:Static vsp:HeaderColors.SeparatorLineBrushKey}}"
-              Background="{DynamicResource {x:Static vsp:HeaderColors.DefaultBrushKey}}"/>
+              Background="{DynamicResource {x:Static vsp:HeaderColors.DefaultBrushKey}}"/>-->
             <ItemsPresenter x:Name="Headers"/>
-            <!--<Primitives:VirtualizedDataGridColumnHeader
+            <Primitives:VirtualizedDataGridColumnHeader
               Grid.Column="1"
+              Panel.ZIndex="-1"
               IsEnabled="False"
               Focusable="False"
               SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}"
               Visibility="{Binding ExpanderHeader, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ObjectNullCheckToVisibility}}"
               Column="{Binding ExpanderHeader, RelativeSource={RelativeSource TemplatedParent}}"
-              HorizontalAlignment="Stretch"/>-->
+              HorizontalAlignment="Stretch"/>
           </Grid>
-          <ControlTemplate.Triggers>
-            <DataTrigger Binding="{Binding ItemsSource, RelativeSource={RelativeSource Self}, Converter={StaticResource IsEmptyEnumerableConverter}}"
-                         Value="True">
-              <Setter TargetName="Headers" Property="IsEnabled" Value="False"/>
-            </DataTrigger>
-          </ControlTemplate.Triggers>
         </ControlTemplate>
       </Setter.Value>
     </Setter>

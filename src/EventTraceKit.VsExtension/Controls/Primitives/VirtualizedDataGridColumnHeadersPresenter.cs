@@ -1,7 +1,7 @@
 namespace EventTraceKit.VsExtension.Controls.Primitives
 {
     using System;
-    using System.Collections.ObjectModel;
+    using System.Collections;
     using System.Collections.Specialized;
     using System.Diagnostics;
     using System.Windows;
@@ -11,6 +11,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
     using System.Windows.Input;
     using System.Windows.Media;
     using System.Windows.Media.Animation;
+    using EventTraceKit.VsExtension.Collections;
 
     public class VirtualizedDataGridColumnHeadersPresenter : ItemsControl
     {
@@ -36,6 +37,32 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
             ItemsPanelProperty.OverrideMetadata(
                 forType, new FrameworkPropertyMetadata(panelTemplate));
+        }
+
+        protected override void OnItemsSourceChanged(IEnumerable oldValue, IEnumerable newValue)
+        {
+            base.OnItemsSourceChanged(oldValue, newValue);
+
+            var oldCollection = oldValue as INotifyCollectionChanged;
+            if (oldCollection != null)
+                oldCollection.CollectionChanged -= OnItemsSourceCollectionChanged;
+
+            var newCollection = newValue as INotifyCollectionChanged;
+            if (newCollection != null)
+                newCollection.CollectionChanged += OnItemsSourceCollectionChanged;
+
+            RefreshEnabled();
+        }
+
+        private void OnItemsSourceCollectionChanged(
+            object sender, NotifyCollectionChangedEventArgs notifyCollectionChangedEventArgs)
+        {
+            RefreshEnabled();
+        }
+
+        private void RefreshEnabled()
+        {
+            IsEnabled = ItemsSource?.Any() == true;
         }
 
         protected override void OnContextMenuOpening(ContextMenuEventArgs e)
@@ -103,14 +130,14 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public Panel InternalItemsHost { get; set; }
 
-        protected override DependencyObject GetContainerForItemOverride()
-        {
-            return new VirtualizedDataGridColumnHeader();
-        }
-
         protected override bool IsItemItsOwnContainerOverride(object item)
         {
             return item is VirtualizedDataGridColumnHeader;
+        }
+
+        protected override DependencyObject GetContainerForItemOverride()
+        {
+            return new VirtualizedDataGridColumnHeader();
         }
 
         protected override void ClearContainerForItemOverride(
@@ -192,7 +219,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         internal void OnHeaderLostMouseCapture(MouseEventArgs e)
         {
-            if (Mouse.LeftButton == MouseButtonState.Pressed &&
+            if (e.LeftButton == MouseButtonState.Pressed &&
                 headerDragCtx.IsDragging)
                 FinishColumnHeaderDrag(true);
         }
@@ -552,90 +579,6 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             {
                 element.RenderTransform = null;
             }
-        }
-    }
-
-    public class ColumnChooser : ContextMenu
-    {
-        private ReadOnlyObservableCollection<VirtualizedDataGridColumn> columns;
-        private VirtualizedDataGridColumn[] sortedColumns;
-
-        static ColumnChooser()
-        {
-            Type forType = typeof(ColumnChooser);
-            DefaultStyleKeyProperty.OverrideMetadata(
-                forType, new FrameworkPropertyMetadata(typeof(ContextMenu)));
-        }
-
-        public ColumnChooser(
-            ReadOnlyObservableCollection<VirtualizedDataGridColumn> columns,
-            IDataView viewModel)
-        {
-            if (columns == null)
-                throw new ArgumentNullException(nameof(columns));
-
-            this.columns = columns;
-
-            ViewModel = viewModel;
-            //this.InitializeComponent();
-            //this.columnTemplate = FindResource("columnTemplate") as DataTemplate;
-            sortedColumns = new VirtualizedDataGridColumn[columns.Count];
-            this.columns.CopyTo(sortedColumns, 0);
-            Array.Sort(sortedColumns, CompareColumnNames);
-
-            for (int i = 0; i < sortedColumns.Length; ++i)
-                Items.Insert(i, CreateContainer(sortedColumns[i]));
-
-            //this.RefreshColumns();
-            ((INotifyCollectionChanged)this.columns).CollectionChanged += ColumnsCollectionChangedHandler;
-
-            CommandBindings.Add(
-                new CommandBinding(ApplicationCommands.Close, CloseCommandExecuted));
-        }
-
-        private void ColumnsCollectionChangedHandler(object sender, NotifyCollectionChangedEventArgs e)
-        {
-        }
-
-        protected override void OnClosed(RoutedEventArgs e)
-        {
-            base.OnClosed(e);
-            ((INotifyCollectionChanged)columns).CollectionChanged -= ColumnsCollectionChangedHandler;
-        }
-
-        public IDataView ViewModel { get; }
-
-        private void CloseCommandExecuted(object sender, ExecutedRoutedEventArgs e)
-        {
-            e.Handled = true;
-        }
-
-        private MenuItem CreateContainer(VirtualizedDataGridColumn column)
-        {
-            var item = new MenuItem {
-                IsCheckable = true,
-                StaysOpenOnClick = true,
-                DataContext = column
-            };
-            item.SetBinding(MenuItem.IsCheckedProperty, new Binding(nameof(column.IsVisible)) {
-                Mode = BindingMode.TwoWay
-            });
-            item.SetBinding(HeaderedItemsControl.HeaderProperty, new Binding(nameof(column.ColumnName)) {
-                Mode = BindingMode.OneWay
-            });
-            return item;
-        }
-
-        private static int CompareColumnNames(
-            VirtualizedDataGridColumn lhs, VirtualizedDataGridColumn rhs)
-        {
-            var comparisonType = StringComparison.CurrentCultureIgnoreCase;
-
-            int cmp = string.Compare(lhs.ColumnName, rhs.ColumnName, comparisonType);
-            if (cmp != 0)
-                return cmp;
-
-            return lhs.ModelVisibleColumnIndex.CompareTo(rhs.ModelVisibleColumnIndex);
         }
     }
 }

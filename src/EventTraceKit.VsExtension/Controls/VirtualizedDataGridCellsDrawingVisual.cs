@@ -70,7 +70,7 @@ namespace EventTraceKit.VsExtension.Controls
 
             using (DrawingContext dc = RenderOpen()) {
                 int rowCount = viewModel.RowCount;
-                if (rowCount <= 0)
+                if (rowCount <= 0 || visibleColumns.Count <= 0)
                     return;
 
                 double actualWidth = cellsPresenter.ActualWidth;

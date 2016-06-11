@@ -10,8 +10,10 @@
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows;
+    using System.Windows.Input;
     using System.Windows.Threading;
     using EventTraceKit.VsExtension.Controls;
+    using Microsoft.VisualStudio.PlatformUI;
     using Microsoft.VisualStudio.Shell;
     using Task = System.Threading.Tasks.Task;
 
@@ -38,40 +40,6 @@
         {
             if (modeProvider != null)
                 modeProvider.OperationalModeChanged += OnOperationalModeChanged;
-
-            //var header = eventsTable.Headers;
-            //header.Add(new TableHeaderViewModel {
-            //    Header = "Time",
-            //    ColumnWidth = 100,
-            //    MemberName = "Time",
-            //    StringFormat = "hh:mm:ss.fffffff"
-            //});
-            //header.Add(new TableHeaderViewModel { Header = "PID", ColumnWidth = 50, MemberName = "ProcessId" });
-            //header.Add(new TableHeaderViewModel { Header = "TID", ColumnWidth = 50, MemberName = "ThreadId" });
-            //header.Add(new TableHeaderViewModel {
-            //    Header = "ProviderId",
-            //    ColumnWidth = 50,
-            //    MemberName = "ProviderId"
-            //});
-            //header.Add(new TableHeaderViewModel { Header = "Provider", ColumnWidth = 50, MemberName = "Provider" });
-            //header.Add(new TableHeaderViewModel { Header = "Id", ColumnWidth = 25, MemberName = "Id" });
-            //header.Add(new TableHeaderViewModel { Header = "Version", ColumnWidth = 20, MemberName = "Version" });
-            //header.Add(new TableHeaderViewModel { Header = "Channel", ColumnWidth = 20, MemberName = "Channel" });
-            //header.Add(new TableHeaderViewModel { Header = "ChannelId", ColumnWidth = 20, MemberName = "ChannelId" });
-            //header.Add(new TableHeaderViewModel { Header = "Level", ColumnWidth = 20, MemberName = "Level" });
-            //header.Add(new TableHeaderViewModel { Header = "LevelId", ColumnWidth = 20, MemberName = "LevelId" });
-            //header.Add(new TableHeaderViewModel { Header = "Task", ColumnWidth = 40, MemberName = "Task" });
-            //header.Add(new TableHeaderViewModel { Header = "TaskId", ColumnWidth = 40, MemberName = "TaskId" });
-            //header.Add(new TableHeaderViewModel { Header = "Opcode", ColumnWidth = 40, MemberName = "Opcode" });
-            //header.Add(new TableHeaderViewModel { Header = "OpcodeId", ColumnWidth = 40, MemberName = "OpcodeId" });
-            //header.Add(new TableHeaderViewModel { Header = "Keywords", ColumnWidth = 50, MemberName = "Keywords" });
-            //header.Add(new TableHeaderViewModel {
-            //    Header = "KeywordMask",
-            //    ColumnWidth = 50,
-            //    MemberName = "KeywordMask",
-            //    StringFormat = "X"
-            //});
-            //header.Add(new TableHeaderViewModel { Header = "Message", ColumnWidth = 500, MemberName = "Message" });
 
             EventsDataView = new TraceEventsView();
             GridModel = new VirtualizedDataGridViewModel(EventsDataView);

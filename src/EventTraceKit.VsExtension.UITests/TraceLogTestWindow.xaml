@@ -26,9 +26,7 @@
       <Button Margin="7,0,0,0" Content="Stop" Command="{Binding StopCommand}"/>
       <Button Margin="7,0,0,0" Content="Clear" Command="{Binding ClearCommand}"/>
       <TextBlock Margin="7,0,0,0" Text="{Binding GridModel.RowCount}"/>
-      <Popup Width="50" Height="100">
-        <Button Content="Foo"/>
-      </Popup>
+      <Button Margin="7,0,0,0" Content="Foo" Command="{Binding FooCommand}"/>
     </StackPanel>
 
     <Controls:VirtualizedDataGrid

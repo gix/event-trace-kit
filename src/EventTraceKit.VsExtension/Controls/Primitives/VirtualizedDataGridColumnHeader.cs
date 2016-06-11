@@ -1,6 +1,7 @@
 ﻿namespace EventTraceKit.VsExtension.Controls.Primitives
 {
     using System;
+    using System.Diagnostics;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Controls.Primitives;
@@ -34,6 +35,13 @@
             SplitCursorCache = new Lazy<Cursor>(
                 () => ResourceUtils.LoadCursorFromResource(
                     forType, "Split.cur"));
+        }
+
+        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(e);
+            if (e.Property == IsEnabledProperty) {
+            }
         }
 
         public static DelegateValueConverter<double, double> ColumnNameMaxWidthConverter { get; }

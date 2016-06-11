@@ -171,7 +171,7 @@ namespace EventTraceKit.VsExtension.Controls
             int index = 0;
             foreach (IDataColumn dataColumn in DataView.Columns) {
                 var column = new VirtualizedDataGridColumn(
-                    this, dataColumn, DataView);
+                    this, dataColumn, DataView, false);
                 WritableColumns.Add(column);
 
                 //var columnPreset = preset.ConfigurableColumns[index];

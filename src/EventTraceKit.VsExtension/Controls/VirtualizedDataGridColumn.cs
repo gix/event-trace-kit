@@ -17,13 +17,22 @@ namespace EventTraceKit.VsExtension.Controls
         public VirtualizedDataGridColumn(
             VirtualizedDataGridColumnsViewModel columns,
             IDataColumn columnModel,
-            IDataView dataView)
+            IDataView dataView,
+            bool isDisconnected)
         {
             this.columns = columns;
             this.columnModel = columnModel;
             this.dataView = dataView;
+            IsDisconnected = isDisconnected;
 
             isInitializing = true;
+            if (isDisconnected) {
+                ModelColumnIndex = -1;
+                ModelVisibleColumnIndex = -1;
+                Width = 45.0;
+                TextAlignment = TextAlignment.Right;
+                IsVisible = true;
+            }
 
             ColumnName = columnModel.Name;
             Width = columnModel.Width;
@@ -36,7 +45,7 @@ namespace EventTraceKit.VsExtension.Controls
 
         public VirtualizedDataGridColumnsViewModel Columns => columns;
 
-        public bool CanMove => IsVisible;
+        public bool CanMove => IsVisible && (!IsDisconnected || IsSeparator || IsFreezableAreaSeparator);
 
         public int ModelColumnIndex { get; private set; }
 
@@ -298,6 +307,8 @@ namespace EventTraceKit.VsExtension.Controls
         public bool IsConfigurable =>
             !IsSeparator && !IsFreezableAreaSeparator;
 
+        public bool IsDisconnected { get; }
+
         private void UpdateAutomationNameProperty()
         {
             //string str;
@@ -344,7 +355,14 @@ namespace EventTraceKit.VsExtension.Controls
 
         public CellValue GetCellValue(int rowIndex, int viewportSizeHint)
         {
-            return GetCachedCellValue(rowIndex, viewportSizeHint);
+            if (!IsDisconnected)
+                return GetCachedCellValue(rowIndex, viewportSizeHint);
+            return GetDisconnectedCellValue(rowIndex);
+        }
+
+        public CellValue GetDisconnectedCellValue(int rowIndex)
+        {
+            return new CellValue(null, null, null);
         }
 
         private void ClearCachedRows()
@@ -404,6 +422,9 @@ namespace EventTraceKit.VsExtension.Controls
 
         private int GetModelColumnIndex()
         {
+            if (IsDisconnected)
+                return -1;
+
             int index = dataView.Columns.IndexOf(columnModel);
             if (index == -1)
                 throw new Exception("Unable to find the model column index for: " + ColumnName);
@@ -412,7 +433,7 @@ namespace EventTraceKit.VsExtension.Controls
 
         private int GetModelVisibleColumnIndex()
         {
-            if (!columnModel.IsVisible)
+            if (IsDisconnected || !columnModel.IsVisible)
                 return -1;
 
             int index = dataView.VisibleColumns.IndexOf(columnModel);

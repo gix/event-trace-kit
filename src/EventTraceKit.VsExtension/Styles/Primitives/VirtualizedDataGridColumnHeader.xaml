@@ -52,9 +52,6 @@
              Style="{StaticResource DataGridColumnHeaderGripper}"/>
     </Grid>
     <ControlTemplate.Triggers>
-      <Trigger Property="IsEnabled" Value="False">
-      </Trigger>
-
       <Trigger Property="IsMouseOver" Value="True">
         <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:EnvironmentColors.CommandBarTextHoverBrushKey}}"/>
         <Setter Property="Background" Value="{DynamicResource {x:Static vsp:HeaderColors.MouseOverBrushKey}}"/>

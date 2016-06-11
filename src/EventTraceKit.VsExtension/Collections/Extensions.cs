@@ -1,6 +1,7 @@
 ﻿namespace EventTraceKit.VsExtension.Collections
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -48,6 +49,12 @@
             }
 
             return cmp;
+        }
+
+        public static bool Any(this IEnumerable source)
+        {
+            IEnumerator e = source.GetEnumerator();
+            return e.MoveNext();
         }
     }
 }
