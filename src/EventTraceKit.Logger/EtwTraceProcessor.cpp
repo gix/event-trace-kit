@@ -512,6 +512,9 @@ static EVENT_RECORD* CopyEvent(Allocator& alloc, EVENT_RECORD const* event)
 
 void EtwTraceProcessor::OnEvent(EVENT_RECORD* event)
 {
+    // Skip the event if it is the event trace header. Log files contain this
+    // event but real-time sessions do not. The event contains the same
+    // information as the EVENT_TRACE_LOGFILE.LogfileHeader member.
     if (IsEventTraceHeader(event))
         return;
 
