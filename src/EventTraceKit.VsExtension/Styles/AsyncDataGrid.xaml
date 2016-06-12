@@ -23,7 +23,7 @@
     </Setter>
   </Style>
 
-  <Style TargetType="{x:Type Controls:VirtualizedDataGrid}">
+  <Style TargetType="{x:Type Controls:AsyncDataGrid}">
     <Setter Property="Focusable" Value="False"/>
     <Setter Property="IsTabStop" Value="False"/>
     <Setter Property="Foreground"
@@ -32,7 +32,7 @@
             Value="{DynamicResource {x:Static SystemColors.ControlBrush}}"/>
     <Setter Property="Template">
       <Setter.Value>
-        <ControlTemplate TargetType="{x:Type Controls:VirtualizedDataGrid}">
+        <ControlTemplate TargetType="{x:Type Controls:AsyncDataGrid}">
           <Grid Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="*"/>
@@ -43,7 +43,7 @@
               <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <DockPanel Margin="{TemplateBinding Padding}">
-              <Primitives:VirtualizedDataGridColumnHeadersPresenter
+              <Primitives:AsyncDataGridColumnHeadersPresenter
                 x:Name="PART_ColumnHeadersPresenter"
                 DockPanel.Dock="Top"
                 IsTabStop="False"
@@ -58,7 +58,7 @@
                             HorizontalScrollBarVisibility="Auto"
                             VerticalScrollBarVisibility="Auto"
                             Style="{StaticResource UnscrollableScrollViewerStyle}">
-                <Primitives:VirtualizedDataGridCellsPresenter
+                <Primitives:AsyncDataGridCellsPresenter
                   x:Name="PART_CellsPresenter"
                   HorizontalGridLinesThickness="0"
                   VerticalGridLinesThickness="0"
@@ -77,13 +77,13 @@
                   ToolTipService.IsEnabled="False"
                   ViewModel="{Binding ViewModel.CellsPresenterViewModel, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
                   VisibleColumns="{Binding ViewModel.ColumnsViewModel.VisibleColumns, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}">
-                  <!--<Primitives:VirtualizedDataGridCellsPresenter.ToolTip>
+                  <!--<Primitives:AsyncDataGridCellsPresenter.ToolTip>
                   <ToolTip>
                     <TextBlock
                       Text="{Binding ViewModel.CellsPresenterViewModel.TextForCurrentCell, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"/>
                   </ToolTip>
-                </Primitives:VirtualizedDataGridCellsPresenter.ToolTip>-->
-                </Primitives:VirtualizedDataGridCellsPresenter>
+                </Primitives:AsyncDataGridCellsPresenter.ToolTip>-->
+                </Primitives:AsyncDataGridCellsPresenter>
               </ScrollViewer>
             </DockPanel>
             <Primitives:BindableScrollBar Orientation="Horizontal"

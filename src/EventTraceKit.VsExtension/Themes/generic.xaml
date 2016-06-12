@@ -7,8 +7,8 @@
     <ResourceDictionary Source="../Styles/DataGridStyle.xaml"/>
     <ResourceDictionary Source="../Styles/ListViewStyle.xaml"/>
     <ResourceDictionary Source="../Styles/Menu.xaml"/>
-    <ResourceDictionary Source="../Styles/Primitives/VirtualizedDataGridColumnHeader.xaml"/>
-    <ResourceDictionary Source="../Styles/Primitives/VirtualizedDataGridColumnHeadersPresenter.xaml"/>
-    <ResourceDictionary Source="../Styles/VirtualizedDataGrid.xaml"/>
+    <ResourceDictionary Source="../Styles/AsyncDataGrid.xaml"/>
+    <ResourceDictionary Source="../Styles/Primitives/AsyncDataGridColumnHeader.xaml"/>
+    <ResourceDictionary Source="../Styles/Primitives/AsyncDataGridColumnHeadersPresenter.xaml"/>
   </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

@@ -42,7 +42,7 @@
                 modeProvider.OperationalModeChanged += OnOperationalModeChanged;
 
             EventsDataView = new TraceEventsView();
-            GridModel = new VirtualizedDataGridViewModel(EventsDataView);
+            GridModel = new AsyncDataGridViewModel(EventsDataView);
 
             syncCtx = new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher);
             SynchronizationContext.SetSynchronizationContext(syncCtx);
@@ -66,7 +66,7 @@
         }
 
         public TraceEventsView EventsDataView { get; }
-        public VirtualizedDataGridViewModel GridModel { get; }
+        public AsyncDataGridViewModel GridModel { get; }
 
         public TraceLogStatsModel Statistics { get; }
 
@@ -1287,9 +1287,9 @@
         private WorkManager workManager;
         private bool refreshViewModelFromModelOnReady;
         private bool refreshViewModelOnUpdateRequest;
-        private VirtualizedDataGridColumnsViewModel columnsViewModel;
+        private AsyncDataGridColumnsViewModel columnsViewModel;
 
-        public VirtualizedDataGridColumnsViewModel ColumnsViewModel
+        public AsyncDataGridColumnsViewModel ColumnsViewModel
         {
             set { columnsViewModel = value; }
         }

@@ -2,10 +2,10 @@ namespace EventTraceKit.VsExtension.Controls
 {
     using System.Windows;
 
-    internal sealed class ExpanderHeaderColumn : VirtualizedDataGridColumn
+    internal sealed class ExpanderHeaderColumn : AsyncDataGridColumn
     {
         public ExpanderHeaderColumn(
-            VirtualizedDataGridColumnsViewModel columns, IDataView dataView)
+            AsyncDataGridColumnsViewModel columns, IDataView dataView)
             : base(columns, new Column(), dataView, true)
         {
             IsVisible = true;

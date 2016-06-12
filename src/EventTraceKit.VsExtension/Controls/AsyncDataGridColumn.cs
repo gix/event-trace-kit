@@ -3,9 +3,9 @@ namespace EventTraceKit.VsExtension.Controls
     using System;
     using System.Windows;
 
-    public class VirtualizedDataGridColumn : DependencyObject
+    public class AsyncDataGridColumn : DependencyObject
     {
-        private readonly VirtualizedDataGridColumnsViewModel columns;
+        private readonly AsyncDataGridColumnsViewModel columns;
         private readonly IDataColumn columnModel;
         private readonly IDataView dataView;
         private readonly bool isInitializing;
@@ -14,8 +14,8 @@ namespace EventTraceKit.VsExtension.Controls
         private int startCacheRowValueIndex;
         private bool isResizing;
 
-        public VirtualizedDataGridColumn(
-            VirtualizedDataGridColumnsViewModel columns,
+        public AsyncDataGridColumn(
+            AsyncDataGridColumnsViewModel columns,
             IDataColumn columnModel,
             IDataView dataView,
             bool isDisconnected)
@@ -43,7 +43,7 @@ namespace EventTraceKit.VsExtension.Controls
             isInitializing = false;
         }
 
-        public VirtualizedDataGridColumnsViewModel Columns => columns;
+        public AsyncDataGridColumnsViewModel Columns => columns;
 
         public bool CanMove => IsVisible && (!IsDisconnected || IsSeparator || IsFreezableAreaSeparator);
 
@@ -62,11 +62,11 @@ namespace EventTraceKit.VsExtension.Controls
             DependencyProperty.Register(
                 nameof(Width),
                 typeof(double),
-                typeof(VirtualizedDataGridColumn),
+                typeof(AsyncDataGridColumn),
                 new PropertyMetadata(
                     80.0,
-                    (d, e) => ((VirtualizedDataGridColumn)d).OnWidthChanged(),
-                    (d, v) => ((VirtualizedDataGridColumn)d).CoerceWidth((double)v)));
+                    (d, e) => ((AsyncDataGridColumn)d).OnWidthChanged(),
+                    (d, v) => ((AsyncDataGridColumn)d).CoerceWidth((double)v)));
 
         /// <summary>
         ///   Gets or sets the column width.
@@ -102,7 +102,7 @@ namespace EventTraceKit.VsExtension.Controls
             DependencyProperty.Register(
                 nameof(IsVisible),
                 typeof(bool),
-                typeof(VirtualizedDataGridColumn),
+                typeof(AsyncDataGridColumn),
                 new PropertyMetadata(Boxed.False, OnIsVisibleChanged));
 
         /// <summary>
@@ -117,7 +117,7 @@ namespace EventTraceKit.VsExtension.Controls
         private static void OnIsVisibleChanged(
             DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var source = (VirtualizedDataGridColumn)d;
+            var source = (AsyncDataGridColumn)d;
             source.OnIsVisibleChanged((bool)e.NewValue);
         }
 
@@ -139,7 +139,7 @@ namespace EventTraceKit.VsExtension.Controls
             DependencyProperty.RegisterReadOnly(
                 nameof(IsSeparator),
                 typeof(bool),
-                typeof(VirtualizedDataGridColumn),
+                typeof(AsyncDataGridColumn),
                 new PropertyMetadata(Boxed.False));
 
         /// <summary>
@@ -165,7 +165,7 @@ namespace EventTraceKit.VsExtension.Controls
             DependencyProperty.RegisterReadOnly(
                 nameof(IsFreezableAreaSeparator),
                 typeof(bool),
-                typeof(VirtualizedDataGridColumn),
+                typeof(AsyncDataGridColumn),
                 new PropertyMetadata(Boxed.False));
 
         /// <summary>
@@ -192,10 +192,10 @@ namespace EventTraceKit.VsExtension.Controls
             DependencyProperty.RegisterReadOnly(
                 nameof(TextAlignment),
                 typeof(TextAlignment),
-                typeof(VirtualizedDataGridColumn),
+                typeof(AsyncDataGridColumn),
                 new PropertyMetadata(
                     TextAlignmentBoxes.Left,
-                    (d, e) => ((VirtualizedDataGridColumn)d).OnUIPropertyChanged()));
+                    (d, e) => ((AsyncDataGridColumn)d).OnUIPropertyChanged()));
 
         /// <summary>
         ///   Identifies the <see cref="TextAlignment"/> dependency property.
@@ -220,7 +220,7 @@ namespace EventTraceKit.VsExtension.Controls
             DependencyProperty.RegisterReadOnly(
                 nameof(IsResizable),
                 typeof(bool),
-                typeof(VirtualizedDataGridColumn),
+                typeof(AsyncDataGridColumn),
                 new PropertyMetadata(Boxed.False));
 
         /// <summary>
@@ -246,7 +246,7 @@ namespace EventTraceKit.VsExtension.Controls
             DependencyProperty.RegisterReadOnly(
                 nameof(IsExpanderHeader),
                 typeof(bool),
-                typeof(VirtualizedDataGridColumn),
+                typeof(AsyncDataGridColumn),
                 new PropertyMetadata(Boxed.False));
 
         /// <summary>
@@ -272,10 +272,10 @@ namespace EventTraceKit.VsExtension.Controls
             DependencyProperty.RegisterReadOnly(
                 nameof(ColumnName),
                 typeof(string),
-                typeof(VirtualizedDataGridColumn),
+                typeof(AsyncDataGridColumn),
                 new PropertyMetadata(
                     null,
-                    (d, e) => ((VirtualizedDataGridColumn)d).OnColumnNameChanged(e)));
+                    (d, e) => ((AsyncDataGridColumn)d).OnColumnNameChanged(e)));
 
         /// <summary>
         ///   Identifies the <see cref="ColumnName"/> dependency property.

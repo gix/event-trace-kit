@@ -13,23 +13,23 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
     using System.Windows.Media.Animation;
     using EventTraceKit.VsExtension.Collections;
 
-    public class VirtualizedDataGridColumnHeadersPresenter : ItemsControl
+    public class AsyncDataGridColumnHeadersPresenter : ItemsControl
     {
-        private VirtualizedDataGrid parentGrid;
+        private AsyncDataGrid parentGrid;
         private HeaderDragContext headerDragCtx;
 
-        static VirtualizedDataGridColumnHeadersPresenter()
+        static AsyncDataGridColumnHeadersPresenter()
         {
-            Type forType = typeof(VirtualizedDataGridColumnHeadersPresenter);
+            Type forType = typeof(AsyncDataGridColumnHeadersPresenter);
             DefaultStyleKeyProperty.OverrideMetadata(
                 forType, new FrameworkPropertyMetadata(forType));
 
             // Arrange the headers in reverse order, i.e. from right to left,
             // to make the left header's gripper overlay the right header.
             var panelFactory = new FrameworkElementFactory(
-                typeof(VirtualizedDataGridColumnHeadersPanel));
+                typeof(AsyncDataGridColumnHeadersPanel));
             panelFactory.SetValue(
-                VirtualizedDataGridColumnHeadersPanel.OrientationProperty,
+                AsyncDataGridColumnHeadersPanel.OrientationProperty,
                 Orientation.Horizontal);
 
             var panelTemplate = new ItemsPanelTemplate(panelFactory);
@@ -79,7 +79,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             base.OnContextMenuOpening(e);
         }
 
-        #region public VirtualizedDataGridColumnsViewModel ViewModel { get; set; }
+        #region public AsyncDataGridColumnsViewModel ViewModel { get; set; }
 
         /// <summary>
         ///   Identifies the <see cref="ViewModel"/> dependency property.
@@ -87,22 +87,22 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         public static readonly DependencyProperty ViewModelProperty =
             DependencyProperty.Register(
                 nameof(ViewModel),
-                typeof(VirtualizedDataGridColumnsViewModel),
-                typeof(VirtualizedDataGridColumnHeadersPresenter),
+                typeof(AsyncDataGridColumnsViewModel),
+                typeof(AsyncDataGridColumnHeadersPresenter),
                 PropertyMetadataUtils.DefaultNull);
 
         /// <summary>
         ///   Gets or sets the columns view model.
         /// </summary>
-        public VirtualizedDataGridColumnsViewModel ViewModel
+        public AsyncDataGridColumnsViewModel ViewModel
         {
-            get { return (VirtualizedDataGridColumnsViewModel)GetValue(ViewModelProperty); }
+            get { return (AsyncDataGridColumnsViewModel)GetValue(ViewModelProperty); }
             set { SetValue(ViewModelProperty, value); }
         }
 
         #endregion
 
-        #region public VirtualizedDataGridColumnViewModel ExpanderHeaderViewModel { get; set; }
+        #region public AsyncDataGridColumnViewModel ExpanderHeaderViewModel { get; set; }
 
         /// <summary>
         ///   Identifies the <see cref="ExpanderHeader"/> dependency property.
@@ -110,34 +110,34 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         public static readonly DependencyProperty ExpanderHeaderProperty =
             DependencyProperty.Register(
                 nameof(ExpanderHeader),
-                typeof(VirtualizedDataGridColumn),
-                typeof(VirtualizedDataGridColumnHeadersPresenter),
+                typeof(AsyncDataGridColumn),
+                typeof(AsyncDataGridColumnHeadersPresenter),
                 PropertyMetadataUtils.DefaultNull);
 
         /// <summary>
         ///   Gets or sets the expander header column.
         /// </summary>
-        public VirtualizedDataGridColumn ExpanderHeader
+        public AsyncDataGridColumn ExpanderHeader
         {
-            get { return (VirtualizedDataGridColumn)GetValue(ExpanderHeaderProperty); }
+            get { return (AsyncDataGridColumn)GetValue(ExpanderHeaderProperty); }
             set { SetValue(ExpanderHeaderProperty, value); }
         }
 
         #endregion
 
-        internal VirtualizedDataGrid ParentGrid =>
-            parentGrid ?? (parentGrid = this.FindParent<VirtualizedDataGrid>());
+        internal AsyncDataGrid ParentGrid =>
+            parentGrid ?? (parentGrid = this.FindParent<AsyncDataGrid>());
 
         public Panel InternalItemsHost { get; set; }
 
         protected override bool IsItemItsOwnContainerOverride(object item)
         {
-            return item is VirtualizedDataGridColumnHeader;
+            return item is AsyncDataGridColumnHeader;
         }
 
         protected override DependencyObject GetContainerForItemOverride()
         {
-            return new VirtualizedDataGridColumnHeader();
+            return new AsyncDataGridColumnHeader();
         }
 
         protected override void ClearContainerForItemOverride(
@@ -153,11 +153,11 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         {
             base.PrepareContainerForItemOverride(element, item);
 
-            var viewModel = item as VirtualizedDataGridColumn;
+            var viewModel = item as AsyncDataGridColumn;
             if (viewModel == null)
                 throw new InvalidOperationException("Invalid item type.");
 
-            var header = (VirtualizedDataGridColumnHeader)element;
+            var header = (AsyncDataGridColumnHeader)element;
             header.SnapsToDevicePixels = SnapsToDevicePixels;
             header.UseLayoutRounding = UseLayoutRounding;
             header.Column = viewModel;
@@ -175,7 +175,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         }
 
         internal void OnHeaderMouseLeftButtonDown(
-            MouseButtonEventArgs e, VirtualizedDataGridColumnHeader header)
+            MouseButtonEventArgs e, AsyncDataGridColumnHeader header)
         {
             if (ParentGrid == null)
                 return;
@@ -226,7 +226,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         private void StartColumnHeaderDrag()
         {
-            var reorderingEventArgs = new VirtualizedDataGridColumnReorderingEventArgs(
+            var reorderingEventArgs = new AsyncDataGridColumnReorderingEventArgs(
                 headerDragCtx.DraggedHeader.Column);
 
             ParentGrid.OnColumnReordering(reorderingEventArgs);
@@ -243,10 +243,10 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             headerDragCtx.StartDrag(ItemContainerGenerator);
         }
 
-        private VirtualizedDataGridColumnHeader HeaderFromIndex(int index)
+        private AsyncDataGridColumnHeader HeaderFromIndex(int index)
         {
             var container = ItemContainerGenerator.ContainerFromIndex(index);
-            return (VirtualizedDataGridColumnHeader)container;
+            return (AsyncDataGridColumnHeader)container;
         }
 
         private static bool ShouldStartColumnHeaderDrag(
@@ -275,7 +275,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 ViewModel.TryMoveColumn(srcColumn, dstColumn);
 
                 dragCompletedEventArgs.Handled = true;
-                var columnEventArgs = new VirtualizedDataGridColumnEventArgs(srcColumn);
+                var columnEventArgs = new AsyncDataGridColumnEventArgs(srcColumn);
                 ParentGrid.OnColumnReordered(columnEventArgs);
             }
 
@@ -354,7 +354,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             private HeaderAnimation[] animations;
             private ItemContainerGenerator generator;
 
-            public VirtualizedDataGridColumnHeader DraggedHeader { get; private set; }
+            public AsyncDataGridColumnHeader DraggedHeader { get; private set; }
             public int DraggedHeaderIndex { get; private set; }
             public Point StartPosition { get; private set; }
             public Point CurrentPosition { get; set; }
@@ -364,7 +364,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             public bool IsDragging => state == DragState.Dragging;
 
             public void PrepareDrag(
-                VirtualizedDataGridColumnHeader draggedHeader, Point position)
+                AsyncDataGridColumnHeader draggedHeader, Point position)
             {
                 state = DragState.Preparing;
                 DraggedHeader = draggedHeader;

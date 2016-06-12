@@ -3,24 +3,24 @@ namespace EventTraceKit.VsExtension.Controls
     using System;
     using System.Windows;
 
-    public sealed class VirtualizedDataGridCellsPresenterViewModel
+    public sealed class AsyncDataGridCellsPresenterViewModel
         : DependencyObject
     {
         private readonly IDataView dataView;
-        private readonly VirtualizedDataGridViewModel parent;
+        private readonly AsyncDataGridViewModel parent;
 
-        public VirtualizedDataGridCellsPresenterViewModel(
-            IDataView dataView, VirtualizedDataGridViewModel parent)
+        public AsyncDataGridCellsPresenterViewModel(
+            IDataView dataView, AsyncDataGridViewModel parent)
         {
             this.dataView = dataView;
             this.parent = parent;
 
-            RowSelection = new VirtualizedDataGridRowSelection(this);
+            RowSelection = new AsyncDataGridRowSelection(this);
         }
 
         public int RowCount => parent.RowCount;
 
-        public VirtualizedDataGridRowSelection RowSelection { get; }
+        public AsyncDataGridRowSelection RowSelection { get; }
 
         #region public int FocusIndex { get; set; }
 
@@ -33,10 +33,10 @@ namespace EventTraceKit.VsExtension.Controls
             DependencyProperty.Register(
                 nameof(FocusIndex),
                 typeof(int),
-                typeof(VirtualizedDataGridCellsPresenterViewModel),
+                typeof(AsyncDataGridCellsPresenterViewModel),
                 new PropertyMetadata(
                     Boxed.Int32Zero,
-                    (d, e) => ((VirtualizedDataGridCellsPresenterViewModel)d).OnFocusIndexChanged(e)));
+                    (d, e) => ((AsyncDataGridCellsPresenterViewModel)d).OnFocusIndexChanged(e)));
 
         /// <summary>
         ///   Gets or sets the focux index.

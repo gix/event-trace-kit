@@ -13,19 +13,19 @@
   <Style x:Key="DataGridColumnHeaderGripper" TargetType="{x:Type Thumb}">
     <Setter Property="Width" Value="8"/>
     <Setter Property="Background" Value="{DynamicResource {x:Static vsp:HeaderColors.SeparatorLineBrushKey}}"/>
-    <Setter Property="Cursor" Value="{x:Static Primitives:VirtualizedDataGridColumnHeader.SplitCursor}"/>
+    <Setter Property="Cursor" Value="{x:Static Primitives:AsyncDataGridColumnHeader.SplitCursor}"/>
     <Setter Property="Template" Value="{StaticResource DataGridColumnHeaderGripperTemplate}"/>
   </Style>
 
   <Style x:Key="DataGridColumnHeaderGripper2" TargetType="{x:Type Thumb}">
     <Setter Property="Width" Value="8"/>
     <Setter Property="Background" Value="{DynamicResource {x:Static vsp:HeaderColors.SeparatorLineBrushKey}}"/>
-    <Setter Property="Cursor" Value="{x:Static Primitives:VirtualizedDataGridColumnHeader.SplitCursor}"/>
+    <Setter Property="Cursor" Value="{x:Static Primitives:AsyncDataGridColumnHeader.SplitCursor}"/>
     <Setter Property="Template" Value="{StaticResource DataGridColumnHeaderGripperTemplate}"/>
   </Style>
 
   <ControlTemplate x:Key="DataGridColumnHeaderTemplate"
-                   TargetType="{x:Type Primitives:VirtualizedDataGridColumnHeader}">
+                   TargetType="{x:Type Primitives:AsyncDataGridColumnHeader}">
     <!--
     FIXME
     <Grid ToolTipService.ToolTip="{Binding Content.ToolTip, ElementName=HeaderContent}"
@@ -62,16 +62,16 @@
         <Setter Property="Background" Value="{DynamicResource {x:Static vsp:HeaderColors.MouseDownBrushKey}}"/>
       </Trigger>
 
-      <Trigger Property="Primitives:VirtualizedDataGridColumnHeader.IsSeparator" Value="True">
+      <Trigger Property="Primitives:AsyncDataGridColumnHeader.IsSeparator" Value="True">
         <Setter Property="Background" Value="Gold"/>
       </Trigger>
-      <Trigger Property="Primitives:VirtualizedDataGridColumnHeader.IsFreezableAreaSeparator" Value="True">
+      <Trigger Property="Primitives:AsyncDataGridColumnHeader.IsFreezableAreaSeparator" Value="True">
         <Setter Property="Background" Value="Gray"/>
       </Trigger>
     </ControlTemplate.Triggers>
   </ControlTemplate>
 
-  <Style TargetType="{x:Type Primitives:VirtualizedDataGridColumnHeader}">
+  <Style TargetType="{x:Type Primitives:AsyncDataGridColumnHeader}">
     <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
     <Setter Property="VerticalContentAlignment" Value="Center"/>
     <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:EnvironmentColors.CommandBarTextActiveBrushKey}}"/>

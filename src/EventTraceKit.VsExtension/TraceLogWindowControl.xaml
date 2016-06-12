@@ -48,7 +48,7 @@
       </StatusBarItem>
     </StatusBar>
 
-    <Controls:VirtualizedDataGrid
+    <Controls:AsyncDataGrid
       ViewModel="{Binding GridModel}"
       Foreground="{DynamicResource {x:Static etkvs:Colors.TraceLogForegroundKey}}"
       Background="{DynamicResource {x:Static vsui:TreeViewColors.BackgroundBrushKey}}"

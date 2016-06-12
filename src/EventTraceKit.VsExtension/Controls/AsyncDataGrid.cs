@@ -1,7 +1,6 @@
-﻿namespace EventTraceKit.VsExtension.Controls
+namespace EventTraceKit.VsExtension.Controls
 {
     using System;
-    using System.Collections.Generic;
     using System.ComponentModel;
     using System.Windows;
     using System.Windows.Controls;
@@ -9,16 +8,15 @@
     using System.Windows.Data;
     using System.Windows.Input;
     using System.Windows.Media;
-    using EventTraceKit.VsExtension.Collections;
-    using Primitives;
+    using EventTraceKit.VsExtension.Controls.Primitives;
 
     [TemplatePart(Name = PART_CancelButton, Type = typeof(Button))]
     [TemplatePart(Name = PART_CellsScrollViewer, Type = typeof(ScrollViewer))]
-    [TemplatePart(Name = PART_CellsPresenter, Type = typeof(VirtualizedDataGridCellsPresenter))]
-    [TemplatePart(Name = PART_ColumnHeadersPresenter, Type = typeof(VirtualizedDataGridColumnHeadersPresenter))]
+    [TemplatePart(Name = PART_CellsPresenter, Type = typeof(AsyncDataGridCellsPresenter))]
+    [TemplatePart(Name = PART_ColumnHeadersPresenter, Type = typeof(AsyncDataGridColumnHeadersPresenter))]
     [TemplateVisualState(Name = STATE_Ready, GroupName = STATE_GROUP_Responsiveness)]
     [TemplateVisualState(Name = STATE_Processing, GroupName = STATE_GROUP_Responsiveness)]
-    public class VirtualizedDataGrid : Control
+    public class AsyncDataGrid : Control
     {
         private const string PART_CancelButton = "PART_CancelButton";
         private const string PART_CellsPresenter = "PART_CellsPresenter";
@@ -28,31 +26,31 @@
         private const string STATE_Processing = "Processing";
         private const string STATE_Ready = "Ready";
 
-        private VirtualizedDataGridCellsPresenter cellsPresenter;
-        private VirtualizedDataGridViewModel viewModel;
+        private AsyncDataGridCellsPresenter cellsPresenter;
+        private AsyncDataGridViewModel viewModel;
 
         private Action<bool> updateStatesAction;
 
-        static VirtualizedDataGrid()
+        static AsyncDataGrid()
         {
-            Type forType = typeof(VirtualizedDataGrid);
+            Type forType = typeof(AsyncDataGrid);
             DefaultStyleKeyProperty.OverrideMetadata(
                 forType, new FrameworkPropertyMetadata(forType));
             IsEnabledProperty.OverrideMetadata(
                 forType, new FrameworkPropertyMetadata(
-                    (d, e) => ((VirtualizedDataGrid)d).OnIsEnabledChanged(e)));
+                    (d, e) => ((AsyncDataGrid)d).OnIsEnabledChanged(e)));
 
             var commandBinding = new CommandBinding(
                 CopyCell, OnCopyCellExecuted,
                 OnCopyCellCanExecute);
             var gesture = new KeyGesture(Key.C, ModifierKeys.Control);
             CommandManager.RegisterClassInputBinding(
-                typeof(VirtualizedDataGrid), new InputBinding(CopyCell, gesture));
+                typeof(AsyncDataGrid), new InputBinding(CopyCell, gesture));
             CommandManager.RegisterClassCommandBinding(
-                typeof(VirtualizedDataGrid), commandBinding);
+                typeof(AsyncDataGrid), commandBinding);
         }
 
-        public VirtualizedDataGrid()
+        public AsyncDataGrid()
         {
             Loaded += OnLoaded;
             Unloaded += OnUnloaded;
@@ -61,11 +59,11 @@
         public event EventHandler<DragStartedEventArgs> ColumnHeaderDragStarted;
         public event EventHandler<DragDeltaEventArgs> ColumnHeaderDragDelta;
         public event EventHandler<DragCompletedEventArgs> ColumnHeaderDragCompleted;
-        public event EventHandler<VirtualizedDataGridColumnReorderingEventArgs> ColumnReordering;
-        public event EventHandler<VirtualizedDataGridColumnEventArgs> ColumnReordered;
+        public event EventHandler<AsyncDataGridColumnReorderingEventArgs> ColumnReordering;
+        public event EventHandler<AsyncDataGridColumnEventArgs> ColumnReordered;
 
         public static readonly RoutedCommand CopyCell =
-            new RoutedCommand(nameof(CopyCell), typeof(VirtualizedDataGrid));
+            new RoutedCommand(nameof(CopyCell), typeof(AsyncDataGrid));
 
         #region public FontFamily RowFontFamily { get; set; }
 
@@ -76,7 +74,7 @@
             DependencyProperty.Register(
                 nameof(RowFontFamily),
                 typeof(FontFamily),
-                typeof(VirtualizedDataGrid),
+                typeof(AsyncDataGrid),
                 new PropertyMetadata(SystemFonts.MessageFontFamily));
 
         /// <summary>
@@ -99,7 +97,7 @@
             DependencyProperty.Register(
                 nameof(RowFontSize),
                 typeof(double),
-                typeof(VirtualizedDataGrid),
+                typeof(AsyncDataGrid),
                 new PropertyMetadata(SystemFonts.MessageFontSize));
 
         /// <summary>
@@ -123,7 +121,7 @@
             DependencyProperty.Register(
                 nameof(RowBackground),
                 typeof(Brush),
-                typeof(VirtualizedDataGrid),
+                typeof(AsyncDataGrid),
                 new PropertyMetadata(Brushes.White));
 
         /// <summary>
@@ -146,7 +144,7 @@
             DependencyProperty.Register(
                 nameof(AlternatingRowBackground),
                 typeof(Brush),
-                typeof(VirtualizedDataGrid),
+                typeof(AsyncDataGrid),
                 new PropertyMetadata(Brushes.WhiteSmoke));
 
         /// <summary>
@@ -169,7 +167,7 @@
             DependencyProperty.Register(
                 nameof(RowSelectionForeground),
                 typeof(Brush),
-                typeof(VirtualizedDataGrid),
+                typeof(AsyncDataGrid),
                 new PropertyMetadata(SystemColors.HighlightTextBrush));
 
         /// <summary>
@@ -192,7 +190,7 @@
             DependencyProperty.Register(
                 nameof(RowSelectionBackground),
                 typeof(Brush),
-                typeof(VirtualizedDataGrid),
+                typeof(AsyncDataGrid),
                 new PropertyMetadata(SystemColors.HighlightBrush));
 
         /// <summary>
@@ -215,7 +213,7 @@
             DependencyProperty.Register(
                 nameof(RowInactiveSelectionForeground),
                 typeof(Brush),
-                typeof(VirtualizedDataGrid),
+                typeof(AsyncDataGrid),
                 new PropertyMetadata(SystemColors.InactiveSelectionHighlightTextBrush));
 
         /// <summary>
@@ -238,7 +236,7 @@
             DependencyProperty.Register(
                 nameof(RowInactiveSelectionBackground),
                 typeof(Brush),
-                typeof(VirtualizedDataGrid),
+                typeof(AsyncDataGrid),
                 new PropertyMetadata(SystemColors.InactiveSelectionHighlightBrush));
 
         /// <summary>
@@ -261,7 +259,7 @@
             DependencyProperty.Register(
                 nameof(RowFocusBorderBrush),
                 typeof(Brush),
-                typeof(VirtualizedDataGrid),
+                typeof(AsyncDataGrid),
                 new PropertyMetadata(SystemColors.ControlTextBrush));
 
         /// <summary>
@@ -275,7 +273,7 @@
 
         #endregion
 
-        #region public IVirtualizedDataGridViewModel ViewModel { get; set; }
+        #region public AsyncDataGridViewModel ViewModel { get; set; }
 
         /// <summary>
         ///   Identifies the <see cref="ViewModel"/> dependency property.
@@ -283,36 +281,36 @@
         public static readonly DependencyProperty ViewModelProperty =
             DependencyProperty.Register(
                 nameof(ViewModel),
-                typeof(VirtualizedDataGridViewModel),
-                typeof(VirtualizedDataGrid),
+                typeof(AsyncDataGridViewModel),
+                typeof(AsyncDataGrid),
                 new PropertyMetadata(null, OnViewModelChanged));
 
-        public VirtualizedDataGridViewModel ViewModel
+        public AsyncDataGridViewModel ViewModel
         {
-            get { return (VirtualizedDataGridViewModel)GetValue(ViewModelProperty); }
+            get { return (AsyncDataGridViewModel)GetValue(ViewModelProperty); }
             set { SetValue(ViewModelProperty, value); }
         }
 
         private static void OnViewModelChanged(
             DependencyObject s, DependencyPropertyChangedEventArgs e)
         {
-            var source = (VirtualizedDataGrid)s;
+            var source = (AsyncDataGrid)s;
             source.CoerceValue(ViewModelEventSourceProperty);
         }
 
         #endregion
 
-        #region private IVirtualizedDataGridViewModel ViewModelEventSource { get; }
+        #region private AsyncDataGridViewModel ViewModelEventSource { get; }
 
         private static readonly DependencyPropertyKey ViewModelEventSourcePropertyKey =
             DependencyProperty.RegisterReadOnly(
                 nameof(ViewModelEventSource),
-                typeof(VirtualizedDataGridViewModel),
-                typeof(VirtualizedDataGrid),
+                typeof(AsyncDataGridViewModel),
+                typeof(AsyncDataGrid),
                 new PropertyMetadata(
                     null,
-                    (s, e) => ((VirtualizedDataGrid)s).ViewModelEventSourcePropertyChanged(e),
-                    (d, v) => ((VirtualizedDataGrid)d).CoerceViewModelEventSourceProperty(v)));
+                    (s, e) => ((AsyncDataGrid)s).ViewModelEventSourcePropertyChanged(e),
+                    (d, v) => ((AsyncDataGrid)d).CoerceViewModelEventSourceProperty(v)));
 
         /// <summary>
         ///   Identifies the <see cref="ViewModelEventSource"/> dependency property.
@@ -320,8 +318,8 @@
         private static readonly DependencyProperty ViewModelEventSourceProperty =
             ViewModelEventSourcePropertyKey.DependencyProperty;
 
-        private VirtualizedDataGridViewModel ViewModelEventSource =>
-            (VirtualizedDataGridViewModel)GetValue(ViewModelEventSourceProperty);
+        private AsyncDataGridViewModel ViewModelEventSource =>
+            (AsyncDataGridViewModel)GetValue(ViewModelEventSourceProperty);
 
         private object CoerceViewModelEventSourceProperty(object baseValue)
         {
@@ -331,15 +329,15 @@
         private void ViewModelEventSourcePropertyChanged(
             DependencyPropertyChangedEventArgs e)
         {
-            var oldValue = (VirtualizedDataGridViewModel)e.OldValue;
+            var oldValue = (AsyncDataGridViewModel)e.OldValue;
             if (oldValue != null) {
                 viewModel = null;
                 oldValue.Updated -= OnViewModelUpdated;
                 //oldValue.PropertyChanged -= OnViewModelPropertyChanged;
-                //BindingOperations.ClearBinding(oldValue, VirtualizedDataGridColumnsViewModel.ActualWidthProperty);
+                //BindingOperations.ClearBinding(oldValue, AsyncDataGridColumnsViewModel.ActualWidthProperty);
             }
 
-            var newValue = (VirtualizedDataGridViewModel)e.NewValue;
+            var newValue = (AsyncDataGridViewModel)e.NewValue;
             if (newValue != null) {
                 viewModel = newValue;
                 newValue.Updated += OnViewModelUpdated;
@@ -349,7 +347,7 @@
                     Path = new PropertyPath(ActualWidthProperty.Name),
                     Mode = BindingMode.OneWay
                 };
-                //BindingOperations.SetBinding(newValue.ColumnsViewModel, VirtualizedDataGridColumnsViewModel.ActualWidthProperty, binding);
+                //BindingOperations.SetBinding(newValue.ColumnsViewModel, AsyncDataGridColumnsViewModel.ActualWidthProperty, binding);
                 var templateChild = GetTemplateChild(PART_CellsScrollViewer) as ScrollViewer;
                 if (templateChild != null)
                     CenterScrollWidthChanged(templateChild.ActualWidth);
@@ -364,10 +362,10 @@
             DependencyProperty.RegisterReadOnly(
                 nameof(CancelButtonPart),
                 typeof(Button),
-                typeof(VirtualizedDataGrid),
+                typeof(AsyncDataGrid),
                 new PropertyMetadata(
                     null,
-                    (s, e) => ((VirtualizedDataGrid)s).OnCancelButtonPartChanged(e)));
+                    (s, e) => ((AsyncDataGrid)s).OnCancelButtonPartChanged(e)));
 
         /// <summary>
         ///   Identifies the <see cref="CancelButtonPart"/> dependency property.
@@ -389,7 +387,7 @@
             DependencyProperty.RegisterReadOnly(
                 nameof(CellsScrollViewer),
                 typeof(ScrollViewer),
-                typeof(VirtualizedDataGrid),
+                typeof(AsyncDataGrid),
                 PropertyMetadataUtils.DefaultNull);
 
         /// <summary>
@@ -406,13 +404,13 @@
 
         #endregion
 
-        #region public VirtualizedDataGridColumnHeadersPresenter ColumnHeadersPresenter { get; private set; }
+        #region public AsyncDataGridColumnHeadersPresenter ColumnHeadersPresenter { get; private set; }
 
         private static readonly DependencyPropertyKey ColumnHeadersPresenterPropertyKey =
             DependencyProperty.RegisterReadOnly(
                 nameof(ColumnHeadersPresenter),
-                typeof(VirtualizedDataGridColumnHeadersPresenter),
-                typeof(VirtualizedDataGrid),
+                typeof(AsyncDataGridColumnHeadersPresenter),
+                typeof(AsyncDataGrid),
                 PropertyMetadataUtils.DefaultNull);
 
         /// <summary>
@@ -421,20 +419,20 @@
         public static readonly DependencyProperty ColumnHeadersPresenterProperty =
             ColumnHeadersPresenterPropertyKey.DependencyProperty;
 
-        public VirtualizedDataGridColumnHeadersPresenter ColumnHeadersPresenter
+        public AsyncDataGridColumnHeadersPresenter ColumnHeadersPresenter
         {
-            get { return (VirtualizedDataGridColumnHeadersPresenter)GetValue(ColumnHeadersPresenterProperty); }
+            get { return (AsyncDataGridColumnHeadersPresenter)GetValue(ColumnHeadersPresenterProperty); }
             private set { SetValue(ColumnHeadersPresenterPropertyKey, value); }
         }
 
         #endregion
 
-        #region public VirtualizedDataGridCellsPresenter CellsPresenterPartCenter { get; private set; }
+        #region public AsyncDataGridCellsPresenter CellsPresenterPartCenter { get; private set; }
 
         private static readonly DependencyPropertyKey CellsPresenterPartCenterPropertyKey =
             DependencyProperty.RegisterReadOnly(
-                nameof(CellsPresenter), typeof(VirtualizedDataGridCellsPresenter),
-                typeof(VirtualizedDataGrid), PropertyMetadataUtils.DefaultNull);
+                nameof(CellsPresenter), typeof(AsyncDataGridCellsPresenter),
+                typeof(AsyncDataGrid), PropertyMetadataUtils.DefaultNull);
 
         /// <summary>
         ///   Identifies the <see cref="CellsPresenter"/> dependency property.
@@ -442,10 +440,68 @@
         public static readonly DependencyProperty CellsPresenterProperty =
             CellsPresenterPartCenterPropertyKey.DependencyProperty;
 
-        public VirtualizedDataGridCellsPresenter CellsPresenter
+        public AsyncDataGridCellsPresenter CellsPresenter
         {
-            get { return (VirtualizedDataGridCellsPresenter)GetValue(CellsPresenterProperty); }
+            get { return (AsyncDataGridCellsPresenter)GetValue(CellsPresenterProperty); }
             private set { SetValue(CellsPresenterPartCenterPropertyKey, value); }
+        }
+
+        #endregion
+
+        #region public bool IsSelectionActive { get; set; }
+
+        /// <summary>
+        ///   Identifies the <see cref="IsSelectionActive"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty IsSelectionActiveProperty =
+            DependencyProperty.Register(
+                nameof(IsSelectionActive),
+                typeof(bool),
+                typeof(AsyncDataGrid),
+                new PropertyMetadata(Boxed.False, OnIsSelectionActiveChanged));
+
+        /// <summary>
+        ///   Gets or sets a value indicating whether the selection is active.
+        /// </summary>
+        public bool IsSelectionActive
+        {
+            get { return (bool)GetValue(IsSelectionActiveProperty); }
+            set { SetValue(IsSelectionActiveProperty, Boxed.Bool(value)); }
+        }
+
+        private static void OnIsSelectionActiveChanged(
+            DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var source = (AsyncDataGrid)d;
+            source.CellsPresenter?.OnIsSelectionActiveChanged();
+        }
+
+        #endregion
+
+        #region internal double HorizontalScrollOffset { get; }
+
+        internal static readonly DependencyProperty HorizontalScrollOffsetProperty =
+            DependencyProperty.Register(
+                nameof(HorizontalScrollOffset),
+                typeof(double),
+                typeof(AsyncDataGrid),
+                new FrameworkPropertyMetadata(0.0, OnHorizontalOffsetChanged));
+
+        internal double HorizontalScrollOffset => (double)GetValue(HorizontalScrollOffsetProperty);
+
+        private static void OnHorizontalOffsetChanged(
+            DependencyObject d,
+            DependencyPropertyChangedEventArgs e)
+        {
+            var source = (AsyncDataGrid)d;
+            var columnHeadersPresenter = source.ColumnHeadersPresenter;
+            if (columnHeadersPresenter != null) {
+                columnHeadersPresenter.InvalidateArrange();
+
+                var itemsHost = columnHeadersPresenter.InternalItemsHost;
+                itemsHost?.InvalidateMeasure();
+                itemsHost?.InvalidateArrange();
+            }
         }
 
         #endregion
@@ -453,9 +509,9 @@
         public override void OnApplyTemplate()
         {
             base.OnApplyTemplate();
-            ColumnHeadersPresenter = GetTemplateChild(PART_ColumnHeadersPresenter) as VirtualizedDataGridColumnHeadersPresenter;
+            ColumnHeadersPresenter = GetTemplateChild(PART_ColumnHeadersPresenter) as AsyncDataGridColumnHeadersPresenter;
             CellsScrollViewer = GetTemplateChild(PART_CellsScrollViewer) as ScrollViewer;
-            CellsPresenter = GetTemplateChild(PART_CellsPresenter) as VirtualizedDataGridCellsPresenter;
+            CellsPresenter = GetTemplateChild(PART_CellsPresenter) as AsyncDataGridCellsPresenter;
             CancelButtonPart = GetTemplateChild(PART_CancelButton) as Button;
 
             if (CellsScrollViewer != null) {
@@ -472,41 +528,6 @@
             cellsPresenter = CellsPresenter;
             UpdateStates(false);
         }
-
-        protected virtual void OnIsEnabledChanged(
-            DependencyPropertyChangedEventArgs e)
-        {
-        }
-
-        #region public bool IsSelectionActive { get; set; }
-
-        /// <summary>
-        ///   Identifies the <see cref="IsSelectionActive"/> dependency property.
-        /// </summary>
-        public static readonly DependencyProperty IsSelectionActiveProperty =
-            DependencyProperty.Register(
-                nameof(IsSelectionActive),
-                typeof(bool),
-                typeof(VirtualizedDataGrid),
-                new PropertyMetadata(Boxed.False, OnIsSelectionActiveChanged));
-
-        /// <summary>
-        ///   Gets or sets a value indicating whether the selection is active.
-        /// </summary>
-        public bool IsSelectionActive
-        {
-            get { return (bool)GetValue(IsSelectionActiveProperty); }
-            set { SetValue(IsSelectionActiveProperty, Boxed.Bool(value)); }
-        }
-
-        private static void OnIsSelectionActiveChanged(
-            DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var source = (VirtualizedDataGrid)d;
-            source.CellsPresenter?.OnIsSelectionActiveChanged();
-        }
-
-        #endregion
 
         protected override void OnIsKeyboardFocusWithinChanged(
             DependencyPropertyChangedEventArgs e)
@@ -527,6 +548,11 @@
             }
 
             IsSelectionActive = isSelectionActive;
+        }
+
+        protected virtual void OnIsEnabledChanged(
+            DependencyPropertyChangedEventArgs e)
+        {
         }
 
         internal static Visual GetVisualRoot(DependencyObject d)
@@ -550,9 +576,9 @@
             if (e.Handled)
                 return;
 
-            //var relativeTo = sender as VirtualizedDataGridCellsPresenter;
+            //var relativeTo = sender as AsyncDataGridCellsPresenter;
             //if (relativeTo != null) {
-            //    VirtualizedDataGridColumnViewModel columnFromPosition = relativeTo.GetColumnFromPosition(e.GetPosition(relativeTo).X);
+            //    AsyncDataGridColumnViewModel columnFromPosition = relativeTo.GetColumnFromPosition(e.GetPosition(relativeTo).X);
             //    ViewModel.ColumnsViewModel.SetClickedColumn(columnFromPosition);
             //}
         }
@@ -569,34 +595,6 @@
         private void CenterScrollViewerSizeChanged(object sender, SizeChangedEventArgs e)
         {
         }
-
-        #region internal double HorizontalScrollOffset { get; }
-
-        internal static readonly DependencyProperty HorizontalScrollOffsetProperty =
-            DependencyProperty.Register(
-                nameof(HorizontalScrollOffset),
-                typeof(double),
-                typeof(VirtualizedDataGrid),
-                new FrameworkPropertyMetadata(0.0, OnHorizontalOffsetChanged));
-
-        internal double HorizontalScrollOffset => (double)GetValue(HorizontalScrollOffsetProperty);
-
-        private static void OnHorizontalOffsetChanged(
-            DependencyObject d,
-            DependencyPropertyChangedEventArgs e)
-        {
-            var source = (VirtualizedDataGrid)d;
-            var columnHeadersPresenter = source.ColumnHeadersPresenter;
-            if (columnHeadersPresenter != null) {
-                columnHeadersPresenter.InvalidateArrange();
-
-                var itemsHost = columnHeadersPresenter.InternalItemsHost;
-                itemsHost?.InvalidateMeasure();
-                itemsHost?.InvalidateArrange();
-            }
-        }
-
-        #endregion
 
         private void OnCancelButtonPartChanged(DependencyPropertyChangedEventArgs e)
         {
@@ -628,14 +626,14 @@
             if (cellsPresenter == null || viewModel == null)
                 return;
 
-            if (e.PropertyName == nameof(VirtualizedDataGridViewModel.RowCount)) {
+            if (e.PropertyName == nameof(AsyncDataGridViewModel.RowCount)) {
                 cellsPresenter.PostUpdateRendering();
             }
         }
 
         private static void OnCopyCellCanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            var grid = (VirtualizedDataGrid)sender;
+            var grid = (AsyncDataGrid)sender;
             //grid.ViewModel.DoCopyToClipboard(HierarchicalDataGridViewModel.CopyBehavior.Cell);
             e.Handled = true;
         }
@@ -644,7 +642,7 @@
         {
         }
 
-        public double AutoSize(VirtualizedDataGridColumn column)
+        public double AutoSize(AsyncDataGridColumn column)
         {
             if (column == null)
                 throw new ArgumentNullException(nameof(column));
@@ -678,390 +676,36 @@
         }
 
         protected internal virtual void OnColumnReordering(
-            VirtualizedDataGridColumnReorderingEventArgs e)
+            AsyncDataGridColumnReorderingEventArgs e)
         {
             ColumnReordering?.Invoke(this, e);
         }
 
-        protected internal virtual void OnColumnReordered(VirtualizedDataGridColumnEventArgs e)
+        protected internal virtual void OnColumnReordered(AsyncDataGridColumnEventArgs e)
         {
             ColumnReordered?.Invoke(this, e);
         }
     }
 
-    [TemplatePart(Name = PART_ColumnHeadersPresenter, Type = typeof(VirtualizedDataGridColumnHeadersPresenter))]
-    public class VirtualizedDataGridScrollViewer : ScrollViewer
+    public class AsyncDataGridColumnEventArgs : EventArgs
     {
-        private const string PART_ColumnHeadersPresenter = "PART_ColumnHeadersPresenter";
-
-        static VirtualizedDataGridScrollViewer()
-        {
-            Type forType = typeof(VirtualizedDataGridScrollViewer);
-            DefaultStyleKeyProperty.OverrideMetadata(
-                forType, new FrameworkPropertyMetadata(forType));
-        }
-
-        #region public VirtualizedDataGridColumnHeadersPresenter ColumnHeadersPresenter { get; private set; }
-
-        private static readonly DependencyPropertyKey ColumnHeadersPresenterPropertyKey =
-            DependencyProperty.RegisterReadOnly(
-                nameof(ColumnHeadersPresenter),
-                typeof(VirtualizedDataGridColumnHeadersPresenter),
-                typeof(VirtualizedDataGridScrollViewer),
-                PropertyMetadataUtils.DefaultNull);
-
-        /// <summary>
-        ///   Identifies the <see cref="ColumnHeadersPresenter"/> dependency property.
-        /// </summary>
-        public static readonly DependencyProperty ColumnHeadersPresenterProperty =
-            ColumnHeadersPresenterPropertyKey.DependencyProperty;
-
-        public VirtualizedDataGridColumnHeadersPresenter ColumnHeadersPresenter
-        {
-            get { return (VirtualizedDataGridColumnHeadersPresenter)GetValue(ColumnHeadersPresenterProperty); }
-            private set { SetValue(ColumnHeadersPresenterPropertyKey, value); }
-        }
-
-        #endregion
-
-        public override void OnApplyTemplate()
-        {
-            base.OnApplyTemplate();
-            ColumnHeadersPresenter = GetTemplateChild(PART_ColumnHeadersPresenter) as VirtualizedDataGridColumnHeadersPresenter;
-        }
-    }
-
-    public class VirtualizedDataGridColumnEventArgs : EventArgs
-    {
-        public VirtualizedDataGridColumnEventArgs(VirtualizedDataGridColumn column)
+        public AsyncDataGridColumnEventArgs(AsyncDataGridColumn column)
         {
             Column = column;
         }
 
-        public VirtualizedDataGridColumn Column { get; }
+        public AsyncDataGridColumn Column { get; }
     }
 
-    public class VirtualizedDataGridColumnReorderingEventArgs
-        : VirtualizedDataGridColumnEventArgs
+    public class AsyncDataGridColumnReorderingEventArgs
+        : AsyncDataGridColumnEventArgs
     {
-        public VirtualizedDataGridColumnReorderingEventArgs(
-            VirtualizedDataGridColumn column)
+        public AsyncDataGridColumnReorderingEventArgs(
+            AsyncDataGridColumn column)
             : base(column)
         {
         }
 
         public bool Cancel { get; set; }
-    }
-
-    public class ItemEventArgs<T> : EventArgs
-    {
-        public ItemEventArgs(T item)
-        {
-            Item = item;
-        }
-
-        public T Item { get; }
-    }
-
-    public delegate void ItemEventHandler<T>(object sender, ItemEventArgs<T> e);
-
-    public interface IDependencyObjectCustomSerializerAccess
-    {
-        object GetValue(DependencyProperty dp);
-        bool ShouldSerializeProperty(DependencyProperty dp);
-    }
-
-    public abstract class FreezableCustomSerializerAccessBase
-        : Freezable, IDependencyObjectCustomSerializerAccess
-    {
-        protected FreezableCustomSerializerAccessBase()
-        {
-        }
-
-        object IDependencyObjectCustomSerializerAccess.GetValue(DependencyProperty dp)
-        {
-            return GetValue(dp);
-        }
-
-        bool IDependencyObjectCustomSerializerAccess.ShouldSerializeProperty(DependencyProperty dp)
-        {
-            return ShouldSerializeProperty(dp);
-        }
-    }
-
-    public class SerializePropertyInProfileAttribute : Attribute
-    {
-        public SerializePropertyInProfileAttribute(string name)
-        {
-
-        }
-    }
-
-    public sealed class HdvViewModelPreset
-        : FreezableCustomSerializerAccessBase
-        , IComparable<HdvViewModelPreset>
-        , IEquatable<HdvViewModelPreset>
-        , ICloneable
-        , ISupportInitialize
-    {
-        public HdvViewModelPreset()
-        {
-            ConfigurableColumns = new FreezableCollection<HdvColumnViewModelPreset>();
-        }
-
-        #region public string Name
-
-        public static readonly DependencyProperty NameProperty =
-            DependencyProperty.Register(
-                nameof(Name),
-                typeof(string),
-                typeof(HdvViewModelPreset),
-                PropertyMetadataUtils.DefaultNull);
-
-        [SerializePropertyInProfile("Name")]
-        public string Name
-        {
-            get { return (string)GetValue(NameProperty); }
-            set { SetValue(NameProperty, value); }
-        }
-
-        #endregion
-
-        #region public bool IsModified
-
-        public static readonly DependencyProperty IsModifiedProperty =
-            DependencyProperty.Register(
-                nameof(IsModified),
-                typeof(bool),
-                typeof(HdvViewModelPreset),
-                new PropertyMetadata(Boxed.Bool(false)));
-
-        public bool IsModified
-        {
-            get { return (bool)GetValue(IsModifiedProperty); }
-            set { SetValue(IsModifiedProperty, Boxed.Bool(value)); }
-        }
-
-        #endregion
-
-        #region public int LeftFrozenColumnCount
-
-        public static readonly DependencyProperty LeftFrozenColumnCountProperty =
-            DependencyProperty.Register(
-                nameof(LeftFrozenColumnCount),
-                typeof(int),
-                typeof(HdvViewModelPreset),
-                new PropertyMetadata(Boxed.Int32(0)));
-
-        [SerializePropertyInProfile("LeftFrozenColumnCount")]
-        public int LeftFrozenColumnCount
-        {
-            get { return (int)GetValue(LeftFrozenColumnCountProperty); }
-            set { SetValue(LeftFrozenColumnCountProperty, Boxed.Int32(value)); }
-        }
-
-        #endregion
-
-        #region public int RightFrozenColumnCount
-
-        public static readonly DependencyProperty RightFrozenColumnCountProperty =
-            DependencyProperty.Register(
-                nameof(RightFrozenColumnCount),
-                typeof(int),
-                typeof(HdvViewModelPreset),
-                new PropertyMetadata(Boxed.Int32(0)));
-
-        [SerializePropertyInProfile("RightFrozenColumnCount")]
-        public int RightFrozenColumnCount
-        {
-            get { return (int)GetValue(RightFrozenColumnCountProperty); }
-            set { SetValue(RightFrozenColumnCountProperty, Boxed.Int32(value)); }
-        }
-
-        #endregion
-
-        #region public FreezableCollection<HdvColumnViewModelPreset> ConfigurableColumns
-
-        public static readonly DependencyProperty ConfigurableColumnsProperty =
-            DependencyProperty.Register(
-                nameof(ConfigurableColumns),
-                typeof(FreezableCollection<HdvColumnViewModelPreset>),
-                typeof(HdvViewModelPreset),
-                PropertyMetadataUtils.DefaultNull);
-
-        [SerializePropertyInProfile("Columns")]
-        public FreezableCollection<HdvColumnViewModelPreset> ConfigurableColumns
-        {
-            get
-            {
-                return
-                    (FreezableCollection<HdvColumnViewModelPreset>)GetValue(ConfigurableColumnsProperty);
-            }
-            private set { SetValue(ConfigurableColumnsProperty, value); }
-        }
-
-        #endregion
-
-        public new HdvViewModelPreset Clone()
-        {
-            return (HdvViewModelPreset)base.Clone();
-        }
-
-        object ICloneable.Clone()
-        {
-            return Clone();
-        }
-
-        void ISupportInitialize.BeginInit()
-        {
-        }
-
-        void ISupportInitialize.EndInit()
-        {
-        }
-
-        public bool Equals(HdvViewModelPreset other)
-        {
-            return CompareTo(other) == 0;
-        }
-
-        public int CompareTo(HdvViewModelPreset other)
-        {
-            if (other == null)
-                throw new ArgumentNullException(nameof(other));
-
-            if (ReferenceEquals(this, other))
-                return 0;
-
-            int cmp;
-            bool dummy =
-                ComparisonUtils.CompareT(out cmp, Name, other.Name) &&
-                ComparisonUtils.CompareValueT(
-                    out cmp, LeftFrozenColumnCount, other.LeftFrozenColumnCount) &&
-                ComparisonUtils.CompareValueT(
-                    out cmp, RightFrozenColumnCount, other.RightFrozenColumnCount) &&
-                ComparisonUtils.CombineSequenceComparisonT(
-                    out cmp, ConfigurableColumns.OrderBySelf(), other.ConfigurableColumns.OrderBySelf());
-            return cmp;
-        }
-
-        protected override void CloneCore(Freezable sourceFreezable)
-        {
-            base.CloneCore(sourceFreezable);
-        }
-
-        protected override Freezable CreateInstanceCore()
-        {
-            return new HdvViewModelPreset();
-        }
-
-        public bool GetColumnVisibility(int configurableColumnIndex)
-        {
-            if (configurableColumnIndex >= ConfigurableColumns.Count ||
-                configurableColumnIndex < 0)
-                throw new ArgumentOutOfRangeException(
-                    nameof(configurableColumnIndex), configurableColumnIndex,
-                    "Value should be between 0 and " + ConfigurableColumns.Count);
-
-            return ConfigurableColumns[configurableColumnIndex].IsVisible;
-        }
-
-        public HdvViewModelPreset SetColumnVisibility(
-            int configurableColumnIndex, bool visibility)
-        {
-            if (configurableColumnIndex >= ConfigurableColumns.Count ||
-                configurableColumnIndex < 0)
-                throw new ArgumentOutOfRangeException(
-                    nameof(configurableColumnIndex), configurableColumnIndex,
-                    "Value should be between 0 and " + ConfigurableColumns.Count);
-
-            if (ConfigurableColumns[configurableColumnIndex].IsVisible == visibility)
-                return this;
-
-            HdvViewModelPreset preset = CreatePresetThatHasBeenModified();
-            preset.ConfigurableColumns[configurableColumnIndex].IsVisible = visibility;
-            return preset;
-        }
-
-        public HdvViewModelPreset CreatePresetThatHasBeenModified()
-        {
-            HdvViewModelPreset preset = Clone();
-            preset.IsModified = true;
-            return preset;
-        }
-    }
-
-    internal class ComparisonUtils
-    {
-        public static bool CompareValueT<T>(
-            out int cmp, T first, T second) where T : struct, IComparable<T>
-        {
-            cmp = first.CompareTo(second);
-            return cmp == 0;
-        }
-
-        public static bool Compare<T>(out int cmp, T first, T second)
-            where T : IComparable
-        {
-            cmp = first.CompareTo(second);
-            return cmp == 0;
-        }
-
-        public static bool CompareT<T>(
-            out int cmp, T x, T y) where T : class, IComparable<T>
-        {
-            if (x == null || y == null)
-                cmp = (x == null ? 1 : 0) - (y == null ? 1 : 0);
-            else
-                cmp = x.CompareTo(y);
-
-            return cmp == 0;
-        }
-
-        public static bool CombineSequenceComparisonT<T>(
-            out int cmp, IEnumerable<T> first, IEnumerable<T> second)
-            where T : IComparable<T>
-        {
-            cmp = first.SequenceCompare(second);
-            return cmp == 0;
-        }
-    }
-
-    public interface IDataView
-    {
-        IDataViewColumnsCollection Columns { get; }
-        IDataViewColumnsCollection VisibleColumns { get; }
-        bool IsReady { get; }
-        HdvViewModelPreset HdvViewModelPreset { get; set; }
-        VirtualizedDataGridColumnsViewModel ColumnsViewModel { set; }
-
-        CellValue GetCellValue(int rowIndex, int columnIndex);
-        void UpdateRowCount(int rows);
-        event ItemEventHandler<bool> Updated;
-        bool RequestUpdate(bool updateFromViewModel);
-    }
-
-    public interface IDataViewColumnsCollection
-        : IReadOnlyList<IDataColumn>
-    {
-        int IndexOf(IDataColumn column);
-    }
-
-    public interface IDataColumn
-    {
-        string Name { get; }
-        double Width { get; }
-        bool IsVisible { get; }
-        bool IsResizable { get; }
-        TextAlignment TextAlignment { get; }
-    }
-
-    public class DataColumn : IDataColumn
-    {
-        public string Name { get; set; }
-        public double Width { get; set; }
-        public bool IsVisible { get; set; }
-        public bool IsResizable { get; set; }
-        public TextAlignment TextAlignment { get; set; }
     }
 }

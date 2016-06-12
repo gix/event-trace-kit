@@ -10,8 +10,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
     public class ColumnChooser : ContextMenu
     {
-        private ReadOnlyObservableCollection<VirtualizedDataGridColumn> columns;
-        private VirtualizedDataGridColumn[] sortedColumns;
+        private ReadOnlyObservableCollection<AsyncDataGridColumn> columns;
+        private AsyncDataGridColumn[] sortedColumns;
 
         static ColumnChooser()
         {
@@ -21,7 +21,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         }
 
         public ColumnChooser(
-            ReadOnlyObservableCollection<VirtualizedDataGridColumn> columns,
+            ReadOnlyObservableCollection<AsyncDataGridColumn> columns,
             IDataView viewModel)
         {
             if (columns == null)
@@ -32,7 +32,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             ViewModel = viewModel;
             //this.InitializeComponent();
             //this.columnTemplate = FindResource("columnTemplate") as DataTemplate;
-            sortedColumns = new VirtualizedDataGridColumn[columns.Count];
+            sortedColumns = new AsyncDataGridColumn[columns.Count];
             this.columns.CopyTo(sortedColumns, 0);
             Array.Sort(sortedColumns, CompareColumnNames);
 
@@ -63,7 +63,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             e.Handled = true;
         }
 
-        private MenuItem CreateContainer(VirtualizedDataGridColumn column)
+        private MenuItem CreateContainer(AsyncDataGridColumn column)
         {
             var item = new MenuItem {
                 IsCheckable = true,
@@ -80,7 +80,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         }
 
         private static int CompareColumnNames(
-            VirtualizedDataGridColumn lhs, VirtualizedDataGridColumn rhs)
+            AsyncDataGridColumn lhs, AsyncDataGridColumn rhs)
         {
             var comparisonType = StringComparison.CurrentCultureIgnoreCase;
 

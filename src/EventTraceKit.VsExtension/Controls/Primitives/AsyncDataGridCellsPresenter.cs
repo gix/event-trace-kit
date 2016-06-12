@@ -12,9 +12,9 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
     using System.Windows.Media;
     using System.Windows.Threading;
 
-    public class VirtualizedDataGridCellsPresenter : FrameworkElement, IScrollInfo
+    public class AsyncDataGridCellsPresenter : FrameworkElement, IScrollInfo
     {
-        private readonly VirtualizedDataGridCellsDrawingVisual cellsDrawingVisual;
+        private readonly AsyncDataGridRenderedCellsVisual renderedCellsVisual;
         private readonly ValueCache<Typeface> typefaceCache;
         private readonly ValueCache<Pen> horizontalGridLinesPenCache;
         private readonly ValueCache<Pen> verticalGridLinesPenCache;
@@ -30,7 +30,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         private bool postUpdateWhenVisible;
         private Point computedOffset;
 
-        public VirtualizedDataGridCellsPresenter()
+        public AsyncDataGridCellsPresenter()
         {
             FocusVisualStyle = null;
             RenderOptions.SetClearTypeHint(this, ClearTypeHint.Enabled);
@@ -48,8 +48,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
             focusIndexUpdate = new QueuedDispatcherAction(Dispatcher, EnsureVisible);
 
-            cellsDrawingVisual = new VirtualizedDataGridCellsDrawingVisual(this);
-            AddVisualChild(cellsDrawingVisual);
+            renderedCellsVisual = new AsyncDataGridRenderedCellsVisual(this);
+            AddVisualChild(renderedCellsVisual);
 
             CoerceValue(FontSizeProperty);
             CoerceValue(RowHeightProperty);
@@ -60,41 +60,41 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             updateRenderingAction = UpdateRendering;
         }
 
-        #region public VirtualizedDataGridCellsPresenterViewModel ViewModel { get; set; }
+        #region public AsyncDataGridCellsPresenterViewModel ViewModel { get; set; }
 
         public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(
             nameof(ViewModel),
-            typeof(VirtualizedDataGridCellsPresenterViewModel),
-            typeof(VirtualizedDataGridCellsPresenter),
+            typeof(AsyncDataGridCellsPresenterViewModel),
+            typeof(AsyncDataGridCellsPresenter),
             new FrameworkPropertyMetadata(
                 null,
                 FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
                 FrameworkPropertyMetadataOptions.AffectsRender,
-                (s, e) => ((VirtualizedDataGridCellsPresenter)s).OnViewModelChanged(e),
+                (s, e) => ((AsyncDataGridCellsPresenter)s).OnViewModelChanged(e),
                 null));
 
-        public VirtualizedDataGridCellsPresenterViewModel ViewModel
+        public AsyncDataGridCellsPresenterViewModel ViewModel
         {
-            get { return (VirtualizedDataGridCellsPresenterViewModel)GetValue(ViewModelProperty); }
+            get { return (AsyncDataGridCellsPresenterViewModel)GetValue(ViewModelProperty); }
             set { SetValue(ViewModelProperty, value); }
         }
 
         private void OnViewModelChanged(DependencyPropertyChangedEventArgs e)
         {
             if (e.OldValue != null) {
-                var oldValue = (VirtualizedDataGridCellsPresenterViewModel)e.OldValue;
+                var oldValue = (AsyncDataGridCellsPresenterViewModel)e.OldValue;
                 oldValue.FocusIndexChanged -= OnViewModelFocusIndexChanged;
             }
 
             if (e.NewValue != null) {
-                var newValue = (VirtualizedDataGridCellsPresenterViewModel)e.NewValue;
+                var newValue = (AsyncDataGridCellsPresenterViewModel)e.NewValue;
                 newValue.FocusIndexChanged += OnViewModelFocusIndexChanged;
             }
         }
 
         #endregion
 
-        #region public ReadOnlyObservableCollection<VirtualizedDataGridColumnViewModel> VisibleColumns { get; set; }
+        #region public ReadOnlyObservableCollection<AsyncDataGridColumnViewModel> VisibleColumns { get; set; }
 
         /// <summary>
         ///   Identifies the <see cref="VisibleColumns"/> dependency property.
@@ -102,19 +102,19 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         public static readonly DependencyProperty VisibleColumnsProperty =
             DependencyProperty.Register(
                 nameof(VisibleColumns),
-                typeof(ReadOnlyObservableCollection<VirtualizedDataGridColumn>),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(ReadOnlyObservableCollection<AsyncDataGridColumn>),
+                typeof(AsyncDataGridCellsPresenter),
                 new PropertyMetadata(
-                    CollectionDefaults<VirtualizedDataGridColumn>.ReadOnlyObservable));
+                    CollectionDefaults<AsyncDataGridColumn>.ReadOnlyObservable));
 
         /// <summary>
         ///   Gets or sets the visible columns.
         /// </summary>
-        public ReadOnlyObservableCollection<VirtualizedDataGridColumn> VisibleColumns
+        public ReadOnlyObservableCollection<AsyncDataGridColumn> VisibleColumns
         {
             get
             {
-                return (ReadOnlyObservableCollection<VirtualizedDataGridColumn>)GetValue(
+                return (ReadOnlyObservableCollection<AsyncDataGridColumn>)GetValue(
                     VisibleColumnsProperty);
             }
             set { SetValue(VisibleColumnsProperty, value); }
@@ -128,12 +128,12 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(RowHeight),
                 typeof(double),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new PropertyMetadata(
                     1.0,
-                    (d, e) => ((VirtualizedDataGridCellsPresenter)d).OnRowHeightChanged(
+                    (d, e) => ((AsyncDataGridCellsPresenter)d).OnRowHeightChanged(
                         (double)e.OldValue, (double)e.NewValue),
-                    (d, v) => ((VirtualizedDataGridCellsPresenter)d).CoerceRowHeight((double)v)));
+                    (d, v) => ((AsyncDataGridCellsPresenter)d).CoerceRowHeight((double)v)));
 
         [TypeConverter(typeof(LengthConverter))]
         public double RowHeight
@@ -163,7 +163,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public static readonly DependencyProperty FontFamilyProperty =
             TextElement.FontFamilyProperty.AddOwner(
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     SystemFonts.MessageFontFamily,
                     FrameworkPropertyMetadataOptions.Inherits,
@@ -181,7 +181,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public static readonly DependencyProperty FontSizeProperty =
             TextElement.FontSizeProperty.AddOwner(
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     SystemFonts.MessageFontSize,
                     FrameworkPropertyMetadataOptions.Inherits,
@@ -197,7 +197,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         private static void OnFontSizeChanged(
             DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var source = (VirtualizedDataGridCellsPresenter)d;
+            var source = (AsyncDataGridCellsPresenter)d;
             source.CoerceValue(RowHeightProperty);
             source.typefaceCache.Clear();
         }
@@ -208,7 +208,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public static readonly DependencyProperty FontStretchProperty =
             TextElement.FontStretchProperty.AddOwner(
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     TextElement.FontStretchProperty.DefaultMetadata.DefaultValue,
                     FrameworkPropertyMetadataOptions.Inherits,
@@ -226,7 +226,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public static readonly DependencyProperty FontStyleProperty =
             TextElement.FontStyleProperty.AddOwner(
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     SystemFonts.MessageFontStyle,
                     FrameworkPropertyMetadataOptions.Inherits,
@@ -244,7 +244,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public static readonly DependencyProperty FontWeightProperty =
             TextElement.FontWeightProperty.AddOwner(
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     SystemFonts.MessageFontWeight,
                     FrameworkPropertyMetadataOptions.Inherits,
@@ -262,7 +262,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public static readonly DependencyProperty ForegroundProperty =
             TextElement.ForegroundProperty.AddOwner(
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     SystemColors.ControlTextBrush,
                     FrameworkPropertyMetadataOptions.Inherits));
@@ -284,7 +284,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(PrimaryBackground),
                 typeof(Brush),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     Brushes.White,
                     FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
@@ -310,7 +310,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(SecondaryBackground),
                 typeof(Brush),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     Brushes.WhiteSmoke,
                     FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
@@ -333,7 +333,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.RegisterReadOnly(
                 nameof(HorizontalScrollVisibility),
                 typeof(Visibility),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new PropertyMetadata(Visibility.Hidden));
 
         public static readonly DependencyProperty HorizontalScrollVisibilityProperty =
@@ -353,7 +353,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.RegisterReadOnly(
                 nameof(VerticalScrollVisibility),
                 typeof(Visibility),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new PropertyMetadata(Visibility.Hidden));
 
         public static readonly DependencyProperty VerticalScrollVisibilityProperty =
@@ -376,7 +376,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(HorizontalGridLinesBrush),
                 typeof(Brush),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     Brushes.Silver,
                     FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
@@ -392,7 +392,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         private static void ClearHorizontalGridLinesPen(
             DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var source = (VirtualizedDataGridCellsPresenter)d;
+            var source = (AsyncDataGridCellsPresenter)d;
             source.horizontalGridLinesPenCache.Clear();
         }
 
@@ -407,7 +407,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(HorizontalGridLinesThickness),
                 typeof(double),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     1.0,
                     FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
@@ -431,7 +431,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(VerticalGridLinesBrush),
                 typeof(Brush),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     Brushes.Silver,
                     FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
@@ -447,7 +447,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         private static void ClearVerticalGridLinesPen(
             DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var source = (VirtualizedDataGridCellsPresenter)d;
+            var source = (AsyncDataGridCellsPresenter)d;
             source.verticalGridLinesPenCache.Clear();
         }
 
@@ -462,7 +462,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(VerticalGridLinesThickness),
                 typeof(double),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     1.0,
                     FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
@@ -486,7 +486,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(SeparatorBrush),
                 typeof(Brush),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     Brushes.Gold,
                     FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
@@ -512,7 +512,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(FrozenColumnBrush),
                 typeof(Brush),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     SystemColors.ControlBrush,
                     FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
@@ -538,7 +538,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(FreezableAreaSeparatorBrush),
                 typeof(Brush),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     Brushes.Gray,
                     FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
@@ -564,7 +564,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(SelectionForeground),
                 typeof(Brush),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     SystemColors.HighlightTextBrush,
                     FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
@@ -590,7 +590,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(SelectionBackground),
                 typeof(Brush),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     SystemColors.HighlightBrush,
                     FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
@@ -616,7 +616,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(SelectionBorderBrush),
                 typeof(Brush),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     SystemColors.HighlightBrush,
                     FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
@@ -635,7 +635,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         private static void ClearSelectionBorderPenCache(
             DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var source = (VirtualizedDataGridCellsPresenter)d;
+            var source = (AsyncDataGridCellsPresenter)d;
             source.selectionBorderPenCache.Clear();
         }
 
@@ -650,7 +650,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(SelectionBorderThickness),
                 typeof(double),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     1.0,
                     FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
@@ -677,7 +677,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(InactiveSelectionForeground),
                 typeof(Brush),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     SystemColors.InactiveSelectionHighlightTextBrush,
                     FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
@@ -703,7 +703,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(InactiveSelectionBackground),
                 typeof(Brush),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     SystemColors.InactiveSelectionHighlightBrush,
                     FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
@@ -729,7 +729,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(InactiveSelectionBorderBrush),
                 typeof(Brush),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     SystemColors.InactiveSelectionHighlightBrush,
                     FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
@@ -748,7 +748,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         private static void ClearInactiveSelectionBorderPenCache(
             DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var source = (VirtualizedDataGridCellsPresenter)d;
+            var source = (AsyncDataGridCellsPresenter)d;
             source.selectionBorderPenCache.Clear();
         }
 
@@ -763,7 +763,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(FocusBorderBrush),
                 typeof(Brush),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     SystemColors.ControlTextBrush,
                     FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
@@ -782,7 +782,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         private static void ClearFocusBorderPenCache(
             DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var source = (VirtualizedDataGridCellsPresenter)d;
+            var source = (AsyncDataGridCellsPresenter)d;
             source.focusBorderPenCache.Clear();
         }
 
@@ -797,7 +797,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(FocusBorderThickness),
                 typeof(double),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     1.0,
                     FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
@@ -850,7 +850,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         protected override Visual GetVisualChild(int index)
         {
             if (index == 0)
-                return cellsDrawingVisual;
+                return renderedCellsVisual;
             return base.GetVisualChild(index - 1);
         }
 
@@ -862,7 +862,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(ScrollOwner),
                 typeof(ScrollViewer),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(null));
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -883,7 +883,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(CanHorizontallyScroll),
                 typeof(bool),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(Boxed.False));
 
         public bool CanHorizontallyScroll
@@ -903,7 +903,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(CanVerticallyScroll),
                 typeof(bool),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new PropertyMetadata(Boxed.False));
 
         public bool CanVerticallyScroll
@@ -920,10 +920,10 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 "ExtentWidth",
                 typeof(double),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     Boxed.DoubleZero,
-                    (d, e) => ((VirtualizedDataGridCellsPresenter)d).OnExtentWidthChanged(e)));
+                    (d, e) => ((AsyncDataGridCellsPresenter)d).OnExtentWidthChanged(e)));
 
         public double ExtentWidth
         {
@@ -944,10 +944,10 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(ExtentHeight),
                 typeof(double),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     Boxed.DoubleZero,
-                    (d, e) => ((VirtualizedDataGridCellsPresenter)d).OnExtentHeightChanged(e)));
+                    (d, e) => ((AsyncDataGridCellsPresenter)d).OnExtentHeightChanged(e)));
 
         public double ExtentHeight
         {
@@ -969,10 +969,10 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 "ViewportWidth",
                 typeof(double),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     Boxed.DoubleZero,
-                    (d, e) => ((VirtualizedDataGridCellsPresenter)d).OnViewportWidthChanged(e)));
+                    (d, e) => ((AsyncDataGridCellsPresenter)d).OnViewportWidthChanged(e)));
 
         public double ViewportWidth
         {
@@ -994,10 +994,10 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(ViewportHeight),
                 typeof(double),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     Boxed.DoubleZero,
-                    (d, e) => ((VirtualizedDataGridCellsPresenter)d).OnViewportHeightChanged(e)));
+                    (d, e) => ((AsyncDataGridCellsPresenter)d).OnViewportHeightChanged(e)));
 
         public double ViewportHeight
         {
@@ -1019,11 +1019,11 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(HorizontalOffset),
                 typeof(double),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     Boxed.DoubleZero,
-                    (d, e) => ((VirtualizedDataGridCellsPresenter)d).OnHorizontalOffsetChanged(e),
-                    (d, v) => ((VirtualizedDataGridCellsPresenter)d).CoerceHorizontalOffset(v)),
+                    (d, e) => ((AsyncDataGridCellsPresenter)d).OnHorizontalOffsetChanged(e),
+                    (d, v) => ((AsyncDataGridCellsPresenter)d).CoerceHorizontalOffset(v)),
                 ValidateValueCallbacks.IsFiniteDouble);
 
         public double HorizontalOffset
@@ -1054,11 +1054,11 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             DependencyProperty.Register(
                 nameof(VerticalOffset),
                 typeof(double),
-                typeof(VirtualizedDataGridCellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
                     Boxed.DoubleZero,
-                    (d, e) => ((VirtualizedDataGridCellsPresenter)d).OnVerticalOffsetChanged(e),
-                    (d, v) => ((VirtualizedDataGridCellsPresenter)d).CoerceVerticalOffset(v)),
+                    (d, e) => ((AsyncDataGridCellsPresenter)d).OnVerticalOffsetChanged(e),
+                    (d, v) => ((AsyncDataGridCellsPresenter)d).CoerceVerticalOffset(v)),
                 ValidateValueCallbacks.IsFiniteDouble);
 
         public double VerticalOffset
@@ -1235,7 +1235,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         private static void ClearTypefaceCache(
             DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var source = (VirtualizedDataGridCellsPresenter)d;
+            var source = (AsyncDataGridCellsPresenter)d;
             source.typefaceCache.Clear();
         }
 
@@ -1304,7 +1304,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 updateDrawing = true;
 
                 if (updateDrawing) {
-                    cellsDrawingVisual.Update(
+                    renderedCellsVisual.Update(
                         new Rect(HorizontalOffset, VerticalOffset, ViewportWidth, ViewportHeight),
                         new Size(ExtentWidth, ExtentHeight),
                         forceUpdate);
@@ -1339,9 +1339,9 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 PostUpdateRendering();
         }
 
-        internal double GetColumnAutoSize(VirtualizedDataGridColumn column)
+        internal double GetColumnAutoSize(AsyncDataGridColumn column)
         {
-            return cellsDrawingVisual.GetColumnAutoSize(column);
+            return renderedCellsVisual.GetColumnAutoSize(column);
         }
 
         public int? GetRowFromPosition(double y)
@@ -1770,7 +1770,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             if (offset != VerticalOffset)
                 VerticalOffset = offset;
 
-            var grid = this.FindAncestor<VirtualizedDataGrid>();
+            var grid = this.FindAncestor<AsyncDataGrid>();
             if (grid != null && (grid.IsKeyboardFocused || grid.IsKeyboardFocusWithin))
                 BringRowIntoView(rowIndex);
         }

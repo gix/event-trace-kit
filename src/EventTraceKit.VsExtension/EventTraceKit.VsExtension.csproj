@@ -167,6 +167,7 @@
   <ItemGroup>
     <Compile Include="Collections\Extensions.cs" />
     <Compile Include="ColorExtensions.cs" />
+    <Compile Include="Controls\AsyncDataGrid.cs" />
     <Compile Include="Controls\IsEmptyEnumerableConverter.cs" />
     <Compile Include="Controls\MenuExtensions.cs" />
     <Compile Include="Controls\Primitives\BindableScrollBar.cs" />
@@ -181,8 +182,8 @@
     <Compile Include="CommonControlBrushes.cs" />
     <Compile Include="Controls\Boxed.cs" />
     <Compile Include="Controls\ExpanderHeaderColumn.cs" />
-    <Compile Include="Controls\Primitives\VirtualizedDataGridColumnHeadersPanel.cs" />
-    <Compile Include="Controls\VirtualizedDataGridRowSelection.cs" />
+    <Compile Include="Controls\Primitives\AsyncDataGridColumnHeadersPanel.cs" />
+    <Compile Include="Controls\AsyncDataGridRowSelection.cs" />
     <Compile Include="Controls\CellValue.cs" />
     <Compile Include="Controls\DoubleExtensions.cs" />
     <Compile Include="DoubleUtils.cs" />
@@ -193,16 +194,16 @@
     <Compile Include="Controls\Primitives\CollectionDefaults.cs" />
     <Compile Include="Controls\Primitives\DelegateValueConverter.cs" />
     <Compile Include="Controls\Primitives\ValueCache.cs" />
-    <Compile Include="Controls\Primitives\VirtualizedDataGridColumnHeader.cs" />
+    <Compile Include="Controls\Primitives\AsyncDataGridColumnHeader.cs" />
     <Compile Include="Controls\FrameworkExtensions.cs" />
     <Compile Include="Controls\PropertyMetadataUtils.cs" />
     <Compile Include="Controls\SizeUtils.cs" />
-    <Compile Include="Controls\VirtualizedDataGrid.cs" />
-    <Compile Include="Controls\Primitives\VirtualizedDataGridColumnHeadersPresenter.cs" />
-    <Compile Include="Controls\VirtualizedDataGridCellsPresenterViewModel.cs" />
-    <Compile Include="Controls\VirtualizedDataGridColumnsViewModel.cs" />
-    <Compile Include="Controls\VirtualizedDataGridColumn.cs" />
-    <Compile Include="Controls\VirtualizedDataGridViewModel.cs" />
+    <Compile Include="Controls\AsyncDataGridStuff.cs" />
+    <Compile Include="Controls\Primitives\AsyncDataGridColumnHeadersPresenter.cs" />
+    <Compile Include="Controls\AsyncDataGridCellsPresenterViewModel.cs" />
+    <Compile Include="Controls\AsyncDataGridColumnsViewModel.cs" />
+    <Compile Include="Controls\AsyncDataGridColumn.cs" />
+    <Compile Include="Controls\AsyncDataGridViewModel.cs" />
     <Compile Include="ResourceKeys.cs" />
     <Compile Include="FontsAndColorsHelper.cs" />
     <Compile Include="Controls\ActivityRing.cs" />
@@ -217,8 +218,8 @@
     <Compile Include="Guids.cs" />
     <Compile Include="Controls\ValidateValueCallbacks.cs" />
     <Compile Include="Controls\Hdv.cs" />
-    <Compile Include="Controls\VirtualizedDataGridCellsDrawingVisual.cs" />
-    <Compile Include="Controls\Primitives\VirtualizedDataGridCellsPresenter.cs" />
+    <Compile Include="Controls\AsyncDataGridRenderedCellsVisual.cs" />
+    <Compile Include="Controls\Primitives\AsyncDataGridCellsPresenter.cs" />
     <Compile Include="PersistedWindowPane.cs" />
     <Compile Include="PersistedWindowWPFControl.xaml.cs">
       <DependentUpon>PersistedWindowWPFControl.xaml</DependentUpon>
@@ -307,11 +308,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Styles\Primitives\VirtualizedDataGridColumnHeader.xaml">
+    <Page Include="Styles\Primitives\AsyncDataGridColumnHeader.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Styles\Primitives\VirtualizedDataGridColumnHeadersPresenter.xaml">
+    <Page Include="Styles\Primitives\AsyncDataGridColumnHeadersPresenter.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -323,7 +324,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Styles\VirtualizedDataGrid.xaml">
+    <Page Include="Styles\AsyncDataGrid.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

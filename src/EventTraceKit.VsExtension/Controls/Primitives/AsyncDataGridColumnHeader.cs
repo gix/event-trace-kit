@@ -1,7 +1,6 @@
 ﻿namespace EventTraceKit.VsExtension.Controls.Primitives
 {
     using System;
-    using System.Diagnostics;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Controls.Primitives;
@@ -10,19 +9,19 @@
 
     [TemplatePart(Name = PART_LeftHeaderGripper, Type = typeof(Thumb))]
     [TemplatePart(Name = PART_RightHeaderGripper, Type = typeof(Thumb))]
-    internal class VirtualizedDataGridColumnHeader : ButtonBase
+    internal class AsyncDataGridColumnHeader : ButtonBase
     {
         private const string PART_LeftHeaderGripper = "PART_LeftHeaderGripper";
         private const string PART_RightHeaderGripper = "PART_RightHeaderGripper";
 
-        private VirtualizedDataGrid parentGrid;
-        private VirtualizedDataGridColumnHeadersPresenter parentPresenter;
+        private AsyncDataGrid parentGrid;
+        private AsyncDataGridColumnHeadersPresenter parentPresenter;
 
         private static readonly Lazy<Cursor> SplitCursorCache;
 
-        static VirtualizedDataGridColumnHeader()
+        static AsyncDataGridColumnHeader()
         {
-            Type forType = typeof(VirtualizedDataGridColumnHeader);
+            Type forType = typeof(AsyncDataGridColumnHeader);
             DefaultStyleKeyProperty.OverrideMetadata(
                 forType, new FrameworkPropertyMetadata(forType));
 
@@ -48,32 +47,32 @@
 
         public static Cursor SplitCursor => SplitCursorCache.Value;
 
-        #region public VirtualizedDataGridColumn Column
+        #region public AsyncDataGridColumn Column
 
         public static readonly DependencyProperty ColumnProperty =
             DependencyProperty.Register(
                 nameof(Column),
-                typeof(VirtualizedDataGridColumn),
-                typeof(VirtualizedDataGridColumnHeader),
+                typeof(AsyncDataGridColumn),
+                typeof(AsyncDataGridColumnHeader),
                 new UIPropertyMetadata(null, OnColumnChanged));
 
-        public VirtualizedDataGridColumn Column
+        public AsyncDataGridColumn Column
         {
-            get { return (VirtualizedDataGridColumn)GetValue(ColumnProperty); }
+            get { return (AsyncDataGridColumn)GetValue(ColumnProperty); }
             set { SetValue(ColumnProperty, value); }
         }
 
         private static void OnColumnChanged(
             DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((VirtualizedDataGridColumnHeader)d).OnColumnChanged(
-                (VirtualizedDataGridColumn)e.OldValue,
-                (VirtualizedDataGridColumn)e.NewValue);
+            ((AsyncDataGridColumnHeader)d).OnColumnChanged(
+                (AsyncDataGridColumn)e.OldValue,
+                (AsyncDataGridColumn)e.NewValue);
         }
 
         private void OnColumnChanged(
-            VirtualizedDataGridColumn oldValue,
-            VirtualizedDataGridColumn newValue)
+            AsyncDataGridColumn oldValue,
+            AsyncDataGridColumn newValue)
         {
             if (newValue != null) {
                 IsResizable = newValue.IsResizable;
@@ -94,7 +93,7 @@
             DependencyProperty.RegisterReadOnly(
                 nameof(LeftHeaderGripperPart),
                 typeof(Thumb),
-                typeof(VirtualizedDataGridColumnHeader),
+                typeof(AsyncDataGridColumnHeader),
                 new UIPropertyMetadata(null));
 
         public static readonly DependencyProperty LeftHeaderGripperPartProperty =
@@ -114,7 +113,7 @@
             DependencyProperty.RegisterReadOnly(
                 nameof(RightHeaderGripperPart),
                 typeof(Thumb),
-                typeof(VirtualizedDataGridColumnHeader),
+                typeof(AsyncDataGridColumnHeader),
                 new UIPropertyMetadata(null));
 
         public static readonly DependencyProperty RightHeaderGripperPartProperty =
@@ -134,7 +133,7 @@
             DependencyProperty.RegisterReadOnly(
                 nameof(RightHeaderGripperVisibility),
                 typeof(Visibility),
-                typeof(VirtualizedDataGridColumnHeader),
+                typeof(AsyncDataGridColumnHeader),
                 new PropertyMetadata(Visibility.Collapsed));
 
         public static readonly DependencyProperty RightHeaderGripperVisibilityProperty =
@@ -154,7 +153,7 @@
             DependencyProperty.RegisterReadOnly(
                 nameof(IsResizable),
                 typeof(bool),
-                typeof(VirtualizedDataGridColumnHeader),
+                typeof(AsyncDataGridColumnHeader),
                 new PropertyMetadata(Boxed.Bool(true)));
 
         public static readonly DependencyProperty IsResizableProperty =
@@ -174,7 +173,7 @@
             DependencyProperty.RegisterReadOnly(
                 nameof(IsSeparator),
                 typeof(bool),
-                typeof(VirtualizedDataGridColumnHeader),
+                typeof(AsyncDataGridColumnHeader),
                 new PropertyMetadata(Boxed.False));
 
         public static readonly DependencyProperty IsSeparatorProperty =
@@ -194,7 +193,7 @@
             DependencyProperty.RegisterReadOnly(
                 nameof(IsFreezableAreaSeparator),
                 typeof(bool),
-                typeof(VirtualizedDataGridColumnHeader),
+                typeof(AsyncDataGridColumnHeader),
                 new PropertyMetadata(Boxed.False));
 
         public static readonly DependencyProperty IsFreezableAreaSeparatorProperty =
@@ -214,7 +213,7 @@
             DependencyProperty.RegisterReadOnly(
                 nameof(IsExpanderHeader),
                 typeof(bool),
-                typeof(VirtualizedDataGridColumnHeader),
+                typeof(AsyncDataGridColumnHeader),
                 new PropertyMetadata(Boxed.False));
 
         public static readonly DependencyProperty IsExpanderHeaderProperty =
@@ -234,7 +233,7 @@
             DependencyProperty.RegisterReadOnly(
                 nameof(SortPriority),
                 typeof(int),
-                typeof(VirtualizedDataGridColumnHeader),
+                typeof(AsyncDataGridColumnHeader),
                 new PropertyMetadata(Boxed.Int32Minus1));
 
         public static readonly DependencyProperty SortPriorityProperty =
@@ -254,7 +253,7 @@
             DependencyProperty.Register(
                 nameof(SeparatorBrush),
                 typeof(Brush),
-                typeof(VirtualizedDataGridColumnHeader),
+                typeof(AsyncDataGridColumnHeader),
                 new FrameworkPropertyMetadata(null));
 
         public Brush SeparatorBrush
@@ -271,7 +270,7 @@
             DependencyProperty.Register(
                 nameof(SeparatorVisibility),
                 typeof(Visibility),
-                typeof(VirtualizedDataGridColumnHeader),
+                typeof(AsyncDataGridColumnHeader),
                 new FrameworkPropertyMetadata(Visibility.Visible));
 
         public Visibility SeparatorVisibility
@@ -282,12 +281,12 @@
 
         #endregion
 
-        internal VirtualizedDataGrid ParentGrid =>
-            parentGrid ?? (parentGrid = this.FindVisualParent<VirtualizedDataGrid>());
+        internal AsyncDataGrid ParentGrid =>
+            parentGrid ?? (parentGrid = this.FindVisualParent<AsyncDataGrid>());
 
-        internal VirtualizedDataGridColumnHeadersPresenter ParentPresenter =>
+        internal AsyncDataGridColumnHeadersPresenter ParentPresenter =>
             parentPresenter ??
-            (parentPresenter = (VirtualizedDataGridColumnHeadersPresenter)
+            (parentPresenter = (AsyncDataGridColumnHeadersPresenter)
                 ItemsControl.ItemsControlFromItemContainer(this));
 
         public override void OnApplyTemplate()
@@ -315,15 +314,15 @@
         {
             //if (!isDragging) {
             base.OnClick();
-            //VirtualizedDataGridColumnViewModel viewModel = ViewModel;
+            //AsyncDataGridColumnViewModel viewModel = ViewModel;
             //if (viewModel != null) {
             //    Action method = null;
-            //    var grid = this.FindAncestor<VirtualizedDataGrid>();
+            //    var grid = this.FindAncestor<AsyncDataGrid>();
             //    viewModel.OnClick(this);
             //    if (grid != null) {
             //        if (method == null) {
             //            method = delegate {
-            //                VirtualizedDataGridColumnHeader header = grid.TryFindColumnHeaderByOldIdentity(viewModel);
+            //                AsyncDataGridColumnHeader header = grid.TryFindColumnHeaderByOldIdentity(viewModel);
             //                if (header != null) {
             //                    header.Focus();
             //                }

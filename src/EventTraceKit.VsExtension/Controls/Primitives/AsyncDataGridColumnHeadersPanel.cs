@@ -7,9 +7,9 @@
     using System.Windows.Controls.Primitives;
     using System.Windows.Media;
 
-    public class VirtualizedDataGridColumnHeadersPanel : StackPanel
+    public class AsyncDataGridColumnHeadersPanel : StackPanel
     {
-        private VirtualizedDataGrid parentGrid;
+        private AsyncDataGrid parentGrid;
 
         private ItemsControl ParentPresenter
         {
@@ -20,9 +20,9 @@
             }
         }
 
-        private VirtualizedDataGrid ParentGrid =>
+        private AsyncDataGrid ParentGrid =>
             parentGrid ??
-            (parentGrid = (ParentPresenter as VirtualizedDataGridColumnHeadersPresenter)?.ParentGrid);
+            (parentGrid = (ParentPresenter as AsyncDataGridColumnHeadersPresenter)?.ParentGrid);
 
         private int LeftFrozenColumnCount => 0;
         private int RightFrozenColumnCount => 0;
@@ -77,14 +77,14 @@
 
             ItemsControl parentPresenter = ParentPresenter;
             if (newIsItemsHost) {
-                var headersPresenter = parentPresenter as VirtualizedDataGridColumnHeadersPresenter;
+                var headersPresenter = parentPresenter as AsyncDataGridColumnHeadersPresenter;
                 IItemContainerGenerator generator = parentPresenter?.ItemContainerGenerator;
                 if (headersPresenter != null
                     && generator != null
                     && generator == generator.GetItemContainerGeneratorForPanel(this))
                     headersPresenter.InternalItemsHost = this;
             } else {
-                var headersPresenter = parentPresenter as VirtualizedDataGridColumnHeadersPresenter;
+                var headersPresenter = parentPresenter as AsyncDataGridColumnHeadersPresenter;
                 if (headersPresenter != null
                     && headersPresenter.InternalItemsHost == this)
                     headersPresenter.InternalItemsHost = null;

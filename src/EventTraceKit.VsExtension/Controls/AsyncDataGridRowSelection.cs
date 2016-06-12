@@ -4,16 +4,16 @@ namespace EventTraceKit.VsExtension.Controls
     using System.Collections.Generic;
     using System.Collections.Specialized;
 
-    public class VirtualizedDataGridRowSelection
+    public class AsyncDataGridRowSelection
     {
-        private readonly VirtualizedDataGridCellsPresenterViewModel cellsViewModel;
+        private readonly AsyncDataGridCellsPresenterViewModel cellsViewModel;
         private readonly List<int> selectionChanges = new List<int>();
         private readonly MultiRange selectedIndices = new MultiRange();
         private int anchorRowIndex;
         private bool selectionRemoves;
 
-        public VirtualizedDataGridRowSelection(
-            VirtualizedDataGridCellsPresenterViewModel cellsViewModel)
+        public AsyncDataGridRowSelection(
+            AsyncDataGridCellsPresenterViewModel cellsViewModel)
         {
             this.cellsViewModel = cellsViewModel;
         }

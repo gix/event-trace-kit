@@ -7,20 +7,20 @@ namespace EventTraceKit.VsExtension.Controls
     using System.Windows.Media;
     using EventTraceKit.VsExtension.Controls.Primitives;
 
-    public class VirtualizedDataGridCellsDrawingVisual : DrawingVisual
+    public class AsyncDataGridRenderedCellsVisual : DrawingVisual
     {
-        private VirtualizedDataGrid parentGrid;
-        private readonly VirtualizedDataGridCellsPresenter cellsPresenter;
+        private AsyncDataGrid parentGrid;
+        private readonly AsyncDataGridCellsPresenter cellsPresenter;
 
-        public VirtualizedDataGridCellsDrawingVisual(
-            VirtualizedDataGridCellsPresenter cellsPresenter)
+        public AsyncDataGridRenderedCellsVisual(
+            AsyncDataGridCellsPresenter cellsPresenter)
         {
             this.cellsPresenter = cellsPresenter;
             VisualTextHintingMode = TextHintingMode.Fixed;
         }
 
-        private VirtualizedDataGrid ParentGrid =>
-            parentGrid ?? (parentGrid = cellsPresenter.FindAncestor<VirtualizedDataGrid>());
+        private AsyncDataGrid ParentGrid =>
+            parentGrid ?? (parentGrid = cellsPresenter.FindAncestor<AsyncDataGrid>());
 
         public Rect RenderedViewport { get; private set; }
 
@@ -270,7 +270,7 @@ namespace EventTraceKit.VsExtension.Controls
         }
 
         private double[] ComputeColumnBoundaries(
-            IList<VirtualizedDataGridColumn> visibleColumns)
+            IList<AsyncDataGridColumn> visibleColumns)
         {
             var boundaries = new double[visibleColumns.Count + 1];
             double cumulativeWidth = 0.0;
@@ -282,7 +282,7 @@ namespace EventTraceKit.VsExtension.Controls
             return boundaries;
         }
 
-        internal double GetColumnAutoSize(VirtualizedDataGridColumn column)
+        internal double GetColumnAutoSize(AsyncDataGridColumn column)
         {
             if (!column.IsVisible)// && !column.IsDisconnected)
                 throw new InvalidOperationException();

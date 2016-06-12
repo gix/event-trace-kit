@@ -4,51 +4,51 @@ namespace EventTraceKit.VsExtension.Controls
     using System.Windows;
     using EventTraceKit.VsExtension.Controls.Primitives;
 
-    public class VirtualizedDataGridColumnsViewModel : DependencyObject
+    public class AsyncDataGridColumnsViewModel : DependencyObject
     {
-        private readonly ObservableCollection<VirtualizedDataGridColumn> columns;
-        private readonly ObservableCollection<VirtualizedDataGridColumn> visibleColumns;
-        private readonly ObservableCollection<VirtualizedDataGridColumn> configurableColumns;
+        private readonly ObservableCollection<AsyncDataGridColumn> columns;
+        private readonly ObservableCollection<AsyncDataGridColumn> visibleColumns;
+        private readonly ObservableCollection<AsyncDataGridColumn> configurableColumns;
 
-        public VirtualizedDataGridColumnsViewModel(
-            IDataView dataView, VirtualizedDataGridViewModel owner)
+        public AsyncDataGridColumnsViewModel(
+            IDataView dataView, AsyncDataGridViewModel owner)
         {
             DataView = dataView;
             dataView.ColumnsViewModel = this;
             Owner = owner;
-            columns = new ObservableCollection<VirtualizedDataGridColumn>();
+            columns = new ObservableCollection<AsyncDataGridColumn>();
 
-            visibleColumns = new ObservableCollection<VirtualizedDataGridColumn>();
-            VisibleColumns = new ReadOnlyObservableCollection<VirtualizedDataGridColumn>(visibleColumns);
+            visibleColumns = new ObservableCollection<AsyncDataGridColumn>();
+            VisibleColumns = new ReadOnlyObservableCollection<AsyncDataGridColumn>(visibleColumns);
 
-            configurableColumns = new ObservableCollection<VirtualizedDataGridColumn>();
-            ConfigurableColumns = new ReadOnlyObservableCollection<VirtualizedDataGridColumn>(configurableColumns);
+            configurableColumns = new ObservableCollection<AsyncDataGridColumn>();
+            ConfigurableColumns = new ReadOnlyObservableCollection<AsyncDataGridColumn>(configurableColumns);
 
             ExpanderHeaderColumn = new ExpanderHeaderColumn(this, dataView);
         }
 
         internal IDataView DataView { get; }
-        internal VirtualizedDataGridViewModel Owner { get; }
-        internal ObservableCollection<VirtualizedDataGridColumn> WritableColumns => columns;
+        internal AsyncDataGridViewModel Owner { get; }
+        internal ObservableCollection<AsyncDataGridColumn> WritableColumns => columns;
 
-        #region public ReadOnlyObservableCollection<VirtualizedDataGridColumnViewModel> VisibleColumns
+        #region public ReadOnlyObservableCollection<AsyncDataGridColumnViewModel> VisibleColumns
 
         private static readonly DependencyPropertyKey VisibleColumnsPropertyKey =
             DependencyProperty.RegisterReadOnly(
                 nameof(VisibleColumns),
-                typeof(ReadOnlyObservableCollection<VirtualizedDataGridColumn>),
-                typeof(VirtualizedDataGridColumnsViewModel),
+                typeof(ReadOnlyObservableCollection<AsyncDataGridColumn>),
+                typeof(AsyncDataGridColumnsViewModel),
                 new PropertyMetadata(
-                    CollectionDefaults<VirtualizedDataGridColumn>.ReadOnlyObservable));
+                    CollectionDefaults<AsyncDataGridColumn>.ReadOnlyObservable));
 
         public static readonly DependencyProperty VisibleColumnsProperty =
             VisibleColumnsPropertyKey.DependencyProperty;
 
-        public ReadOnlyObservableCollection<VirtualizedDataGridColumn> VisibleColumns
+        public ReadOnlyObservableCollection<AsyncDataGridColumn> VisibleColumns
         {
             get
             {
-                return (ReadOnlyObservableCollection<VirtualizedDataGridColumn>)
+                return (ReadOnlyObservableCollection<AsyncDataGridColumn>)
                     GetValue(VisibleColumnsProperty);
             }
             private set { SetValue(VisibleColumnsPropertyKey, value); }
@@ -56,7 +56,7 @@ namespace EventTraceKit.VsExtension.Controls
 
         #endregion
 
-        #region public ReadOnlyObservableCollection<VirtualizedDataGridColumn> ConfigurableColumns
+        #region public ReadOnlyObservableCollection<AsyncDataGridColumn> ConfigurableColumns
 
         /// <summary>
         ///   Identifies the <see cref="ConfigurableColumns"/> dependency property.
@@ -64,18 +64,18 @@ namespace EventTraceKit.VsExtension.Controls
         public static readonly DependencyProperty ConfigurableColumnsProperty =
             DependencyProperty.Register(
                 nameof(ConfigurableColumns),
-                typeof(ReadOnlyObservableCollection<VirtualizedDataGridColumn>),
-                typeof(VirtualizedDataGridColumnsViewModel),
+                typeof(ReadOnlyObservableCollection<AsyncDataGridColumn>),
+                typeof(AsyncDataGridColumnsViewModel),
                 new PropertyMetadata(null));
 
         /// <summary>
         ///   Gets or sets the configurable columns.
         /// </summary>
-        public ReadOnlyObservableCollection<VirtualizedDataGridColumn> ConfigurableColumns
+        public ReadOnlyObservableCollection<AsyncDataGridColumn> ConfigurableColumns
         {
             get
             {
-                return (ReadOnlyObservableCollection<VirtualizedDataGridColumn>)
+                return (ReadOnlyObservableCollection<AsyncDataGridColumn>)
                   GetValue(ConfigurableColumnsProperty);
             }
             private set { SetValue(ConfigurableColumnsProperty, value); }
@@ -89,7 +89,7 @@ namespace EventTraceKit.VsExtension.Controls
             DependencyProperty.RegisterReadOnly(
                 nameof(Visibility),
                 typeof(Visibility),
-                typeof(VirtualizedDataGridColumnsViewModel),
+                typeof(AsyncDataGridColumnsViewModel),
                 new PropertyMetadata(Visibility.Visible));
 
         /// <summary>
@@ -109,13 +109,13 @@ namespace EventTraceKit.VsExtension.Controls
 
         #endregion
 
-        #region public VirtualizedDataGridColumnViewModel ExpanderHeaderColumn { get; private set; }
+        #region public AsyncDataGridColumnViewModel ExpanderHeaderColumn { get; private set; }
 
         private static readonly DependencyPropertyKey ExpanderHeaderColumnPropertyKey =
             DependencyProperty.RegisterReadOnly(
                 nameof(ExpanderHeaderColumn),
-                typeof(VirtualizedDataGridColumn),
-                typeof(VirtualizedDataGridColumnsViewModel),
+                typeof(AsyncDataGridColumn),
+                typeof(AsyncDataGridColumnsViewModel),
                 new PropertyMetadata(null));
 
         /// <summary>
@@ -127,9 +127,9 @@ namespace EventTraceKit.VsExtension.Controls
         /// <summary>
         ///   Gets or sets the expander header column.
         /// </summary>
-        protected VirtualizedDataGridColumn ExpanderHeaderColumn
+        protected AsyncDataGridColumn ExpanderHeaderColumn
         {
-            get { return (VirtualizedDataGridColumn)GetValue(ExpanderHeaderColumnProperty); }
+            get { return (AsyncDataGridColumn)GetValue(ExpanderHeaderColumnProperty); }
             set { SetValue(ExpanderHeaderColumnPropertyKey, value); }
         }
 
@@ -153,8 +153,8 @@ namespace EventTraceKit.VsExtension.Controls
         }
 
         public void TryMoveColumn(
-            VirtualizedDataGridColumn srcColumn,
-            VirtualizedDataGridColumn dstColumn)
+            AsyncDataGridColumn srcColumn,
+            AsyncDataGridColumn dstColumn)
         {
             int oldIndex = columns.IndexOf(srcColumn);
             int newIndex = columns.IndexOf(dstColumn);
@@ -170,7 +170,7 @@ namespace EventTraceKit.VsExtension.Controls
             WritableColumns.Clear();
             int index = 0;
             foreach (IDataColumn dataColumn in DataView.Columns) {
-                var column = new VirtualizedDataGridColumn(
+                var column = new AsyncDataGridColumn(
                     this, dataColumn, DataView, false);
                 WritableColumns.Add(column);
 

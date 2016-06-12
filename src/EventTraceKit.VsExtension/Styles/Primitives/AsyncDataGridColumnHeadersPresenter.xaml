@@ -3,14 +3,14 @@
                     xmlns:Controls="clr-namespace:EventTraceKit.VsExtension.Controls"
                     xmlns:Primitives="clr-namespace:EventTraceKit.VsExtension.Controls.Primitives"
                     xmlns:vsp="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0">
-  <Style TargetType="{x:Type Primitives:VirtualizedDataGridColumnHeadersPresenter}">
+  <Style TargetType="{x:Type Primitives:AsyncDataGridColumnHeadersPresenter}">
     <Style.Resources>
       <Controls:ObjectNullCheckToVisibility x:Key="ObjectNullCheckToVisibility"/>
       <Controls:IsEmptyEnumerableConverter x:Key="IsEmptyEnumerableConverter"/>
     </Style.Resources>
     <Setter Property="Template">
       <Setter.Value>
-        <ControlTemplate TargetType="{x:Type Primitives:VirtualizedDataGridColumnHeadersPresenter}">
+        <ControlTemplate TargetType="{x:Type Primitives:AsyncDataGridColumnHeadersPresenter}">
           <Grid HorizontalAlignment="Stretch">
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="Auto"/>
@@ -23,7 +23,7 @@
               BorderBrush="{DynamicResource {x:Static vsp:HeaderColors.SeparatorLineBrushKey}}"
               Background="{DynamicResource {x:Static vsp:HeaderColors.DefaultBrushKey}}"/>-->
             <ItemsPresenter x:Name="Headers"/>
-            <Primitives:VirtualizedDataGridColumnHeader
+            <Primitives:AsyncDataGridColumnHeader
               Grid.Column="1"
               Panel.ZIndex="-1"
               IsEnabled="False"
