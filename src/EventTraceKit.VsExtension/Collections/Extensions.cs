@@ -7,6 +7,33 @@
 
     public static class Extensions
     {
+        public static void AddRange<T>(
+            this ICollection<T> collection, IEnumerable<T> newItems)
+        {
+            TryAddCapacity<T>(collection, newItems);
+            foreach (T local in newItems)
+                collection.Add(local);
+        }
+
+        public static void EnsureCapacity<T>(this List<T> list, int newCapacity)
+        {
+            if (list.Capacity < newCapacity)
+                list.Capacity = newCapacity;
+        }
+
+        private static bool TryAddCapacity<T>(
+            ICollection<T> collection, IEnumerable<T> newItems)
+        {
+            var list = collection as List<T>;
+            var newItemsCollection = newItems as ICollection<T>;
+            if (list != null && newItemsCollection != null) {
+                list.EnsureCapacity(list.Count + newItemsCollection.Count);
+                return true;
+            }
+
+            return false;
+        }
+
         public static IEnumerable<T> OrderBySelf<T>(this IEnumerable<T> source)
             where T : IComparable<T>
         {

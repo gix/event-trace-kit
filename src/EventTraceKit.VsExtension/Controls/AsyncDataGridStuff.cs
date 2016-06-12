@@ -97,6 +97,23 @@
 
         #endregion
 
+        #region public bool IsModifiedFromUI
+
+        public static readonly DependencyProperty IsUIModifiedProperty =
+            DependencyProperty.Register(
+                nameof(IsUIModified),
+                typeof(bool),
+                typeof(HdvViewModelPreset),
+                new PropertyMetadata(Boxed.Bool(false)));
+
+        public bool IsUIModified
+        {
+            get { return (bool)GetValue(IsUIModifiedProperty); }
+            set { SetValue(IsUIModifiedProperty, Boxed.Bool(value)); }
+        }
+
+        #endregion
+
         #region public int LeftFrozenColumnCount
 
         public static readonly DependencyProperty LeftFrozenColumnCountProperty =
@@ -284,20 +301,51 @@
     {
         IDataViewColumnsCollection Columns { get; }
         IDataViewColumnsCollection VisibleColumns { get; }
-        bool IsReady { get; }
-        HdvViewModelPreset HdvViewModelPreset { get; set; }
-        AsyncDataGridColumnsViewModel ColumnsViewModel { set; }
 
         CellValue GetCellValue(int rowIndex, int columnIndex);
         void UpdateRowCount(int rows);
-        event ItemEventHandler<bool> Updated;
-        bool RequestUpdate(bool updateFromViewModel);
+
+        void BeginDataUpdate();
+        bool EndDataUpdate();
+        void ApplyColumnView(DataColumnViewInfo[] dataColumnViewInfos);
+    }
+
+    public sealed class DataColumnViewInfo
+    {
+        public IDataView View { get; set; }
+
+        public Guid ColumnId { get; set; }
+        public string Name { get; set; }
+        public string HelpText { get; set; }
+        public bool IsVisible { get; set; }
+        public string Format { get; set; }
+        public IFormatProvider FormatProvider { get; set; }
+    }
+
+    public sealed class DataColumnView
+    {
+        public DataColumnView(DataColumn column, DataColumnViewInfo info)
+        {
+            Column = column;
+            IsVisible = info.IsVisible;
+            Format = info.Format;
+            FormatProvider = info.FormatProvider;
+        }
+
+        public DataColumn Column { get; }
+
+        public Guid ColumnId => Column.Id;
+        public string Name => Column.Name;
+        public string HelpText { get; set; }
+        public bool IsVisible { get; set; }
+        public string Format { get; set; }
+        public IFormatProvider FormatProvider { get; set; }
     }
 
     public interface IDataViewColumnsCollection
-        : IReadOnlyList<IDataColumn>
+        : IReadOnlyList<DataColumnView>
     {
-        int IndexOf(IDataColumn column);
+        int IndexOf(DataColumnView column);
     }
 
     public interface IDataColumn
@@ -311,10 +359,16 @@
 
     public class DataColumn : IDataColumn
     {
+        public Guid Id { get; set; }
         public string Name { get; set; }
         public double Width { get; set; }
         public bool IsVisible { get; set; }
         public bool IsResizable { get; set; }
         public TextAlignment TextAlignment { get; set; }
+
+        public DataColumnView CreateView(DataColumnViewInfo info)
+        {
+            return new DataColumnView(this, info);
+        }
     }
 }

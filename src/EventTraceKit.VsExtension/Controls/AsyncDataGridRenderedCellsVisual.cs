@@ -240,7 +240,7 @@ namespace EventTraceKit.VsExtension.Controls
 
                         var value = column.GetCellValue(row, viewportSizeHint);
                         var formatted = new FormattedText(
-                            value.ToString(), currentCulture, flowDirection,
+                            value?.ToString(), currentCulture, flowDirection,
                             typeface, fontSize, foreground, null,
                             TextFormattingMode.Display);
                         formatted.MaxTextWidth = Math.Max(cellWidth - totalPadding, 0);

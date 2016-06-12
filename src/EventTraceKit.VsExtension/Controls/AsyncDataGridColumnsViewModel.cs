@@ -10,12 +10,9 @@ namespace EventTraceKit.VsExtension.Controls
         private readonly ObservableCollection<AsyncDataGridColumn> visibleColumns;
         private readonly ObservableCollection<AsyncDataGridColumn> configurableColumns;
 
-        public AsyncDataGridColumnsViewModel(
-            IDataView dataView, AsyncDataGridViewModel owner)
+        public AsyncDataGridColumnsViewModel(HdvViewModel hdvViewModel)
         {
-            DataView = dataView;
-            dataView.ColumnsViewModel = this;
-            Owner = owner;
+            HdvViewModel = hdvViewModel;
             columns = new ObservableCollection<AsyncDataGridColumn>();
 
             visibleColumns = new ObservableCollection<AsyncDataGridColumn>();
@@ -24,11 +21,10 @@ namespace EventTraceKit.VsExtension.Controls
             configurableColumns = new ObservableCollection<AsyncDataGridColumn>();
             ConfigurableColumns = new ReadOnlyObservableCollection<AsyncDataGridColumn>(configurableColumns);
 
-            ExpanderHeaderColumn = new ExpanderHeaderColumn(this, dataView);
+            ExpanderHeaderColumn = new ExpanderHeaderColumn(this, hdvViewModel);
         }
 
-        internal IDataView DataView { get; }
-        internal AsyncDataGridViewModel Owner { get; }
+        internal HdvViewModel HdvViewModel { get; }
         internal ObservableCollection<AsyncDataGridColumn> WritableColumns => columns;
 
         #region public ReadOnlyObservableCollection<AsyncDataGridColumnViewModel> VisibleColumns
@@ -153,39 +149,48 @@ namespace EventTraceKit.VsExtension.Controls
         }
 
         public void TryMoveColumn(
-            AsyncDataGridColumn srcColumn,
-            AsyncDataGridColumn dstColumn)
+            AsyncDataGridColumn srcColumn, AsyncDataGridColumn dstColumn)
         {
             int oldIndex = columns.IndexOf(srcColumn);
             int newIndex = columns.IndexOf(dstColumn);
             if (oldIndex != newIndex)
                 WritableColumns.Move(oldIndex, newIndex);
-            RefreshAllObservableCollections();
+
+            HdvViewModelPreset preset = HdvViewModel.CreatePresetFromUIThatHasBeenModified();
+            HdvViewModel.HdvViewModelPreset = preset;
         }
 
         internal void ApplyPresetAssumeGridModelInSync(HdvViewModelPreset preset)
         {
-            //IsApplyingPreset = true;
-            //base.Hdv.BeginDataUpdate();
+            IsApplyingPreset = true;
+            HdvViewModel.Hdv.BeginDataUpdate();
             WritableColumns.Clear();
             int index = 0;
-            foreach (IDataColumn dataColumn in DataView.Columns) {
+            foreach (var dataColumn in HdvViewModel.Hdv.Columns) {
                 var column = new AsyncDataGridColumn(
-                    this, dataColumn, DataView, false);
+                    this, dataColumn, HdvViewModel, false);
                 WritableColumns.Add(column);
 
-                //var columnPreset = preset.ConfigurableColumns[index];
-                //column.Width = columnPreset.Width;
-                //column.TextAlignment = columnPreset.TextAlignment;
+                var columnPreset = preset.ConfigurableColumns[index];
+                column.Width = columnPreset.Width;
+                column.TextAlignment = columnPreset.TextAlignment;
                 //column.CellFormat = columnPreset.CellFormat;
                 ++index;
             }
 
             //preset.PlaceSeparatorsInList<HierarchicalDataGridColumnViewModel>(base.ColumnsWriteable, base.LeftFreezableAreaSeparatorColumn, base.RightFreezableAreaSeparatorColumn, this.graphingAreaSeparatorColumn, this.keysValuesSeparatorColumn, forcedColumnLeftCount);
-            //base.Hdv.EndDataUpdate();
+            HdvViewModel.Hdv.EndDataUpdate();
             RefreshAllObservableCollections();
-            //IsApplyingPreset = false;
+            IsApplyingPreset = false;
             //UpdateFreezableColumnsWidth();
+        }
+
+        protected bool IsApplyingPreset { get; set; }
+
+        internal void OnUIPropertyChanged(AsyncDataGridColumn column)
+        {
+            if (!IsApplyingPreset)
+                HdvViewModel.RequestUpdate(false);
         }
     }
 }

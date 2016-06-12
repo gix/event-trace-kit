@@ -6,14 +6,14 @@
     using System.Collections.ObjectModel;
     using System.ComponentModel.Design;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Runtime.Serialization;
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows;
-    using System.Windows.Input;
     using System.Windows.Threading;
+    using EventTraceKit.VsExtension.Collections;
     using EventTraceKit.VsExtension.Controls;
-    using Microsoft.VisualStudio.PlatformUI;
     using Microsoft.VisualStudio.Shell;
     using Task = System.Threading.Tasks.Task;
 
@@ -41,8 +41,15 @@
             if (modeProvider != null)
                 modeProvider.OperationalModeChanged += OnOperationalModeChanged;
 
-            EventsDataView = new TraceEventsView();
-            GridModel = new AsyncDataGridViewModel(EventsDataView);
+            var tableTuple = new GenericEventsViewModelSource().CreateTable();
+            var dataTable = tableTuple.Item1;
+            var preset = tableTuple.Item2;
+
+            EventsDataView = new TraceEventsView(dataTable);
+            HdvViewModel = new HdvViewModel(EventsDataView);
+            GridModel = HdvViewModel.GridViewModel;
+
+            HdvViewModel.HdvViewModelPreset = preset;
 
             syncCtx = new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher);
             SynchronizationContext.SetSynchronizationContext(syncCtx);
@@ -66,6 +73,7 @@
         }
 
         public TraceEventsView EventsDataView { get; }
+        public HdvViewModel HdvViewModel { get; }
         public AsyncDataGridViewModel GridModel { get; }
 
         public TraceLogStatsModel Statistics { get; }
@@ -296,33 +304,6 @@
                     break;
             }
         }
-    }
-
-    public class TableHeaderViewModel : ViewModel
-    {
-        public string Header { get; set; }
-
-        public double ColumnWidth { get; set; }
-
-        public string MemberName { get; set; }
-
-        public string StringFormat { get; set; }
-
-        private bool isVisible = true;
-
-        public bool IsVisible
-        {
-            get { return isVisible; }
-            set { SetProperty(ref isVisible, value); }
-        }
-
-        public bool ResetColumnWidth { get; set; }
-
-        public double MinWidth => double.MinValue;
-
-        public double MaxWidth => double.MaxValue;
-
-        public bool IsStar => false;
     }
 
     public class TraceLogWindowDesignTimeModel : TraceLogWindowViewModel
@@ -561,16 +542,16 @@
             this.view = view;
         }
 
-        public int IndexOf(IDataColumn column)
+        public int IndexOf(DataColumnView column)
         {
-            return view.GetDataColumnIndex(column);
+            return view.GetDataColumnViewIndex(column);
         }
 
         public int Count => view.ColumnCount;
 
-        public IDataColumn this[int columnIndex] => view.GetDataColumn(columnIndex);
+        public DataColumnView this[int columnIndex] => view.GetDataColumnView(columnIndex);
 
-        public IEnumerator<IDataColumn> GetEnumerator()
+        public IEnumerator<DataColumnView> GetEnumerator()
         {
             for (int index = 0; index < Count; ++index)
                 yield return this[index];
@@ -578,7 +559,7 @@
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((IEnumerable<IDataColumn>)this).GetEnumerator();
+            return ((IEnumerable<DataColumnView>)this).GetEnumerator();
         }
     }
 
@@ -780,7 +761,15 @@
 
     public class TraceEventsView : DependencyObject, IDataView
     {
-        private readonly List<DataColumn> columns = new List<DataColumn>();
+        private int deferredUpdateNestingDepth;
+        private readonly DataTable table;
+
+        public TraceEventsView(DataTable table)
+        {
+            if (table == null)
+                throw new ArgumentNullException(nameof(table));
+            this.table = table;
+        }
 
         public IDataViewColumnsCollection Columns =>
             new DataViewColumnsCollection(this);
@@ -788,280 +777,65 @@
         public IDataViewColumnsCollection VisibleColumns =>
             new DataViewColumnsCollection(this);
 
-        public TraceEventsView()
+        public bool DeferUpdates => deferredUpdateNestingDepth > 0;
+
+        public void BeginDataUpdate()
         {
-            workManager = new WorkManager(Dispatcher);
-
-            var providerNamePreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("934D2438-65F3-4AE9-8FEA-94B81AA5A4A6"),
-                    Name = "Provider Name",
-                    IsVisible = true,
-                    Width = 200
-                }.EnsureFrozen();
-            var taskNamePreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("730765B3-2E42-43E7-8B26-BAB7F4999E69"),
-                    Name = "Task Name",
-                    IsVisible = true,
-                    Width = 80
-                }.EnsureFrozen();
-            var opcodeOrTypePreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("F08CCD14-FE1E-4D9E-BE6C-B527EA4B25DA"),
-                    Name = "Opcode/Type ",
-                    IsVisible = false,
-                    Width = 80
-                }.EnsureFrozen();
-            var levelPreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("388591F3-43B2-4E68-B080-0B1A48D33559"),
-                    Name = "Level",
-                    IsVisible = false,
-                    Width = 80
-                }.EnsureFrozen();
-            var versionPreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("215AB0D7-BEC9-4A70-96C4-028EE3404F09"),
-                    Name = "Version",
-                    IsVisible = false,
-                    Width = 80
-                }.EnsureFrozen();
-            var taskPreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("CE90F4D8-0FDE-4324-8D39-5BF74C8F4D9B"),
-                    Name = "Task",
-                    IsVisible = false,
-                    Width = 80
-                }.EnsureFrozen();
-            var keywordPreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("62DC8843-C7BF-45F0-AC61-644395D53409"),
-                    Name = "Keyword",
-                    IsVisible = false,
-                    Width = 80,
-                    TextAlignment = TextAlignment.Right,
-                    CellFormat = "x"
-                }.EnsureFrozen();
-            var channelPreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("CF9373E2-5876-4F84-BB3A-F6C878D36F86"),
-                    Name = "Channel",
-                    IsVisible = false,
-                    Width = 80
-                }.EnsureFrozen();
-            var idPreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("0FE03A19-FBCB-4514-9441-2D0B1AB5E2E1"),
-                    Name = "Id",
-                    IsVisible = false,
-                    Width = 80
-                }.EnsureFrozen();
-            var opcodeNamePreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("99C0A192-174F-4DD5-AFD8-32F513506E88"),
-                    Name = "Opcode Name",
-                    IsVisible = true,
-                    Width = 80
-                }.EnsureFrozen();
-            var eventNamePreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("B82277B9-7066-4938-A959-EABF0C689087"),
-                    Name = "Event Name",
-                    IsVisible = true,
-                    Width = 100
-                }.EnsureFrozen();
-            var messagePreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("89F731F6-D4D2-40E8-9615-6EB5A5A68A75"),
-                    Name = "Message",
-                    IsVisible = true,
-                    Width = 100
-                }.EnsureFrozen();
-            var providerIdPreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("9B9DAF0F-EAC6-43FE-B68F-EAF0D9A4AFB9"),
-                    Name = "Provider Id",
-                    IsVisible = false,
-                    Width = 100
-                }.EnsureFrozen();
-            var eventTypePreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("AC2A6011-BCB3-4721-BEF1-E1DEC50C073D"),
-                    Name = "Event Type",
-                    IsVisible = false,
-                    Width = 100
-                }.EnsureFrozen();
-            var cpuPreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("452A05E3-A1C0-4686-BB6B-C39AFF2F24BE"),
-                    Name = "Cpu",
-                    IsVisible = true,
-                    Width = 30
-                }.EnsureFrozen();
-            var threadIdPreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("6BEB4F24-53DC-4A9D-8EEA-ED8F69990349"),
-                    Name = "ThreadId",
-                    IsVisible = true,
-                    Width = 50
-                }.EnsureFrozen();
-            var processIdPreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("7600E8FD-D7C2-4BA4-9DE4-AADE5230DC53"),
-                    Name = "Event Header ProcessId",
-                    IsVisible = true,
-                    Width = 50,
-                    HelpText = "(0 = PID Not Found)"
-                }.EnsureFrozen();
-            var userDataLengthPreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("813F4638-8D41-4EAD-94DD-9A4AFFEFA701"),
-                    Name = "UserDataLength",
-                    IsVisible = false,
-                    Width = 30
-                }.EnsureFrozen();
-            var activityIdPreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("21695563-AC1B-4953-9B9B-991353DBC082"),
-                    Name = "etw:ActivityId",
-                    IsVisible = false,
-                    Width = 60
-                }.EnsureFrozen();
-            var relatedActivityIdPreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("83B1BF6F-5E8D-4143-A84B-8C16ED1EF6BD"),
-                    Name = "etw:Related ActivityId",
-                    IsVisible = false,
-                    Width = 60
-                }.EnsureFrozen();
-            var userSecurityIdentifierPreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("F979E52D-EE1B-4A7E-950F-28103990D11B"),
-                    Name = "etw:UserSid",
-                    IsVisible = false,
-                    Width = 60
-                }.EnsureFrozen();
-            var sessionIdPreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("84FC6D0C-5FFD-40D9-8C3B-F0EB8F8F2D1B"),
-                    Name = "etw:SessionId",
-                    IsVisible = false,
-                    Width = 60
-                }.EnsureFrozen();
-            var eventKeyPreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("4F0679D2-B5E7-4AB1-ADF7-FCDEBEEF801B"),
-                    Name = "etw:EventKey",
-                    IsVisible = false,
-                    Width = 80
-                }.EnsureFrozen();
-            var timestampGeneratorPreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("9C75AA69-046E-42AE-B594-B4AD24335A0A"),
-                    Name = "Time",
-                    IsVisible = true,
-                    Width = 80,
-                    TextAlignment = TextAlignment.Right,
-                    CellFormat = "sN"
-                }.EnsureFrozen();
-            var datetimeGeneratorPreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("8823874B-917D-4D64-ABDF-EA29E6C87789"),
-                    Name = "DateTime (Local)",
-                    Width = 150,
-                }.EnsureFrozen();
-            var modernProcessDataPreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("DC7E68B0-E753-47DF-8357-61BEC093E405"),
-                    Name = "Process",
-                    IsVisible = true,
-                    Width = 150
-                }.EnsureFrozen();
-            var processNamePreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("BB09F706-FE79-43AA-A103-120801DAC28F"),
-                    Name = "Process Name",
-                    IsVisible = true,
-                    Width = 150
-                }.EnsureFrozen();
-            var stackTopPreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("D55383F4-D0ED-404B-98A8-DC9CF4533FBF"),
-                    Name = "Stack",
-                    IsVisible = false,
-                    Width = 100
-                }.EnsureFrozen();
-            var threadStartModulePreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("D58C42B0-818D-4D83-BD99-9DA872E77B54"),
-                    Name = "Thread Start Module",
-                    IsVisible = false,
-                    Width = 100
-                }.EnsureFrozen();
-            var threadStartFunctionPreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("125BB527-34C6-4A33-82B8-05E3B0C7A591"),
-                    Name = "Thread Start Function",
-                    IsVisible = false,
-                    Width = 100
-                }.EnsureFrozen();
-            var countPreset =
-                new HdvColumnViewModelPreset {
-                    Id = new Guid("3EF367F3-62FD-453B-88F7-67D97D3F12F8"),
-                    Name = "Count",
-                    IsVisible = true,
-                    Width = 80
-                }.EnsureFrozen();
-
-            defaultPreset = new HdvViewModelPreset();
-
-            AddColumn(providerNamePreset, new DataColumn());
-            AddColumn(taskNamePreset, new DataColumn());
-            AddColumn(opcodeOrTypePreset, new DataColumn());
-            AddColumn(levelPreset, new DataColumn());
-            AddColumn(versionPreset, new DataColumn());
-            AddColumn(taskPreset, new DataColumn());
-            AddColumn(keywordPreset, new DataColumn());
-            AddColumn(channelPreset, new DataColumn());
-            AddColumn(idPreset, new DataColumn());
-            AddColumn(opcodeNamePreset, new DataColumn());
-            AddColumn(eventNamePreset, new DataColumn());
-            AddColumn(messagePreset, new DataColumn());
-            AddColumn(providerIdPreset, new DataColumn());
-            AddColumn(eventTypePreset, new DataColumn());
-            AddColumn(cpuPreset, new DataColumn());
-            AddColumn(threadIdPreset, new DataColumn());
-            AddColumn(processIdPreset, new DataColumn());
-            AddColumn(userDataLengthPreset, new DataColumn());
-            AddColumn(activityIdPreset, new DataColumn());
-            AddColumn(relatedActivityIdPreset, new DataColumn());
-            AddColumn(userSecurityIdentifierPreset, new DataColumn());
-            AddColumn(sessionIdPreset, new DataColumn());
-            AddColumn(eventKeyPreset, new DataColumn());
-            AddColumn(timestampGeneratorPreset, new DataColumn());
-            AddColumn(datetimeGeneratorPreset, new DataColumn());
-            AddColumn(modernProcessDataPreset, new DataColumn());
-            AddColumn(processNamePreset, new DataColumn());
-            AddColumn(stackTopPreset, new DataColumn());
-            AddColumn(threadStartModulePreset, new DataColumn());
-            AddColumn(threadStartFunctionPreset, new DataColumn());
-            AddColumn(countPreset, new DataColumn());
-
-            HdvViewModelPreset = defaultPreset;
+            ++deferredUpdateNestingDepth;
         }
 
-        private HdvViewModelPreset defaultPreset;
-
-        private void AddColumn(HdvColumnViewModelPreset preset, DataColumn column)
+        public bool EndDataUpdate()
         {
-            column.Name = preset.Name;
-            column.Width = preset.Width;
-            column.IsVisible = preset.IsVisible;
-            column.IsResizable = true;
-            column.TextAlignment = preset.TextAlignment;
-            columns.Add(column);
-            defaultPreset.ConfigurableColumns.Add(preset);
+            if (--deferredUpdateNestingDepth != 0)
+                return false;
+
+            OnDataUpdated();
+            return true;
+        }
+
+        protected virtual void OnDataUpdated()
+        {
+            if (!DeferUpdates && RowCount > 0) {
+            }
+        }
+
+        protected DataColumnViewInfo[] DataColumnViewInfos { get; set; }
+        protected DataColumnView[] DataColumnViews { get; set; }
+
+        public void ApplyColumnView(DataColumnViewInfo[] dataColumnViewInfos)
+        {
+            ApplyColumnViewCore(dataColumnViewInfos);
+        }
+
+        protected void ApplyColumnViewCore(IEnumerable<DataColumnViewInfo> dataColumnViewInfos)
+        {
+            if (dataColumnViewInfos == null)
+                throw new ArgumentNullException(nameof(dataColumnViewInfos));
+
+            DataColumnViewInfos = dataColumnViewInfos.ToArray();
+            foreach (DataColumnViewInfo info in DataColumnViewInfos)
+                info.View = this;
+
+            RefreshDataColumnViewFromViewInfos();
+            //this.VisibleDataColumnViewIndices = new Int32List();
+            //this.RefreshVisibleColumns();
+        }
+
+        private void RefreshDataColumnViewFromViewInfos()
+        {
+            DataColumnViews = new DataColumnView[DataColumnViewInfos.Length];
+            Parallel.For(0, DataColumnViewInfos.Length, i => {
+                DataColumnViews[i] = CreateDataColumnViewFromInfo(DataColumnViewInfos[i]);
+            });
+        }
+
+        public DataColumnView CreateDataColumnViewFromInfo(DataColumnViewInfo info)
+        {
+            if (info == null)
+                throw new ArgumentNullException(nameof(info));
+
+            DataColumn column = table.Columns[info.ColumnId];
+            return column.CreateView(info);
         }
 
         public CellValue GetCellValue(int rowIndex, int columnIndex)
@@ -1089,54 +863,456 @@
         public int EventCount => RowCount;
 
         public int RowCount { get; private set; }
-        public int ColumnCount => columns.Count;
+        public int ColumnCount => DataColumnViews?.Length ?? 0;
 
-        public IDataColumn GetDataColumn(int columnIndex)
+        public DataColumnView GetDataColumnView(int columnIndex)
         {
-            return columns[columnIndex];
+            return DataColumnViews[columnIndex];
         }
 
         public void Clear()
         {
         }
 
-        public int GetDataColumnIndex(IDataColumn column)
+        public int GetDataColumnViewIndex(DataColumnView column)
         {
-            var dataColumn = column as DataColumn;
-            if (dataColumn == null)
+            if (DataColumnViews == null)
                 return -1;
-            return columns.IndexOf(dataColumn);
+            return Array.IndexOf(DataColumnViews, column);
         }
+    }
 
-        #region
+    public sealed class GenericEventsViewModelSource
+    {
+        private readonly HdvColumnViewModelPreset providerNamePreset;
+        private readonly HdvColumnViewModelPreset taskNamePreset;
+        private readonly HdvColumnViewModelPreset opcodeOrTypePreset;
+        private readonly HdvColumnViewModelPreset levelPreset;
+        private readonly HdvColumnViewModelPreset versionPreset;
+        private readonly HdvColumnViewModelPreset taskPreset;
+        private readonly HdvColumnViewModelPreset keywordPreset;
+        private readonly HdvColumnViewModelPreset channelPreset;
+        private readonly HdvColumnViewModelPreset idPreset;
+        private readonly HdvColumnViewModelPreset opcodeNamePreset;
+        private readonly HdvColumnViewModelPreset eventNamePreset;
+        private readonly HdvColumnViewModelPreset messagePreset;
+        private readonly HdvColumnViewModelPreset providerIdPreset;
+        private readonly HdvColumnViewModelPreset eventTypePreset;
+        private readonly HdvColumnViewModelPreset cpuPreset;
+        private readonly HdvColumnViewModelPreset threadIdPreset;
+        private readonly HdvColumnViewModelPreset processIdPreset;
+        private readonly HdvColumnViewModelPreset userDataLengthPreset;
+        private readonly HdvColumnViewModelPreset activityIdPreset;
+        private readonly HdvColumnViewModelPreset relatedActivityIdPreset;
+        private readonly HdvColumnViewModelPreset userSecurityIdentifierPreset;
+        private readonly HdvColumnViewModelPreset sessionIdPreset;
+        private readonly HdvColumnViewModelPreset eventKeyPreset;
+        private readonly HdvColumnViewModelPreset timestampGeneratorPreset;
+        private readonly HdvColumnViewModelPreset datetimeGeneratorPreset;
+        private readonly HdvColumnViewModelPreset modernProcessDataPreset;
+        private readonly HdvColumnViewModelPreset processNamePreset;
+        private readonly HdvColumnViewModelPreset stackTopPreset;
+        private readonly HdvColumnViewModelPreset threadStartModulePreset;
+        private readonly HdvColumnViewModelPreset threadStartFunctionPreset;
+        private readonly HdvColumnViewModelPreset countPreset;
 
-        private static readonly DependencyPropertyKey IsReadyPropertyKey =
-            DependencyProperty.RegisterReadOnly(
-                nameof(IsReady),
-                typeof(bool),
-                typeof(TraceEventsView),
-                new PropertyMetadata(Boxed.True,
-                    OnIsReadyChanged));
-
-        public static readonly DependencyProperty IsReadyProperty = IsReadyPropertyKey.DependencyProperty;
-
-        public bool IsReady
+        public GenericEventsViewModelSource()
         {
-            get { return (bool)GetValue(IsReadyProperty); }
-            private set { SetValue(IsReadyPropertyKey, Boxed.Bool(value)); }
+            providerNamePreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("934D2438-65F3-4AE9-8FEA-94B81AA5A4A6"),
+                    Name = "Provider Name",
+                    IsVisible = true,
+                    Width = 200
+                }.EnsureFrozen();
+            taskNamePreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("730765B3-2E42-43E7-8B26-BAB7F4999E69"),
+                    Name = "Task Name",
+                    IsVisible = true,
+                    Width = 80
+                }.EnsureFrozen();
+            opcodeOrTypePreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("F08CCD14-FE1E-4D9E-BE6C-B527EA4B25DA"),
+                    Name = "Opcode/Type ",
+                    IsVisible = false,
+                    Width = 80
+                }.EnsureFrozen();
+            levelPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("388591F3-43B2-4E68-B080-0B1A48D33559"),
+                    Name = "Level",
+                    IsVisible = false,
+                    Width = 80
+                }.EnsureFrozen();
+            versionPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("215AB0D7-BEC9-4A70-96C4-028EE3404F09"),
+                    Name = "Version",
+                    IsVisible = false,
+                    Width = 80
+                }.EnsureFrozen();
+            taskPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("CE90F4D8-0FDE-4324-8D39-5BF74C8F4D9B"),
+                    Name = "Task",
+                    IsVisible = false,
+                    Width = 80
+                }.EnsureFrozen();
+            keywordPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("62DC8843-C7BF-45F0-AC61-644395D53409"),
+                    Name = "Keyword",
+                    IsVisible = false,
+                    Width = 80,
+                    TextAlignment = TextAlignment.Right,
+                    CellFormat = "x"
+                }.EnsureFrozen();
+            channelPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("CF9373E2-5876-4F84-BB3A-F6C878D36F86"),
+                    Name = "Channel",
+                    IsVisible = false,
+                    Width = 80
+                }.EnsureFrozen();
+            idPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("0FE03A19-FBCB-4514-9441-2D0B1AB5E2E1"),
+                    Name = "Id",
+                    IsVisible = false,
+                    Width = 80
+                }.EnsureFrozen();
+            opcodeNamePreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("99C0A192-174F-4DD5-AFD8-32F513506E88"),
+                    Name = "Opcode Name",
+                    IsVisible = true,
+                    Width = 80
+                }.EnsureFrozen();
+            eventNamePreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("B82277B9-7066-4938-A959-EABF0C689087"),
+                    Name = "Event Name",
+                    IsVisible = true,
+                    Width = 100
+                }.EnsureFrozen();
+            messagePreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("89F731F6-D4D2-40E8-9615-6EB5A5A68A75"),
+                    Name = "Message",
+                    IsVisible = true,
+                    Width = 100
+                }.EnsureFrozen();
+            providerIdPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("9B9DAF0F-EAC6-43FE-B68F-EAF0D9A4AFB9"),
+                    Name = "Provider Id",
+                    IsVisible = false,
+                    Width = 100
+                }.EnsureFrozen();
+            eventTypePreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("AC2A6011-BCB3-4721-BEF1-E1DEC50C073D"),
+                    Name = "Event Type",
+                    IsVisible = false,
+                    Width = 100
+                }.EnsureFrozen();
+            cpuPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("452A05E3-A1C0-4686-BB6B-C39AFF2F24BE"),
+                    Name = "Cpu",
+                    IsVisible = true,
+                    Width = 30
+                }.EnsureFrozen();
+            threadIdPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("6BEB4F24-53DC-4A9D-8EEA-ED8F69990349"),
+                    Name = "ThreadId",
+                    IsVisible = true,
+                    Width = 50
+                }.EnsureFrozen();
+            processIdPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("7600E8FD-D7C2-4BA4-9DE4-AADE5230DC53"),
+                    Name = "Event Header ProcessId",
+                    IsVisible = true,
+                    Width = 50,
+                    HelpText = "(0 = PID Not Found)"
+                }.EnsureFrozen();
+            userDataLengthPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("813F4638-8D41-4EAD-94DD-9A4AFFEFA701"),
+                    Name = "UserDataLength",
+                    IsVisible = false,
+                    Width = 30
+                }.EnsureFrozen();
+            activityIdPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("21695563-AC1B-4953-9B9B-991353DBC082"),
+                    Name = "etw:ActivityId",
+                    IsVisible = false,
+                    Width = 60
+                }.EnsureFrozen();
+            relatedActivityIdPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("83B1BF6F-5E8D-4143-A84B-8C16ED1EF6BD"),
+                    Name = "etw:Related ActivityId",
+                    IsVisible = false,
+                    Width = 60
+                }.EnsureFrozen();
+            userSecurityIdentifierPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("F979E52D-EE1B-4A7E-950F-28103990D11B"),
+                    Name = "etw:UserSid",
+                    IsVisible = false,
+                    Width = 60
+                }.EnsureFrozen();
+            sessionIdPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("84FC6D0C-5FFD-40D9-8C3B-F0EB8F8F2D1B"),
+                    Name = "etw:SessionId",
+                    IsVisible = false,
+                    Width = 60
+                }.EnsureFrozen();
+            eventKeyPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("4F0679D2-B5E7-4AB1-ADF7-FCDEBEEF801B"),
+                    Name = "etw:EventKey",
+                    IsVisible = false,
+                    Width = 80
+                }.EnsureFrozen();
+            timestampGeneratorPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("9C75AA69-046E-42AE-B594-B4AD24335A0A"),
+                    Name = "Time",
+                    IsVisible = true,
+                    Width = 80,
+                    TextAlignment = TextAlignment.Right,
+                    CellFormat = "sN"
+                }.EnsureFrozen();
+            datetimeGeneratorPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("8823874B-917D-4D64-ABDF-EA29E6C87789"),
+                    Name = "DateTime (Local)",
+                    Width = 150,
+                }.EnsureFrozen();
+            modernProcessDataPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("DC7E68B0-E753-47DF-8357-61BEC093E405"),
+                    Name = "Process",
+                    IsVisible = true,
+                    Width = 150
+                }.EnsureFrozen();
+            processNamePreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("BB09F706-FE79-43AA-A103-120801DAC28F"),
+                    Name = "Process Name",
+                    IsVisible = true,
+                    Width = 150
+                }.EnsureFrozen();
+            stackTopPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("D55383F4-D0ED-404B-98A8-DC9CF4533FBF"),
+                    Name = "Stack",
+                    IsVisible = false,
+                    Width = 100
+                }.EnsureFrozen();
+            threadStartModulePreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("D58C42B0-818D-4D83-BD99-9DA872E77B54"),
+                    Name = "Thread Start Module",
+                    IsVisible = false,
+                    Width = 100
+                }.EnsureFrozen();
+            threadStartFunctionPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("125BB527-34C6-4A33-82B8-05E3B0C7A591"),
+                    Name = "Thread Start Function",
+                    IsVisible = false,
+                    Width = 100
+                }.EnsureFrozen();
         }
 
-        private static void OnIsReadyChanged(
-            DependencyObject d, DependencyPropertyChangedEventArgs e)
+        public Tuple<DataTable, HdvViewModelPreset> CreateTable()
         {
-            ((TraceEventsView)d).OnIsReadyChanged(e.NewValue);
+            var table = new DataTable("Generic Events");
+            var defaultPreset = new HdvViewModelPreset();
+
+            AddColumn(table, defaultPreset, providerNamePreset, new DataColumn());
+            AddColumn(table, defaultPreset, taskNamePreset, new DataColumn());
+            AddColumn(table, defaultPreset, opcodeOrTypePreset, new DataColumn());
+            AddColumn(table, defaultPreset, levelPreset, new DataColumn());
+            AddColumn(table, defaultPreset, versionPreset, new DataColumn());
+            AddColumn(table, defaultPreset, taskPreset, new DataColumn());
+            AddColumn(table, defaultPreset, keywordPreset, new DataColumn());
+            AddColumn(table, defaultPreset, channelPreset, new DataColumn());
+            AddColumn(table, defaultPreset, idPreset, new DataColumn());
+            AddColumn(table, defaultPreset, opcodeNamePreset, new DataColumn());
+            AddColumn(table, defaultPreset, eventNamePreset, new DataColumn());
+            AddColumn(table, defaultPreset, messagePreset, new DataColumn());
+            AddColumn(table, defaultPreset, providerIdPreset, new DataColumn());
+            AddColumn(table, defaultPreset, eventTypePreset, new DataColumn());
+            AddColumn(table, defaultPreset, cpuPreset, new DataColumn());
+            AddColumn(table, defaultPreset, threadIdPreset, new DataColumn());
+            AddColumn(table, defaultPreset, processIdPreset, new DataColumn());
+            AddColumn(table, defaultPreset, userDataLengthPreset, new DataColumn());
+            AddColumn(table, defaultPreset, activityIdPreset, new DataColumn());
+            AddColumn(table, defaultPreset, relatedActivityIdPreset, new DataColumn());
+            AddColumn(table, defaultPreset, userSecurityIdentifierPreset, new DataColumn());
+            AddColumn(table, defaultPreset, sessionIdPreset, new DataColumn());
+            AddColumn(table, defaultPreset, eventKeyPreset, new DataColumn());
+            AddColumn(table, defaultPreset, timestampGeneratorPreset, new DataColumn());
+            AddColumn(table, defaultPreset, datetimeGeneratorPreset, new DataColumn());
+            AddColumn(table, defaultPreset, modernProcessDataPreset, new DataColumn());
+            AddColumn(table, defaultPreset, processNamePreset, new DataColumn());
+            AddColumn(table, defaultPreset, stackTopPreset, new DataColumn());
+            AddColumn(table, defaultPreset, threadStartModulePreset, new DataColumn());
+            AddColumn(table, defaultPreset, threadStartFunctionPreset, new DataColumn());
+
+            return Tuple.Create(table, defaultPreset);
         }
 
-        private void OnIsReadyChanged(object newValue)
+        private void AddColumn(
+            DataTable table, HdvViewModelPreset defaultPreset,
+            HdvColumnViewModelPreset preset, DataColumn column)
         {
+            column.Id = preset.Id;
+            column.Name = preset.Name;
+            column.Width = preset.Width;
+            column.IsVisible = preset.IsVisible;
+            column.IsResizable = true;
+            column.TextAlignment = preset.TextAlignment;
+            table.Add(column);
+            defaultPreset.ConfigurableColumns.Add(preset);
+        }
+    }
+
+    public class DataTable : ICloneable
+    {
+        private readonly List<DataColumn> columns = new List<DataColumn>();
+        private readonly Dictionary<Guid, DataColumn> mapColumnGuidToColumn =
+            new Dictionary<Guid, DataColumn>();
+        private readonly Dictionary<string, DataColumn> mapColumnNameToColumn =
+            new Dictionary<string, DataColumn>();
+
+        public DataTable(string tableName)
+        {
+            TableName = tableName;
         }
 
-        #endregion
+        public string TableName { get; }
+        internal int Count => columns.Count;
+        public DataTableColumnCollection Columns => new DataTableColumnCollection(this);
+
+        internal DataColumn this[int index] => columns[index];
+        internal DataColumn this[string columnName] => mapColumnNameToColumn[columnName];
+        internal DataColumn this[Guid columnGuid] => mapColumnGuidToColumn[columnGuid];
+
+        internal void Add(DataColumn column)
+        {
+            if (column == null)
+                throw new ArgumentNullException(nameof(column));
+            if (column.Name == null)
+                throw new ArgumentException("Column must have a name.");
+            if (column.Id == Guid.Empty)
+                throw new ArgumentException("Column must have an id.");
+
+            if (mapColumnNameToColumn.ContainsKey(column.Name))
+                throw new InvalidOperationException(
+                    $"DataTable already contains a column named {column.Name}");
+            if (mapColumnGuidToColumn.ContainsKey(column.Id))
+                throw new InvalidOperationException(
+                    $"DataTable already contains a column with ID {column.Id}.");
+
+            columns.Add(column);
+            mapColumnNameToColumn[column.Name] = column;
+            mapColumnGuidToColumn[column.Id] = column;
+        }
+
+        object ICloneable.Clone() => Clone();
+
+        public DataTable Clone()
+        {
+            var table = new DataTable(TableName);
+            foreach (DataColumn column in Columns)
+                table.Add(column);
+
+            return table;
+        }
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DataTableColumnCollection : IEnumerable<DataColumn>
+    {
+        private readonly DataTable table;
+
+        public DataTableColumnCollection(DataTable table)
+        {
+            if (table == null)
+                throw new ArgumentNullException(nameof(table));
+            this.table = table;
+        }
+
+        public DataColumn this[int index] => table[index];
+        public DataColumn this[Guid id] => table[id];
+        public DataColumn this[string name] => table[name];
+
+        public void Add(DataColumn column)
+        {
+            if (column == null)
+                throw new ArgumentNullException(nameof(column));
+            table.Add(column);
+        }
+
+        public IEnumerator<DataColumn> GetEnumerator()
+        {
+            return table.Columns.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+    }
+
+    public class HdvViewModel : DependencyObject
+    {
+        private readonly WorkManager workManager;
+        private readonly IDataView dataView;
+
+        private bool isInitializedWithFirstPreset;
+        private bool shouldApplyPreset;
+        private HdvViewModelPreset presetBeingApplied;
+        private HdvViewModelPreset presetToApplyOnReady;
+        private bool refreshViewModelFromModelOnReady;
+        private bool refreshViewModelOnUpdateRequest;
+        private AsyncDataGridColumnsViewModel columnsViewModel;
+
+        internal CancellationTokenSource readCancellationTokenSource;
+        private readonly ManualResetEvent asyncReadQueueComplete;
+        private object asyncReadWorkQueueLock;
+        private bool allowBackgroundThreads;
+
+        public HdvViewModel(IDataView dataView)
+        {
+            if (dataView == null)
+                throw new ArgumentNullException(nameof(dataView));
+            this.dataView = dataView;
+            workManager = new WorkManager(Dispatcher);
+
+            asyncReadQueueComplete = new ManualResetEvent(true);
+            asyncReadWorkQueueLock = new object();
+            allowBackgroundThreads = true;
+
+            columnsViewModel = new AsyncDataGridColumnsViewModel(this);
+            GridViewModel = new AsyncDataGridViewModel(
+                this, columnsViewModel);
+
+            IsReady = false;
+        }
+
+        public AsyncDataGridViewModel GridViewModel { get; }
 
         #region
 
@@ -1144,22 +1320,17 @@
             DependencyProperty.Register(
                 nameof(HdvViewModelPreset),
                 typeof(HdvViewModelPreset),
-                typeof(TraceEventsView),
+                typeof(HdvViewModel),
                 new PropertyMetadata(
                     null,
-                    (s, e) => ((TraceEventsView)s).HdvViewModelPresetPropertyChanged(e),
-                    (dO, bV) => ((TraceEventsView)dO).CoerceHdvViewModelPresetProperty(bV)));
+                    (s, e) => ((HdvViewModel)s).HdvViewModelPresetPropertyChanged(e),
+                    (dO, bV) => ((HdvViewModel)dO).CoerceHdvViewModelPresetProperty(bV)));
 
         public HdvViewModelPreset HdvViewModelPreset
         {
             get { return (HdvViewModelPreset)GetValue(HdvViewModelPresetProperty); }
             set { SetValue(HdvViewModelPresetProperty, value); }
         }
-
-        private bool isInitializedWithFirstPreset;
-        private bool shouldApplyPreset;
-        private HdvViewModelPreset presetBeingApplied;
-        private HdvViewModelPreset presetToApplyOnReady;
 
         private void HdvViewModelPresetPropertyChanged(DependencyPropertyChangedEventArgs e)
         {
@@ -1203,7 +1374,7 @@
                 //this.Hdv.BeginDataUpdate();
                 ApplyPresetToGridModel(
                     preset,
-                    () => ContinuePresetAfterGridModelInSync(presetName, preset), -1);
+                    () => ContinuePresetAfterGridModelInSync(presetName, preset));
             }
             //this.HdvViewModelPresetChanged.Raise<HdvViewModelPreset>(this, e);
             //this.ResetIsPresetError();
@@ -1220,14 +1391,63 @@
             //    this.templatePreset, this.viewCreationInfoCollection, includeDynamicColumns);
             HdvViewModelPreset compatiblePreset = preset;
 
-            //shouldApplyPreset = !compatiblePreset.IsModifiedFromUI;
-            //compatiblePreset.IsModifiedFromUI = false;
+            shouldApplyPreset = !compatiblePreset.IsUIModified;
+            compatiblePreset.IsUIModified = false;
             compatiblePreset.Freeze();
             //this.cachedHdvViewModelPreset = compatiblePreset;
             return compatiblePreset;
         }
 
         #endregion
+
+        #region public bool IsReady { get; private set; }
+
+        private static readonly DependencyPropertyKey IsReadyPropertyKey =
+            DependencyProperty.RegisterReadOnly(
+                nameof(IsReady),
+                typeof(bool),
+                typeof(HdvViewModel),
+                new PropertyMetadata(Boxed.True, OnIsReadyChanged));
+
+        public static readonly DependencyProperty IsReadyProperty = IsReadyPropertyKey.DependencyProperty;
+
+        public bool IsReady
+        {
+            get { return (bool)GetValue(IsReadyProperty); }
+            private set { SetValue(IsReadyPropertyKey, Boxed.Bool(value)); }
+        }
+
+        private static void OnIsReadyChanged(
+            DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((HdvViewModel)d).OnIsReadyChanged(e.NewValue);
+        }
+
+        private void OnIsReadyChanged(object newValue)
+        {
+        }
+
+        #endregion
+
+        public bool RequestUpdate(bool refreshViewModelFromModel = true)
+        {
+            if (!IsReady) {
+                refreshViewModelOnUpdateRequest |= refreshViewModelFromModel;
+                return false;
+            }
+
+            RaiseUpdate(refreshViewModelFromModel);
+            return true;
+        }
+
+        public event ItemEventHandler<bool> Updated;
+
+        public void RaiseUpdate(bool refreshViewModelFromModel = true)
+        {
+            VerifyAccess();
+
+            Updated?.Invoke(this, new ItemEventArgs<bool>(refreshViewModelFromModel));
+        }
 
         internal void EnableTableAfterAsyncOperation()
         {
@@ -1241,22 +1461,55 @@
         }
 
         private void ApplyPresetToGridModel(
-            HdvViewModelPreset preset, Action callbackOnComplete, int maxPreservedKeyCount = -1)
+            HdvViewModelPreset preset, Action callbackOnComplete)
         {
             if (!IsReady)
                 ExceptionUtils.ThrowInvalidOperationException(
                     "Must be ready before applying preset to grid model.");
 
             DisableTableForAsyncOperation();
-            //DataColumnViewInfo[] columnViewInfos = this.viewCreationInfoCollection.GetDataColumnViewInfosFromPreset(preset, this).ToArray<DataColumnViewInfo>();
-            //this.WaitForReadOperationToComplete();
+
+            DataColumnViewInfo[] columnViewInfos = GetDataColumnViewInfosFromPreset(preset).ToArray();
+            WaitForReadOperationToComplete();
+
             WorkManager.BackgroundThread.Post(delegate {
-                //this.Hdv.BeginDataUpdate();
-                //int preservedKeyCount = this.hdv.ApplyColumnView(columnViewInfos, maxPreservedKeyCount);
+                dataView.BeginDataUpdate();
+                dataView.ApplyColumnView(columnViewInfos);
                 //this.columnViewReady = true;
-                //this.Hdv.EndDataUpdate();
+                dataView.EndDataUpdate();
                 WorkManager.UIThread.Post(callbackOnComplete);
             });
+        }
+
+        private IEnumerable<DataColumnViewInfo> GetDataColumnViewInfosFromPreset(
+            HdvViewModelPreset preset)
+        {
+            foreach (HdvColumnViewModelPreset columnPreset in preset.ConfigurableColumns) {
+                var info = new DataColumnViewInfo {
+                    ColumnId = columnPreset.Id,
+                    Name = columnPreset.Name,
+                    HelpText = columnPreset.HelpText,
+                    IsVisible = columnPreset.IsVisible,
+                    Format = columnPreset.CellFormat,
+                    FormatProvider = null,
+                };
+                yield return info;
+            }
+        }
+
+        internal void WaitForReadOperationToComplete()
+        {
+            WaitForReadOperationToComplete(-1, null);
+        }
+
+        internal void WaitForReadOperationToComplete(
+            int spinIntervalMilliseconds, Action stillWaitingCallback)
+        {
+            allowBackgroundThreads = false;
+            readCancellationTokenSource?.Cancel();
+
+            while (!asyncReadQueueComplete.WaitOne(spinIntervalMilliseconds))
+                stillWaitingCallback?.Invoke();
         }
 
         private void ContinuePresetAfterGridModelInSync(
@@ -1284,16 +1537,6 @@
             CompleteAsyncOrSyncUpdate();
         }
 
-        private WorkManager workManager;
-        private bool refreshViewModelFromModelOnReady;
-        private bool refreshViewModelOnUpdateRequest;
-        private AsyncDataGridColumnsViewModel columnsViewModel;
-
-        public AsyncDataGridColumnsViewModel ColumnsViewModel
-        {
-            set { columnsViewModel = value; }
-        }
-
         internal WorkManager WorkManager
         {
             get
@@ -1301,6 +1544,8 @@
                 return workManager;
             }
         }
+
+        public IDataView Hdv => dataView;
 
         private void ContinueAsyncOperation(Action callback, bool refreshViewModelFromModelOnReady = true)
         {
@@ -1362,7 +1607,7 @@
                 if (refreshViewModelFromModel)
                     refreshViewModelFromModelOnReady = false;
 
-                bool flag3 = this.RequestUpdate(refreshViewModelFromModel);
+                bool flag3 = RequestUpdate(refreshViewModelFromModel);
                 if (refreshViewModelFromModel && !flag3) {
                     ExceptionUtils.ThrowInternalErrorException("We should have sent an update for the hdvviewmodel, but didn't");
                 }
@@ -1371,24 +1616,46 @@
             return !flag;
         }
 
-        public bool RequestUpdate(bool refreshViewModelFromModel = true)
+        internal CellValue GetCellValue(int rowIndex, int visibleColumnIndex)
         {
-            if (!IsReady) {
-                refreshViewModelOnUpdateRequest |= refreshViewModelFromModel;
-                return false;
-            }
-
-            RaiseUpdate(refreshViewModelFromModel);
-            return true;
+            CellValue result = null;
+            workManager.BackgroundThread.Send(() => {
+                result = dataView.GetCellValue(rowIndex, visibleColumnIndex);
+                result.PrecomputeString();
+            });
+            return result;
         }
 
-        public event ItemEventHandler<bool> Updated;
-
-        public void RaiseUpdate(bool refreshViewModelFromModel = true)
+        internal HdvViewModelPreset CreatePresetFromUIThatHasBeenModified()
         {
-            VerifyAccess();
+            VerifyIsReady();
+            HdvViewModelPreset preset = new HdvViewModelPreset();
+            HdvViewModelPreset hdvViewModelPreset = HdvViewModelPreset;
+            string name = hdvViewModelPreset.Name;
+            if (name != null)
+                preset.Name = name;
 
-            Updated?.Invoke(this, new ItemEventArgs<bool>(refreshViewModelFromModel));
+            preset.IsModified = true;
+
+            preset.ConfigurableColumns.Clear();
+            preset.ConfigurableColumns.AddRange(
+                from column in columnsViewModel.WritableColumns
+                where column.IsConnected
+                select column.ToPreset());
+
+            return preset;
+        }
+
+        public void VerifyIsReady()
+        {
+            if (!IsReady)
+                ExceptionUtils.ThrowInvalidOperationException(
+                    "HdvViewModel needs to be ready for this operation");
+        }
+
+        internal void OnUIPropertyChanged(AsyncDataGridColumn column)
+        {
+            columnsViewModel?.OnUIPropertyChanged(column);
         }
     }
 
@@ -1481,9 +1748,9 @@
             Task.Run(action);
         }
 
-        public async void Send(Action action)
+        public void Send(Action action)
         {
-            await Task.Run(action);
+            Task.Run(action).Wait();
         }
 
         public void VerifyAccess()

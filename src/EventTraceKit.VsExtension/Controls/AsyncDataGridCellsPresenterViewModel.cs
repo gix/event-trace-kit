@@ -6,13 +6,13 @@ namespace EventTraceKit.VsExtension.Controls
     public sealed class AsyncDataGridCellsPresenterViewModel
         : DependencyObject
     {
-        private readonly IDataView dataView;
+        private readonly HdvViewModel hdv;
         private readonly AsyncDataGridViewModel parent;
 
         public AsyncDataGridCellsPresenterViewModel(
-            IDataView dataView, AsyncDataGridViewModel parent)
+            HdvViewModel hdv, AsyncDataGridViewModel parent)
         {
-            this.dataView = dataView;
+            this.hdv = hdv;
             this.parent = parent;
 
             RowSelection = new AsyncDataGridRowSelection(this);
@@ -59,7 +59,7 @@ namespace EventTraceKit.VsExtension.Controls
             get
             {
                 VerifyAccess();
-                return dataView.IsReady;
+                return hdv.IsReady;
             }
         }
 
@@ -73,7 +73,7 @@ namespace EventTraceKit.VsExtension.Controls
         {
             VerifyAccess();
             ValidateIsReady();
-            dataView.RequestUpdate(updateFromViewModel);
+            hdv.RequestUpdate(updateFromViewModel);
         }
     }
 }

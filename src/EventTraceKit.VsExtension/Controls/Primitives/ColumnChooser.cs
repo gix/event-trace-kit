@@ -22,7 +22,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public ColumnChooser(
             ReadOnlyObservableCollection<AsyncDataGridColumn> columns,
-            IDataView viewModel)
+            HdvViewModel viewModel)
         {
             if (columns == null)
                 throw new ArgumentNullException(nameof(columns));
@@ -56,7 +56,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             ((INotifyCollectionChanged)columns).CollectionChanged -= ColumnsCollectionChangedHandler;
         }
 
-        public IDataView ViewModel { get; }
+        public HdvViewModel ViewModel { get; }
 
         private void CloseCommandExecuted(object sender, ExecutedRoutedEventArgs e)
         {

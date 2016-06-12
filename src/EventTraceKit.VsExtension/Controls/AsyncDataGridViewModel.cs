@@ -4,13 +4,14 @@ namespace EventTraceKit.VsExtension.Controls
 
     public class AsyncDataGridViewModel : DependencyObject
     {
-        public AsyncDataGridViewModel(IDataView dataView)
+        public AsyncDataGridViewModel(
+            HdvViewModel hdv, AsyncDataGridColumnsViewModel columnsViewModel)
         {
-            CellsPresenterViewModel = new AsyncDataGridCellsPresenterViewModel(dataView, this);
-            ColumnsViewModel = new AsyncDataGridColumnsViewModel(dataView, this);
+            CellsPresenterViewModel = new AsyncDataGridCellsPresenterViewModel(hdv, this);
+            ColumnsViewModel = columnsViewModel;
             RowCount = 40;
 
-            dataView.Updated += (s, e) => RaiseUpdate(e.Item);
+            hdv.Updated += (s, e) => RaiseUpdate(e.Item);
         }
 
         public AsyncDataGridCellsPresenterViewModel CellsPresenterViewModel { get; }

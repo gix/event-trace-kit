@@ -4,6 +4,8 @@
 
     public class CellValue
     {
+        private string precomputed;
+
         public CellValue(object value, IFormatProvider formatProvider, string format)
         {
             Value = value;
@@ -17,7 +19,7 @@
 
         public override string ToString()
         {
-            return FormatValue();
+            return precomputed ?? FormatValue();
         }
 
         private string FormatValue()
@@ -33,6 +35,11 @@
                 result = formattable.ToString(Format, FormatProvider);
 
             return result ?? Value?.ToString() ?? string.Empty;
+        }
+
+        public void PrecomputeString()
+        {
+            precomputed = FormatValue();
         }
     }
 }
