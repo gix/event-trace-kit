@@ -24,6 +24,9 @@ namespace EventTraceKit.VsExtension.UITests
                 Themes.Add(name);
 
             SelectedTheme = App.Current.ActiveTheme;
+
+            rows = 100;
+            EventsDataView.UpdateRowCount(rows);
         }
 
         public ObservableCollection<string> Themes { get; } =
@@ -61,14 +64,14 @@ namespace EventTraceKit.VsExtension.UITests
         {
         }
 
-        private int rows = 0;
+        private int rows;
 
         private void Gen(CancellationToken token)
         {
             while (!token.IsCancellationRequested) {
                 EventsDataView.UpdateRowCount(rows);
-                Thread.Sleep(TimeSpan.FromMilliseconds(500));
-                rows += 1;
+                Thread.Sleep(TimeSpan.FromMilliseconds(10));
+                rows += 100;
             }
         }
 

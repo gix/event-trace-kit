@@ -299,8 +299,10 @@
 
     public interface IDataView
     {
-        IDataViewColumnsCollection Columns { get; }
-        IDataViewColumnsCollection VisibleColumns { get; }
+        DataViewColumnsCollection Columns { get; }
+        DataViewColumnsCollection VisibleColumns { get; }
+        int RowCount { get; }
+        event EventHandler RowCountChanged;
 
         CellValue GetCellValue(int rowIndex, int columnIndex);
         void UpdateRowCount(int rows);
@@ -340,12 +342,6 @@
         public bool IsVisible { get; set; }
         public string Format { get; set; }
         public IFormatProvider FormatProvider { get; set; }
-    }
-
-    public interface IDataViewColumnsCollection
-        : IReadOnlyList<DataColumnView>
-    {
-        int IndexOf(DataColumnView column);
     }
 
     public interface IDataColumn

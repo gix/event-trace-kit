@@ -172,6 +172,8 @@
     <Compile Include="Controls\MenuExtensions.cs" />
     <Compile Include="Controls\Primitives\BindableScrollBar.cs" />
     <Compile Include="Controls\Primitives\ColumnChooser.cs" />
+    <Compile Include="FreezableExtensions.cs" />
+    <Compile Include="GenericEventsViewModelSource.cs" />
     <Compile Include="HslColor.cs" />
     <Compile Include="HsvColor.cs" />
     <Compile Include="MultiRange.cs" />

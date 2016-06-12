@@ -68,11 +68,14 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         protected override void OnContextMenuOpening(ContextMenuEventArgs e)
         {
             if (!e.Handled) {
-                var chooser = new ColumnChooser(ViewModel.ConfigurableColumns, ViewModel.HdvViewModel) {
-                    Placement = PlacementMode.MousePoint,
-                    PlacementTarget = VisualTreeHelper.GetParent(this) as UIElement
-                };
-                chooser.IsOpen = true;
+                using (ParentGrid.EnterContextMenuVisualState()) {
+                    var chooser = new ColumnChooser(ViewModel.ConfigurableColumns, ViewModel.HdvViewModel) {
+                        Placement = PlacementMode.MousePoint,
+                        PlacementTarget = VisualTreeHelper.GetParent(this) as UIElement
+                    };
+                    chooser.IsOpen = true;
+                }
+
                 e.Handled = true;
             }
 

@@ -10,7 +10,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
     public class ColumnChooser : ContextMenu
     {
-        private ReadOnlyObservableCollection<AsyncDataGridColumn> columns;
+        private readonly ReadOnlyObservableCollection<AsyncDataGridColumn> columns;
         private AsyncDataGridColumn[] sortedColumns;
 
         static ColumnChooser()

@@ -7,18 +7,15 @@ namespace EventTraceKit.VsExtension.Controls
         : DependencyObject
     {
         private readonly HdvViewModel hdv;
-        private readonly AsyncDataGridViewModel parent;
 
-        public AsyncDataGridCellsPresenterViewModel(
-            HdvViewModel hdv, AsyncDataGridViewModel parent)
+        public AsyncDataGridCellsPresenterViewModel(HdvViewModel hdv)
         {
             this.hdv = hdv;
-            this.parent = parent;
 
             RowSelection = new AsyncDataGridRowSelection(this);
         }
 
-        public int RowCount => parent.RowCount;
+        public int RowCount => hdv.Hdv.RowCount;
 
         public AsyncDataGridRowSelection RowSelection { get; }
 

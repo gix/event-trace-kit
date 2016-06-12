@@ -26,9 +26,6 @@ namespace EventTraceKit.VsExtension.Controls
         private const string STATE_Processing = "Processing";
         private const string STATE_Ready = "Ready";
 
-        private AsyncDataGridCellsPresenter cellsPresenter;
-        private AsyncDataGridViewModel viewModel;
-
         private Action<bool> updateStatesAction;
 
         static AsyncDataGrid()
@@ -331,23 +328,12 @@ namespace EventTraceKit.VsExtension.Controls
         {
             var oldValue = (AsyncDataGridViewModel)e.OldValue;
             if (oldValue != null) {
-                viewModel = null;
                 oldValue.Updated -= OnViewModelUpdated;
-                //oldValue.PropertyChanged -= OnViewModelPropertyChanged;
-                //BindingOperations.ClearBinding(oldValue, AsyncDataGridColumnsViewModel.ActualWidthProperty);
             }
 
             var newValue = (AsyncDataGridViewModel)e.NewValue;
             if (newValue != null) {
-                viewModel = newValue;
                 newValue.Updated += OnViewModelUpdated;
-                //newValue.PropertyChanged += OnViewModelPropertyChanged;
-                var binding = new Binding {
-                    Source = this,
-                    Path = new PropertyPath(ActualWidthProperty.Name),
-                    Mode = BindingMode.OneWay
-                };
-                //BindingOperations.SetBinding(newValue.ColumnsViewModel, AsyncDataGridColumnsViewModel.ActualWidthProperty, binding);
                 var templateChild = GetTemplateChild(PART_CellsScrollViewer) as ScrollViewer;
                 if (templateChild != null)
                     CenterScrollWidthChanged(templateChild.ActualWidth);
@@ -525,7 +511,6 @@ namespace EventTraceKit.VsExtension.Controls
             if (CellsPresenter != null)
                 CellsPresenter.MouseUp += OnCellsPresenterMouseUp;
 
-            cellsPresenter = CellsPresenter;
             UpdateStates(false);
         }
 
@@ -547,7 +532,58 @@ namespace EventTraceKit.VsExtension.Controls
                 }
             }
 
-            IsSelectionActive = isSelectionActive;
+            IsSelectionActive = isSelectionActive || GetIsContextMenuOpen(this);
+        }
+
+        #region attached bool IsContextMenuOpen
+
+        private static readonly DependencyPropertyKey IsContextMenuOpenPropertyKey =
+            DependencyProperty.RegisterAttachedReadOnly(
+                "IsContextMenuOpen",
+                typeof(bool),
+                typeof(AsyncDataGrid),
+                new FrameworkPropertyMetadata(
+                    Boxed.False, FrameworkPropertyMetadataOptions.Inherits));
+
+        public static readonly DependencyProperty IsContextMenuOpenProperty =
+            IsContextMenuOpenPropertyKey.DependencyProperty;
+
+        public static bool GetIsContextMenuOpen(UIElement element)
+        {
+            if (element == null)
+                throw new ArgumentNullException(nameof(element));
+            return (bool)element.GetValue(IsContextMenuOpenProperty);
+        }
+
+        private static void SetIsContextMenuOpen(UIElement element, bool value)
+        {
+            if (element == null)
+                throw new ArgumentNullException(nameof(element));
+            element.SetValue(IsContextMenuOpenPropertyKey, Boxed.Bool(value));
+        }
+
+        #endregion
+
+        public IDisposable EnterContextMenuVisualState()
+        {
+            return new ContextMenuScope(this);
+        }
+
+        private sealed class ContextMenuScope : IDisposable
+        {
+            private readonly AsyncDataGrid owner;
+
+            public ContextMenuScope(AsyncDataGrid owner)
+            {
+                this.owner = owner;
+                SetIsContextMenuOpen(owner, true);
+
+            }
+
+            public void Dispose()
+            {
+                SetIsContextMenuOpen(owner, false);
+            }
         }
 
         protected virtual void OnIsEnabledChanged(
@@ -619,16 +655,6 @@ namespace EventTraceKit.VsExtension.Controls
         private void OnViewModelUpdated(object sender, ItemEventArgs<bool> e)
         {
             CellsPresenter?.PostUpdateRendering();
-        }
-
-        private void OnViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (cellsPresenter == null || viewModel == null)
-                return;
-
-            if (e.PropertyName == nameof(AsyncDataGridViewModel.RowCount)) {
-                cellsPresenter.PostUpdateRendering();
-            }
         }
 
         private static void OnCopyCellCanExecute(object sender, CanExecuteRoutedEventArgs e)

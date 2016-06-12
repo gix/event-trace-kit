@@ -25,7 +25,7 @@
       <Button Margin="7,0,0,0" Content="Start" Command="{Binding StartCommand}"/>
       <Button Margin="7,0,0,0" Content="Stop" Command="{Binding StopCommand}"/>
       <Button Margin="7,0,0,0" Content="Clear" Command="{Binding ClearCommand}"/>
-      <TextBlock Margin="7,0,0,0" Text="{Binding GridModel.RowCount}"/>
+      <TextBlock Margin="7,0,0,0" Text="{Binding EventsDataView.RowCount}"/>
     </StackPanel>
 
     <Controls:AsyncDataGrid
