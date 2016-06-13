@@ -1,5 +1,8 @@
 ﻿namespace EventTraceKit.VsExtension.UITests
 {
+    using System;
+    using System.Windows.Controls.Primitives;
+
     /// <summary>
     /// Interaction logic for TraceLogTestWindow.xaml
     /// </summary>

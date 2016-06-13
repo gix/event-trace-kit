@@ -206,18 +206,23 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             headerDragCtx.CurrentPosition = e.GetPosition(this);
 
             if (headerDragCtx.IsPreparing) {
-                if (ShouldStartColumnHeaderDrag(headerDragCtx.CurrentPosition,
-                                                headerDragCtx.StartPosition))
+                if (headerDragCtx.ShouldStartDrag())
                     StartColumnHeaderDrag();
                 return;
             }
 
-            var deltaX = headerDragCtx.CurrentPosition.X - headerDragCtx.StartPosition.X;
-            GetTranslation(headerDragCtx.DraggedHeader).X = deltaX;
+            headerDragCtx.DoDrag(FindHeaderIndex);
 
-            int targetIndex = FindHeaderIndex(headerDragCtx.CurrentPosition);
-            if (targetIndex != -1)
-                headerDragCtx.AnimateDrag(targetIndex);
+            // For unknown reasons we often get duplicate mouse-move events so
+            // only report non-zero deltas.
+            // For reference: Thumb's mouse-move handling has the same check for
+            // its delta event. DataGridColumnHeader does not but also does not
+            // get zero deltas.
+            var delta = headerDragCtx.LastDelta;
+            if (delta != new Vector()) {
+                var dragDeltaEventArgs = new DragDeltaEventArgs(delta.X, delta.Y);
+                ParentGrid.OnColumnHeaderDragDelta(dragDeltaEventArgs);
+            }
         }
 
         internal void OnHeaderLostMouseCapture(MouseEventArgs e)
@@ -258,39 +263,30 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             return (AsyncDataGridColumnHeader)container;
         }
 
-        private static bool ShouldStartColumnHeaderDrag(
-            Point currentPos, Point originalPos)
-        {
-            double deltaX = Math.Abs(currentPos.X - originalPos.X);
-            return deltaX.GreaterThan(
-                SystemParameters.MinimumHorizontalDragDistance);
-        }
-
-        private void FinishColumnHeaderDrag(bool isCancel)
+        private void FinishColumnHeaderDrag(bool canceled)
         {
             int targetIndex = FindHeaderIndex(headerDragCtx.CurrentPosition);
 
-            var delta = headerDragCtx.CurrentPosition - headerDragCtx.StartPosition;
+            var totalDelta = headerDragCtx.TotalDelta;
             var dragCompletedEventArgs = new DragCompletedEventArgs(
-                delta.X, delta.Y, isCancel);
+                totalDelta.X, totalDelta.Y, canceled);
             ParentGrid.OnColumnHeaderDragCompleted(dragCompletedEventArgs);
 
-            headerDragCtx.Reset();
+            headerDragCtx.ResetDrag();
 
-            if (!isCancel && targetIndex != -1 &&
+            if (!canceled && targetIndex != -1 &&
                 targetIndex != headerDragCtx.DraggedHeaderIndex) {
                 var srcColumn = headerDragCtx.DraggedHeader.Column;
                 var dstColumn = HeaderFromIndex(targetIndex).Column;
                 ViewModel.TryMoveColumn(srcColumn, dstColumn);
 
-                dragCompletedEventArgs.Handled = true;
                 var columnEventArgs = new AsyncDataGridColumnEventArgs(srcColumn);
                 ParentGrid.OnColumnReordered(columnEventArgs);
             }
 
             ClearColumnHeaderDragInfo();
 
-            ParentGrid.CellsPresenter?.Focus();
+            ParentGrid?.CellsPresenter?.Focus();
         }
 
         private void ClearColumnHeaderDragInfo()
@@ -364,11 +360,25 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             private DragState state;
             private HeaderAnimation[] animations;
             private ItemContainerGenerator generator;
+            private Point lastPosition;
+            private Point currentPosition;
 
             public AsyncDataGridColumnHeader DraggedHeader { get; private set; }
             public int DraggedHeaderIndex { get; private set; }
             public Point StartPosition { get; private set; }
-            public Point CurrentPosition { get; set; }
+
+            public Point CurrentPosition
+            {
+                get { return currentPosition; }
+                set
+                {
+                    lastPosition = currentPosition;
+                    currentPosition = value;
+                }
+            }
+
+            public Vector TotalDelta => CurrentPosition - StartPosition;
+            public Vector LastDelta => CurrentPosition - lastPosition;
 
             public bool IsActive => state != DragState.None;
             public bool IsPreparing => state == DragState.Preparing;
@@ -380,6 +390,15 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 state = DragState.Preparing;
                 DraggedHeader = draggedHeader;
                 StartPosition = position;
+                lastPosition = position;
+                currentPosition = position;
+            }
+
+            public bool ShouldStartDrag()
+            {
+                double totalDeltaX = Math.Abs(CurrentPosition.X - StartPosition.X);
+                return totalDeltaX.GreaterThan(
+                    SystemParameters.MinimumHorizontalDragDistance);
             }
 
             public void StartDrag(ItemContainerGenerator generator)
@@ -398,7 +417,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 Panel.SetZIndex(DraggedHeader, -1);
             }
 
-            public void Reset()
+            public void ResetDrag()
             {
                 DraggedHeader.RenderTransform = null;
                 DraggedHeader.ClearValue(Panel.ZIndexProperty);
@@ -407,7 +426,16 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                     animation?.Reset();
             }
 
-            public void AnimateDrag(int targetIndex)
+            public void DoDrag(Func<Point, int> findHeaderIndex)
+            {
+                GetTranslation(DraggedHeader).X = TotalDelta.X;
+
+                int targetIndex = findHeaderIndex(CurrentPosition);
+                if (targetIndex != -1)
+                    AnimateDrag(targetIndex);
+            }
+
+            private void AnimateDrag(int targetIndex)
             {
                 for (int i = 0; i < animations.Length; ++i) {
                     if (i == DraggedHeaderIndex)
@@ -416,14 +444,14 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                     var animation = animations[i];
                     if ((i <= DraggedHeaderIndex && i < targetIndex) ||
                         (i >= DraggedHeaderIndex && i > targetIndex)) {
-                        animation?.MoveBack();
+                        animation?.MoveToInitial();
                         continue;
                     }
 
                     if (animation == null)
                         animation = CreateAnimation(i);
 
-                    animation.MoveAside();
+                    animation.MoveToAlternate();
                 }
             }
 
@@ -508,7 +536,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 clock = animation.CreateClock();
             }
 
-            public void MoveAside()
+            public void MoveToAlternate()
             {
                 switch (state) {
                     case State.Initial:
@@ -521,10 +549,14 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                         Reverse();
                         Run();
                         break;
+                    case State.Alternate:
+                    case State.MovingToAlternate:
+                        // Nothing to do.
+                        break;
                 }
             }
 
-            public void MoveBack()
+            public void MoveToInitial()
             {
                 switch (state) {
                     case State.Alternate:
@@ -536,6 +568,10 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                         state = State.MovingToInitial;
                         Reverse();
                         Run();
+                        break;
+                    case State.Initial:
+                    case State.MovingToInitial:
+                        // Nothing to do.
                         break;
                 }
             }
@@ -581,7 +617,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                         state = State.Initial;
                         break;
                     default:
-                        Debug.Fail("Wrong state in OnCompleted callback " + state + ".");
+                        Debug.Fail("Wrong state in OnCompleted callback: " + state + ".");
                         break;
                 }
             }
