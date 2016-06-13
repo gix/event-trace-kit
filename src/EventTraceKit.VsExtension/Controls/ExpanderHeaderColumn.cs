@@ -10,7 +10,7 @@ namespace EventTraceKit.VsExtension.Controls
 
         private static DataColumnView CreateColumnView()
         {
-            var column = new DataColumn { Name = string.Empty };
+            var column = new DataColumn<object> { Name = string.Empty };
             var info = new DataColumnViewInfo { IsVisible = true };
             return column.CreateView(info);
         }

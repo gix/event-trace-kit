@@ -237,6 +237,7 @@
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="ResourceUtils.cs" />
     <Compile Include="SelectionProperties.cs" />
+    <Compile Include="TdhHelper.cs" />
     <Compile Include="TraceLogWindow.cs" />
     <Compile Include="TraceLogWindowCommand.cs" />
     <Compile Include="TraceLogWindowControl.xaml.cs">
@@ -370,16 +371,16 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\EventTraceKit.Logger.WatchDog\EventTraceKit.Logger.WatchDog.vcxproj">
-      <Project>{32c0585a-5db9-457c-9e69-1621bc3547a5}</Project>
-      <Name>EventTraceKit.Logger.WatchDog</Name>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
     <ProjectReference Include="..\EventTraceKit.Logger\EventTraceKit.Logger.vcxproj">
       <Project>{3EDE8E61-F8E3-4645-A940-337F91A9DF65}</Project>
       <Name>EventTraceKit.Logger</Name>
       <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
       <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
+    </ProjectReference>
+    <ProjectReference Include="..\EventTraceKit.Logger.WatchDog\EventTraceKit.Logger.WatchDog.vcxproj">
+      <Project>{32c0585a-5db9-457c-9e69-1621bc3547a5}</Project>
+      <Name>EventTraceKit.Logger.WatchDog</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup>

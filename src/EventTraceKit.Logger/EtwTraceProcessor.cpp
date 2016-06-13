@@ -129,33 +129,28 @@ DWORD GetPropertyLength(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
         st = TdhGetPropertySize(info.record, 0, NULL, 1, &DataDescriptor, &PropertySize);
         st = TdhGetProperty(info.record, 0, NULL, 1, &DataDescriptor, PropertySize, (PBYTE)&Length);
         *propertyLength = (USHORT)Length;
+    } else if (propInfo.length > 0) {
+        *propertyLength = propInfo.length;
     } else {
-        if (propInfo.length > 0) {
+        // If the property is a binary blob and is defined in a MOF class, the extension
+        // qualifier is used to determine the size of the blob. However, if the extension 
+        // is IPAddrV6, you must set the PropertyLength variable yourself because the 
+        // EVENT_PROPERTY_INFO.length field will be zero.
+
+        if (TDH_INTYPE_BINARY == propInfo.nonStructType.InType &&
+            TDH_OUTTYPE_IPV6 == propInfo.nonStructType.OutType) {
+            *propertyLength = (USHORT)sizeof(IN6_ADDR);
+        } else if (TDH_INTYPE_UNICODESTRING == propInfo.nonStructType.InType ||
+                   TDH_INTYPE_ANSISTRING == propInfo.nonStructType.InType ||
+            (propInfo.Flags & PropertyStruct) == PropertyStruct) {
             *propertyLength = propInfo.length;
         } else {
-            // If the property is a binary blob and is defined in a MOF class, the extension
-            // qualifier is used to determine the size of the blob. However, if the extension 
-            // is IPAddrV6, you must set the PropertyLength variable yourself because the 
-            // EVENT_PROPERTY_INFO.length field will be zero.
+            wprintf(L"Unexpected length of 0 for intype %d and outtype %d\n",
+                    propInfo.nonStructType.InType,
+                    propInfo.nonStructType.OutType);
 
-            if (TDH_INTYPE_BINARY == propInfo.nonStructType.InType &&
-                TDH_OUTTYPE_IPV6 == propInfo.nonStructType.OutType)
-            {
-                *propertyLength = (USHORT)sizeof(IN6_ADDR);
-            } else if (TDH_INTYPE_UNICODESTRING == propInfo.nonStructType.InType ||
-                       TDH_INTYPE_ANSISTRING == propInfo.nonStructType.InType ||
-                       (propInfo.Flags & PropertyStruct) == PropertyStruct)
-            {
-                *propertyLength = propInfo.length;
-            } else
-            {
-                wprintf(L"Unexpected length of 0 for intype %d and outtype %d\n",
-                        propInfo.nonStructType.InType,
-                        propInfo.nonStructType.OutType);
-
-                st = ERROR_EVT_INVALID_EVENT_DATA;
-                goto cleanup;
-            }
+            st = ERROR_EVT_INVALID_EVENT_DATA;
+            goto cleanup;
         }
     }
 
@@ -518,7 +513,13 @@ void EtwTraceProcessor::OnEvent(EVENT_RECORD* event)
     if (IsEventTraceHeader(event))
         return;
 
-    events.push_back(CopyEvent(eventRecordAllocator, event));
+    EVENT_RECORD* eventCopy = CopyEvent(eventRecordAllocator, event);
+
+    {
+        std::unique_lock<std::shared_mutex> lock(mutex);
+        events.push_back(eventInfoCache.Get(*eventCopy));
+    }
+
     size_t newCount = ++eventCount;
 
     if (sink)

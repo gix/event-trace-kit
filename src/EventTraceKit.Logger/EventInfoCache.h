@@ -4,6 +4,7 @@
 #include "Support/CompilerSupport.h"
 
 #include <cstdint>
+#include <unordered_map>
 #include <windows.h>
 #include <evntcons.h>
 #include <tdh.h>
@@ -17,8 +18,8 @@ class EventInfo
 public:
     EventInfo() = default;
 
-    EventInfo(EVENT_RECORD* record, TRACE_EVENT_INFO* info)
-        : record(record), info(info)
+    EventInfo(EVENT_RECORD* record, TRACE_EVENT_INFO* info, size_t infoSize)
+        : record(record), info(info), infoSize(infoSize)
     {
     }
 
@@ -67,6 +68,7 @@ public:
 
     EVENT_RECORD* record = nullptr;
     TRACE_EVENT_INFO* info = nullptr;
+    size_t infoSize = 0;
 
     template<typename T>
     ETK_ALWAYS_INLINE T GetAt(size_t offset) const
@@ -119,11 +121,12 @@ class EventInfoCache
 public:
     EventInfoCache();
     EventInfo Get(EVENT_RECORD& event);
+    using TraceEventInfoPtr = std::tuple<vstruct_ptr<TRACE_EVENT_INFO>, size_t>;
+    static TraceEventInfoPtr CreateEventInfo(EVENT_RECORD& event);
 
 private:
-    using EventInfoPtr = vstruct_ptr<TRACE_EVENT_INFO>;
-    static EventInfoPtr CreateEventInfo(EVENT_RECORD& event);
-    LruCache<EventInfoKey, EventInfoPtr, boost::hash<EventInfoKey>> infos;
+    //LruCache<EventInfoKey, TraceEventInfoPtr, boost::hash<EventInfoKey>> infos;
+    std::unordered_map<EventInfoKey, TraceEventInfoPtr, boost::hash<EventInfoKey>> infos;
 };
 
 } // namespace etk

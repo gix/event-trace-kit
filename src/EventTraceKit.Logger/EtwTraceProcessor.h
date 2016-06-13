@@ -7,8 +7,10 @@
 
 #include <atomic>
 #include <deque>
-#include <windows.h>
+#include <shared_mutex>
 #include <thread>
+
+#include <windows.h>
 #include <evntcons.h>
 
 namespace etk
@@ -45,9 +47,11 @@ public:
     }
 
     virtual size_t GetEventCount() override { return eventCount; }
-    virtual EVENT_RECORD const* GetEvent(size_t index) override
+    virtual EventInfo GetEvent(size_t index) const override
     {
-        if (index >= eventCount) return nullptr;
+        if (index >= eventCount) return EventInfo();
+
+        std::shared_lock<std::shared_mutex> lock(mutex);
         return events[index];
     }
 
@@ -72,12 +76,14 @@ private:
     using EventRecordAllocator = BumpPtrAllocator<MallocAllocator>;
     EventRecordAllocator eventRecordAllocator;
 
-    std::deque<EVENT_RECORD const*> events;
+    std::deque<EventInfo> events;
     std::atomic<size_t> eventCount;
 
     IEventSink* sink = nullptr;
     TraceFormatter formatter;
     std::wstring messageBuffer;
+
+    mutable std::shared_mutex mutex;
 };
 
 } // namespace etk

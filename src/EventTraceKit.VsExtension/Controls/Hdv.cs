@@ -1,24 +1,10 @@
 ﻿namespace EventTraceKit.VsExtension.Controls.Hdv
 {
     using System;
-    using System.ComponentModel;
     using System.Data.SqlClient;
-    using System.Globalization;
     using System.Runtime.InteropServices;
     using System.Security.Principal;
     using System.Windows;
-
-    public static class DataColumn
-    {
-        public static DataColumn<T> Create<T>(Func<int, T> staticGenerator)
-        {
-            return Create<T>(null);
-        }
-    }
-
-    public class DataColumn<T>
-    {
-    }
 
     public class HdvColumnViewModelPreset
     {
@@ -91,142 +77,6 @@
             //    Opcode.GetHashCode(),
             //    Task.GetHashCode(),
             //    Keyword.GetHashCode());
-        }
-    }
-
-    public sealed class TimestampConverter : TypeConverter
-    {
-        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
-        {
-            return (sourceType == typeof(string)) || base.CanConvertFrom(context, sourceType);
-        }
-
-        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
-        {
-            return base.CanConvertTo(context, destinationType);
-        }
-
-        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-        {
-            string str = value as string;
-            if (str != null)
-                return TimePoint.Parse(str.Trim());
-            return base.ConvertFrom(context, culture, value);
-        }
-
-        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
-        {
-            if (destinationType == null)
-                throw new ArgumentNullException(nameof(destinationType));
-            return base.ConvertTo(context, culture, value, destinationType);
-        }
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    [TypeConverter(typeof(TimestampConverter))]
-    public struct TimePoint
-        : IComparable<TimePoint>
-        , IEquatable<TimePoint>
-    {
-        private readonly long nanoseconds;
-
-        public TimePoint(long nanoseconds)
-        {
-            this.nanoseconds = nanoseconds;
-        }
-
-        public static TimePoint FromNanoseconds(long nanoseconds)
-        {
-            return new TimePoint(nanoseconds);
-        }
-
-        public long ToNanoseconds => nanoseconds;
-        public long ToMicroseconds => nanoseconds / 1000;
-        public long ToMilliseconds => nanoseconds / 1000000;
-        public long ToSeconds => nanoseconds / 1000000000;
-
-        public static TimePoint Abs(TimePoint value)
-        {
-            return FromNanoseconds(Math.Abs(value.nanoseconds));
-        }
-
-        public static TimePoint Min(TimePoint lhs, TimePoint rhs)
-        {
-            return new TimePoint(Math.Min(lhs.ToNanoseconds, rhs.ToNanoseconds));
-        }
-
-        public static TimePoint Max(TimePoint lhs, TimePoint rhs)
-        {
-            return new TimePoint(Math.Max(lhs.ToNanoseconds, rhs.ToNanoseconds));
-        }
-
-        public static TimePoint Zero => new TimePoint();
-
-        public static TimePoint MinValue => new TimePoint(-9223372036854775808L);
-
-        public static TimePoint MaxValue => new TimePoint(9223372036854775807);
-
-        public int CompareTo(TimePoint other)
-        {
-            return
-                nanoseconds < other.nanoseconds ? -1 :
-                nanoseconds <= other.nanoseconds ? 0 :
-                1;
-        }
-
-        public bool Equals(TimePoint other)
-        {
-            return nanoseconds == other.nanoseconds;
-        }
-
-        public static bool operator ==(TimePoint lhs, TimePoint rhs)
-        {
-            return lhs.Equals(rhs);
-        }
-
-        public static bool operator !=(TimePoint lhs, TimePoint rhs)
-        {
-            return !lhs.Equals(rhs);
-        }
-
-        public static bool operator <(TimePoint lhs, TimePoint rhs)
-        {
-            return lhs.CompareTo(rhs) < 0;
-        }
-
-        public static bool operator >(TimePoint lhs, TimePoint rhs)
-        {
-            return lhs.CompareTo(rhs) > 0;
-        }
-
-        public static bool operator <=(TimePoint lhs, TimePoint rhs)
-        {
-            return lhs.CompareTo(rhs) <= 0;
-        }
-
-        public static bool operator >=(TimePoint lhs, TimePoint rhs)
-        {
-            return lhs.CompareTo(rhs) >= 0;
-        }
-
-        public override bool Equals(object other)
-        {
-            return other is TimePoint && Equals((TimePoint)other);
-        }
-
-        public override int GetHashCode()
-        {
-            return nanoseconds.GetHashCode();
-        }
-
-        public override string ToString()
-        {
-            return nanoseconds.ToString("F0");
-        }
-
-        public static TimePoint Parse(string s)
-        {
-            return new TimePoint(long.Parse(s));
         }
     }
 
@@ -579,13 +429,28 @@
             this.str = str;
         }
 
-        public static readonly UnmanagedString Empty = new UnmanagedString();
+        public static readonly UnmanagedString Empty;
+
+        public unsafe bool IsEmpty
+        {
+            get
+            {
+                if (HasValue)
+                    return str[0] == '\0';
+                return true;
+            }
+        }
 
         public unsafe bool HasValue => str != null;
 
         public override unsafe string ToString()
         {
             return str != null ? new string(str) : string.Empty;
+        }
+
+        public static implicit operator string(UnmanagedString value)
+        {
+            return value.ToString();
         }
 
         public bool Equals(UnmanagedString other)
@@ -918,14 +783,6 @@
         }
     }
 
-    internal class ConstantColumn
-    {
-        public static DataColumn<T> CreateComputedColumn<T>(T constant)
-        {
-            return DataColumn.Create<T>(null);
-        }
-    }
-
     public enum EventType
     {
         Unknown,
@@ -934,357 +791,5 @@
         TraceLogging,
         Wpp,
         MaxValue
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct Keyword
-        : IEquatable<Keyword>
-        , IComparable<Keyword>
-    {
-        public Keyword(ulong keywordValue)
-        {
-            KeywordValue = keywordValue;
-        }
-
-        public ulong KeywordValue { get; }
-
-        public static Keyword Zero => new Keyword();
-        public static Keyword MinValue => new Keyword(0L);
-        public static Keyword MaxValue => new Keyword(ulong.MaxValue);
-
-        public static bool operator ==(Keyword lhs, Keyword rhs)
-        {
-            return lhs.Equals(rhs);
-        }
-
-        public static bool operator !=(Keyword lhs, Keyword rhs)
-        {
-            return !lhs.Equals(rhs);
-        }
-
-        public static bool operator <(Keyword lhs, Keyword rhs)
-        {
-            return lhs.CompareTo(rhs) < 0;
-        }
-
-        public static bool operator >(Keyword lhs, Keyword rhs)
-        {
-            return lhs.CompareTo(rhs) > 0;
-        }
-
-        public static bool operator <=(Keyword lhs, Keyword rhs)
-        {
-            return lhs.CompareTo(rhs) <= 0;
-        }
-
-        public static bool operator >=(Keyword lhs, Keyword rhs)
-        {
-            return lhs.CompareTo(rhs) >= 0;
-        }
-
-        public static Keyword operator &(Keyword lhs, Keyword rhs)
-        {
-            return new Keyword(lhs.KeywordValue & rhs.KeywordValue);
-        }
-
-        public static implicit operator Keyword(ulong keywordValue)
-        {
-            return new Keyword(keywordValue);
-        }
-
-        public bool Equals(Keyword other)
-        {
-            return KeywordValue == other.KeywordValue;
-        }
-
-        public int CompareTo(Keyword other)
-        {
-            return KeywordValue.CompareTo(other.KeywordValue);
-        }
-
-        public override bool Equals(object other)
-        {
-            return other is Keyword && Equals((Keyword)other);
-        }
-
-        public override int GetHashCode()
-        {
-            return KeywordValue.GetHashCode();
-        }
-
-        public override string ToString()
-        {
-            return KeywordValue.ToString(CultureInfo.InvariantCulture);
-        }
-    }
-
-    public class CrimsonEventsViewModelSource
-    {
-        public class CrimsonEventsInfo
-        {
-            private unsafe TRACE_EVENT_INFO** traceEventInfos;
-            private unsafe EVENT_RECORD** eventRecords;
-
-            public uint ProjectProcessId(int index)
-            {
-                return GetEventRecord(index).EventHeader.ProcessId;
-            }
-
-            public unsafe TraceEventInfoCPtr GetTraceEventInfo(int index)
-            {
-                return new TraceEventInfoCPtr(traceEventInfos[index], 0);
-            }
-
-            public unsafe EventRecordCPtr GetEventRecord(int index)
-            {
-                return new EventRecordCPtr(eventRecords[index]);
-            }
-
-            public ushort ProjectId(int index)
-            {
-                return GetEventRecord(index).EventHeader.EventDescriptor.Id;
-            }
-
-            public byte ProjectVersion(int index)
-            {
-                return GetEventRecord(index).EventHeader.EventDescriptor.Version;
-            }
-
-            public byte ProjectChannel(int index)
-            {
-                return GetEventRecord(index).EventHeader.EventDescriptor.Channel;
-            }
-
-            public UnmanagedString ProjectChannelName(int index)
-            {
-                return GetTraceEventInfo(index).GetChannelName();
-            }
-
-            public byte ProjectLevel(int index)
-            {
-                return GetEventRecord(index).EventHeader.EventDescriptor.Level;
-            }
-
-            public UnmanagedString ProjectLevelName(int index)
-            {
-                return GetTraceEventInfo(index).GetLevelName();
-            }
-
-            public ushort ProjectTask(int index)
-            {
-                return GetEventRecord(index).EventHeader.EventDescriptor.Task;
-            }
-
-            public UnmanagedString ProjectTaskName(int index)
-            {
-                return GetTraceEventInfo(index).GetTaskName();
-            }
-
-            public byte ProjectOpCode(int index)
-            {
-                return GetEventRecord(index).EventHeader.EventDescriptor.Opcode;
-            }
-
-            public UnmanagedString ProjectOpCodeName(int index)
-            {
-                //var eventRecord = GetEventRecord(index);
-                //if (eventRecord.IsTraceLoggingEvent()) {
-                //    int opcode = eventRecord.EventHeader.EventDescriptor.Opcode;
-                //    return this.winmetaOpcodeService.GetOpcodeName(opcode);
-                //}
-                return GetTraceEventInfo(index).GetOpcodeName();
-            }
-
-            public ulong ProjectKeyword(int index)
-            {
-                return GetEventRecord(index).EventHeader.EventDescriptor.Keyword;
-            }
-
-            public Guid ProjectProviderGuid(int index)
-            {
-                return GetEventRecord(index).EventHeader.ProviderId;
-            }
-
-            public string ProjectMessage(int index)
-            {
-                throw new NotImplementedException();
-            }
-
-            public string ProjectProviderName(int index)
-            {
-                TraceEventInfoCPtr eventInfo = GetTraceEventInfo(index);
-                if (eventInfo.HasValue)
-                    return eventInfo.ProviderName.ToString();
-
-                return ProjectProviderGuid(index).ToString();
-            }
-
-            public Guid ProjectActivityId(int index)
-            {
-                return GetEventRecord(index).EventHeader.ActivityId;
-            }
-
-            private static readonly Guid ActivityIdSentinel =
-                new Guid("D733D8B0-7D18-4AEB-A3FC-8C4613BC2A40");
-
-            public unsafe Guid ProjectRelatedActivityId(int index)
-            {
-                var item = GetEventRecord(index).FindExtendedData(EVENT_HEADER_EXT_TYPE.RELATED_ACTIVITYID);
-                if (item == null)
-                    return ActivityIdSentinel;
-                return item->RelatedActivityId;
-            }
-
-            public unsafe string ProjectUserSecurityIdentifier(int index)
-            {
-                var item = GetEventRecord(index).FindExtendedData(EVENT_HEADER_EXT_TYPE.SID);
-                if (item == null)
-                    return string.Empty;
-
-                SecurityIdentifier sid = item->UserSecurityIdentifier;
-                return sid?.ToString() ?? string.Empty;
-            }
-
-            public int ProjectThreadId(int index)
-            {
-                return (int)GetEventRecord(index).EventHeader.ThreadId;
-            }
-
-            public TimePoint ProjectTimePoint(int index)
-            {
-                return TimePoint.Zero;
-            }
-        }
-
-        public interface ISession
-        {
-        }
-
-        public DataTableGenerator CreateTable(ISession session)
-        {
-            var info = new CrimsonEventsInfo();
-            var generator = new DataTableGenerator();
-
-            HdvColumnViewModelPreset providerNamePreset = null;
-            HdvColumnViewModelPreset taskNamePreset = null;
-            HdvColumnViewModelPreset versionPreset = null;
-            HdvColumnViewModelPreset idPreset = null;
-            HdvColumnViewModelPreset channelPreset = null;
-            HdvColumnViewModelPreset levelPreset = null;
-            HdvColumnViewModelPreset opcodePreset = null;
-            HdvColumnViewModelPreset taskPreset = null;
-            HdvColumnViewModelPreset keywordPreset = null;
-            HdvColumnViewModelPreset opcodeNamePreset = null;
-            HdvColumnViewModelPreset messagePreset = null;
-            HdvColumnViewModelPreset providerIdPreset = null;
-            HdvColumnViewModelPreset threadIdPreset = null;
-            HdvColumnViewModelPreset processIdPreset = null;
-
-            generator.AddColumn(
-                providerNamePreset,
-                DataColumn.Create(info.ProjectProviderName),
-                false);
-
-            generator.AddColumn(
-                taskNamePreset,
-                DataColumn.Create(info.ProjectTaskName),
-                false);
-
-            generator.AddColumn(
-                versionPreset,
-                DataColumn.Create(info.ProjectVersion),
-                false);
-
-            generator.AddColumn(
-                idPreset,
-                DataColumn.Create(info.ProjectId),
-                false);
-
-            generator.AddColumn(
-                channelPreset,
-                DataColumn.Create(info.ProjectChannel),
-                false);
-
-            generator.AddColumn(
-                levelPreset,
-                DataColumn.Create(info.ProjectLevel),
-                false);
-
-            generator.AddColumn(
-                opcodePreset,
-                DataColumn.Create(info.ProjectOpCode),
-                false, null,
-                ConstantColumn.CreateComputedColumn("Opcode"));
-
-            generator.AddColumn(
-                taskPreset,
-                DataColumn.Create(info.ProjectTask),
-                false);
-
-            generator.AddColumn(
-                keywordPreset,
-                DataColumn.Create(info.ProjectKeyword),
-                false);
-
-            generator.AddColumn(
-                opcodeNamePreset,
-                DataColumn.Create(info.ProjectOpCodeName),
-                false);
-
-            generator.AddColumn(
-                messagePreset,
-                DataColumn.Create(info.ProjectMessage),
-                false);
-
-            generator.AddColumn(
-                providerIdPreset,
-                DataColumn.Create(info.ProjectProviderGuid),
-                false);
-
-            generator.AddColumn(
-                threadIdPreset,
-                DataColumn.Create(info.ProjectThreadId),
-                false);
-
-            //generator.AddColumn(
-            //    activityIdPreset,
-            //    DataColumn.Create(info.ProjectActivityId),
-            //    false, new ActivityIdFormatter(sentinelActivityId), null, false,
-            //    false);
-
-            //generator.AddColumn(
-            //    relatedActivityIdPreset,
-            //    DataColumn.Create(info.ProjectRelatedActivityId),
-            //    false, new ActivityIdFormatter(sentinelActivityId), null,
-            //    false, false);
-
-            //generator.AddColumn(
-            //    userSecurityIdentifierPreset,
-            //    DataColumn.Create(info.ProjectUserSecurityIdentifier),
-            //    false);
-
-            generator.AddColumn(
-                processIdPreset,
-                DataColumn.Create(info.ProjectProcessId),
-                false);
-
-            //const int MaxEventDataDescriptors = 128;
-            //for (uint i = 0; i < MaxEventDataDescriptors; ++i) {
-            //    DataColumn<string> column39 = DataColumn.Create<string>(new TopLevelPropertyGenerator(info, i));
-            //    DataColumn<string> header = DataColumn.Create<string>(new TopLevelPropertyHeaderGenerator(info, i));
-            //    var data = StringWithLogicalComparisonColumn.CreateComputedColumn(column39);
-            //    string columnName = "UserData" + (i + 1);
-            //    generator.AddColumn(
-            //        GuidUtils.GenerateGuidFromName(columnName),
-            //        columnName,
-            //        data,
-            //        false,
-            //        true,
-            //        80,
-            //        SortOrder.Unspecified, -1, 0, null, null, header, false, true);
-            //}
-
-            return generator;
-        }
     }
 }

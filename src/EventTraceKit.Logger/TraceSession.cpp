@@ -197,6 +197,13 @@ namespace EventTraceKit
 
 class EventSink;
 
+public value struct EventInfo
+{
+    property IntPtr EventRecord;
+    property IntPtr TraceEventInfo;
+    property IntPtr TraceEventInfoSize;
+};
+
 public ref class TraceSession : public System::IDisposable
 {
 public:
@@ -208,11 +215,16 @@ public:
     void Clear();
     TraceStatistics^ Query();
 
-    IntPtr GetEvent(int index)
+    EventInfo GetEvent(int index)
     {
-        if (processor)
-            return IntPtr((void*)processor->GetEvent(index));
-        return IntPtr::Zero;
+        if (!processor)
+            return EventInfo();
+        auto eventInfo = processor->GetEvent(index);
+        EventInfo info;
+        info.EventRecord = IntPtr(eventInfo.record);
+        info.TraceEventInfo = IntPtr(eventInfo.info);
+        info.TraceEventInfoSize = IntPtr((void*)eventInfo.infoSize);
+        return info;
     }
 
     event Action<int>^ NewEvents;

@@ -324,9 +324,9 @@
         public IFormatProvider FormatProvider { get; set; }
     }
 
-    public sealed class DataColumnView
+    public abstract class DataColumnView
     {
-        public DataColumnView(DataColumn column, DataColumnViewInfo info)
+        protected DataColumnView(DataColumn column, DataColumnViewInfo info)
         {
             Column = column;
             IsVisible = info.IsVisible;
@@ -342,6 +342,32 @@
         public bool IsVisible { get; set; }
         public string Format { get; set; }
         public IFormatProvider FormatProvider { get; set; }
+
+        public CellValue GetCellValue(int index)
+        {
+            return GetCellValueCore(index);
+        }
+
+        protected abstract CellValue GetCellValueCore(int index);
+
+        public object UntypedGetValue(int index)
+        {
+            return Column.UntypedGetValue(index);
+        }
+    }
+
+    public sealed class DataColumnView<T> : DataColumnView
+    {
+        public DataColumnView(DataColumn column, DataColumnViewInfo info)
+            : base(column, info)
+        {
+        }
+
+        protected sealed override CellValue GetCellValueCore(int index)
+        {
+            object value = UntypedGetValue(index);
+            return new CellValue(value, FormatProvider, Format);
+        }
     }
 
     public interface IDataColumn
@@ -353,7 +379,7 @@
         TextAlignment TextAlignment { get; }
     }
 
-    public class DataColumn : IDataColumn
+    public abstract class DataColumn : IDataColumn
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
@@ -364,7 +390,57 @@
 
         public DataColumnView CreateView(DataColumnViewInfo info)
         {
-            return new DataColumnView(this, info);
+            return CreateViewCore(info);
+        }
+
+        public object UntypedGetValue(int index)
+        {
+            return UntypedGetValueCore(index);
+        }
+
+        protected abstract DataColumnView CreateViewCore(DataColumnViewInfo info);
+        protected abstract object UntypedGetValueCore(int index);
+
+        public static DataColumn Create<T>()
+        {
+            return new DataColumn<T>();
+        }
+
+        public static DataColumn Create<T>(Func<int, T> generator)
+        {
+            return new DataColumn<T>(generator);
+        }
+    }
+
+    public class DataColumn<T> : DataColumn
+    {
+        private readonly Func<int, T> generator;
+
+        public DataColumn(Func<int, T> generator)
+        {
+            this.generator = generator;
+        }
+
+        public DataColumn()
+        {
+            generator = _ => default(T);
+        }
+
+        public new DataColumnView<T> CreateView(DataColumnViewInfo info)
+        {
+            return new DataColumnView<T>(this, info);
+        }
+
+        protected sealed override DataColumnView CreateViewCore(DataColumnViewInfo info)
+        {
+            return CreateView(info);
+        }
+
+        public T this[int index] => generator(index);
+
+        protected sealed override object UntypedGetValueCore(int index)
+        {
+            return this[index];
         }
     }
 }

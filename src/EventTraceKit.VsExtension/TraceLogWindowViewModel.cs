@@ -19,7 +19,12 @@
     using Microsoft.VisualStudio.Shell;
     using Task = System.Threading.Tasks.Task;
 
-    public class TraceLogWindowViewModel : ViewModel
+    public interface IEventInfoSource
+    {
+        EventInfo GetEvent(int index);
+    }
+
+    public class TraceLogWindowViewModel : ViewModel, IEventInfoSource
     {
         private readonly DispatcherTimer updateStatisticsTimer;
         private readonly List<TraceProviderSpec> providers = new List<TraceProviderSpec>();
@@ -43,7 +48,7 @@
             if (modeProvider != null)
                 modeProvider.OperationalModeChanged += OnOperationalModeChanged;
 
-            var tableTuple = new GenericEventsViewModelSource().CreateTable();
+            var tableTuple = new GenericEventsViewModelSource().CreateTable(this);
             var dataTable = tableTuple.Item1;
             var preset = tableTuple.Item2;
 
@@ -153,12 +158,19 @@
                 IsCollecting = true;
                 updateStatisticsTimer.Start();
             } catch (Exception ex) {
+                session?.Stop();
+                session = null;
+                IsCollecting = false;
+                updateStatisticsTimer.Stop();
                 Status = ex.ToString();
             }
         }
 
         private void OnNewEvents(int newCount)
         {
+            EventsDataView.UpdateRowCount(newCount);
+            return;
+
             var now = DateTime.UtcNow;
             var elapsed = now - lastUpdateEvent;
 
@@ -304,6 +316,13 @@
                     StartCapture();
                     break;
             }
+        }
+
+        public EventInfo GetEvent(int index)
+        {
+            if (session != null)
+                return session.GetEvent(index);
+            return new EventInfo();
         }
     }
 
@@ -885,10 +904,10 @@
 
         public override CellValue GetCellValue(int rowIndex, int columnIndex)
         {
-            var result = new CellValue(
-                $"{rowIndex}:{DataColumnViews[columnIndex].Name}", null, null);
+            if (rowIndex >= EventCount)
+                return null;
 
-            return result;
+            return DataColumnViews[columnIndex].GetCellValue(rowIndex);
         }
     }
 
@@ -984,6 +1003,7 @@
     {
         private readonly WorkManager workManager;
         private readonly IDataView dataView;
+        private readonly AsyncDataGridColumnsViewModel columnsViewModel;
 
         private bool isInitializedWithFirstPreset;
         private bool shouldApplyPreset;
@@ -991,7 +1011,6 @@
         private HdvViewModelPreset presetToApplyOnReady;
         private bool refreshViewModelFromModelOnReady;
         private bool refreshViewModelOnUpdateRequest;
-        private AsyncDataGridColumnsViewModel columnsViewModel;
 
         internal CancellationTokenSource readCancellationTokenSource;
         private readonly ManualResetEvent asyncReadQueueComplete;
