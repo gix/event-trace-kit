@@ -11,6 +11,7 @@
     using System.Xml.Linq;
     using System.Xml.XPath;
     using EventTraceKit.VsExtension;
+    using Microsoft.VisualStudio.PlatformUI;
     using Microsoft.VisualStudio.Settings;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
@@ -30,14 +31,14 @@
         {
             base.OnStartup(e);
 
-            //ServiceProvider.GlobalProvider
-
             var setGlobalProvider = typeof(ServiceProvider)
                 .GetMethod("SetGlobalProvider", BindingFlags.NonPublic | BindingFlags.Static);
 
             setGlobalProvider.Invoke(null, new object[] { CreateServiceProvider() });
 
             var sm = ServiceProvider.GlobalProvider.GetService(typeof(SVsSettingsManager)) as IVsSettingsManager;
+
+            EnvironmentRenderCapabilities.Current.VisualEffectsAllowed = 1 | 2;
 
             availableThemes.AddRange(FindAvailableThemes());
             TryLoadTheme("VisualStudio.Dark");

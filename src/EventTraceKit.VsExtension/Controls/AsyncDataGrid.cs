@@ -657,6 +657,12 @@ namespace EventTraceKit.VsExtension.Controls
             CellsPresenter?.PostUpdateRendering();
         }
 
+        protected override void OnGotFocus(RoutedEventArgs e)
+        {
+            base.OnGotFocus(e);
+            //CellsPresenter?.Focus();
+        }
+
         private static void OnCopyCellCanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
             var grid = (AsyncDataGrid)sender;

@@ -156,6 +156,7 @@ namespace EventTraceKit.VsExtension.Controls
             if (oldIndex != newIndex)
                 WritableColumns.Move(oldIndex, newIndex);
 
+            RefreshAllObservableCollections();
             HdvViewModelPreset preset = HdvViewModel.CreatePresetFromUIThatHasBeenModified();
             HdvViewModel.HdvViewModelPreset = preset;
         }

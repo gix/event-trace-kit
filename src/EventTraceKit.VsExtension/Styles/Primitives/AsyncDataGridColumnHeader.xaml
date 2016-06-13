@@ -17,13 +17,6 @@
     <Setter Property="Template" Value="{StaticResource DataGridColumnHeaderGripperTemplate}"/>
   </Style>
 
-  <Style x:Key="DataGridColumnHeaderGripper2" TargetType="{x:Type Thumb}">
-    <Setter Property="Width" Value="8"/>
-    <Setter Property="Background" Value="{DynamicResource {x:Static vsp:HeaderColors.SeparatorLineBrushKey}}"/>
-    <Setter Property="Cursor" Value="{x:Static Primitives:AsyncDataGridColumnHeader.SplitCursor}"/>
-    <Setter Property="Template" Value="{StaticResource DataGridColumnHeaderGripperTemplate}"/>
-  </Style>
-
   <ControlTemplate x:Key="DataGridColumnHeaderTemplate"
                    TargetType="{x:Type Primitives:AsyncDataGridColumnHeader}">
     <!--
@@ -47,7 +40,7 @@
       <!-- Note the negative margin on the thumb, which gives the gripper a
            bigger hit area than the actual visual appearance -->
       <Thumb x:Name="PART_LeftHeaderGripper" HorizontalAlignment="Left" Margin="-4,0,0,0"
-             Style="{StaticResource DataGridColumnHeaderGripper2}"/>
+             Style="{StaticResource DataGridColumnHeaderGripper}"/>
       <Thumb x:Name="PART_RightHeaderGripper" HorizontalAlignment="Right" Margin="0,0,-4,0"
              Style="{StaticResource DataGridColumnHeaderGripper}"/>
     </Grid>
@@ -72,6 +65,7 @@
   </ControlTemplate>
 
   <Style TargetType="{x:Type Primitives:AsyncDataGridColumnHeader}">
+    <Setter Property="Focusable" Value="True"/>
     <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
     <Setter Property="VerticalContentAlignment" Value="Center"/>
     <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:EnvironmentColors.CommandBarTextActiveBrushKey}}"/>

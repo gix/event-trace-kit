@@ -149,7 +149,6 @@
             try {
                 session = new TraceSession(new List<TraceEvent>(), providers);
                 session.NewEvents += OnNewEvents;
-                //Events.Attach(session);
                 session.Start();
                 IsCollecting = true;
                 updateStatisticsTimer.Start();
@@ -886,7 +885,8 @@
 
         public override CellValue GetCellValue(int rowIndex, int columnIndex)
         {
-            var result = new CellValue(string.Format("{0}:{1}", rowIndex, columnIndex), null, null);
+            var result = new CellValue(
+                $"{rowIndex}:{DataColumnViews[columnIndex].Name}", null, null);
 
             return result;
         }

@@ -227,6 +227,12 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 FinishColumnHeaderDrag(true);
         }
 
+        internal void OnHeaderKeyDown(KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape && headerDragCtx.IsDragging)
+                FinishColumnHeaderDrag(true);
+        }
+
         private void StartColumnHeaderDrag()
         {
             var reorderingEventArgs = new AsyncDataGridColumnReorderingEventArgs(
@@ -283,6 +289,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             }
 
             ClearColumnHeaderDragInfo();
+
+            ParentGrid.CellsPresenter?.Focus();
         }
 
         private void ClearColumnHeaderDragInfo()

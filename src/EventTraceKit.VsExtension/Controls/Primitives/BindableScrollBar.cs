@@ -5,11 +5,17 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
     using System.Windows.Controls;
     using System.Windows.Controls.Primitives;
     using System.Windows.Data;
+    using System.Windows.Input;
 
     public class BindableScrollBar : ScrollBar
     {
         private readonly ScrollEventHandler scrollBarScrollHandler;
         private readonly ScrollChangedEventHandler scrollViewerScrollChangedHandler;
+
+        static BindableScrollBar()
+        {
+            InitializeCommands();
+        }
 
         public BindableScrollBar()
         {
@@ -61,6 +67,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             if (newValue != null)
                 BindToScrollViewer(newValue);
         }
+
+        #endregion
 
         private void UnbindFromScrollViewer(ScrollViewer oldViewer)
         {
@@ -115,7 +123,63 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             SetBinding(VisibilityProperty, visibilityBinding);
         }
 
-        #endregion
+        private static void InitializeCommands()
+        {
+            var executed = new ExecutedRoutedEventHandler(OnScrollCommand);
+            var canExecute = new CanExecuteRoutedEventHandler(OnQueryScrollCommand);
+            RegisterCommandHandler(LineLeftCommand, executed, canExecute);
+            RegisterCommandHandler(LineRightCommand, executed, canExecute);
+            RegisterCommandHandler(PageLeftCommand, executed, canExecute);
+            RegisterCommandHandler(PageRightCommand, executed, canExecute);
+            RegisterCommandHandler(LineUpCommand, executed, canExecute);
+            RegisterCommandHandler(LineDownCommand, executed, canExecute);
+            RegisterCommandHandler(PageUpCommand, executed, canExecute);
+            RegisterCommandHandler(PageDownCommand, executed, canExecute);
+            RegisterCommandHandler(ScrollToLeftEndCommand, executed, canExecute);
+            RegisterCommandHandler(ScrollToRightEndCommand, executed, canExecute);
+            RegisterCommandHandler(ScrollToEndCommand, executed, canExecute);
+            RegisterCommandHandler(ScrollToHomeCommand, executed, canExecute);
+            RegisterCommandHandler(ScrollToTopCommand, executed, canExecute);
+            RegisterCommandHandler(ScrollToBottomCommand, executed, canExecute);
+            RegisterCommandHandler(ScrollToHorizontalOffsetCommand, executed, canExecute);
+            RegisterCommandHandler(ScrollToVerticalOffsetCommand, executed, canExecute);
+            RegisterCommandHandler(DeferScrollToHorizontalOffsetCommand, executed, canExecute);
+            RegisterCommandHandler(DeferScrollToVerticalOffsetCommand, executed, canExecute);
+        }
+
+        private static void RegisterCommandHandler(
+            RoutedCommand command, ExecutedRoutedEventHandler executed,
+            CanExecuteRoutedEventHandler canExecute)
+        {
+            CommandManager.RegisterClassCommandBinding(
+                typeof(BindableScrollBar),
+                new CommandBinding(command, executed, canExecute));
+        }
+
+        private static void OnQueryScrollCommand(
+            object target, CanExecuteRoutedEventArgs args)
+        {
+            args.CanExecute = true;
+            if (args.Command == DeferScrollToHorizontalOffsetCommand ||
+                args.Command == DeferScrollToVerticalOffsetCommand) {
+                var viewer = target as ScrollViewer;
+                if (viewer != null && !viewer.IsDeferredScrollingEnabled) {
+                    args.CanExecute = false;
+                    args.Handled = true;
+                }
+            }
+        }
+
+        private static void OnScrollCommand(
+            object target, ExecutedRoutedEventArgs args)
+        {
+            // Forward all scrollbar events to the bound scroll viewer which
+            // then can handle them properly using its scroll info. Without
+            // forwarding these events will not reach the scroll viewer via
+            // bubbling when we are not a descendant element of the viewer.
+            var scrollBar = target as BindableScrollBar;
+            scrollBar?.ScrollViewer?.RaiseEvent(args);
+        }
 
         private void OnScrollBarScroll(object sender, ScrollEventArgs e)
         {

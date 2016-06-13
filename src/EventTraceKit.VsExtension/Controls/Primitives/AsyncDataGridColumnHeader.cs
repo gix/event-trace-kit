@@ -384,6 +384,17 @@
             }
         }
 
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+
+            var parent = ParentPresenter;
+            if (parent != null) {
+                parent.OnHeaderKeyDown(e);
+                e.Handled = true;
+            }
+        }
+
         private void OnLeftHeaderGripperPartDragStarted(
             object sender, DragStartedEventArgs e)
         {
