@@ -4,6 +4,7 @@
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Media;
+    using EventTraceKit.VsExtension.Windows;
 
     /// <summary>
     ///   Represents a control that indicates that an activity is ongoing. The

@@ -5,7 +5,8 @@
   xmlns:utils="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Utilities"
   xmlns:vsui="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
   xmlns:vsi="clr-namespace:Microsoft.Internal.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
-  xmlns:etk="clr-namespace:EventTraceKit.VsExtension.Controls">
+  xmlns:etk="clr-namespace:EventTraceKit.VsExtension.Controls"
+  xmlns:Windows="clr-namespace:EventTraceKit.VsExtension.Windows">
 
   <utils:BrushToColorConverter x:Key="BrushToColorConverter"/>
   <vsui:NotNullConverter x:Key="NotNullConverter"/>
@@ -19,6 +20,10 @@
   </Geometry>
   <Geometry x:Key="DownArrowGeometry">M 0 0 L 3 3 L 6 0 Z</Geometry>
   <Geometry x:Key="UpArrowGeometry">M 0 3 L 3 0 L 6 3 Z</Geometry>
+
+  <Style x:Key="{x:Type Path}" TargetType="{x:Type Path}">
+    <Setter Property="Fill" Value="{DynamicResource {x:Static vsui:HeaderColors.GlyphBrushKey}}"/>
+  </Style>
 
   <Style TargetType="{x:Type etk:VsMenuScrollViewer}">
     <Setter Property="HorizontalScrollBarVisibility" Value="Hidden"/>
@@ -151,7 +156,7 @@
                     BorderThickness="1"/>
             <Border Background="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarMenuBackgroundGradientBeginBrushKey}}"
                     HorizontalAlignment="Left" VerticalAlignment="Top" Height="2"
-                    Margin="{etk:MenuPopupPositionerExtension ElementName=Bg}">
+                    Margin="{Windows:MenuPopupPositionerExtension ElementName=Bg}">
             </Border>
           </Grid>
         </vsui:SystemDropShadowChrome>

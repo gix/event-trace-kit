@@ -11,6 +11,7 @@
     using System.Xml.Linq;
     using System.Xml.XPath;
     using EventTraceKit.VsExtension;
+    using EventTraceKit.VsExtension.Windows;
     using Microsoft.VisualStudio.PlatformUI;
     using Microsoft.VisualStudio.Settings;
     using Microsoft.VisualStudio.Shell;

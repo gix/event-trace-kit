@@ -37,6 +37,7 @@ public:
     virtual bool IsEndOfTracing() = 0;
 
     virtual void ClearEvents() = 0;
+    virtual TRACE_LOGFILE_HEADER const* GetLogFileHeader() const = 0;
     virtual size_t GetEventCount() = 0;
     virtual EventInfo GetEvent(size_t index) const = 0;
 };

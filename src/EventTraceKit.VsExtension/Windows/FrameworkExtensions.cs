@@ -1,4 +1,4 @@
-namespace EventTraceKit.VsExtension.Controls
+namespace EventTraceKit.VsExtension.Windows
 {
     using System;
     using System.Windows;

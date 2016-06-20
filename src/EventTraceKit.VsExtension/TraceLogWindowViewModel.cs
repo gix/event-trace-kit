@@ -16,13 +16,9 @@
     using System.Windows.Threading;
     using EventTraceKit.VsExtension.Collections;
     using EventTraceKit.VsExtension.Controls;
+    using EventTraceKit.VsExtension.Windows;
     using Microsoft.VisualStudio.Shell;
     using Task = System.Threading.Tasks.Task;
-
-    public interface IEventInfoSource
-    {
-        EventInfo GetEvent(int index);
-    }
 
     public class TraceLogWindowViewModel : ViewModel, IEventInfoSource
     {
@@ -72,7 +68,8 @@
             updateStatisticsTimer.Tick += (s, a) => UpdateStats();
 
             var spec = new TraceProviderSpec(new Guid("716EFEF7-5AC2-4EE0-8277-D9226411A155"));
-            spec.SetManifest(@"C:\Users\nrieck\dev\ffmf\src\Sculptor\Sculptor.man");
+            //spec.SetManifest(@"C:\Users\nrieck\dev\ffmf\src\Sculptor\Sculptor.man");
+            spec.SetProviderBinary(@"C:\Users\nrieck\dev\ffmf\build\x64-dbg\bin\Sculptor.dll");
             spec.IncludeSecurityId = true;
             spec.IncludeStackTrace = true;
             spec.IncludeTerminalSessionId = true;
@@ -316,6 +313,13 @@
                     StartCapture();
                     break;
             }
+        }
+
+        public TraceSessionInfo GetInfo()
+        {
+            if (session != null)
+                return session.GetInfo();
+            return new TraceSessionInfo();
         }
 
         public EventInfo GetEvent(int index)
@@ -837,9 +841,12 @@
             return column.CreateView(info);
         }
 
-        public virtual CellValue GetCellValue(int rowIndex, int columnIndex)
+        public CellValue GetCellValue(int rowIndex, int columnIndex)
         {
-            return null;
+            if (rowIndex >= RowCount)
+                return null;
+
+            return DataColumnViews[columnIndex].GetCellValue(rowIndex);
         }
 
         public event EventHandler RowCountChanged;
@@ -901,14 +908,6 @@
         }
 
         public int EventCount => RowCount;
-
-        public override CellValue GetCellValue(int rowIndex, int columnIndex)
-        {
-            if (rowIndex >= EventCount)
-                return null;
-
-            return DataColumnViews[columnIndex].GetCellValue(rowIndex);
-        }
     }
 
     public class DataTable : ICloneable

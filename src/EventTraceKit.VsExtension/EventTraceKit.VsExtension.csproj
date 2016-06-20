@@ -49,7 +49,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
-    <SignAssembly>true</SignAssembly>
+    <SignAssembly>false</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>..\Common\EventTraceKit.snk</AssemblyOriginatorKeyFile>
@@ -165,41 +165,47 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CharCPtrUtils.cs" />
     <Compile Include="Collections\Extensions.cs" />
-    <Compile Include="ColorExtensions.cs" />
+    <Compile Include="Windows\MenuPopupPositionerExtension.cs" />
+    <Compile Include="Controls\VsMenuScrollViewer.cs" />
+    <Compile Include="Windows\ColorExtensions.cs" />
     <Compile Include="Controls\AsyncDataGrid.cs" />
-    <Compile Include="Controls\IsEmptyEnumerableConverter.cs" />
+    <Compile Include="Windows\IsEmptyEnumerableConverter.cs" />
     <Compile Include="Controls\MenuExtensions.cs" />
     <Compile Include="Controls\Primitives\BindableScrollBar.cs" />
     <Compile Include="Controls\Primitives\ColumnChooser.cs" />
-    <Compile Include="FreezableExtensions.cs" />
+    <Compile Include="Windows\FreezableExtensions.cs" />
     <Compile Include="GenericEventsViewModelSource.cs" />
     <Compile Include="HslColor.cs" />
     <Compile Include="HsvColor.cs" />
+    <Compile Include="IEventInfoSource.cs" />
+    <Compile Include="IMessageFormatter.cs" />
+    <Compile Include="Keyword.cs" />
     <Compile Include="MultiRange.cs" />
     <Compile Include="Native\NativeMethods.cs" />
     <Compile Include="NumberUtils.cs" />
     <Compile Include="QueuedDispatcherAction.cs" />
     <Compile Include="Range.cs" />
     <Compile Include="CommonControlBrushes.cs" />
-    <Compile Include="Controls\Boxed.cs" />
+    <Compile Include="Boxed.cs" />
     <Compile Include="Controls\ExpanderHeaderColumn.cs" />
     <Compile Include="Controls\Primitives\AsyncDataGridColumnHeadersPanel.cs" />
     <Compile Include="Controls\AsyncDataGridRowSelection.cs" />
-    <Compile Include="Controls\CellValue.cs" />
-    <Compile Include="Controls\DoubleExtensions.cs" />
+    <Compile Include="CellValue.cs" />
+    <Compile Include="DoubleExtensions.cs" />
     <Compile Include="DoubleUtils.cs" />
-    <Compile Include="Controls\DrawingContextExtensions.cs" />
-    <Compile Include="Controls\NegativeDoubleValueConverter.cs" />
-    <Compile Include="Controls\ObjectNullCheckToVisibility.cs" />
-    <Compile Include="Controls\PointUtils.cs" />
+    <Compile Include="Windows\DrawingContextExtensions.cs" />
+    <Compile Include="Windows\NegativeDoubleValueConverter.cs" />
+    <Compile Include="Windows\ObjectNullCheckToVisibility.cs" />
+    <Compile Include="PointUtils.cs" />
     <Compile Include="Controls\Primitives\CollectionDefaults.cs" />
-    <Compile Include="Controls\Primitives\DelegateValueConverter.cs" />
-    <Compile Include="Controls\Primitives\ValueCache.cs" />
+    <Compile Include="Windows\DelegateValueConverter.cs" />
+    <Compile Include="ValueCache.cs" />
     <Compile Include="Controls\Primitives\AsyncDataGridColumnHeader.cs" />
-    <Compile Include="Controls\FrameworkExtensions.cs" />
-    <Compile Include="Controls\PropertyMetadataUtils.cs" />
-    <Compile Include="Controls\SizeUtils.cs" />
+    <Compile Include="Windows\FrameworkExtensions.cs" />
+    <Compile Include="Windows\PropertyMetadataUtils.cs" />
+    <Compile Include="SizeUtils.cs" />
     <Compile Include="Controls\AsyncDataGridStuff.cs" />
     <Compile Include="Controls\Primitives\AsyncDataGridColumnHeadersPresenter.cs" />
     <Compile Include="Controls\AsyncDataGridCellsPresenterViewModel.cs" />
@@ -211,15 +217,15 @@
     <Compile Include="Controls\ActivityRing.cs" />
     <Compile Include="Controls\ProgressRing.cs" />
     <Compile Include="CustomTypeDescriptor.cs" />
-    <Compile Include="DependencyPropertyExtensions.cs" />
+    <Compile Include="Windows\DependencyPropertyExtensions.cs" />
     <Compile Include="DynamicWindowPane.cs" />
     <Compile Include="DynamicWindowWPFControl.xaml.cs">
       <DependentUpon>DynamicWindowWPFControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="EventTraceKitPackage.cs" />
     <Compile Include="Guids.cs" />
-    <Compile Include="Controls\ValidateValueCallbacks.cs" />
-    <Compile Include="Controls\Hdv.cs" />
+    <Compile Include="ValidateValueCallbacks.cs" />
+    <Compile Include="Native.cs" />
     <Compile Include="Controls\AsyncDataGridRenderedCellsVisual.cs" />
     <Compile Include="Controls\Primitives\AsyncDataGridCellsPresenter.cs" />
     <Compile Include="PersistedWindowPane.cs" />
@@ -234,10 +240,12 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="ResourceUtils.cs" />
     <Compile Include="SelectionProperties.cs" />
     <Compile Include="TdhHelper.cs" />
+    <Compile Include="TimePoint.cs" />
+    <Compile Include="TimePointConverter.cs" />
+    <Compile Include="TimePointFormatter.cs" />
     <Compile Include="TraceLogWindow.cs" />
     <Compile Include="TraceLogWindowCommand.cs" />
     <Compile Include="TraceLogWindowControl.xaml.cs">
@@ -386,6 +394,7 @@
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>
   </PropertyGroup>
+  <Import Project="..\Common\CommonProjectNet.props" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

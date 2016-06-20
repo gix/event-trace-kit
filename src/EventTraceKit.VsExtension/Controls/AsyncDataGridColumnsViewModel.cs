@@ -175,7 +175,7 @@ namespace EventTraceKit.VsExtension.Controls
                 var columnPreset = preset.ConfigurableColumns[index];
                 column.Width = columnPreset.Width;
                 column.TextAlignment = columnPreset.TextAlignment;
-                //column.CellFormat = columnPreset.CellFormat;
+                column.CellFormat = columnPreset.CellFormat;
                 ++index;
             }
 

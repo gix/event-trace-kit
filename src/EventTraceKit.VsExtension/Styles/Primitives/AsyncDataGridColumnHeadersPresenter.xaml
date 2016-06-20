@@ -2,11 +2,13 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:Controls="clr-namespace:EventTraceKit.VsExtension.Controls"
                     xmlns:Primitives="clr-namespace:EventTraceKit.VsExtension.Controls.Primitives"
-                    xmlns:vsp="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0">
+                    xmlns:vsp="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
+                    xmlns:etkvs="clr-namespace:EventTraceKit.VsExtension"
+                    xmlns:Windows="clr-namespace:EventTraceKit.VsExtension.Windows">
   <Style TargetType="{x:Type Primitives:AsyncDataGridColumnHeadersPresenter}">
     <Style.Resources>
-      <Controls:ObjectNullCheckToVisibility x:Key="ObjectNullCheckToVisibility"/>
-      <Controls:IsEmptyEnumerableConverter x:Key="IsEmptyEnumerableConverter"/>
+      <Windows:ObjectNullCheckToVisibility x:Key="ObjectNullCheckToVisibility"/>
+      <Windows:IsEmptyEnumerableConverter x:Key="IsEmptyEnumerableConverter"/>
     </Style.Resources>
     <Setter Property="Template">
       <Setter.Value>

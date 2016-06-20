@@ -12,6 +12,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
     using System.Windows.Media;
     using System.Windows.Media.Animation;
     using EventTraceKit.VsExtension.Collections;
+    using EventTraceKit.VsExtension.Windows;
 
     public class AsyncDataGridColumnHeadersPresenter : ItemsControl
     {

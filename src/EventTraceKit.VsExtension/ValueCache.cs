@@ -1,4 +1,4 @@
-namespace EventTraceKit.VsExtension.Controls.Primitives
+namespace EventTraceKit.VsExtension
 {
     using System;
     using System.Threading;

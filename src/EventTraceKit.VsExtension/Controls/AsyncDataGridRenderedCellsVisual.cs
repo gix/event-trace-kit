@@ -6,6 +6,7 @@ namespace EventTraceKit.VsExtension.Controls
     using System.Windows;
     using System.Windows.Media;
     using EventTraceKit.VsExtension.Controls.Primitives;
+    using EventTraceKit.VsExtension.Windows;
 
     public class AsyncDataGridRenderedCellsVisual : DrawingVisual
     {
@@ -240,8 +241,8 @@ namespace EventTraceKit.VsExtension.Controls
 
                         var value = column.GetCellValue(row, viewportSizeHint);
                         var formatted = new FormattedText(
-                            value?.ToString(), currentCulture, flowDirection,
-                            typeface, fontSize, foreground, null,
+                            value?.ToString() ?? string.Empty, currentCulture,
+                            flowDirection, typeface, fontSize, foreground, null,
                             TextFormattingMode.Display);
                         formatted.MaxTextWidth = Math.Max(cellWidth - totalPadding, 0);
                         formatted.MaxTextHeight = rowHeight;

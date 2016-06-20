@@ -2,15 +2,13 @@ namespace EventTraceKit.VsExtension
 {
     using System;
     using System.Collections.Generic;
-    using System.ComponentModel;
     using System.Globalization;
     using System.Linq;
-    using System.Runtime.InteropServices;
     using System.Security.Principal;
     using System.Text;
     using System.Windows;
     using EventTraceKit.VsExtension.Controls;
-    using EventTraceKit.VsExtension.Controls.Hdv;
+    using EventTraceKit.VsExtension.Windows;
     using Microsoft.VisualStudio.Shell.Interop;
 
     public sealed class GenericEventsViewModelSource
@@ -40,7 +38,7 @@ namespace EventTraceKit.VsExtension
         private readonly HdvColumnViewModelPreset userSecurityIdentifierPreset;
         private readonly HdvColumnViewModelPreset sessionIdPreset;
         private readonly HdvColumnViewModelPreset eventKeyPreset;
-        private readonly HdvColumnViewModelPreset timestampGeneratorPreset;
+        private readonly HdvColumnViewModelPreset timePointGeneratorPreset;
         private readonly HdvColumnViewModelPreset datetimeGeneratorPreset;
         private readonly HdvColumnViewModelPreset modernProcessDataPreset;
         private readonly HdvColumnViewModelPreset processNamePreset;
@@ -123,7 +121,7 @@ namespace EventTraceKit.VsExtension
             opcodeOrTypePreset =
                 new HdvColumnViewModelPreset {
                     Id = new Guid("F08CCD14-FE1E-4D9E-BE6C-B527EA4B25DA"),
-                    Name = "Opcode/Type ",
+                    Name = "Opcode/Type",
                     IsVisible = false,
                     Width = 80
                 }.EnsureFrozen();
@@ -181,7 +179,7 @@ namespace EventTraceKit.VsExtension
             processIdPreset =
                 new HdvColumnViewModelPreset {
                     Id = new Guid("7600E8FD-D7C2-4BA4-9DE4-AADE5230DC53"),
-                    Name = "Event Header ProcessId",
+                    Name = "ProcessId",
                     IsVisible = true,
                     Width = 50,
                     HelpText = "(0 = PID Not Found)"
@@ -228,14 +226,14 @@ namespace EventTraceKit.VsExtension
                     IsVisible = false,
                     Width = 80
                 }.EnsureFrozen();
-            timestampGeneratorPreset =
+            timePointGeneratorPreset =
                 new HdvColumnViewModelPreset {
                     Id = new Guid("9C75AA69-046E-42AE-B594-B4AD24335A0A"),
                     Name = "Time",
                     IsVisible = true,
                     Width = 80,
                     TextAlignment = TextAlignment.Right,
-                    CellFormat = "sN"
+                    CellFormat = TimePointFormatter.FormatSecondsGrouped
                 }.EnsureFrozen();
             datetimeGeneratorPreset =
                 new HdvColumnViewModelPreset {
@@ -285,39 +283,41 @@ namespace EventTraceKit.VsExtension
         {
             var table = new DataTable("Generic Events");
             var defaultPreset = new HdvViewModelPreset();
-            var info = new CrimsonEventsInfo(eventInfoSource);
+            var formatter = new NativeTdhFormatter();
+            var info = new CrimsonEventsInfo(eventInfoSource, formatter);
 
+            AddColumn(table, defaultPreset, timePointGeneratorPreset, DataColumn.Create(info.ProjectTimePoint));
+            AddColumn(table, defaultPreset, datetimeGeneratorPreset, DataColumn.Create(info.ProjectDateTime));
             AddColumn(table, defaultPreset, providerIdPreset, DataColumn.Create(info.ProjectProviderId));
             AddColumn(table, defaultPreset, providerNamePreset, DataColumn.Create(info.ProjectProviderName));
-            AddColumn(table, defaultPreset, taskNamePreset, DataColumn.Create(info.ProjectTaskName));
-            AddColumn(table, defaultPreset, opcodeOrTypePreset, DataColumn.Create(info.ProjectOpCode));
-            AddColumn(table, defaultPreset, levelPreset, DataColumn.Create(info.ProjectLevel));
+            AddColumn(table, defaultPreset, idPreset, DataColumn.Create(info.ProjectId));
             AddColumn(table, defaultPreset, versionPreset, DataColumn.Create(info.ProjectVersion));
-            AddColumn(table, defaultPreset, taskPreset, DataColumn.Create(info.ProjectTask));
-            AddColumn(table, defaultPreset, keywordPreset, DataColumn.Create(info.ProjectKeyword));
             AddColumn(table, defaultPreset, channelPreset, DataColumn.Create(info.ProjectChannel));
             AddColumn(table, defaultPreset, channelNamePreset, DataColumn.Create(info.ProjectChannelName));
-            AddColumn(table, defaultPreset, idPreset, DataColumn.Create(info.ProjectId));
+            AddColumn(table, defaultPreset, taskPreset, DataColumn.Create(info.ProjectTask));
+            AddColumn(table, defaultPreset, taskNamePreset, DataColumn.Create(info.ProjectTaskName));
             AddColumn(table, defaultPreset, opcodeNamePreset, DataColumn.Create(info.ProjectOpCodeName));
+            AddColumn(table, defaultPreset, opcodeOrTypePreset, DataColumn.Create(info.ProjectOpCode));
+            AddColumn(table, defaultPreset, levelPreset, DataColumn.Create(info.ProjectLevel));
+            AddColumn(table, defaultPreset, levelNamePreset, DataColumn.Create(info.ProjectLevelName));
+            AddColumn(table, defaultPreset, keywordPreset, DataColumn.Create(info.ProjectKeyword));
+            AddColumn(table, defaultPreset, processIdPreset, DataColumn.Create(info.ProjectProcessId));
+            AddColumn(table, defaultPreset, threadIdPreset, DataColumn.Create(info.ProjectThreadId));
             AddColumn(table, defaultPreset, messagePreset, DataColumn.Create(info.ProjectMessage));
             AddColumn(table, defaultPreset, eventNamePreset, DataColumn.Create(info.ProjectEventName));
             AddColumn(table, defaultPreset, eventTypePreset, DataColumn.Create(info.ProjectEventType));
             AddColumn(table, defaultPreset, cpuPreset, DataColumn.Create(info.ProjectCpu));
-            AddColumn(table, defaultPreset, threadIdPreset, DataColumn.Create(info.ProjectThreadId));
-            AddColumn(table, defaultPreset, processIdPreset, DataColumn.Create(info.ProjectProcessId));
             AddColumn(table, defaultPreset, userDataLengthPreset, DataColumn.Create(info.ProjectUserDataLength));
             AddColumn(table, defaultPreset, activityIdPreset, DataColumn.Create(info.ProjectActivityId));
             AddColumn(table, defaultPreset, relatedActivityIdPreset, DataColumn.Create(info.ProjectRelatedActivityId));
             AddColumn(table, defaultPreset, userSecurityIdentifierPreset, DataColumn.Create(info.ProjectUserSecurityIdentifier));
             AddColumn(table, defaultPreset, sessionIdPreset, DataColumn.Create(info.ProjectSessionId));
             AddColumn(table, defaultPreset, eventKeyPreset, DataColumn.Create(info.ProjectEventKey));
-            AddColumn(table, defaultPreset, timestampGeneratorPreset, DataColumn.Create(info.ProjectTimePoint));
-            AddColumn(table, defaultPreset, datetimeGeneratorPreset, DataColumn.Create(info.ProjectDateTime));
-            AddColumn(table, defaultPreset, modernProcessDataPreset, DataColumn.Create<object>());
-            AddColumn(table, defaultPreset, processNamePreset, DataColumn.Create<string>());
-            AddColumn(table, defaultPreset, stackTopPreset, DataColumn.Create<object>());
-            AddColumn(table, defaultPreset, threadStartModulePreset, DataColumn.Create<string>());
-            AddColumn(table, defaultPreset, threadStartFunctionPreset, DataColumn.Create<string>());
+            //AddColumn(table, defaultPreset, modernProcessDataPreset, DataColumn.Create<object>());
+            //AddColumn(table, defaultPreset, processNamePreset, DataColumn.Create<string>());
+            //AddColumn(table, defaultPreset, stackTopPreset, DataColumn.Create<object>());
+            //AddColumn(table, defaultPreset, threadStartModulePreset, DataColumn.Create<string>());
+            //AddColumn(table, defaultPreset, threadStartFunctionPreset, DataColumn.Create<string>());
 
             return Tuple.Create(table, defaultPreset);
         }
@@ -339,10 +339,13 @@ namespace EventTraceKit.VsExtension
         private sealed class CrimsonEventsInfo
         {
             private readonly IEventInfoSource eventInfoSource;
+            private readonly IMessageFormatter messageFormatter;
 
-            public CrimsonEventsInfo(IEventInfoSource eventInfoSource)
+            public CrimsonEventsInfo(
+                IEventInfoSource eventInfoSource, IMessageFormatter messageFormatter)
             {
                 this.eventInfoSource = eventInfoSource;
+                this.messageFormatter = messageFormatter;
             }
 
             private EventInfo GetEventInfo(int index)
@@ -350,19 +353,17 @@ namespace EventTraceKit.VsExtension
                 return eventInfoSource.GetEvent(index);
             }
 
+            public unsafe EventRecordCPtr GetEventRecord(int index)
+            {
+                return new EventRecordCPtr(
+                    (EVENT_RECORD*)GetEventInfo(index).EventRecord);
+            }
+
             public unsafe TraceEventInfoCPtr GetTraceEventInfo(int index)
             {
                 var info = GetEventInfo(index);
                 return new TraceEventInfoCPtr(
                     (TRACE_EVENT_INFO*)info.TraceEventInfo, (uint)info.TraceEventInfoSize);
-                //return new TraceEventInfoCPtr(traceEventInfos[index], 0);
-            }
-
-            public unsafe EventRecordCPtr GetEventRecord(int index)
-            {
-                return new EventRecordCPtr(
-                    (EVENT_RECORD*)GetEventInfo(index).EventRecord);
-                //return new EventRecordCPtr(eventRecords[index]);
             }
 
             public Guid ProjectProviderId(int index)
@@ -448,15 +449,8 @@ namespace EventTraceKit.VsExtension
             {
                 var info = GetEventInfo(index);
 
-                var eventRecord = new EventRecordCPtr(
-                    (EVENT_RECORD*)GetEventInfo(index).EventRecord);
-                var traceEventInfo = new TraceEventInfoCPtr(
-                    (TRACE_EVENT_INFO*)info.TraceEventInfo, (uint)info.TraceEventInfoSize);
-
-                TimePoint timestamp = ProjectTimePoint(index);
-                var parseTdhContext = new ParseTdhContext();
-                return TdhHelper.GetMessageForEventRecord(
-                    eventRecord, timestamp, traceEventInfo, parseTdhContext, CultureInfo.CurrentCulture);
+                return messageFormatter.GetMessageForEvent(
+                    info, tdhContext, CultureInfo.CurrentCulture);
             }
 
             public EventType ProjectEventType(int index)
@@ -478,6 +472,8 @@ namespace EventTraceKit.VsExtension
 
             private static readonly Guid ActivityIdSentinel =
                 new Guid("D733D8B0-7D18-4AEB-A3FC-8C4613BC2A40");
+
+            private readonly ParseTdhContext tdhContext = new ParseTdhContext();
 
             public unsafe Guid ProjectRelatedActivityId(int index)
             {
@@ -520,7 +516,10 @@ namespace EventTraceKit.VsExtension
 
             public TimePoint ProjectTimePoint(int index)
             {
-                return GetEventRecord(index).TimePoint;
+                var sessionInfo = eventInfoSource.GetInfo();
+                var startTime = new TimePoint(sessionInfo.StartTime);
+                var time = GetEventRecord(index).TimePoint;
+                return new TimePoint(time.ToNanoseconds - startTime.ToNanoseconds);
             }
 
             public DateTime ProjectDateTime(int index)
@@ -540,294 +539,39 @@ namespace EventTraceKit.VsExtension
         }
     }
 
-    [Flags]
-    public enum FormatMessageFlags
+    public class ManagedTdhFormatter : IMessageFormatter
     {
-        /// <native>FORMAT_MESSAGE_IGNORE_INSERTS</native>
-        IgnoreInserts = 0x00000200,
-
-        /// <native>FORMAT_MESSAGE_FROM_STRING</native>
-        FromString = 0x00000400,
-
-        /// <native>FORMAT_MESSAGE_FROM_HMODULE</native>
-        FromHmodule = 0x00000800,
-
-        /// <native>FORMAT_MESSAGE_FROM_SYSTEM</native>
-        FromSystem = 0x00001000,
-
-        /// <native>FORMAT_MESSAGE_ARGUMENT_ARRAY</native>
-        ArgumentArray = 0x00002000,
-
-        /// <native>FORMAT_MESSAGE_MAX_WIDTH_MASK</native>
-        MaxWidthMask = 0x000000FF,
-    }
-
-    internal static class TdhNativeMethods
-    {
-        [DllImport("Kernel32.dll", SetLastError = true)]
-        public static extern uint FormatMessageW(
-            [MarshalAs(UnmanagedType.U4)] FormatMessageFlags dwFlags,
-            UnmanagedString lpSource,
-            uint dwMessageId,
-            uint dwLanguageId,
-            IntPtr lpBuffer,
-            uint nSize,
-            [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPWStr)]
-            string[] Arguments);
-
-        [DllImport("Kernel32.dll", SetLastError = true)]
-        public static extern bool FileTimeToSystemTime(
-            [In] ref System.Runtime.InteropServices.ComTypes.FILETIME lpFileTime, out SYSTEMTIME lpSystemTime);
-
-        [DllImport("WS2_32.dll", EntryPoint = "WSAAddressToStringW", CharSet = CharSet.Unicode, SetLastError = true)]
-        public static extern int WSAAddressToString(
-            IntPtr pSockAddressStruct, uint cbSockAddressStruct, IntPtr lpProtocolInfo, IntPtr resultString, ref int cbResultStringLength);
-    }
-
-    internal static class CharCPtrUtils
-    {
-        public static unsafe int GetLength(char* wsz, int cchMax)
+        public unsafe string GetMessageForEvent(
+            EventInfo eventInfo,
+            ParseTdhContext parseTdhContext,
+            IFormatProvider formatProvider)
         {
-            if (wsz == null)
-                throw new ArgumentNullException(nameof(wsz));
+            var eventRecord = new EventRecordCPtr(
+                (EVENT_RECORD*)eventInfo.EventRecord);
 
-            if (cchMax < 0)
-                throw new ArgumentOutOfRangeException(nameof(cchMax), "must be non-negative");
+            var traceEventInfo = new TraceEventInfoCPtr(
+                (TRACE_EVENT_INFO*)eventInfo.TraceEventInfo,
+                (uint)eventInfo.TraceEventInfoSize);
 
-            int num = 0;
-            while (num < cchMax) {
-                if (wsz[0] == '\0') {
-                    return num;
-                }
-                wsz++;
-                num++;
-            }
-
-            return num;
+            return TdhHelper.GetMessageForEventRecord(
+                eventRecord, traceEventInfo, parseTdhContext, formatProvider);
         }
     }
 
-    public sealed class TimePointConverter : TypeConverter
+    public class NativeTdhFormatter : IMessageFormatter
     {
-        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+        private readonly EtwMessageFormatter formatter = new EtwMessageFormatter();
+
+        public unsafe string GetMessageForEvent(
+            EventInfo eventInfo,
+            ParseTdhContext parseTdhContext,
+            IFormatProvider formatProvider)
         {
-            return (sourceType == typeof(string)) || base.CanConvertFrom(context, sourceType);
-        }
-
-        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
-        {
-            return base.CanConvertTo(context, destinationType);
-        }
-
-        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-        {
-            string str = value as string;
-            if (str != null)
-                return TimePoint.Parse(str.Trim());
-            return base.ConvertFrom(context, culture, value);
-        }
-
-        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
-        {
-            if (destinationType == null)
-                throw new ArgumentNullException(nameof(destinationType));
-            return base.ConvertTo(context, culture, value, destinationType);
-        }
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    [TypeConverter(typeof(TimePointConverter))]
-    public struct TimePoint
-        : IComparable<TimePoint>
-        , IEquatable<TimePoint>
-        , IFormattable
-    {
-        private readonly long nanoseconds;
-
-        public TimePoint(long nanoseconds)
-        {
-            this.nanoseconds = nanoseconds;
-        }
-
-        public static TimePoint FromNanoseconds(long nanoseconds)
-        {
-            return new TimePoint(nanoseconds);
-        }
-
-        public long ToNanoseconds => nanoseconds;
-        public long ToMicroseconds => nanoseconds / 1000;
-        public long ToMilliseconds => nanoseconds / 1000000;
-        public long ToSeconds => nanoseconds / 1000000000;
-
-        public static TimePoint Abs(TimePoint value)
-        {
-            return FromNanoseconds(Math.Abs(value.nanoseconds));
-        }
-
-        public static TimePoint Min(TimePoint lhs, TimePoint rhs)
-        {
-            return new TimePoint(Math.Min(lhs.ToNanoseconds, rhs.ToNanoseconds));
-        }
-
-        public static TimePoint Max(TimePoint lhs, TimePoint rhs)
-        {
-            return new TimePoint(Math.Max(lhs.ToNanoseconds, rhs.ToNanoseconds));
-        }
-
-        public static TimePoint Zero => new TimePoint();
-
-        public static TimePoint MinValue => new TimePoint(-9223372036854775808L);
-
-        public static TimePoint MaxValue => new TimePoint(9223372036854775807);
-
-        public int CompareTo(TimePoint other)
-        {
-            return
-                nanoseconds < other.nanoseconds ? -1 :
-                nanoseconds <= other.nanoseconds ? 0 :
-                1;
-        }
-
-        public bool Equals(TimePoint other)
-        {
-            return nanoseconds == other.nanoseconds;
-        }
-
-        public static bool operator ==(TimePoint lhs, TimePoint rhs)
-        {
-            return lhs.Equals(rhs);
-        }
-
-        public static bool operator !=(TimePoint lhs, TimePoint rhs)
-        {
-            return !lhs.Equals(rhs);
-        }
-
-        public static bool operator <(TimePoint lhs, TimePoint rhs)
-        {
-            return lhs.CompareTo(rhs) < 0;
-        }
-
-        public static bool operator >(TimePoint lhs, TimePoint rhs)
-        {
-            return lhs.CompareTo(rhs) > 0;
-        }
-
-        public static bool operator <=(TimePoint lhs, TimePoint rhs)
-        {
-            return lhs.CompareTo(rhs) <= 0;
-        }
-
-        public static bool operator >=(TimePoint lhs, TimePoint rhs)
-        {
-            return lhs.CompareTo(rhs) >= 0;
-        }
-
-        public override bool Equals(object other)
-        {
-            return other is TimePoint && Equals((TimePoint)other);
-        }
-
-        public override int GetHashCode()
-        {
-            return nanoseconds.GetHashCode();
-        }
-
-        public override string ToString()
-        {
-            return nanoseconds.ToString("F0");
-        }
-
-        public string ToString(string format, IFormatProvider formatProvider)
-        {
-            return nanoseconds.ToString(format, formatProvider);
-        }
-
-        public static TimePoint Parse(string s)
-        {
-            return new TimePoint(long.Parse(s));
-        }
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct Keyword
-        : IEquatable<Keyword>
-        , IComparable<Keyword>
-    {
-        public Keyword(ulong keywordValue)
-        {
-            KeywordValue = keywordValue;
-        }
-
-        public ulong KeywordValue { get; }
-
-        public static Keyword Zero => new Keyword();
-        public static Keyword MinValue => new Keyword(0L);
-        public static Keyword MaxValue => new Keyword(ulong.MaxValue);
-
-        public static bool operator ==(Keyword lhs, Keyword rhs)
-        {
-            return lhs.Equals(rhs);
-        }
-
-        public static bool operator !=(Keyword lhs, Keyword rhs)
-        {
-            return !lhs.Equals(rhs);
-        }
-
-        public static bool operator <(Keyword lhs, Keyword rhs)
-        {
-            return lhs.CompareTo(rhs) < 0;
-        }
-
-        public static bool operator >(Keyword lhs, Keyword rhs)
-        {
-            return lhs.CompareTo(rhs) > 0;
-        }
-
-        public static bool operator <=(Keyword lhs, Keyword rhs)
-        {
-            return lhs.CompareTo(rhs) <= 0;
-        }
-
-        public static bool operator >=(Keyword lhs, Keyword rhs)
-        {
-            return lhs.CompareTo(rhs) >= 0;
-        }
-
-        public static Keyword operator &(Keyword lhs, Keyword rhs)
-        {
-            return new Keyword(lhs.KeywordValue & rhs.KeywordValue);
-        }
-
-        public static implicit operator Keyword(ulong keywordValue)
-        {
-            return new Keyword(keywordValue);
-        }
-
-        public bool Equals(Keyword other)
-        {
-            return KeywordValue == other.KeywordValue;
-        }
-
-        public int CompareTo(Keyword other)
-        {
-            return KeywordValue.CompareTo(other.KeywordValue);
-        }
-
-        public override bool Equals(object other)
-        {
-            return other is Keyword && Equals((Keyword)other);
-        }
-
-        public override int GetHashCode()
-        {
-            return KeywordValue.GetHashCode();
-        }
-
-        public override string ToString()
-        {
-            return KeywordValue.ToString(CultureInfo.InvariantCulture);
+            return formatter.FormatEventMessage(
+                (void*)eventInfo.EventRecord,
+                (void*)eventInfo.TraceEventInfo,
+                (uint)eventInfo.TraceEventInfoSize,
+                (uint)parseTdhContext.NativePointerSize);
         }
     }
 }

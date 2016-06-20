@@ -17,7 +17,6 @@ namespace EventTraceKit.VsExtension
     {
         private string caption = string.Empty;
         private Guid persistanceGuid = Guid.Empty;
-        private int index = -1;
 
         /// <summary>
         /// This class holds the properties for one item.
@@ -49,10 +48,7 @@ namespace EventTraceKit.VsExtension
         [DisplayName("Persistence GUID")]
         [Description("Guids used to uniquely identify the window type.")]
         [Category("Advanced")]
-        public string PersistenceGuid
-        {
-            get { return persistanceGuid.ToString("B"); }
-        }
+        public string PersistenceGuid => persistanceGuid.ToString("B");
 
         /// <summary>
         /// Index of the window in our list. We use this internally to avoid having to
@@ -61,11 +57,7 @@ namespace EventTraceKit.VsExtension
         /// This property will not be visible because we are using the Browsable(false) attribute
         /// </summary>
         [Browsable(false)]
-        public int Index
-        {
-            get { return index; }
-            set { index = value; }
-        }
+        public int Index { get; set; } = -1;
 
         /// <summary>
         /// String that will be displayed in the Properties window combo box.

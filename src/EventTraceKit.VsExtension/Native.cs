@@ -1,42 +1,8 @@
-﻿namespace EventTraceKit.VsExtension.Controls.Hdv
+﻿namespace EventTraceKit.VsExtension
 {
     using System;
-    using System.Data.SqlClient;
     using System.Runtime.InteropServices;
     using System.Security.Principal;
-    using System.Windows;
-
-    public class HdvColumnViewModelPreset
-    {
-    }
-
-    public class DataTableGenerator
-    {
-        public DataColumn<T> AddColumn<T>(
-            HdvColumnViewModelPreset columnPreset, DataColumn<T> dataColumn,
-            bool isHierarchical, IFormatProvider formatProvider = null,
-            DataColumn<string> headerColumn = null, bool isPercent = false,
-            bool isDynamic = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        public DataColumn<T> AddColumn<T>(
-            Guid columnGuid, string columnName, DataColumn<T> dataColumn,
-            bool isHierarchical, bool isVisible, int width,
-            SortOrder sortOrder = 0,
-            int sortPriority = -1,
-            TextAlignment? textAlignment = new TextAlignment?(),
-            string format = null,
-            IFormatProvider formatProvider = null,
-            DataColumn<string> headerColumn = null,
-            bool isPercent = false,
-            bool isDynamic = false,
-            string columnHelpText = null)
-        {
-            throw new NotImplementedException();
-        }
-    }
 
     [StructLayout(LayoutKind.Sequential)]
     public struct EVENT_DESCRIPTOR : IEquatable<EVENT_DESCRIPTOR>
@@ -95,9 +61,15 @@
         public readonly TimeUnionStruct TimeUnion;
         public readonly Guid ActivityId;
 
-        public bool HasFlagProcessorIndex => HasFlag(0x200);
+        public bool HasExtendedInfo => HasFlag(0x01);
+        public bool IsPrivateSession => HasFlag(0x02);
+        public bool IsStringOnly => HasFlag(0x04);
+        public bool IsTraceMessage => HasFlag(0x08);
+        public bool NoCpuTime => HasFlag(0x10);
         public bool HasFlag32BitHeader => HasFlag(0x20);
         public bool HasFlag64BitHeader => HasFlag(0x40);
+        public bool ClassicHeader => HasFlag(0x100);
+        public bool HasFlagProcessorIndex => HasFlag(0x200);
 
         public uint KernelTime => TimeUnion.KernelTime;
         public uint UserTime => TimeUnion.UserTime;
@@ -136,11 +108,11 @@
     {
         public EVENT_HEADER EventHeader;
         public ETW_BUFFER_CONTEXT BufferContext;
-        public readonly ushort ExtendedDataCount;
-        public readonly ushort UserDataLength;
-        public readonly EVENT_HEADER_EXTENDED_DATA_ITEM* ExtendedData;
-        public readonly IntPtr UserData;
-        public readonly IntPtr UserContext;
+        public ushort ExtendedDataCount;
+        public ushort UserDataLength;
+        public EVENT_HEADER_EXTENDED_DATA_ITEM* ExtendedData;
+        public IntPtr UserData;
+        public IntPtr UserContext;
 
         public ulong ProcessorIndex =>
             EventHeader.HasFlagProcessorIndex ?
@@ -167,6 +139,7 @@
 
         public EVENT_HEADER* Pointer => pEventHeader;
         public bool HasData => pEventHeader != null;
+        public bool IsStringOnly => HasData && pEventHeader->IsStringOnly;
         public Guid ProviderId => HasData ? pEventHeader[0].ProviderId : Guid.Empty;
         public EVENT_DESCRIPTOR EventDescriptor => HasData ? pEventHeader->EventDescriptor : new EVENT_DESCRIPTOR();
         public Guid ActivityId => HasData ? pEventHeader->ActivityId : Guid.Empty;
@@ -279,16 +252,31 @@
     [StructLayout(LayoutKind.Sequential)]
     public struct EVENT_PROPERTY_INFO
     {
-        public readonly PROPERTY_FLAGS Flags;
-        public readonly uint NameOffset;
-        private readonly Union union;
-        private readonly ushort countAndCountPropertyIndex;
-        private readonly ushort lengthAndLengthPropertyIndex;
-        private readonly uint Reserved;
+        public PROPERTY_FLAGS Flags;
+        public uint NameOffset;
+        private Union union;
+        public ushort countAndCountPropertyIndex;
+        public ushort lengthAndLengthPropertyIndex;
+        public uint Reserved;
 
-        public TDH_IN_TYPE InType => (TDH_IN_TYPE)union.field0UInt16;
-        public TDH_OUT_TYPE OutType => (TDH_OUT_TYPE)union.field1UInt16;
-        public uint MapNameOffset => union.field2UInt32;
+        public TDH_IN_TYPE InType
+        {
+            get { return (TDH_IN_TYPE)union.field0UInt16; }
+            set { union.field0UInt16 = (ushort)value; }
+        }
+
+        public TDH_OUT_TYPE OutType
+        {
+            get { return (TDH_OUT_TYPE)union.field1UInt16; }
+            set { union.field1UInt16 = (ushort)value; }
+        }
+
+        public uint MapNameOffset
+        {
+            get { return union.field2UInt32; }
+            set { union.field2UInt32 = value; }
+        }
+
         public ushort StructStartIndex => union.field0UInt16;
         public ushort NumOfStructMembers => union.field1UInt16;
         public uint padding => union.field2UInt32;
@@ -302,13 +290,13 @@
         private struct Union
         {
             [FieldOffset(0)]
-            public readonly ushort field0UInt16;
+            public ushort field0UInt16;
 
             [FieldOffset(2)]
-            public readonly ushort field1UInt16;
+            public ushort field1UInt16;
 
             [FieldOffset(4)]
-            public readonly uint field2UInt32;
+            public uint field2UInt32;
         }
     }
 
@@ -388,26 +376,26 @@
     [StructLayout(LayoutKind.Sequential)]
     public struct TRACE_EVENT_INFO
     {
-        public readonly Guid ProviderGuid;
-        public readonly Guid EventGuid;
-        public readonly EVENT_DESCRIPTOR EventDescriptor;
-        public readonly DECODING_SOURCE DecodingSource;
-        public readonly uint ProviderNameOffset;
-        public readonly uint LevelNameOffset;
-        public readonly uint ChannelNameOffset;
-        public readonly uint KeywordsNameOffset;
-        public readonly uint TaskNameOffset;
-        public readonly uint OpcodeNameOffset;
-        public readonly uint EventMessageOffset;
-        public readonly uint ProviderMessageOffset;
-        public readonly uint BinaryXMLOffset;
-        public readonly uint BinaryXMLSize;
-        public readonly uint ActivityIDNameOffset;
-        public readonly uint RelatedActivityIDNameOffset;
-        public readonly uint PropertyCount;
-        public readonly uint TopLevelPropertyCount;
-        public readonly TEMPLATE_FLAGS Flags;
-        private EVENT_PROPERTY_INFO EventPropertyInfoArray;
+        public Guid ProviderGuid;
+        public Guid EventGuid;
+        public EVENT_DESCRIPTOR EventDescriptor;
+        public DECODING_SOURCE DecodingSource;
+        public uint ProviderNameOffset;
+        public uint LevelNameOffset;
+        public uint ChannelNameOffset;
+        public uint KeywordsNameOffset;
+        public uint TaskNameOffset;
+        public uint OpcodeNameOffset;
+        public uint EventMessageOffset;
+        public uint ProviderMessageOffset;
+        public uint BinaryXMLOffset;
+        public uint BinaryXMLSize;
+        public uint ActivityIDNameOffset;
+        public uint RelatedActivityIDNameOffset;
+        public uint PropertyCount;
+        public uint TopLevelPropertyCount;
+        public TEMPLATE_FLAGS Flags;
+        public EVENT_PROPERTY_INFO EventPropertyInfoArray;
 
         public static unsafe EVENT_PROPERTY_INFO* GetEventPropertyInfoArray(
             TRACE_EVENT_INFO* pTraceEventInfo)
@@ -475,11 +463,14 @@
         private readonly TRACE_EVENT_INFO* pTraceEventInfo;
         private readonly uint cbTraceEventInfo;
 
-        internal TraceEventInfoCPtr(TRACE_EVENT_INFO* pTraceEventInfo, uint cbTraceEventInfo)
+        public TraceEventInfoCPtr(TRACE_EVENT_INFO* pTraceEventInfo, uint cbTraceEventInfo)
         {
             this.pTraceEventInfo = pTraceEventInfo;
             this.cbTraceEventInfo = cbTraceEventInfo;
         }
+
+        public TRACE_EVENT_INFO* Ptr => pTraceEventInfo;
+        public uint Size => cbTraceEventInfo;
 
         public bool HasValue => pTraceEventInfo != null && cbTraceEventInfo != 0;
 
@@ -623,7 +614,7 @@
             return new string((char*)((byte*)pTraceEventInfo + nameOffset));
         }
 
-        public UnmanagedString MessageName =>
+        public UnmanagedString Message =>
             HasValue ? GetTdhString(pTraceEventInfo->EventMessageOffset) : UnmanagedString.Empty;
     }
 
@@ -730,6 +721,7 @@
             this.pEventRecord = pEventRecord;
         }
 
+        public EVENT_RECORD* Ptr => pEventRecord;
         public bool HasData => pEventRecord != null;
 
         public IntPtr UserData => HasData ? pEventRecord[0].UserData : IntPtr.Zero;

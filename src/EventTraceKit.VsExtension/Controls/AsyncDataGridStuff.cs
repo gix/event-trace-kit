@@ -5,6 +5,7 @@
     using System.ComponentModel;
     using System.Windows;
     using EventTraceKit.VsExtension.Collections;
+    using EventTraceKit.VsExtension.Windows;
 
     public class ItemEventArgs<T> : EventArgs
     {
@@ -370,16 +371,7 @@
         }
     }
 
-    public interface IDataColumn
-    {
-        string Name { get; }
-        double Width { get; }
-        bool IsVisible { get; }
-        bool IsResizable { get; }
-        TextAlignment TextAlignment { get; }
-    }
-
-    public abstract class DataColumn : IDataColumn
+    public abstract class DataColumn
     {
         public Guid Id { get; set; }
         public string Name { get; set; }

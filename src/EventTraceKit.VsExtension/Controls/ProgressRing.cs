@@ -3,6 +3,7 @@
     using System;
     using System.Windows;
     using System.Windows.Controls;
+    using EventTraceKit.VsExtension.Windows;
 
     /// <summary>
     ///   Represents a control that indicates that an operation is ongoing. The

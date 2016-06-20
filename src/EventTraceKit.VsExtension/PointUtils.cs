@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Controls
+﻿namespace EventTraceKit.VsExtension
 {
     using System;
     using System.Runtime.CompilerServices;

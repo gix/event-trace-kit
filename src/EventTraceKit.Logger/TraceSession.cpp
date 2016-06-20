@@ -197,6 +197,13 @@ namespace EventTraceKit
 
 class EventSink;
 
+public value struct TraceSessionInfo
+{
+    property long long StartTime;
+    property long long PerfFreq;
+    property unsigned PointerSize;
+};
+
 public value struct EventInfo
 {
     property IntPtr EventRecord;
@@ -214,6 +221,19 @@ public:
     void Stop();
     void Clear();
     TraceStatistics^ Query();
+
+    TraceSessionInfo GetInfo()
+    {
+        if (!this->processor)
+            return TraceSessionInfo();
+
+        auto logFileHeader = this->processor->GetLogFileHeader();
+        TraceSessionInfo info = {};
+        info.StartTime = logFileHeader->StartTime.QuadPart;
+        info.PerfFreq = logFileHeader->PerfFreq.QuadPart;
+        info.PointerSize = logFileHeader->PointerSize;
+        return info;
+    }
 
     EventInfo GetEvent(int index)
     {

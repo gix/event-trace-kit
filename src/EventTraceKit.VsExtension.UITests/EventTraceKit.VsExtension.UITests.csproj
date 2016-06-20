@@ -187,5 +187,6 @@
       <Name>EventTraceKit.VsExtension</Name>
     </ProjectReference>
   </ItemGroup>
+  <Import Project="..\Common\CommonProjectNet.props" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

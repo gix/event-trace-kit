@@ -16,17 +16,6 @@
 namespace etk
 {
 
-class TraceFormatter
-{
-public:
-    bool FormatEventMessage(
-        EventInfo info, size_t pointerSize, std::wstring& sink);
-
-private:
-    std::wstring formattedProperties;
-    std::vector<size_t> formattedPropertiesOffsets;
-};
-
 class EtwTraceProcessor : public ITraceProcessor
 {
 public:
@@ -44,6 +33,13 @@ public:
         events.clear();
         if (sink)
             sink->NotifyNewEvents(0);
+    }
+
+    virtual TRACE_LOGFILE_HEADER const* GetLogFileHeader() const override
+    {
+        if (!traceHandle)
+            return nullptr;
+        return &traceLogFile.LogfileHeader;
     }
 
     virtual size_t GetEventCount() override { return eventCount; }
@@ -80,8 +76,6 @@ private:
     std::atomic<size_t> eventCount;
 
     IEventSink* sink = nullptr;
-    TraceFormatter formatter;
-    std::wstring messageBuffer;
 
     mutable std::shared_mutex mutex;
 };

@@ -8,7 +8,6 @@ namespace EventTraceKit.VsExtension
     using System.Runtime.InteropServices;
     using System.Security.Principal;
     using System.Text;
-    using EventTraceKit.VsExtension.Controls.Hdv;
     using Microsoft.VisualStudio.Shell.Interop;
     using FILETIME = System.Runtime.InteropServices.ComTypes.FILETIME;
 
@@ -145,6 +144,61 @@ namespace EventTraceKit.VsExtension
         private static readonly object tokenLock = new object();
         private static List<List<IntPtr>> tokens = new List<List<IntPtr>>();
 
+        public static unsafe string GetMessageForEventRecord(
+            EventRecordCPtr eventRecord,
+            TraceEventInfoCPtr traceEventInfo,
+            ParseTdhContext parseTdhContext,
+            IFormatProvider formatProvider)
+        {
+            if (eventRecord.EventHeader.IsStringOnly)
+                return CharCPtrUtils.GetString(
+                    (char*)eventRecord.UserData, eventRecord.UserDataLength);
+
+            var message = traceEventInfo.Message;
+            if (message.IsEmpty)
+                return string.Empty;
+
+            var arguments = new string[traceEventInfo.TopLevelPropertyCount];
+            var count = traceEventInfo.PropertyCount + 1;
+            lock (tokenLock) {
+                EnsureRoomForTokensAndClear(count);
+                var build = TokenAccessContext.Build;
+                TryGetTokens(
+                    traceEventInfo, eventRecord, parseTdhContext, traceEventInfo.TopLevelPropertyCount, tokens,
+                    build, count);
+                build = TokenAccessContext.Consume;
+                for (uint i = 0; i < traceEventInfo.TopLevelPropertyCount; i++) {
+                    if (!tokens[(int)i].Any()) {
+                        arguments[i] = "Unable to parse data";
+                    } else {
+                        var eventMapInfo = new EventMapInfoCPtr();
+                        arguments[i] = GetStringForProperty(
+                            traceEventInfo, eventRecord, i, parseTdhContext, tokens, build, count,
+                            formatProvider, eventMapInfo);
+                    }
+                }
+
+                if (messageBuffer == null)
+                    messageBuffer = new char[0x1000];
+
+                fixed (char* ptr = messageBuffer)
+                {
+                    var flags = FormatMessageFlags.FromString | FormatMessageFlags.ArgumentArray;
+                    var numWritten = TdhNativeMethods.FormatMessageW(
+                        flags, message, 0, 0, new IntPtr(ptr),
+                        (uint)messageBuffer.Length, arguments);
+                    if (numWritten == 0)
+                        return string.Empty;
+
+                    if (messageBuffer[numWritten - 1] == ' ' &&
+                        messageBuffer[numWritten] == '\0')
+                        messageBuffer[numWritten - 1] = '\0';
+
+                    return new UnmanagedString(ptr).ToString();
+                }
+            }
+        }
+
         private static unsafe byte* AdjustPastAnsiString(byte* pData)
         {
             short num = 0;
@@ -260,9 +314,9 @@ namespace EventTraceKit.VsExtension
 
                 case TDH_IN_TYPE.COUNTEDSTRING:
                 case TDH_IN_TYPE.COUNTEDANSISTRING: {
-                    var num = *(ushort*)pData;
-                    return pData + 2 + num;
-                }
+                        var num = *(ushort*)pData;
+                        return pData + 2 + num;
+                    }
                 case TDH_IN_TYPE.REVERSEDCOUNTEDSTRING:
                 case TDH_IN_TYPE.REVERSEDCOUNTEDANSISTRING:
                 case TDH_IN_TYPE.NONNULLTERMINATEDSTRING:
@@ -353,62 +407,17 @@ namespace EventTraceKit.VsExtension
 
         private static string GetHexStringFor(IFormatProvider formatProvider, ulong data, int numDigits)
         {
-            var format = numDigits == 2
-                ? "X2"
-                : (numDigits == 4
-                    ? "X4"
-                    : (numDigits == 8
-                        ? "X8"
-                        : (numDigits == 0x10 ? "X16" : "X" + numDigits.ToString(CultureInfo.InvariantCulture))));
+            string format;
+            switch (numDigits) {
+                case 2: format = "X2"; break;
+                case 4: format = "X4"; break;
+                case 8: format = "X8"; break;
+                case 16: format = "X16"; break;
+                default:
+                    format = "X" + numDigits.ToString(CultureInfo.InvariantCulture);
+                    break;
+            }
             return "0x" + data.ToString(format, formatProvider);
-        }
-
-        public static unsafe string GetMessageForEventRecord(
-            EventRecordCPtr eventRecord,
-            TimePoint eventTimeStamp,
-            TraceEventInfoCPtr traceEventInfo,
-            ParseTdhContext parseTdhContext,
-            IFormatProvider formatProvider)
-        {
-            string str2;
-            var messageName = traceEventInfo.MessageName;
-            if (messageName.IsEmpty) {
-                return string.Empty;
-            }
-            var arguments = new string[traceEventInfo.TopLevelPropertyCount];
-            var count = traceEventInfo.PropertyCount + 1;
-            lock (tokenLock) {
-                EnsureRoomForTokensAndClear(count);
-                var build = TokenAccessContext.Build;
-                TryGetTokens(
-                    traceEventInfo, eventRecord, parseTdhContext, traceEventInfo.TopLevelPropertyCount, tokens,
-                    build, count);
-                build = TokenAccessContext.Consume;
-                for (uint i = 0; i < traceEventInfo.TopLevelPropertyCount; i++) {
-                    if (!tokens[(int)i].Any()) {
-                        arguments[i] = "Unable to parse data";
-                    } else {
-                        var eventMapInfo = new EventMapInfoCPtr();
-                        arguments[i] = GetStringForProperty(
-                            traceEventInfo, eventRecord, i, parseTdhContext, tokens, build, count,
-                            formatProvider, eventMapInfo);
-                    }
-                }
-                if (messageBuffer == null) {
-                    messageBuffer = new char[0x1000];
-                }
-                fixed (char* chRef = messageBuffer) {
-                    var lpBuffer = new IntPtr(chRef);
-                    if (
-                        TdhNativeMethods.FormatMessageW(
-                            FormatMessageFlags.FromString | FormatMessageFlags.ArgumentArray, messageName, 0,
-                            0, lpBuffer, (uint)messageBuffer.Length, arguments) == 0) {
-                        return string.Empty;
-                    }
-                    str2 = new UnmanagedString(chRef).ToString();
-                }
-            }
-            return str2;
         }
 
         private static bool GetPropertyParams(
@@ -487,25 +496,27 @@ namespace EventTraceKit.VsExtension
             IFormatProvider formatProvider,
             EventMapInfoCPtr eventMapInfo = new EventMapInfoCPtr())
         {
-            uint num;
-            bool flag2;
-            uint num2;
-            bool flag3;
+            uint count;
+            bool isArray;
+            uint length;
+            bool hasExplicitLength;
             var flag = eventRecord.Is32Bit(parseTdhContext.NativePointerSize);
             var infoForProperty = traceEventInfo.GetPropertyInfo(propertyIndex);
             if (
                 !GetPropertyParams(
-                    traceEventInfo, tokenizedProperties, context, infoForProperty, flag, out num, out flag2,
-                    out num2, out flag3)) {
+                    traceEventInfo, tokenizedProperties, context, infoForProperty, flag, out count,
+                    out isArray,
+                    out length, out hasExplicitLength))
                 throw new InternalErrorException();
-            }
-            if (num2 > eventRecord.UserDataLength) {
+
+            if (length > eventRecord.UserDataLength) {
                 return string.Format(
                     CultureInfo.CurrentUICulture,
                     "Unable to parse data (payload too short: expected {0} bytes, have {1})",
-                    new object[] { num2, eventRecord.UserDataLength });
+                    new object[] { length, eventRecord.UserDataLength });
             }
-            if ((num == 1) && !flag2 && !infoForProperty.HasFlag(PROPERTY_FLAGS.PropertyStruct)) {
+
+            if ((count == 1) && !isArray && !infoForProperty.HasFlag(PROPERTY_FLAGS.PropertyStruct)) {
                 string str;
                 var buffer = tokenizedProperties[(int)propertyIndex].FirstOrDefault();
                 if (buffer == new IntPtr()) {
@@ -513,22 +524,24 @@ namespace EventTraceKit.VsExtension
                 }
                 if (
                     AdjustPointerPastTDHData(
-                        infoForProperty.SimpleTdhInType, infoForProperty.SimpleTdhOutType, buffer, num2, flag3,
+                        infoForProperty.SimpleTdhInType, infoForProperty.SimpleTdhOutType, buffer, length, hasExplicitLength,
                         flag) == new IntPtr()) {
                     return "Unable to parse data";
                 }
                 if (TryGetStringForTDHData(
                     infoForProperty.SimpleTdhInType, infoForProperty.SimpleTdhOutType, buffer,
-                    eventRecord.TimePoint, flag, num2, parseTdhContext, formatProvider, out str, eventMapInfo)) {
+                    eventRecord.TimePoint, flag, length, parseTdhContext, formatProvider, out str, eventMapInfo)) {
                     return str;
                 }
                 return string.Empty;
             }
+
             var current = tokenizedProperties[(int)propertyIndex].FirstOrDefault();
             var result = new StringBuilder();
             GetStringForProperty(
                 traceEventInfo, eventRecord, propertyIndex, parseTdhContext, tokenizedProperties, context,
                 countValidProperties, result, formatProvider, ref current);
+
             return result.ToString();
         }
 
@@ -544,77 +557,78 @@ namespace EventTraceKit.VsExtension
             IFormatProvider formatProvider,
             ref IntPtr current)
         {
-            uint num;
-            bool flag2;
-            uint num2;
-            bool flag3;
+            uint count;
+            bool isArray;
+            uint length;
+            bool hasExplicitLength;
             var flag = eventRecord.Is32Bit(parseTdhContext.NativePointerSize);
             var infoForProperty = traceEventInfo.GetPropertyInfo(propertyIndex);
             if (
                 !GetPropertyParams(
-                    traceEventInfo, tokenizedProperties, context, infoForProperty, flag, out num, out flag2,
-                    out num2, out flag3)) {
+                    traceEventInfo, tokenizedProperties, context, infoForProperty, flag, out count, out isArray,
+                    out length, out hasExplicitLength)) {
                 result.Append("Unable to parse data");
-            } else {
-                if (flag2) {
-                    result.Append("[");
-                }
-                for (uint i = 0; i < num; i++) {
-                    if (i != 0) {
-                        result.Append(" : ");
+                return;
+            }
+
+            if (isArray)
+                result.Append("[");
+
+            for (uint i = 0; i < count; ++i) {
+                if (i != 0)
+                    result.Append(" : ");
+
+                if (infoForProperty.HasFlag(PROPERTY_FLAGS.PropertyStruct)) {
+                    result.Append("{");
+                    uint structStartIndex = infoForProperty.StructStartIndex;
+                    if (structStartIndex >= countValidProperties) {
+                        result.Append("Unable to parse data");
+                        return;
                     }
-                    if (infoForProperty.HasFlag(PROPERTY_FLAGS.PropertyStruct)) {
-                        result.Append("{");
-                        uint structStartIndex = infoForProperty.StructStartIndex;
-                        if (structStartIndex >= countValidProperties) {
-                            result.Append("Unable to parse data");
-                            return;
-                        }
-                        var num5 = structStartIndex + infoForProperty.NumOfStructMembers;
-                        if (num5 >= countValidProperties) {
-                            result.Append("Unable to parse data");
-                            return;
-                        }
-                        for (var j = structStartIndex; j < num5; j++) {
-                            if (j != structStartIndex) {
-                                result.Append("; ");
-                            }
-                            GetStringForProperty(
-                                traceEventInfo, eventRecord, j, parseTdhContext, tokenizedProperties, context,
-                                countValidProperties, result, formatProvider, ref current);
-                        }
-                        for (var k = structStartIndex; k < num5; k++) {
-                            tokens[(int)k].RemoveAt(0);
-                        }
-                        result.Append("}");
-                    } else {
-                        string str;
-                        var ptr3 = new IntPtr();
-                        if (current == ptr3) {
-                            result.Append("Unable to parse data");
-                            return;
-                        }
-                        var ptr2 = AdjustPointerPastTDHData(
-                            infoForProperty.SimpleTdhInType, infoForProperty.SimpleTdhOutType, current, num2,
-                            flag3, flag);
-                        var ptr4 = new IntPtr();
-                        if (ptr2 == ptr4) {
-                            result.Append("Unable to parse data");
-                            return;
-                        }
-                        var eventMapInfo = new EventMapInfoCPtr();
-                        if (TryGetStringForTDHData(
-                            infoForProperty.SimpleTdhInType, infoForProperty.SimpleTdhOutType, current,
-                            eventRecord.TimePoint, flag, num2, parseTdhContext, formatProvider, out str,
-                            eventMapInfo)) {
-                            result.Append(str);
-                        }
-                        current = ptr2;
+                    var num5 = structStartIndex + infoForProperty.NumOfStructMembers;
+                    if (num5 >= countValidProperties) {
+                        result.Append("Unable to parse data");
+                        return;
                     }
+                    for (var j = structStartIndex; j < num5; j++) {
+                        if (j != structStartIndex) {
+                            result.Append("; ");
+                        }
+                        GetStringForProperty(
+                            traceEventInfo, eventRecord, j, parseTdhContext, tokenizedProperties, context,
+                            countValidProperties, result, formatProvider, ref current);
+                    }
+                    for (var k = structStartIndex; k < num5; k++) {
+                        tokens[(int)k].RemoveAt(0);
+                    }
+                    result.Append("}");
+                } else {
+                    string str;
+                    var ptr3 = new IntPtr();
+                    if (current == ptr3) {
+                        result.Append("Unable to parse data");
+                        return;
+                    }
+                    var ptr2 = AdjustPointerPastTDHData(
+                        infoForProperty.SimpleTdhInType, infoForProperty.SimpleTdhOutType, current, length,
+                        hasExplicitLength, flag);
+                    var ptr4 = new IntPtr();
+                    if (ptr2 == ptr4) {
+                        result.Append("Unable to parse data");
+                        return;
+                    }
+                    var eventMapInfo = new EventMapInfoCPtr();
+                    if (TryGetStringForTDHData(
+                        infoForProperty.SimpleTdhInType, infoForProperty.SimpleTdhOutType, current,
+                        eventRecord.TimePoint, flag, length, parseTdhContext, formatProvider, out str,
+                        eventMapInfo)) {
+                        result.Append(str);
+                    }
+                    current = ptr2;
                 }
-                if (flag2) {
-                    result.Append("]");
-                }
+            }
+            if (isArray) {
+                result.Append("]");
             }
         }
 
@@ -638,9 +652,9 @@ namespace EventTraceKit.VsExtension
                     traceEventInfo, eventRecord, parseTdhContext, traceEventInfo.TopLevelPropertyCount, tokens,
                     build, count);
                 var num2 = (int)propertyIndex;
-                if (!tokens[num2].Any()) {
+                if (!tokens[num2].Any())
                     return "Unable to parse data";
-                }
+
                 build = TokenAccessContext.Consume;
                 return GetStringForProperty(
                     traceEventInfo, eventRecord, propertyIndex, parseTdhContext, tokens, build, count,
@@ -659,225 +673,193 @@ namespace EventTraceKit.VsExtension
             IFormatProvider formatProvider,
             EventMapInfoCPtr eventMapInfo = new EventMapInfoCPtr())
         {
-            char* chPtr;
-            int num;
-            byte num2;
-            ushort num3;
             var pdata = buffer.ToPointer();
-            if (pdata == null) {
+            if (pdata == null)
                 return string.Empty;
-            }
+
             if (eventMapInfo.HasData) {
                 var str = eventMapInfo.ValueAtKey(pdata, tdhInType);
-                if (str.Length > 0) {
+                if (str.Length > 0)
                     return str;
-                }
             }
+
             switch (tdhInType) {
                 case TDH_IN_TYPE.NULL:
                     return string.Empty;
 
                 case TDH_IN_TYPE.UNICODESTRING:
-                    chPtr = (char*)pdata;
-                    if (dataLength == 0) {
+                    var chPtr = (char*)pdata;
+                    if (dataLength == 0)
                         return new string(chPtr);
-                    }
-                    num = 0;
-                    while (num < dataLength) {
-                        if (chPtr[num] == '\0') {
+
+                    int len;
+                    for (len = 0; len < dataLength; ++len) {
+                        if (chPtr[len] == '\0')
                             break;
-                        }
-                        num++;
                     }
-                    break;
+
+                    return new string(chPtr, 0, len);
 
                 case TDH_IN_TYPE.ANSISTRING:
-                    if (dataLength == 0) {
+                    if (dataLength == 0)
                         return Marshal.PtrToStringAnsi(new IntPtr(pdata));
-                    }
                     return Marshal.PtrToStringAnsi(new IntPtr(pdata), (int)dataLength);
 
                 case TDH_IN_TYPE.INT8:
                     return (*(sbyte*)pdata).ToString(formatProvider);
 
-                case TDH_IN_TYPE.UINT8: {
-                    num2 = *(byte*)pdata;
-                    var tdh_out_type = tdhOutType;
-                    switch (tdh_out_type) {
+                case TDH_IN_TYPE.UINT8:
+                    var byteVal = *(byte*)pdata;
+                    switch (tdhOutType) {
                         case TDH_OUT_TYPE.NULL:
                         case TDH_OUT_TYPE.DATETIME:
                         case TDH_OUT_TYPE.BYTE:
                         case TDH_OUT_TYPE.UNSIGNEDBYTE:
-                            goto Label_016E;
+                            return byteVal.ToString(formatProvider);
+                        case TDH_OUT_TYPE.STRING:
+                            return ((char)byteVal).ToString(formatProvider);
+                        case TDH_OUT_TYPE.HEXINT8:
+                            return GetHexStringFor(formatProvider, byteVal, 2);
+                        default:
+                            return byteVal.ToString(formatProvider);
+                    }
 
-                        case TDH_OUT_TYPE.STRING: {
-                            var ch = (char)num2;
-                            return ch.ToString(formatProvider);
-                        }
-                    }
-                    if (tdh_out_type != TDH_OUT_TYPE.HEXINT8) {
-                        goto Label_016E;
-                    }
-                    return GetHexStringFor(formatProvider, num2, 2);
-                }
                 case TDH_IN_TYPE.INT16:
                     return (*(short*)pdata).ToString(formatProvider);
 
-                case TDH_IN_TYPE.UINT16: {
-                    num3 = *(ushort*)pdata;
-                    var tdh_out_type2 = tdhOutType;
-                    switch (tdh_out_type2) {
+                case TDH_IN_TYPE.UINT16:
+                    var ushortVal = *(ushort*)pdata;
+                    switch (tdhOutType) {
                         case TDH_OUT_TYPE.NULL:
                         case TDH_OUT_TYPE.UNSIGNEDSHORT:
-                            goto Label_01BC;
+                            return ushortVal.ToString(formatProvider);
+                        case TDH_OUT_TYPE.STRING:
+                            return ((char)ushortVal).ToString(formatProvider);
+                        case TDH_OUT_TYPE.HEXINT16:
+                            return GetHexStringFor(formatProvider, ushortVal, 4);
+                        default:
+                            return ushortVal.ToString(formatProvider);
+                    }
 
-                        case TDH_OUT_TYPE.STRING: {
-                            var ch2 = (char)num3;
-                            return ch2.ToString(formatProvider);
+                case TDH_IN_TYPE.INT32:
+                    var intVal = *(int*)pdata;
+                    if (tdhOutType == TDH_OUT_TYPE.HRESULT)
+                        return GetHexStringFor(formatProvider, intVal, 8);
+                    return intVal.ToString(formatProvider);
+
+                case TDH_IN_TYPE.UINT32:
+                    var uintVal = *(uint*)pdata;
+                    switch (tdhOutType) {
+                        case TDH_OUT_TYPE.NULL:
+                            return uintVal.ToString(formatProvider);
+                        case TDH_OUT_TYPE.HEXINT32:
+                        case TDH_OUT_TYPE.ETWTIME:
+                        case TDH_OUT_TYPE.ERRORCODE:
+                        case TDH_OUT_TYPE.WIN32ERROR:
+                        case TDH_OUT_TYPE.NTSTATUS:
+                            return GetHexStringFor(formatProvider, uintVal, 8);
+                        case TDH_OUT_TYPE.PID: {
+                            var pid = uintVal;
+                            //ProcessDataCPtr processData = new ProcessDataCPtr(parseTdhContext.ProcessInfoSource.QueryProcess(ref timestamp, pid, Proximity.Exact));
+                            //ProcessModernApplicationPair pair = new ProcessModernApplicationPair(processData, parseTdhContext.ModernApplicationProcessInfoSource);
+                            //if (pair.HasValue) {
+                            //    return pair.ToString();
+                            //}
+                            return pid.ToString(formatProvider);
                         }
+                        case TDH_OUT_TYPE.PORT:
+                            return uintVal.ToString(formatProvider);
+                        case TDH_OUT_TYPE.IPV4:
+                            return uintVal.ToString(formatProvider);
+                        default:
+                            return uintVal.ToString(formatProvider);
                     }
-                    if (tdh_out_type2 != TDH_OUT_TYPE.HEXINT16) {
-                        goto Label_01BC;
-                    }
-                    return GetHexStringFor(formatProvider, num3, 4);
-                }
-                case TDH_IN_TYPE.INT32: {
-                    var num4 = *(int*)pdata;
-                    var tdh_out_type3 = tdhOutType;
-                    if ((tdh_out_type3 == TDH_OUT_TYPE.NULL) || (tdh_out_type3 == TDH_OUT_TYPE.INT) ||
-                        (tdh_out_type3 != TDH_OUT_TYPE.HRESULT)) {
-                        return num4.ToString(formatProvider);
-                    }
-                    return GetHexStringFor(formatProvider, num4, 8);
-                }
-                case TDH_IN_TYPE.UINT32: {
-                    var num5 = *(uint*)pdata;
-                    var tdh_out_type4 = tdhOutType;
-                    if (tdh_out_type4 != TDH_OUT_TYPE.NULL) {
-                        switch (tdh_out_type4) {
-                            case TDH_OUT_TYPE.HEXINT32:
-                            case TDH_OUT_TYPE.ETWTIME:
-                            case TDH_OUT_TYPE.ERRORCODE:
-                            case TDH_OUT_TYPE.WIN32ERROR:
-                            case TDH_OUT_TYPE.NTSTATUS:
-                                return GetHexStringFor(formatProvider, num5, 8);
 
-                            case TDH_OUT_TYPE.PID: {
-                                var pid = num5;
-                                //ProcessDataCPtr processData = new ProcessDataCPtr(parseTdhContext.ProcessInfoSource.QueryProcess(ref timestamp, pid, Proximity.Exact));
-                                //ProcessModernApplicationPair pair = new ProcessModernApplicationPair(processData, parseTdhContext.ModernApplicationProcessInfoSource);
-                                //if (pair.HasValue) {
-                                //    return pair.ToString();
-                                //}
-                                return pid.ToString(formatProvider);
-                            }
-                            case TDH_OUT_TYPE.PORT:
-                                return num5.ToString(formatProvider);
-
-                            case TDH_OUT_TYPE.IPV4:
-                                return num5.ToString(formatProvider);
-                        }
-                    }
-                    return num5.ToString(formatProvider);
-                }
                 case TDH_IN_TYPE.INT64:
                     return (*(long*)pdata).ToString(formatProvider);
 
-                case TDH_IN_TYPE.UINT64: {
-                    var data = *(ulong*)pdata;
-                    var tdh_out_type5 = tdhOutType;
-                    if ((tdh_out_type5 == TDH_OUT_TYPE.NULL) || (tdh_out_type5 == TDH_OUT_TYPE.UNSIGNEDLONG) ||
-                        (tdh_out_type5 != TDH_OUT_TYPE.HEXINT64)) {
-                        return data.ToString(formatProvider);
-                    }
-                    return GetHexStringFor(formatProvider, data, 0x10);
-                }
+                case TDH_IN_TYPE.UINT64:
+                    if (tdhOutType == TDH_OUT_TYPE.HEXINT64)
+                        return GetHexStringFor(formatProvider, *(ulong*)pdata, 16);
+                    return (*(ulong*)pdata).ToString(formatProvider);
+
                 case TDH_IN_TYPE.FLOAT:
                     return (*(float*)pdata).ToString(formatProvider);
 
                 case TDH_IN_TYPE.DOUBLE:
                     return (*(double*)pdata).ToString(formatProvider);
 
-                case TDH_IN_TYPE.BOOLEAN: {
-                    var flag = *(int*)pdata != 0;
-                    return flag.ToString(formatProvider);
-                }
+                case TDH_IN_TYPE.BOOLEAN:
+                    var boolVal = *(int*)pdata != 0;
+                    return boolVal.ToString(formatProvider);
+
                 case TDH_IN_TYPE.BINARY:
-                    if (tdhOutType != TDH_OUT_TYPE.IPV6) {
-                        if ((tdhOutType == TDH_OUT_TYPE.SOCKETADDRESS) && (dataLength <= 0x80)) {
-                            fixed (char* chRef = temporaryStringForSockAddressString) {
-                                var length = temporaryStringForSockAddressString.Length;
-                                if (
-                                    TdhNativeMethods.WSAAddressToString(
-                                        new IntPtr(pdata), dataLength, new IntPtr(), new IntPtr(chRef),
-                                        ref length) == 0) {
-                                    return new UnmanagedString(chRef);
-                                }
-                            }
-                        }
-                        goto Label_03DF;
+                    if (tdhOutType == TDH_OUT_TYPE.IPV6) {
+                        if (dataLength == 0)
+                            return string.Empty;
+                        if (dataLength < 16)
+                            return GetBinaryHextStringFromData(pdata, dataLength);
+
+                        for (uint i = 0; i < dataLength; ++i)
+                            tempByteArrayForIpV6Parsing[i] = *((byte*)pdata + i);
+                        return new IPAddress(tempByteArrayForIpV6Parsing).ToString();
                     }
-                    if (dataLength != 0) {
-                        if (dataLength >= 0x10) {
-                            for (uint i = 0; i < dataLength; i++) {
-                                tempByteArrayForIpV6Parsing[i] = *((byte*)pdata + i);
-                            }
-                            return new IPAddress(tempByteArrayForIpV6Parsing).ToString();
+
+                    if (tdhOutType == TDH_OUT_TYPE.SOCKETADDRESS && dataLength <= 128) {
+                        fixed (char* chRef = temporaryStringForSockAddressString) {
+                            var length = temporaryStringForSockAddressString.Length;
+                            if (TdhNativeMethods.WSAAddressToString(
+                                new IntPtr(pdata), dataLength, new IntPtr(), new IntPtr(chRef),
+                                ref length) == 0)
+                                return new UnmanagedString(chRef);
                         }
-                        goto Label_03DF;
                     }
-                    return string.Empty;
+
+                    return GetBinaryHextStringFromData(pdata, dataLength);
 
                 case TDH_IN_TYPE.GUID:
                     return (*(Guid*)pdata).ToString(null, formatProvider);
 
-                case TDH_IN_TYPE.POINTER: {
-                    if (!is32BitEventRecord) {
-                        var num12 = *(ulong*)pdata;
-                        return GetHexStringFor(formatProvider, num12, 0x10);
-                    }
-                    var num11 = *(uint*)pdata;
-                    return GetHexStringFor(formatProvider, num11, 8);
-                }
+                case TDH_IN_TYPE.POINTER:
+                    if (!is32BitEventRecord)
+                        return GetHexStringFor(formatProvider, *(ulong*)pdata, 16);
+                    return GetHexStringFor(formatProvider, *(uint*)pdata, 8);
+
                 case TDH_IN_TYPE.FILETIME: {
-                    var lpSystemTime = new SYSTEMTIME();
+                    var systemTime = new SYSTEMTIME();
                     var lpFileTime = *(FILETIME*)pdata;
-                    TdhNativeMethods.FileTimeToSystemTime(ref lpFileTime, out lpSystemTime);
+                    TdhNativeMethods.FileTimeToSystemTime(ref lpFileTime, out systemTime);
                     return string.Format(
                         CultureInfo.CurrentUICulture, "{0:00}/{1:00}/{2:0000} {3:00}:{4:00}:{5:00}.{6:000}",
-                        lpSystemTime.wMonth, lpSystemTime.wDay, lpSystemTime.wYear, lpSystemTime.wHour,
-                        lpSystemTime.wMinute, lpSystemTime.wSecond, lpSystemTime.wMilliseconds);
+                        systemTime.wMonth, systemTime.wDay, systemTime.wYear, systemTime.wHour,
+                        systemTime.wMinute, systemTime.wSecond, systemTime.wMilliseconds);
                 }
+
                 case TDH_IN_TYPE.SYSTEMTIME: {
-                    var systemtime2 = *(SYSTEMTIME*)pdata;
+                    var systemtime = *(SYSTEMTIME*)pdata;
                     return string.Format(
                         CultureInfo.CurrentUICulture, "{0:00}/{1:00}/{2:0000} {3:00}:{4:00}:{5:00}.{6:000}",
-                        systemtime2.wMonth, systemtime2.wDay, systemtime2.wYear, systemtime2.wHour,
-                        systemtime2.wMinute, systemtime2.wSecond, systemtime2.wMilliseconds);
+                        systemtime.wMonth, systemtime.wDay, systemtime.wYear, systemtime.wHour,
+                        systemtime.wMinute, systemtime.wSecond, systemtime.wMilliseconds);
                 }
+
                 case TDH_IN_TYPE.SID:
-                    if (dataLength == 0) {
+                    if (dataLength == 0)
                         dataLength = (uint)GetSIDLengthFromData(pdata);
-                    }
                     return GetSid(pdata, dataLength);
 
-                case TDH_IN_TYPE.HEXINT32: {
-                    var num13 = *(int*)pdata;
-                    return GetHexStringFor(formatProvider, num13, 8);
-                }
-                case TDH_IN_TYPE.HEXINT64: {
-                    var num14 = *(long*)pdata;
-                    return GetHexStringFor(formatProvider, num14, 0x10);
-                }
-                case TDH_IN_TYPE.COUNTEDSTRING: {
-                    var num15 = *(ushort*)pdata;
-                    return new string((char*)((byte*)pdata + 2), 0, num15 / 2);
-                }
-                case TDH_IN_TYPE.COUNTEDANSISTRING: {
-                    var len = *(ushort*)pdata;
-                    var ptr = new IntPtr((byte*)pdata + 2);
-                    return Marshal.PtrToStringAnsi(ptr, len);
-                }
+                case TDH_IN_TYPE.HEXINT32:
+                    return GetHexStringFor(formatProvider, *(int*)pdata, 8);
+                case TDH_IN_TYPE.HEXINT64:
+                    return GetHexStringFor(formatProvider, *(long*)pdata, 0x10);
+
+                case TDH_IN_TYPE.COUNTEDSTRING:
+                    return new string((char*)((byte*)pdata + 2), 0, *(ushort*)pdata / 2);
+
+                case TDH_IN_TYPE.COUNTEDANSISTRING:
+                    return Marshal.PtrToStringAnsi(
+                        new IntPtr((byte*)pdata + 2), *(ushort*)pdata);
+
                 case TDH_IN_TYPE.REVERSEDCOUNTEDSTRING:
                 case TDH_IN_TYPE.REVERSEDCOUNTEDANSISTRING:
                 case TDH_IN_TYPE.NONNULLTERMINATEDSTRING:
@@ -902,22 +884,17 @@ namespace EventTraceKit.VsExtension
                 default:
                     throw new NotImplementedException();
             }
-            return new string(chPtr, 0, num);
-            Label_016E:
-            return num2.ToString(formatProvider);
-            Label_01BC:
-            return num3.ToString(formatProvider);
-            Label_03DF:
-            return GetBinaryHextStringFromData(pdata, dataLength);
         }
 
-        private static unsafe bool GetULongForTDHData(TDH_IN_TYPE tdhInType, IntPtr buffer, out uint result)
+        private static unsafe bool GetULongForTDHData(
+            TDH_IN_TYPE tdhInType, IntPtr buffer, out uint result)
         {
             var voidPtr = buffer.ToPointer();
             if (voidPtr == null) {
                 result = 0;
                 return false;
             }
+
             switch (tdhInType) {
                 case TDH_IN_TYPE.UINT8:
                     result = *(uint*)voidPtr;
@@ -930,9 +907,11 @@ namespace EventTraceKit.VsExtension
                 case TDH_IN_TYPE.UINT32:
                     result = *(uint*)voidPtr;
                     return true;
+
+                default:
+                    result = 0;
+                    return false;
             }
-            result = 0;
-            return false;
         }
 
         private static bool TokenizeProperties(
@@ -944,20 +923,21 @@ namespace EventTraceKit.VsExtension
             bool is32Bit,
             ref IntPtr current)
         {
-            uint num;
-            bool flag;
-            uint num2;
-            bool flag2;
+            uint count;
+            bool isArray;
+            uint length;
+            bool hasExplicitLength;
             var infoForProperty = traceEventInfo.GetPropertyInfo(propertyIndex);
             if (
                 !GetPropertyParams(
-                    traceEventInfo, tokenizedProperties, context, infoForProperty, is32Bit, out num, out flag,
-                    out num2, out flag2)) {
+                    traceEventInfo, tokenizedProperties, context, infoForProperty,
+                    is32Bit, out count, out isArray, out length, out hasExplicitLength)) {
                 tokenizedProperties[(int)propertyIndex].Add(new IntPtr());
                 return false;
             }
+
             tokenizedProperties[(int)propertyIndex].Add(current);
-            for (uint i = 0; i < num; i++) {
+            for (uint i = 0; i < count; i++) {
                 if (infoForProperty.HasFlag(PROPERTY_FLAGS.PropertyStruct)) {
                     uint structStartIndex = infoForProperty.StructStartIndex;
                     if (structStartIndex >= countValidTokenizedProperties) {
@@ -969,7 +949,8 @@ namespace EventTraceKit.VsExtension
                         tokenizedProperties[(int)structStartIndex].Add(new IntPtr());
                         return false;
                     }
-                    for (var j = structStartIndex; j < num5; j++) {
+
+                    for (uint j = structStartIndex; j < num5; ++j) {
                         if (
                             !TokenizeProperties(
                                 traceEventInfo, j, tokenizedProperties, context, countValidTokenizedProperties,
@@ -979,19 +960,18 @@ namespace EventTraceKit.VsExtension
                         }
                     }
                 } else {
-                    var ptr6 = new IntPtr();
-                    if (current == ptr6) {
+                    if (current == IntPtr.Zero)
                         return false;
-                    }
+
                     current = AdjustPointerPastTDHData(
-                        infoForProperty.SimpleTdhInType, infoForProperty.SimpleTdhOutType, current, num2,
-                        flag2, is32Bit);
-                    var ptr7 = new IntPtr();
-                    if (current == ptr7) {
+                        infoForProperty.SimpleTdhInType, infoForProperty.SimpleTdhOutType, current, length,
+                        hasExplicitLength, is32Bit);
+
+                    if (current == IntPtr.Zero)
                         return false;
-                    }
                 }
             }
+
             return true;
         }
 
@@ -1007,16 +987,15 @@ namespace EventTraceKit.VsExtension
             out string result,
             EventMapInfoCPtr eventMapInfo = new EventMapInfoCPtr())
         {
-            var flag = true;
             try {
                 result = GetStringForTDHData(
-                    tdhInType, tdhOutType, buffer, timestamp, is32BitEventRecord, dataLength, parseTdhContext,
-                    formatProvider, eventMapInfo);
+                    tdhInType, tdhOutType, buffer, timestamp, is32BitEventRecord,
+                    dataLength, parseTdhContext, formatProvider, eventMapInfo);
+                return true;
             } catch {
                 result = string.Empty;
-                flag = false;
+                return false;
             }
-            return flag;
         }
 
         private static bool TryGetTokens(
@@ -1031,7 +1010,7 @@ namespace EventTraceKit.VsExtension
             var flag = eventRecord.Is32Bit(parseTdhContext.NativePointerSize);
             var userData = eventRecord.UserData;
             var topLevelPropertyCount = traceEventInfo.TopLevelPropertyCount;
-            for (uint i = 0; i < maxTopLevelProperty; i++) {
+            for (uint i = 0; i < maxTopLevelProperty; ++i) {
                 if (
                     !TokenizeProperties(
                         traceEventInfo, i, result, context, countValidProperties, flag, ref userData)) {
@@ -1039,6 +1018,7 @@ namespace EventTraceKit.VsExtension
                     return false;
                 }
             }
+
             return true;
         }
 
@@ -1047,6 +1027,50 @@ namespace EventTraceKit.VsExtension
             Build,
             Consume
         }
+    }
+
+    [Flags]
+    public enum FormatMessageFlags
+    {
+        /// <native>FORMAT_MESSAGE_IGNORE_INSERTS</native>
+        IgnoreInserts = 0x00000200,
+
+        /// <native>FORMAT_MESSAGE_FROM_STRING</native>
+        FromString = 0x00000400,
+
+        /// <native>FORMAT_MESSAGE_FROM_HMODULE</native>
+        FromHmodule = 0x00000800,
+
+        /// <native>FORMAT_MESSAGE_FROM_SYSTEM</native>
+        FromSystem = 0x00001000,
+
+        /// <native>FORMAT_MESSAGE_ARGUMENT_ARRAY</native>
+        ArgumentArray = 0x00002000,
+
+        /// <native>FORMAT_MESSAGE_MAX_WIDTH_MASK</native>
+        MaxWidthMask = 0x000000FF,
+    }
+
+    internal static class TdhNativeMethods
+    {
+        [DllImport("Kernel32.dll", SetLastError = true)]
+        public static extern uint FormatMessageW(
+            [MarshalAs(UnmanagedType.U4)] FormatMessageFlags dwFlags,
+            UnmanagedString lpSource,
+            uint dwMessageId,
+            uint dwLanguageId,
+            IntPtr lpBuffer,
+            uint nSize,
+            [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPWStr)]
+            string[] Arguments);
+
+        [DllImport("Kernel32.dll", SetLastError = true)]
+        public static extern bool FileTimeToSystemTime(
+            [In] ref System.Runtime.InteropServices.ComTypes.FILETIME lpFileTime, out SYSTEMTIME lpSystemTime);
+
+        [DllImport("WS2_32.dll", EntryPoint = "WSAAddressToStringW", CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern int WSAAddressToString(
+            IntPtr pSockAddressStruct, uint cbSockAddressStruct, IntPtr lpProtocolInfo, IntPtr resultString, ref int cbResultStringLength);
     }
 
     public class ParseTdhContext

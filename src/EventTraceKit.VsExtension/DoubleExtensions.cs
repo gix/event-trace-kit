@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Controls
+﻿namespace EventTraceKit.VsExtension
 {
     public static class DoubleExtensions
     {

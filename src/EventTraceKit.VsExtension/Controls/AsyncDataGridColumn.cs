@@ -213,6 +213,31 @@ namespace EventTraceKit.VsExtension.Controls
 
         #endregion
 
+        #region public string CellFormat { get; set; }
+
+        /// <summary>
+        ///   Identifies the <see cref="CellFormatProperty"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty CellFormatProperty =
+            DependencyProperty.Register(
+                nameof(CellFormat),
+                typeof(string),
+                typeof(AsyncDataGridColumn),
+                new PropertyMetadata(
+                    null,
+                    (d, e) => ((AsyncDataGridColumn)d).OnUIPropertyChanged()));
+
+        /// <summary>
+        ///   Gets or sets the cell format.
+        /// </summary>
+        public string CellFormat
+        {
+            get { return (string)GetValue(CellFormatProperty); }
+            set { SetValue(CellFormatProperty, value); }
+        }
+
+        #endregion
+
         #region public bool IsResizable { get; private set; }
 
         private static readonly DependencyPropertyKey IsResizablePropertyKey =
@@ -476,7 +501,7 @@ namespace EventTraceKit.VsExtension.Controls
                 HelpText = columnModel.HelpText,
                 TextAlignment = TextAlignment,
                 IsVisible = IsVisible,
-                //CellFormat = this.CellFormat,
+                CellFormat = CellFormat,
                 Width = (int)Width,
             };
             return preset;

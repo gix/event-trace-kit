@@ -6,6 +6,7 @@
     using System.Windows.Controls.Primitives;
     using System.Windows.Input;
     using System.Windows.Media;
+    using EventTraceKit.VsExtension.Windows;
 
     [TemplatePart(Name = PART_LeftHeaderGripper, Type = typeof(Thumb))]
     [TemplatePart(Name = PART_RightHeaderGripper, Type = typeof(Thumb))]
