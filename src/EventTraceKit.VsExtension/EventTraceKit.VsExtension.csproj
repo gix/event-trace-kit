@@ -167,6 +167,8 @@
   <ItemGroup>
     <Compile Include="CharCPtrUtils.cs" />
     <Compile Include="Collections\Extensions.cs" />
+    <Compile Include="HdvColumnViewModelPreset.cs" />
+    <Compile Include="HdvViewModel.cs" />
     <Compile Include="Windows\MenuPopupPositionerExtension.cs" />
     <Compile Include="Controls\VsMenuScrollViewer.cs" />
     <Compile Include="Windows\ColorExtensions.cs" />

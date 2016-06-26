@@ -123,6 +123,14 @@ void EtwTraceProcessor::StopProcessing()
         processorThread.join();
 }
 
+EventInfo EtwTraceProcessor::GetEvent(size_t index) const
+{
+    if (index >= eventCount) return EventInfo();
+
+    std::shared_lock<std::shared_mutex> lock(mutex);
+    return events[index];
+}
+
 DWORD EtwTraceProcessor::ProcessTraceProc(_In_ LPVOID lpParameter)
 {
     SetCurrentThreadName("ETW Trace Processor");
@@ -159,6 +167,22 @@ bool EtwTraceProcessor::IsEndOfTracing()
 
     DWORD st = WaitForSingleObject(processorThread.native_handle(), 0);
     return st == WAIT_OBJECT_0;
+}
+
+void EtwTraceProcessor::ClearEvents()
+{
+    eventCount = 0;
+    std::unique_lock<std::shared_mutex> lock(mutex);
+    events.clear();
+    if (sink)
+        sink->NotifyNewEvents(0);
+}
+
+TRACE_LOGFILE_HEADER const* EtwTraceProcessor::GetLogFileHeader() const
+{
+    if (!traceHandle)
+        return nullptr;
+    return &traceLogFile.LogfileHeader;
 }
 
 template<typename Allocator>

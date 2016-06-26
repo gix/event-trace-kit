@@ -40,6 +40,7 @@ namespace EventTraceKit.VsExtension
         private readonly HdvColumnViewModelPreset eventKeyPreset;
         private readonly HdvColumnViewModelPreset timePointGeneratorPreset;
         private readonly HdvColumnViewModelPreset datetimeGeneratorPreset;
+        private readonly HdvColumnViewModelPreset decodingSourcePreset;
         private readonly HdvColumnViewModelPreset modernProcessDataPreset;
         private readonly HdvColumnViewModelPreset processNamePreset;
         private readonly HdvColumnViewModelPreset stackTopPreset;
@@ -241,6 +242,12 @@ namespace EventTraceKit.VsExtension
                     Name = "DateTime (Local)",
                     Width = 150,
                 }.EnsureFrozen();
+            decodingSourcePreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("D06EBF0F-A744-4E27-B635-F2E4A56B9B50"),
+                    Name = "Decoding Source",
+                    Width = 150,
+                }.EnsureFrozen();
             modernProcessDataPreset =
                 new HdvColumnViewModelPreset {
                     Id = new Guid("DC7E68B0-E753-47DF-8357-61BEC093E405"),
@@ -313,6 +320,7 @@ namespace EventTraceKit.VsExtension
             AddColumn(table, defaultPreset, userSecurityIdentifierPreset, DataColumn.Create(info.ProjectUserSecurityIdentifier));
             AddColumn(table, defaultPreset, sessionIdPreset, DataColumn.Create(info.ProjectSessionId));
             AddColumn(table, defaultPreset, eventKeyPreset, DataColumn.Create(info.ProjectEventKey));
+            AddColumn(table, defaultPreset, decodingSourcePreset, DataColumn.Create(info.ProjectDecodingSource));
             //AddColumn(table, defaultPreset, modernProcessDataPreset, DataColumn.Create<object>());
             //AddColumn(table, defaultPreset, processNamePreset, DataColumn.Create<string>());
             //AddColumn(table, defaultPreset, stackTopPreset, DataColumn.Create<object>());
@@ -445,7 +453,7 @@ namespace EventTraceKit.VsExtension
                 return GetEventRecord(index).EventHeader.EventDescriptor.Keyword;
             }
 
-            public unsafe string ProjectMessage(int index)
+            public string ProjectMessage(int index)
             {
                 var info = GetEventInfo(index);
 
@@ -535,6 +543,11 @@ namespace EventTraceKit.VsExtension
             public string ProjectEventName(int index)
             {
                 return null; // FIXME
+            }
+
+            public DECODING_SOURCE ProjectDecodingSource(int index)
+            {
+                return GetTraceEventInfo(index).DecodingSource;
             }
         }
     }

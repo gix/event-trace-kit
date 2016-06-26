@@ -27,29 +27,13 @@ public:
     virtual void StopProcessing() override;
     virtual bool IsEndOfTracing() override;
 
-    virtual void ClearEvents() override
-    {
-        eventCount = 0;
-        events.clear();
-        if (sink)
-            sink->NotifyNewEvents(0);
-    }
+    virtual void ClearEvents() override;
 
-    virtual TRACE_LOGFILE_HEADER const* GetLogFileHeader() const override
-    {
-        if (!traceHandle)
-            return nullptr;
-        return &traceLogFile.LogfileHeader;
-    }
+    virtual TRACE_LOGFILE_HEADER const* GetLogFileHeader() const override;
 
     virtual size_t GetEventCount() override { return eventCount; }
-    virtual EventInfo GetEvent(size_t index) const override
-    {
-        if (index >= eventCount) return EventInfo();
 
-        std::shared_lock<std::shared_mutex> lock(mutex);
-        return events[index];
-    }
+    virtual EventInfo GetEvent(size_t index) const override;
 
 private:
     static DWORD WINAPI ProcessTraceProc(_In_ LPVOID lpParameter);

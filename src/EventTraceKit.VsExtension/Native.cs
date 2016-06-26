@@ -488,6 +488,8 @@
         public byte OpCode => HasValue ? pTraceEventInfo->EventDescriptor.Opcode : (byte)0;
         public ulong Keyword => HasValue ? pTraceEventInfo->EventDescriptor.Keyword : 0L;
 
+        public DECODING_SOURCE DecodingSource => HasValue ? pTraceEventInfo->DecodingSource : 0L;
+
         public UnmanagedString GetChannelName()
         {
             if (HasValue)
@@ -724,9 +726,9 @@
         public EVENT_RECORD* Ptr => pEventRecord;
         public bool HasData => pEventRecord != null;
 
-        public IntPtr UserData => HasData ? pEventRecord[0].UserData : IntPtr.Zero;
-        public ushort UserDataLength => HasData ? pEventRecord[0].UserDataLength : (ushort)0;
         public TimePoint TimePoint => HasData ? pEventRecord->EventHeader.TimeStamp : TimePoint.Zero;
+        public IntPtr UserData => HasData ? pEventRecord->UserData : IntPtr.Zero;
+        public ushort UserDataLength => HasData ? pEventRecord->UserDataLength : (ushort)0;
         public ulong ProcessorIndex => HasData ? pEventRecord->ProcessorIndex : ulong.MaxValue;
 
         public EventHeaderCPtr EventHeader =>
@@ -748,15 +750,6 @@
 
             return null;
         }
-
-        //public IEnumerable<EVENT_HEADER_EXTENDED_DATA_ITEM> ExtendedData
-        //{
-        //    get
-        //    {
-        //        return MarshalUtils.PtrToStructureArray<EVENT_HEADER_EXTENDED_DATA_ITEM>(
-        //            pEventRecord->ExtendedData, pEventRecord->ExtendedDataCount, true);
-        //    }
-        //}
 
         public bool IsTraceLoggingEvent()
         {
