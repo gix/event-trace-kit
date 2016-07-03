@@ -1,7 +1,10 @@
 namespace EventTraceKit.VsExtension.Controls
 {
     using System;
+    using System.Collections.Generic;
+    using System.Threading;
     using System.Windows;
+    using EventTraceKit.VsExtension.Controls.Primitives;
 
     public sealed class AsyncDataGridCellsPresenterViewModel
         : DependencyObject
@@ -60,17 +63,63 @@ namespace EventTraceKit.VsExtension.Controls
             }
         }
 
-        protected void ValidateIsReady()
-        {
-            if (!IsReady)
-                throw new InvalidOperationException();
-        }
+        internal object DataValidityToken => null;
 
         public void RequestUpdate(bool updateFromViewModel)
         {
             VerifyAccess();
             ValidateIsReady();
             hdv.RequestUpdate(updateFromViewModel);
+        }
+
+        private void ValidateIsReady()
+        {
+            if (!IsReady)
+                throw new InvalidOperationException();
+        }
+
+        internal void PrefetchAllDataAndQueueUpdateRender(
+            AsyncDataGridCellsPresenter cellPresenter, int firstVisibleColumn,
+            int lastVisibleColumn, int firstVisibleRow, int lastVisibleRow,
+            Action<bool> selectionPrefetched, Action<bool> callBackWhenFinished)
+        {
+            hdv.VerifyIsReady();
+
+            IList<AsyncDataGridColumn> visibleColumns = cellPresenter.VisibleColumns;
+            for (int i = firstVisibleColumn; i <= lastVisibleColumn; ++i) {
+                AsyncDataGridColumn column = visibleColumns[i];
+                column.IsSafeToReadCellValuesFromUIThread = false;
+            }
+
+            hdv.PerformAsyncReadOperation(delegate (CancellationToken cancellationToken) {
+                //if (!cancellationToken.IsCancellationRequested) {
+                //    lock (RowSelection) {
+                //        RowSelection.RefreshDataIfNecessary(cancellationToken);
+                //    }
+                //}
+
+                selectionPrefetched(cancellationToken.IsCancellationRequested);
+                if (!cancellationToken.IsCancellationRequested) {
+                    List<AsyncDataGridColumn> list = new List<AsyncDataGridColumn>();
+                    for (int m = firstVisibleColumn; m <= lastVisibleColumn; m++) {
+                        AsyncDataGridColumn item = visibleColumns[m];
+                        list.Add(item);
+                    }
+
+                    int viewportSizeHint = (lastVisibleRow - firstVisibleRow) + 1;
+                    foreach (AsyncDataGridColumn column in list) {
+                        for (int i = firstVisibleRow; i <= lastVisibleRow; ++i) {
+                            if (cancellationToken.IsCancellationRequested)
+                                break;
+                            column.GetCellValue(i, viewportSizeHint);
+                        }
+                        column.IsSafeToReadCellValuesFromUIThread = true;
+                        cellPresenter.PostUpdateRendering();
+                    }
+                }
+
+                callBackWhenFinished(cancellationToken.IsCancellationRequested);
+            });
         }
     }
 }

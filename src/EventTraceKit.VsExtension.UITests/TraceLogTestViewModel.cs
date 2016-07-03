@@ -2,22 +2,20 @@ namespace EventTraceKit.VsExtension.UITests
 {
     using System;
     using System.Collections.ObjectModel;
-    using System.Threading;
-    using System.Threading.Tasks;
     using System.Windows.Input;
     using EventTraceKit.VsExtension;
+    using Microsoft.VisualStudio.PlatformUI;
 
     public class TraceLogTestViewModel : TraceLogWindowViewModel
     {
         private string selectedTheme;
-
-        private CancellationTokenSource cts;
+        private bool running;
 
         public TraceLogTestViewModel()
             : base(new StubOperationalModeProvider())
         {
-            StartCommand = new DelegateCommand(Start);
-            StopCommand = new DelegateCommand(Stop);
+            StartCommand = new DelegateCommand(Start, CanStart);
+            StopCommand = new DelegateCommand(Stop, CanStop);
             ClearCommand = new DelegateCommand(Clear);
 
             foreach (var name in App.Current.AvailableThemes)
@@ -42,41 +40,35 @@ namespace EventTraceKit.VsExtension.UITests
             }
         }
 
-        private void Start()
+        public ICommand StartCommand { get; }
+        public ICommand StopCommand { get; }
+        public ICommand ClearCommand { get; }
+
+        private bool CanStart(object obj)
+        {
+            return !running;
+        }
+
+        private void Start(object param)
         {
             StartCapture();
-            return;
-
-            if (cts != null)
-                return;
-
-            cts = new CancellationTokenSource();
-            Task.Factory.StartNew(() => Gen(cts.Token), TaskCreationOptions.LongRunning);
+            running = true;
         }
 
-        private void Stop()
+        private bool CanStop(object obj)
+        {
+            return running;
+        }
+
+        private void Stop(object param)
         {
             StopCapture();
-            return;
-
-            cts?.Cancel();
-            cts = null;
+            running = false;
         }
 
-        private new void Clear()
+        private void Clear(object param)
         {
             base.Clear();
-        }
-
-        private int rows;
-
-        private void Gen(CancellationToken token)
-        {
-            while (!token.IsCancellationRequested) {
-                EventsDataView.UpdateRowCount(rows);
-                Thread.Sleep(TimeSpan.FromMilliseconds(10));
-                rows += 100;
-            }
         }
 
         private class StubOperationalModeProvider : IOperationalModeProvider
@@ -84,9 +76,5 @@ namespace EventTraceKit.VsExtension.UITests
             public VsOperationalMode CurrentMode => VsOperationalMode.Design;
             public event EventHandler<VsOperationalMode> OperationalModeChanged;
         }
-
-        public ICommand StartCommand { get; }
-        public ICommand StopCommand { get; }
-        public ICommand ClearCommand { get; }
     }
 }

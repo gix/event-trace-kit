@@ -15,18 +15,19 @@ template<typename CharT, typename Traits = std::char_traits<CharT>>
 class basic_string_view
 {
 public:
-    typedef Traits traits_type;
-    typedef CharT value_type;
-    typedef CharT* pointer;
-    typedef CharT const* const_pointer;
-    typedef CharT& reference;
-    typedef CharT const& const_reference;
-    typedef const_pointer const_iterator;
-    typedef const_iterator iterator;
-    typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
-    typedef const_reverse_iterator reverse_iterator;
-    typedef size_t size_type;
-    typedef ptrdiff_t difference_type;
+    using traits_type            = Traits;
+    using value_type             = CharT;
+    using pointer                = CharT*;
+    using const_pointer          = CharT const*;
+    using reference              = CharT&;
+    using const_reference        = CharT const&;
+    using const_iterator         = const_pointer;
+    using iterator               = const_iterator;
+    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+    using reverse_iterator       = const_reverse_iterator;
+    using size_type              = size_t;
+    using difference_type        = ptrdiff_t;
+
     static constexpr size_type const npos = size_type(-1);
 
     // [string.view.cons], construct/copy
@@ -475,9 +476,9 @@ bool operator >=(std::common_type_t<basic_string_view<CharT, Traits>> lhs,
 #endif
 
 
-typedef basic_string_view<char>     string_view;
-typedef basic_string_view<char16_t> u16string_view;
-typedef basic_string_view<char32_t> u32string_view;
-typedef basic_string_view<wchar_t>  wstring_view;
+using string_view = basic_string_view<char>;
+using u16string_view = basic_string_view<char16_t>;
+using u32string_view  = basic_string_view<char32_t>;
+using wstring_view  = basic_string_view<wchar_t>;
 
 } // namespace etk

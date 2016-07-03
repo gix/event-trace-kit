@@ -63,7 +63,7 @@ TdhManifestLoadCookie AddSculptorProvider(EtwTraceSession& session)
     static GUID const ProviderId = { 0x716EFEF7, 0x5AC2, 0x4EE0,{ 0x82, 0x77, 0xD9, 0x22, 0x64, 0x11, 0xA1, 0x55 } };
     //static GUID const ProviderId = { 0x00000000, 0x0000, 0x0000, { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 } };
     //ProviderState provider(ProviderId, 0xFF, 0x7FFFFFFF, 0x7FFFFFFF);
-    TraceProviderSpec provider(ProviderId, 0xFF, 0xFFFFFFFFFFFFFFFFULL, 0);
+    TraceProviderDescriptor provider(ProviderId, 0xFF, 0xFFFFFFFFFFFFFFFFULL, 0);
 
     wchar_t path[] = { L"C:\\Users\\nrieck\\dev\\ffmf\\src\\Sculptor\\Sculptor.man" };
     //ULONG ec = TdhLoadManifest(L"C:\\Users\\nrieck\\dev\\InstrManifestCompiler\\src\\InstrManifestCompiler.Tests\\Input\\Test2.man");

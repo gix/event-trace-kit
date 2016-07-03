@@ -1,9 +1,7 @@
 ﻿#pragma once
-#include "ADT/LruCache.h"
 #include "ADT/VarStructPtr.h"
-#include "Support/CompilerSupport.h"
+#include "EventInfo.h"
 
-#include <cstdint>
 #include <unordered_map>
 #include <windows.h>
 #include <evntcons.h>
@@ -13,120 +11,61 @@
 namespace etk
 {
 
-class EventInfo
+struct EventKey
 {
-public:
-    EventInfo() = default;
-
-    EventInfo(EVENT_RECORD* record, TRACE_EVENT_INFO* info, size_t infoSize)
-        : record(record), info(info), infoSize(infoSize)
+    EventKey(GUID const& providerId, USHORT eventId, UCHAR version)
     {
+        std::memcpy(data, &providerId, sizeof(providerId));
+        std::memcpy(data + sizeof(providerId), &eventId, sizeof(eventId));
+        std::memcpy(data + sizeof(providerId) + sizeof(eventId), &version, sizeof(version));
     }
 
-    explicit operator bool() const { return info != nullptr; }
-    TRACE_EVENT_INFO* operator ->() const { return info; }
-
-    wchar_t const* ProviderName() const {
-        return GetStringAt(info->ProviderNameOffset);
-    }
-
-    wchar_t const* LevelName() const {
-        return GetStringAt(info->LevelNameOffset);
-    }
-
-    wchar_t const* ChannelName() const {
-        return GetStringAt(info->ChannelNameOffset);
-    }
-
-    wchar_t const* TaskName() const {
-        return GetStringAt(info->TaskNameOffset);
-    }
-
-    wchar_t const* OpcodeName() const {
-        return GetStringAt(info->OpcodeNameOffset);
-    }
-
-    wchar_t const* KeywordsName() const {
-        return GetStringAt(info->KeywordsNameOffset);
-    }
-
-    wchar_t const* EventMessage() const {
-        return GetStringAt(info->EventMessageOffset);
-    }
-
-    wchar_t const* ProviderMessage() const {
-        return GetStringAt(info->ProviderMessageOffset);
-    }
-
-    wchar_t const* ActivityIdName() const {
-        return GetStringAt(info->ActivityIDNameOffset);
-    }
-
-    wchar_t const* RelatedActivityIdName() const {
-        return GetStringAt(info->RelatedActivityIDNameOffset);
-    }
-
-    EVENT_RECORD* record = nullptr;
-    TRACE_EVENT_INFO* info = nullptr;
-    size_t infoSize = 0;
-
-    template<typename T>
-    ETK_ALWAYS_INLINE T GetAt(size_t offset) const
+    static EventKey FromEvent(EVENT_RECORD& record)
     {
-        return reinterpret_cast<T>(reinterpret_cast<uint8_t*>(info) + offset);
+        return FromEventHeader(record.EventHeader);
     }
 
-private:
-    ETK_ALWAYS_INLINE wchar_t const* GetStringAt(size_t offset) const
+    static EventKey FromEventHeader(EVENT_HEADER& header)
     {
-        return offset ? GetAt<wchar_t const*>(offset) : nullptr;
-    }
-};
-
-struct EventInfoKey
-{
-    EventInfoKey(GUID const& providerId, USHORT eventId)
-    {
-        std::memcpy(Buffer, &providerId, sizeof(providerId));
-        std::memcpy(Buffer + sizeof(providerId), &eventId, sizeof(eventId));
+        return EventKey(header.ProviderId,
+                        header.EventDescriptor.Id,
+                        header.EventDescriptor.Version);
     }
 
-    static EventInfoKey FromEvent(EVENT_RECORD& record)
-    {
-        return EventInfoKey(record.EventHeader.ProviderId,
-                            record.EventHeader.EventDescriptor.Id);
-    }
-
-    friend bool operator ==(EventInfoKey const& x, EventInfoKey const& y) {
+    friend bool operator ==(EventKey const& x, EventKey const& y) {
         return std::memcmp(&x, &y, sizeof(y)) == 0;
     }
 
-    friend bool operator <(EventInfoKey const& x, EventInfoKey const& y) {
+    friend bool operator <(EventKey const& x, EventKey const& y) {
         return std::memcmp(&x, &y, sizeof(y)) < 0;
     }
 
-    friend std::size_t hash_value(EventInfoKey const& key)
+    friend std::size_t hash_value(EventKey const& key)
     {
         std::size_t seed = 0;
-        boost::hash_combine(seed, key.Buffer);
+        boost::hash_combine(seed, key.data);
         return seed;
     }
 
 private:
-    char Buffer[sizeof(EVENT_HEADER::ProviderId) + sizeof(EVENT_DESCRIPTOR::Id)];
+    char data[sizeof(EVENT_HEADER::ProviderId) +
+              sizeof(EVENT_DESCRIPTOR::Id) +
+              sizeof(EVENT_DESCRIPTOR::Version)];
 };
 
 class EventInfoCache
 {
 public:
     EventInfoCache();
-    EventInfo Get(EVENT_RECORD& event);
+    EventInfo Get(EVENT_RECORD& record);
+
+    void Clear() { infos.clear(); }
+
     using TraceEventInfoPtr = std::tuple<vstruct_ptr<TRACE_EVENT_INFO>, size_t>;
-    static TraceEventInfoPtr CreateEventInfo(EVENT_RECORD& event);
+    static TraceEventInfoPtr CreateEventInfo(EVENT_RECORD& record);
 
 private:
-    //LruCache<EventInfoKey, TraceEventInfoPtr, boost::hash<EventInfoKey>> infos;
-    std::unordered_map<EventInfoKey, TraceEventInfoPtr, boost::hash<EventInfoKey>> infos;
+    std::unordered_map<EventKey, TraceEventInfoPtr, boost::hash<EventKey>> infos;
 };
 
 } // namespace etk

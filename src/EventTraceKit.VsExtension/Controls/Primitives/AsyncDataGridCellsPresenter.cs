@@ -1295,7 +1295,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         {
             postedUpdate = false;
 
-            if (ViewModel != null) { // && ViewModel.IsReady
+            if (ViewModel != null && ViewModel.IsReady) {
                 UpdateScrollInfo();
 
                 bool updateDrawing =
@@ -1490,8 +1490,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                     viewModel.RequestUpdate(false);
             }
 
-            //if (!ViewModel.IsReady)
-            //    e.Handled = true;
+            if (!ViewModel.IsReady)
+                e.Handled = true;
 
             base.OnKeyDown(e);
         }

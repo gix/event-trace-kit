@@ -75,7 +75,7 @@ struct EqualProviderId
     EqualProviderId(GUID const& id) : id(id) {}
     EqualProviderId& operator =(EqualProviderId const&) = delete;
 
-    bool operator ()(TraceProviderSpec const& provider) const
+    bool operator ()(TraceProviderDescriptor const& provider) const
     {
         return provider.Id == id;
     }
@@ -182,7 +182,7 @@ void EtwTraceSession::Query(TraceStatistics& stats)
     stats.LoggerThreadId = static_cast<unsigned>(GetThreadId(traceProperties->LoggerThreadId));
 }
 
-bool EtwTraceSession::AddProvider(TraceProviderSpec const& provider)
+bool EtwTraceSession::AddProvider(TraceProviderDescriptor const& provider)
 {
     auto entry = find_if(providers, EqualProviderId(provider.Id));
     if (entry == providers.end()) {
@@ -247,7 +247,7 @@ void EtwTraceSession::DisableAllProviders()
         DisableProvider(providerId);
 }
 
-HRESULT EtwTraceSession::EnableProviderTrace(TraceProviderSpec const& provider) const
+HRESULT EtwTraceSession::EnableProviderTrace(TraceProviderDescriptor const& provider) const
 {
     std::vector<EVENT_FILTER_DESCRIPTOR> filters;
     std::unique_ptr<EventIdFilter> eventIdFilter;
@@ -282,7 +282,7 @@ HRESULT EtwTraceSession::DisableProviderTrace(GUID const& providerId) const
         0, 0, 0, 0, nullptr));
 }
 
-ETK_EXPORT std::unique_ptr<ITraceSession> CreateEtwTraceSession(
+std::unique_ptr<ITraceSession> CreateEtwTraceSession(
     wstring_view name, TraceProperties const& properties)
 {
     return std::make_unique<EtwTraceSession>(name, properties);

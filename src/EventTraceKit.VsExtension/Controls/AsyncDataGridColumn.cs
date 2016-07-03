@@ -43,6 +43,7 @@ namespace EventTraceKit.VsExtension.Controls
         }
 
         public AsyncDataGridColumnsViewModel Columns => columns;
+        internal DataColumnView ColumnModel => columnModel;
 
         public bool CanMove => IsVisible && (!IsDisconnected || IsSeparator || IsFreezableAreaSeparator);
 
@@ -324,7 +325,7 @@ namespace EventTraceKit.VsExtension.Controls
 
         #endregion
 
-        public bool IsSafeToReadCellValuesFromUIThread { get; } = true;
+        internal bool IsSafeToReadCellValuesFromUIThread { get; set; } = true;
 
         public bool CanSort { get; } = false;
 

@@ -1,45 +1,29 @@
 #pragma once
-#include "ADT/StringView.h"
-#include "EventInfoCache.h"
+#include "ADT/ArrayRef.h"
+#include "ITraceSession.h"
+
+#include <memory>
 #include <windows.h>
-#include <evntcons.h>
+#include <evntrace.h>
 
 namespace etk
 {
 
-struct FormattedEvent
-{
-    GUID ProviderId;
-    unsigned ProcessId;
-    unsigned ThreadId;
-    uint64_t ProcessorTime;
-    EVENT_DESCRIPTOR Descriptor;
-    FILETIME Time;
-    wstring_view Message;
-    EventInfo Info;
-};
-
-class IEventSink
-{
-public:
-    virtual ~IEventSink() {};
-    virtual void ProcessEvent(FormattedEvent const& event) = 0;
-    virtual void NotifyNewEvents(size_t newEventCount) = 0;
-};
+class IEventSink;
 
 class ITraceProcessor
 {
 public:
-    virtual ~ITraceProcessor() {};
+    virtual ~ITraceProcessor() {}
     virtual void SetEventSink(IEventSink* sink) = 0;
     virtual void StartProcessing() = 0;
     virtual void StopProcessing() = 0;
     virtual bool IsEndOfTracing() = 0;
 
-    virtual void ClearEvents() = 0;
     virtual TRACE_LOGFILE_HEADER const* GetLogFileHeader() const = 0;
-    virtual size_t GetEventCount() = 0;
-    virtual EventInfo GetEvent(size_t index) const = 0;
 };
+
+std::unique_ptr<ITraceProcessor> CreateEtwTraceProcessor(
+    std::wstring loggerName, ArrayRef<TraceProviderDescriptor> providers);
 
 } // namespace etk

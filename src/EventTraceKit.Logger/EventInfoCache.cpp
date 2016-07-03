@@ -8,31 +8,27 @@ EventInfoCache::EventInfoCache()
 {
 }
 
-EventInfo EventInfoCache::Get(EVENT_RECORD& event)
+EventInfo EventInfoCache::Get(EVENT_RECORD& record)
 {
-    auto key = EventInfoKey::FromEvent(event);
-
-    //TraceEventInfoPtr& info = infos.GetOrCreate(key, [&](EventInfoKey const&) {
-    //    return CreateEventInfo(event);
-    //});
+    auto key = EventKey::FromEvent(record);
 
     auto& entry = infos[key];
     if (!std::get<0>(entry))
-        entry = CreateEventInfo(event);
+        entry = CreateEventInfo(record);
 
-    return EventInfo(&event, std::get<0>(entry).get(), std::get<1>(entry));
+    return EventInfo(&record, std::get<0>(entry).get(), std::get<1>(entry));
 }
 
 EventInfoCache::TraceEventInfoPtr
-EventInfoCache::CreateEventInfo(EVENT_RECORD& event)
+EventInfoCache::CreateEventInfo(EVENT_RECORD& record)
 {
     TraceEventInfoPtr info;
 
     ULONG bufferSize = 0;
-    DWORD ec = TdhGetEventInformation(&event, 0, nullptr, std::get<0>(info).get(), &bufferSize);
+    DWORD ec = TdhGetEventInformation(&record, 0, nullptr, nullptr, &bufferSize);
     if (ec == ERROR_INSUFFICIENT_BUFFER) {
         std::get<0>(info) = make_vstruct<TRACE_EVENT_INFO>(bufferSize);
-        ec = TdhGetEventInformation(&event, 0, nullptr, std::get<0>(info).get(), &bufferSize);
+        ec = TdhGetEventInformation(&record, 0, nullptr, std::get<0>(info).get(), &bufferSize);
     }
 
     if (ec != ERROR_SUCCESS)

@@ -13,6 +13,8 @@
     <ClCompile Include="TraceSession.cpp" />
     <ClCompile Include="EtwMessageFormatter.cpp" />
     <ClCompile Include="EtwMessageFormatterManaged.cpp" />
+    <ClCompile Include="EtwTraceLog.cpp" />
+    <ClCompile Include="WatchDog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EtwTraceProcessor.h" />
@@ -33,14 +35,16 @@
     <ClInclude Include="ADT\WaitEvent.h" />
     <ClInclude Include="Win32Exception.h" />
     <ClInclude Include="ADT\LruCache.h" />
-    <ClInclude Include="EtwTraceProcessorCreate.h" />
     <ClInclude Include="ITraceProcessor.h" />
-    <ClInclude Include="Support\DllExport.h" />
     <ClInclude Include="Support\StringFormat.h" />
     <ClInclude Include="Support\Hashing.h" />
     <ClInclude Include="EventInfoCache.h" />
     <ClInclude Include="Support\SetThreadName.h" />
     <ClInclude Include="Support\Allocator.h" />
     <ClInclude Include="EtwMessageFormatter.h" />
+    <ClInclude Include="EventInfo.h" />
+    <ClInclude Include="IEventSink.h" />
+    <ClInclude Include="ITraceLog.h" />
+    <ClInclude Include="WatchDog.h" />
   </ItemGroup>
 </Project>

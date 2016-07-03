@@ -23,6 +23,10 @@
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
     </ClCompile>
+    <ClCompile Include="EtwTraceLog.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
+    </ClCompile>
     <ClCompile Include="EtwTraceProcessor.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
@@ -51,6 +55,7 @@
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
     </ClCompile>
+    <ClCompile Include="WatchDog.cpp" />
     <ClCompile Include="Win32Exception.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
@@ -62,11 +67,13 @@
     <ClCompile Include="EtwMessageFormatterManaged.cpp">
       <FileType>CppHeader</FileType>
     </ClCompile>
+    <ClInclude Include="ITraceLog.h" />
+    <ClInclude Include="EventInfo.h" />
     <ClInclude Include="EventInfoCache.h" />
+    <ClInclude Include="IEventSink.h" />
     <ClInclude Include="Support\Allocator.h" />
     <ClInclude Include="Support\Hashing.h" />
     <ClInclude Include="ITraceProcessor.h" />
-    <ClInclude Include="EtwTraceProcessorCreate.h" />
     <ClInclude Include="ADT\Guid.h" />
     <ClInclude Include="ADT\Handle.h" />
     <ClInclude Include="ADT\LruCache.h" />
@@ -81,14 +88,15 @@
     <ClInclude Include="Support\CompilerSupport.h" />
     <ClInclude Include="Support\CountOf.h" />
     <ClInclude Include="Support\Debug.h" />
-    <ClInclude Include="Support\DllExport.h" />
     <ClInclude Include="Support\ErrorHandling.h" />
     <ClInclude Include="Support\RangeAdaptors.h" />
     <ClInclude Include="Support\SetThreadName.h" />
     <ClInclude Include="Support\StringFormat.h" />
+    <ClInclude Include="WatchDog.h" />
     <ClInclude Include="Win32Exception.h" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="System" />
     <Reference Include="System.Core" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -139,7 +147,6 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>ETK_LOGGER_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>dbghelp.lib;tdh.lib;wevtapi.lib;ntdll.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -152,7 +159,6 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\EventTraceKit.Logger\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>ETK_LOGGER_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

@@ -72,7 +72,7 @@ public:
     virtual void Flush() override;
     virtual void Query(TraceStatistics& stats) override;
 
-    virtual bool AddProvider(TraceProviderSpec const& provider) override;
+    virtual bool AddProvider(TraceProviderDescriptor const& provider) override;
     virtual bool RemoveProvider(GUID const& providerId) override;
     virtual bool EnableProvider(GUID const& providerId) override;
     virtual bool DisableProvider(GUID const& providerId) override;
@@ -81,13 +81,13 @@ public:
 
 private:
     void SetProperties(TraceProperties const& properties);
-    HRESULT EnableProviderTrace(TraceProviderSpec const& provider) const;
+    HRESULT EnableProviderTrace(TraceProviderDescriptor const& provider) const;
     HRESULT DisableProviderTrace(GUID const& providerId) const;
 
     std::wstring sessionName;
     std::unique_ptr<EventTraceProperties> traceProperties;
     TRACEHANDLE traceHandle;
-    std::vector<TraceProviderSpec> providers;
+    std::vector<TraceProviderDescriptor> providers;
     std::unordered_set<GUID> enabledProviders;
 };
 

@@ -1,7 +1,8 @@
 #include "ADT/Guid.h"
-#include "ADT/LruCache.h"
-#include "EtwTraceSession.h"
-#include "EtwTraceProcessorCreate.h"
+#include "ITraceLog.h"
+#include "ITraceProcessor.h"
+#include "ITraceSession.h"
+#include "WatchDog.h"
 
 #include <msclr/lock.h>
 #include <msclr/marshal.h>
@@ -14,6 +15,7 @@
 using namespace System;
 using namespace System::Linq;
 using namespace System::Collections::Generic;
+using namespace System::Runtime::InteropServices;
 using msclr::interop::marshal_as;
 
 
@@ -57,10 +59,10 @@ public ref struct TraceStatistics
     property unsigned LoggerThreadId;
 };
 
-public ref class TraceProviderSpec
+public ref class TraceProviderDescriptor
 {
 public:
-    TraceProviderSpec(Guid id)
+    TraceProviderDescriptor(Guid id)
     {
         Id = id;
         Level = 0xFF;
@@ -117,6 +119,17 @@ private:
     bool isManifest = false;
 };
 
+public ref class TraceSessionDescriptor
+{
+public:
+    TraceSessionDescriptor()
+    {
+        Providers = gcnew List<TraceProviderDescriptor^>();
+    }
+
+    property IList<TraceProviderDescriptor^>^ Providers;
+};
+
 } // namespace EventTraceKit
 
 namespace msclr
@@ -125,7 +138,7 @@ namespace interop
 {
 
 template<>
-inline System::DateTime marshal_as<System::DateTime, FILETIME>(FILETIME const& time)
+inline System::DateTime marshal_as<System::DateTime, ::FILETIME>(::FILETIME const& time)
 {
     uint64_t ticks = (uint64_t(time.dwHighDateTime) << 32) | time.dwLowDateTime;
     return System::DateTime::FromFileTime(ticks);
@@ -170,9 +183,9 @@ inline std::vector<T> marshal_as_vector(List<T>^ list)
 }
 
 template<>
-inline etk::TraceProviderSpec marshal_as(EventTraceKit::TraceProviderSpec^ const& provider)
+inline etk::TraceProviderDescriptor marshal_as(EventTraceKit::TraceProviderDescriptor^ const& provider)
 {
-    etk::TraceProviderSpec native(
+    etk::TraceProviderDescriptor native(
         marshal_as<GUID>(provider->Id), provider->Level, provider->MatchAnyKeyword,
         provider->MatchAllKeyword);
     native.IncludeSecurityId = provider->IncludeSecurityId;
@@ -211,15 +224,67 @@ public value struct EventInfo
     property IntPtr TraceEventInfoSize;
 };
 
+public ref class TraceLog : public System::IDisposable
+{
+public:
+    delegate void EventsChangedDelegate(UIntPtr);
+
+    TraceLog()
+    {
+        onEventsChangedCallback = gcnew EventsChangedDelegate(this, &TraceLog::OnEventsChanged);
+
+        auto nativeCallback = static_cast<etk::TraceLogEventsChangedCallback*>(
+            Marshal::GetFunctionPointerForDelegate(onEventsChangedCallback).ToPointer());
+        auto nativeLog = etk::CreateEtwTraceLog(nativeCallback);
+
+        this->nativeLog = nativeLog.release();
+    }
+
+    ~TraceLog() { this->!TraceLog(); }
+    !TraceLog() { delete nativeLog; }
+
+    event Action<UIntPtr>^ EventsChanged;
+
+    property unsigned EventCount
+    {
+        unsigned get() { return nativeLog->GetEventCount(); }
+    }
+
+    void Clear() { nativeLog->Clear(); }
+
+    EventInfo GetEvent(int index)
+    {
+        auto eventInfo = nativeLog->GetEvent(index);
+        EventInfo info;
+        info.EventRecord = IntPtr(eventInfo.Record());
+        info.TraceEventInfo = IntPtr(eventInfo.Info());
+        info.TraceEventInfoSize = IntPtr((void*)eventInfo.InfoSize());
+        return info;
+    }
+
+internal:
+    etk::ITraceLog* Native() { return nativeLog;  }
+
+private:
+    void OnEventsChanged(UIntPtr newCount)
+    {
+        EventsChanged(newCount);
+    }
+
+    EventsChangedDelegate^ onEventsChangedCallback;
+    etk::ITraceLog* nativeLog;
+};
+
 public ref class TraceSession : public System::IDisposable
 {
 public:
-    TraceSession(IList<TraceEvent^>^ events, IEnumerable<TraceProviderSpec^>^ providers);
-    ~TraceSession();
+    TraceSession(TraceSessionDescriptor^ descriptor);
+    ~TraceSession() { this->!TraceSession(); }
+    !TraceSession();
 
-    void Start();
+    void Start(TraceLog^ traceLog);
     void Stop();
-    void Clear();
+    void Flush();
     TraceStatistics^ Query();
 
     TraceSessionInfo GetInfo()
@@ -235,127 +300,14 @@ public:
         return info;
     }
 
-    EventInfo GetEvent(int index)
-    {
-        if (!processor)
-            return EventInfo();
-        auto eventInfo = processor->GetEvent(index);
-        EventInfo info;
-        info.EventRecord = IntPtr(eventInfo.record);
-        info.TraceEventInfo = IntPtr(eventInfo.info);
-        info.TraceEventInfoSize = IntPtr((void*)eventInfo.infoSize);
-        return info;
-    }
-
-    event Action<int>^ NewEvents;
-
-internal:
-    void RaiseNewEvents(size_t newEventCount)
-    {
-        NewEvents((int)newEventCount);
-    }
-
 private:
-    array<TraceProviderSpec^>^ providers;
-    IList<TraceEvent^>^ events;
+    TraceSessionDescriptor^ descriptor;
     std::wstring* loggerName = nullptr;
-    EventSink* eventSink = nullptr;
-    std::vector<etk::TraceProviderSpec>* nativeProviders = nullptr;
-    String^ watchDogExitEventName;
-    System::Threading::EventWaitHandle^ watchDogExitEvent;
-    System::Diagnostics::Process^ watchDog;
+    std::vector<etk::TraceProviderDescriptor>* nativeProviders = nullptr;
+    WatchDog^ watchDog;
+
     etk::ITraceSession* session = nullptr;
     etk::ITraceProcessor* processor = nullptr;
-};
-
-class EventSink : public etk::IEventSink
-{
-public:
-    EventSink(IList<TraceEvent^>^ events, TraceSession^ session)
-        : events(events)
-        , providerNameCache(10)
-        , eventStringsCache(50)
-        , session(session)
-    {
-    }
-
-    virtual void ProcessEvent(etk::FormattedEvent const& event) override
-    {
-        msclr::lock l(events);
-        events->Add(Convert(event));
-    }
-
-    virtual void NotifyNewEvents(size_t newEventCount) override
-    {
-        session->RaiseNewEvents(newEventCount);
-    }
-
-private:
-    String^ MakeString(wchar_t const* str)
-    {
-        return str ? gcnew String(str) : nullptr;
-    }
-
-    TraceEvent^ Convert(etk::FormattedEvent const& event)
-    {
-        String^ provider = providerNameCache.GetOrCreate(
-            event.ProviderId, [&](GUID const&) {
-            return gcroot<String^>(MakeString(event.Info.ProviderName()));
-        });
-
-        EventInfoStrings& strings = eventStringsCache.GetOrCreate(
-            etk::EventInfoKey(event.ProviderId, event.Descriptor.Id),
-            [&](etk::EventInfoKey const&) {
-            EventInfoStrings s;
-            s.ChannelName = MakeString(event.Info.ChannelName());
-            s.LevelName = MakeString(event.Info.LevelName());
-            s.TaskName = MakeString(event.Info.TaskName());
-            s.OpcodeName = MakeString(event.Info.OpcodeName());
-            s.Keywords = MakeString(event.Info.KeywordsName());
-            return s;
-        });
-
-        auto managed = gcnew TraceEvent();
-
-        managed->ProviderId = marshal_as<Guid>(event.ProviderId);
-        managed->Id = event.Descriptor.Id;
-        managed->Version = event.Descriptor.Version;
-        managed->ChannelId = event.Descriptor.Channel;
-        managed->LevelId = event.Descriptor.Level;
-        managed->OpcodeId = event.Descriptor.Opcode;
-        managed->TaskId = event.Descriptor.Task;
-        managed->KeywordMask = event.Descriptor.Keyword;
-
-        managed->Provider = provider;
-        managed->Channel = strings.ChannelName;
-        managed->Level = strings.LevelName;
-        managed->Opcode = strings.OpcodeName;
-        managed->Task = strings.TaskName;
-        managed->Keywords = strings.Keywords;
-
-        managed->Time = marshal_as<DateTime>(event.Time);
-        managed->ProcessId = event.ProcessId;
-        managed->ThreadId = event.ThreadId;
-        managed->ProcessorTime = event.ProcessorTime;
-        managed->Message = marshal_as<String^>(event.Message);
-        managed->Formatted = !!event.Info;
-
-        return managed;
-    }
-
-    struct EventInfoStrings
-    {
-        gcroot<String^> ChannelName;
-        gcroot<String^> LevelName;
-        gcroot<String^> TaskName;
-        gcroot<String^> OpcodeName;
-        gcroot<String^> Keywords;
-    };
-
-    etk::LruCache<GUID, gcroot<String^>> providerNameCache;
-    etk::LruCache<etk::EventInfoKey, EventInfoStrings, boost::hash<etk::EventInfoKey>> eventStringsCache;
-    gcroot<IList<TraceEvent^>^> events;
-    gcroot<TraceSession^> session;
 };
 
 static std::wstring LoggerNameBase = L"EventTraceKit_54644792-9281-48E9-B69D-E82A86F98960";
@@ -366,84 +318,46 @@ static std::wstring CreateLoggerName()
     return LoggerNameBase + L"_" + std::to_wstring(pid);
 }
 
-TraceSession::TraceSession(IList<TraceEvent^>^ events,
-                           IEnumerable<TraceProviderSpec^>^ providers)
-    : events(events)
-    , providers(Enumerable::ToArray(providers))
+TraceSession::TraceSession(TraceSessionDescriptor^ descriptor)
+    : descriptor(descriptor)
     , loggerName(new std::wstring(CreateLoggerName()))
 {
+    watchDog = gcnew WatchDog(marshal_as<String^>(*loggerName));
+
     etk::TraceProperties properties(marshal_as<GUID>(System::Guid::NewGuid()));
     auto session = etk::CreateEtwTraceSession(*loggerName, properties);
 
-    nativeProviders = new std::vector<etk::TraceProviderSpec>();
-    for each (TraceProviderSpec^ provider in this->providers)
-        nativeProviders->push_back(marshal_as<etk::TraceProviderSpec>(provider));
+    nativeProviders = new std::vector<etk::TraceProviderDescriptor>();
+    for each (TraceProviderDescriptor^ provider in descriptor->Providers)
+        nativeProviders->push_back(marshal_as<etk::TraceProviderDescriptor>(provider));
 
     for (auto const& provider : *nativeProviders) {
         session->AddProvider(provider);
         session->EnableProvider(provider.Id);
     }
 
-    eventSink = new EventSink(events, this);
     this->session = session.release();
-
-    watchDogExitEventName = Guid::NewGuid().ToString();
-    watchDogExitEvent = gcnew System::Threading::EventWaitHandle(
-        false, System::Threading::EventResetMode::ManualReset,
-        watchDogExitEventName);
 }
 
-TraceSession::~TraceSession()
+TraceSession::!TraceSession()
 {
     Stop();
-    if (session)
-        delete session;
-
-    delete eventSink;
-    delete loggerName;
+    delete session;
+    delete watchDog;
     delete nativeProviders;
+    delete loggerName;
 }
 
-using namespace System::Diagnostics;
-using namespace System::IO;
-using namespace System::Reflection;
-
-static String^ GetAssemblyFilePath(Assembly^ assembly)
+void TraceSession::Start(TraceLog^ traceLog)
 {
-    String^ path = (gcnew Uri(assembly->CodeBase))->AbsolutePath;
-    path = Uri::UnescapeDataString(path);
-    return Path::GetFullPath(path);
-}
+    if (!traceLog)
+        throw gcnew ArgumentNullException("traceLog");
 
-static String^ GetCurrentAssemblyDir()
-{
-    String^ filePath = GetAssemblyFilePath(Assembly::GetExecutingAssembly());
-    return Path::GetDirectoryName(filePath);
-}
-
-static Process^ StartWatchDog(String^ loggerName, String^ exitEventName)
-{
-    auto startInfo = gcnew ProcessStartInfo();
-    startInfo->CreateNoWindow = true;
-    startInfo->UseShellExecute = false;
-    startInfo->ErrorDialog = false;
-    startInfo->FileName = Path::Combine(GetCurrentAssemblyDir(), "EventTraceKit.Logger.WatchDog.exe");
-    startInfo->Arguments = String::Concat(
-        Process::GetCurrentProcess()->Id.ToString() + " " +
-        loggerName + " " +
-        exitEventName);
-    return Process::Start(startInfo);
-}
-
-void TraceSession::Start()
-{
-    watchDogExitEvent->Reset();
-    watchDog = StartWatchDog(marshal_as<String^>(*loggerName), watchDogExitEventName);
-
+    watchDog->Start();
     session->Start();
 
     auto processor = etk::CreateEtwTraceProcessor(*loggerName, *nativeProviders);
-    processor->SetEventSink(eventSink);
+    processor->SetEventSink(traceLog->Native());
 
     this->processor = processor.release();
     this->processor->StartProcessing();
@@ -454,21 +368,20 @@ void TraceSession::Stop()
     if (!processor)
         return;
 
-    watchDogExitEvent->Set();
-    session->Stop();
     processor->StopProcessing();
+    session->Stop();
+    watchDog->Stop();
 
     delete processor;
     processor = nullptr;
 }
 
-void TraceSession::Clear()
+void TraceSession::Flush()
 {
     if (!processor)
         return;
 
     session->Flush();
-    processor->ClearEvents();
 }
 
 TraceStatistics^ TraceSession::Query()

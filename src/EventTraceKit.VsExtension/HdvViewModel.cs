@@ -197,7 +197,7 @@ namespace EventTraceKit.VsExtension
         internal void EnableTableAfterAsyncOperation()
         {
             IsReady = true;
-            //this.UpdateSelectionIndicesAfterTableChanged();
+            allowBackgroundThreads = true;
         }
 
         internal void DisableTableForAsyncOperation()
@@ -401,6 +401,61 @@ namespace EventTraceKit.VsExtension
         internal void OnUIPropertyChanged(AsyncDataGridColumn column)
         {
             columnsViewModel?.OnUIPropertyChanged(column);
+        }
+
+        internal void PerformAsyncReadOperation(
+            Action<CancellationToken> callback)
+        {
+            if (TryBeginReadOperation()) {
+                WorkManager.BackgroundThread.Post(delegate {
+                    callback(readCancellationTokenSource.Token);
+                    Thread.Sleep(TimeSpan.FromSeconds(1));
+                    CompleteAsyncRead();
+                });
+            } else {
+                var cancelledToken = new CancellationTokenSource();
+                cancelledToken.Cancel();
+                WorkManager.BackgroundThread.Post(() => callback(cancelledToken.Token));
+            }
+        }
+
+        internal bool TryBeginReadOperation()
+        {
+            VerifyAccess();
+            if (!allowBackgroundThreads) {
+                ExceptionUtils.ThrowInvalidOperationException("Cannot perform background operation in this state.");
+            }
+            lock (asyncReadWorkQueueLock) {
+                if (countReadOperationInProgress == 0) {
+                    if (readCancellationTokenSource != null) {
+                        ExceptionUtils.ThrowInvalidOperationException("The async read count is out of sync with the token source");
+                    }
+                    readCancellationTokenSource = new CancellationTokenSource();
+                    asyncReadQueueComplete.Reset();
+                }
+                countReadOperationInProgress++;
+            }
+            return true;
+        }
+
+        private int countReadOperationInProgress;
+
+        internal void CompleteAsyncRead()
+        {
+            if (WorkManager.UIThread.CheckAccess()) {
+                ExceptionUtils.ThrowInternalErrorException("Must invoke this method not from the UI thread");
+            }
+            lock (asyncReadWorkQueueLock) {
+                if (countReadOperationInProgress == 0) {
+                    ExceptionUtils.ThrowInternalErrorException("There was no read operation to complete.");
+                }
+                countReadOperationInProgress--;
+                if (countReadOperationInProgress == 0) {
+                    readCancellationTokenSource.Dispose();
+                    readCancellationTokenSource = null;
+                    asyncReadQueueComplete.Set();
+                }
+            }
         }
     }
 }

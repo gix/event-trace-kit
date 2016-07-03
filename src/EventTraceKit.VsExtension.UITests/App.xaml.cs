@@ -42,7 +42,7 @@
             EnvironmentRenderCapabilities.Current.VisualEffectsAllowed = 1 | 2;
 
             availableThemes.AddRange(FindAvailableThemes());
-            TryLoadTheme("VisualStudio.Dark");
+            TryLoadTheme("VisualStudio.Light");
         }
 
         private ServiceProvider CreateServiceProvider()

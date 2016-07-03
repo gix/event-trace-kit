@@ -1,12 +1,11 @@
 #pragma once
-#include "Support/DllExport.h"
+#include "ADT/StringView.h"
 
 #include <cstdint>
 #include <memory>
 #include <vector>
 #include <windows.h>
 #include <evntrace.h>
-#include <guiddef.h>
 
 namespace etk
 {
@@ -62,11 +61,12 @@ struct TraceStatistics
     unsigned LoggerThreadId;
 };
 
-struct TraceProviderSpec
+struct TraceProviderDescriptor
 {
-    TraceProviderSpec(GUID id, uint8_t level = 0xFF,
-                  uint64_t anyKeywordMask = 0xFFFFFFFFFFFFFFFFULL,
-                  uint64_t allKeywordMask = 0)
+    TraceProviderDescriptor(
+        GUID id, uint8_t level = 0xFF,
+        uint64_t anyKeywordMask = 0xFFFFFFFFFFFFFFFFULL,
+        uint64_t allKeywordMask = 0)
         : Id(id)
         , Level(level)
         , MatchAnyKeyword(anyKeywordMask)
@@ -139,7 +139,7 @@ public:
     virtual void Flush() = 0;
     virtual void Query(TraceStatistics& stats) = 0;
 
-    virtual bool AddProvider(TraceProviderSpec const& provider) = 0;
+    virtual bool AddProvider(TraceProviderDescriptor const& provider) = 0;
     virtual bool RemoveProvider(GUID const& providerId) = 0;
     virtual bool EnableProvider(GUID const& providerId) = 0;
     virtual bool DisableProvider(GUID const& providerId) = 0;
@@ -147,7 +147,7 @@ public:
     virtual void DisableAllProviders() = 0;
 };
 
-ETK_EXPORT std::unique_ptr<ITraceSession> CreateEtwTraceSession(
+std::unique_ptr<ITraceSession> CreateEtwTraceSession(
     wstring_view name, TraceProperties const& properties);
 
 } // namespace etk

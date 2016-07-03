@@ -61,10 +61,10 @@ namespace EventTraceKit.VsExtension.Controls
                 }
             }
 
-            //if (!EnsureReadyForViewport(
-            //    viewModel, visibleColumnFirst, visibleColumnLast, firstVisibleRowIndex,
-            //    lastVisibleRowIndex) || !this.isHighlightDataPrefetched)
-            //    return;
+            if (!EnsureReadyForViewport(
+                viewModel, firstVisibleColumn, lastVisibleColumn, firstVisibleRow,
+                lastVisibleRow))
+                return;
 
             Offset = new Vector();
             RenderedViewport = Rect.Empty;
@@ -317,6 +317,57 @@ namespace EventTraceKit.VsExtension.Controls
             }
 
             return width;
+        }
+
+        private int cachedFirstVisibleColumn;
+        private int cachedLastVisibleColumn;
+        private int cachedFirstVisibleRow;
+        private int cachedLastVisibleRow;
+        private bool lastPrefetchCancelled;
+        private bool isAsyncPrefetchInProgress;
+        private object cachedDataValidityToken;
+
+        private bool EnsureReadyForViewport(
+            AsyncDataGridCellsPresenterViewModel dataViewModel,
+            int firstVisibleColumn, int lastVisibleColumn, int firstVisibleRow, int lastVisibleRow)
+        {
+            VerifyAccess();
+            if (isAsyncPrefetchInProgress)
+                return true;
+
+            if (cachedFirstVisibleColumn == firstVisibleColumn &&
+                cachedLastVisibleColumn == lastVisibleColumn &&
+                cachedFirstVisibleRow == firstVisibleRow &&
+                cachedLastVisibleRow == lastVisibleRow &&
+                //dataViewModel.IsValidDataValidityToken(cachedDataValidityToken) &&
+                //!dataViewModel.RowSelection.IsRefreshNecessary() &&
+                !lastPrefetchCancelled) {
+                return true;
+            }
+
+            lastPrefetchCancelled = false;
+            cachedFirstVisibleColumn = firstVisibleColumn;
+            cachedLastVisibleColumn = lastVisibleColumn;
+            cachedFirstVisibleRow = firstVisibleRow;
+            cachedLastVisibleRow = lastVisibleRow;
+            cachedDataValidityToken = dataViewModel.DataValidityToken;
+            isAsyncPrefetchInProgress = true;
+
+            Action<bool> callBackWhenFinished = delegate (bool wasCancelled) {
+                lastPrefetchCancelled = wasCancelled;
+                isAsyncPrefetchInProgress = false;
+                if (!wasCancelled)
+                    cellsPresenter.PostUpdateRendering();
+            };
+            Action<bool> highlightAndSelectionPrefetched = delegate (bool wasCancelled) {
+                if (!wasCancelled)
+                    cellsPresenter.PostUpdateRendering();
+            };
+
+            dataViewModel.PrefetchAllDataAndQueueUpdateRender(
+                cellsPresenter, firstVisibleColumn, lastVisibleColumn,
+                firstVisibleRow, lastVisibleRow, highlightAndSelectionPrefetched, callBackWhenFinished);
+            return false;
         }
     }
 }

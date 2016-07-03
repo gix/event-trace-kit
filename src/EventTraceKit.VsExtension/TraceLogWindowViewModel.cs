@@ -14,6 +14,7 @@
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Threading;
+    using EventTraceKit.VsExtension.Collections;
     using EventTraceKit.VsExtension.Controls;
     using Microsoft.VisualStudio.Shell;
     using Task = System.Threading.Tasks.Task;
@@ -21,7 +22,7 @@
     public class TraceLogWindowViewModel : ViewModel, IEventInfoSource
     {
         private readonly DispatcherTimer updateStatisticsTimer;
-        private readonly List<TraceProviderSpec> providers = new List<TraceProviderSpec>();
+        private readonly TraceSessionDescriptor sessionDescriptor = new TraceSessionDescriptor();
 
         private string status;
         private bool showStatistics;
@@ -29,6 +30,7 @@
         private string formattedBufferStatistics;
         private bool autoLog;
         private bool isCollecting;
+        private TraceLog traceLog;
         private TraceSession session;
 
         private DateTime lastUpdateEvent = DateTime.MinValue;
@@ -65,13 +67,14 @@
             updateStatisticsTimer.Interval = TimeSpan.FromSeconds(1);
             updateStatisticsTimer.Tick += (s, a) => UpdateStats();
 
-            var spec = new TraceProviderSpec(new Guid("716EFEF7-5AC2-4EE0-8277-D9226411A155"));
+            var provider = new TraceProviderDescriptor(new Guid("716EFEF7-5AC2-4EE0-8277-D9226411A155")) {
+                IncludeSecurityId = true,
+                IncludeStackTrace = true,
+                IncludeTerminalSessionId = true
+            };
             //spec.SetManifest(@"C:\Users\nrieck\dev\ffmf\src\Sculptor\Sculptor.man");
-            spec.SetProviderBinary(@"C:\Users\nrieck\dev\ffmf\build\x64-dbg\bin\Sculptor.dll");
-            spec.IncludeSecurityId = true;
-            spec.IncludeStackTrace = true;
-            spec.IncludeTerminalSessionId = true;
-            providers.Add(spec);
+            provider.SetProviderBinary(@"C:\Users\nrieck\dev\ffmf\build\x64-dbg\bin\Sculptor.dll");
+            sessionDescriptor.Providers.Add(provider);
         }
 
         public TraceEventsView EventsDataView { get; }
@@ -118,7 +121,7 @@
 
         private bool CanStartCapture()
         {
-            return providers.Count > 0;
+            return sessionDescriptor.Providers.Count > 0;
         }
 
         private void ToggleCapture()
@@ -132,7 +135,8 @@
         public void Clear()
         {
             try {
-                session?.Clear();
+                traceLog?.Clear();
+                session?.Flush();
                 EventsDataView.Clear();
                 Statistics.Reset();
             } catch (Exception ex) {
@@ -147,9 +151,10 @@
 
             Status = null;
             try {
-                session = new TraceSession(new List<TraceEvent>(), providers);
-                session.NewEvents += OnNewEvents;
-                session.Start();
+                traceLog = new TraceLog();
+                traceLog.EventsChanged += OnEventsChanged;
+                session = new TraceSession(sessionDescriptor);
+                session.Start(traceLog);
                 IsCollecting = true;
                 updateStatisticsTimer.Start();
             } catch (Exception ex) {
@@ -158,12 +163,17 @@
                 IsCollecting = false;
                 updateStatisticsTimer.Stop();
                 Status = ex.ToString();
+                MessageBox.Show(
+                    "Failed to start trace session.\r\n" + ex.Message,
+                    "",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
         }
 
-        private void OnNewEvents(int newCount)
+        private void OnEventsChanged(UIntPtr newCount)
         {
-            EventsDataView.UpdateRowCount(newCount);
+            EventsDataView.UpdateRowCount((int)newCount.ToUInt32());
             return;
 
             var now = DateTime.UtcNow;
@@ -173,7 +183,7 @@
                 return;
 
             lastUpdateEvent = now;
-            taskFactory.StartNew(() => Update(newCount));
+            taskFactory.StartNew(() => Update((int)newCount.ToUInt32()));
         }
 
         private void Update(int newCount)
@@ -188,7 +198,6 @@
 
             try {
                 //Events.Detach(session);
-                session.NewEvents -= OnNewEvents;
                 session.Stop();
                 session.Dispose();
                 session = null;
@@ -203,7 +212,7 @@
         private void Configure()
         {
             var viewModel = new TraceSessionSettingsWindowViewModel();
-            foreach (var provider in providers)
+            foreach (var provider in sessionDescriptor.Providers)
                 viewModel.Providers.Add(new TraceProviderSpecViewModel(provider));
 
             var window = new TraceSessionSettingsWindow();
@@ -211,8 +220,8 @@
             if (window.ShowModal() != true)
                 return;
 
-            providers.Clear();
-            providers.AddRange(viewModel.Providers.Select(x => x.ToModel()));
+            sessionDescriptor.Providers.Clear();
+            sessionDescriptor.Providers.AddRange(viewModel.Providers.Select(x => x.ToModel()));
         }
 
         private async void UpdateStats()
@@ -322,8 +331,8 @@
 
         public EventInfo GetEvent(int index)
         {
-            if (session != null)
-                return session.GetEvent(index);
+            if (traceLog != null)
+                return traceLog.GetEvent(index);
             return new EventInfo();
         }
     }
@@ -431,7 +440,7 @@
             Level = 0xFF;
         }
 
-        public TraceProviderSpecViewModel(TraceProviderSpec provider)
+        public TraceProviderSpecViewModel(TraceProviderDescriptor provider)
         {
             Id = provider.Id;
             Level = provider.Level;
@@ -494,9 +503,9 @@
         public ObservableCollection<uint> ProcessIds { get; }
         public ObservableCollection<ushort> EventIds { get; }
 
-        public TraceProviderSpec ToModel()
+        public TraceProviderDescriptor ToModel()
         {
-            var spec = new TraceProviderSpec(Id);
+            var spec = new TraceProviderDescriptor(Id);
             spec.Level = Level;
             spec.MatchAnyKeyword = MatchAnyKeyword;
             spec.MatchAllKeyword = MatchAllKeyword;

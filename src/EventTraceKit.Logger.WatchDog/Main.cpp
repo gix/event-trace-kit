@@ -29,31 +29,38 @@ static void CloseTraceSession(std::wstring const& loggerName)
 
 int wmain(int argc, wchar_t** argv)
 {
-    if (argc != 4) {
-        fwprintf(stderr, L"Wrong number of arguments.");
+    if (argc != 5) {
+        fwprintf(stderr, L"Wrong number of arguments.\n");
         return -1;
     }
 
     try {
         DWORD processId = boost::lexical_cast<DWORD>(argv[1]);
         std::wstring loggerName(argv[2]);
-        std::wstring exitEventName(argv[3]);
+        std::wstring readyEventName(argv[3]);
+        std::wstring exitEventName(argv[4]);
 
         ProcessHandle process(OpenProcess(SYNCHRONIZE, FALSE, processId));
         if (!process) {
-            fwprintf(stderr, L"Failed to open process %lu to watch.", processId);
+            HRESULT hr = GetLastErrorAsHResult();
+            fwprintf(stderr, L"Failed to open process %lu to watch. (hr=0x%08X)\n", processId, hr);
             return -1;
         }
 
-        WaitEvent exitEventHandle = WaitEvent::Open(exitEventName, SYNCHRONIZE);
+        WaitEvent readyEvent = WaitEvent::Open(readyEventName, SYNCHRONIZE | EVENT_MODIFY_STATE);
+        WaitEvent exitEvent = WaitEvent::Open(exitEventName, SYNCHRONIZE);
 
-        if (WaitForAny(process, exitEventHandle) == 0)
+        HRESULT hr = readyEvent.Set();
+        if (FAILED(hr))
+            fwprintf(stderr, L"Failed to set ready event. (hr=0x%08X)\n", hr);
+
+        if (WaitForAny(process, exitEvent) == 0)
             CloseTraceSession(loggerName);
     } catch (std::exception const& ex) {
         fwprintf(stderr, L"Caught exception: %s\n", ex.what());
         return -1;
     } catch (...) {
-        fwprintf(stderr, L"Caught unknown exception.");
+        fwprintf(stderr, L"Caught unknown exception.\n");
         return -1;
     }
 

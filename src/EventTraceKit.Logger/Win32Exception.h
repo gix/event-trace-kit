@@ -1,5 +1,4 @@
 #pragma once
-#include "Support/CompilerSupport.h"
 #include <exception>
 #include <string>
 
@@ -7,7 +6,7 @@ namespace etk
 {
 
 class Win32Exception
-    : public virtual std::exception
+    : public std::exception
 {
 public:
     Win32Exception();

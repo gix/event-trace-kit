@@ -11,17 +11,17 @@ template<typename T>
 class ArrayRef
 {
 public:
-    typedef T value_type;
-    typedef T* pointer;
-    typedef T const* const_pointer;
-    typedef T& reference;
-    typedef T const& const_reference;
-    typedef const_pointer const_iterator;
-    typedef const_iterator iterator;
-    typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
-    typedef const_reverse_iterator reverse_iterator;
-    typedef size_t size_type;
-    typedef ptrdiff_t difference_type;
+    using value_type             = T;
+    using pointer                = T*;
+    using const_pointer          = T const*;
+    using reference              = T&;
+    using const_reference        = T const&;
+    using const_iterator         = const_pointer;
+    using iterator               = const_iterator;
+    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+    using reverse_iterator       = const_reverse_iterator;
+    using size_type              = size_t;
+    using difference_type        = ptrdiff_t;
 
     ETK_ALWAYS_INLINE
     constexpr ArrayRef() noexcept
@@ -185,17 +185,17 @@ template<typename T>
 class MutableArrayRef : public ArrayRef<T>
 {
 public:
-    typedef typename ArrayRef<T>::value_type value_type;
-    typedef typename ArrayRef<T>::const_pointer const_pointer;
-    typedef typename ArrayRef<T>::const_reference const_reference;
-    typedef typename ArrayRef<T>::const_iterator const_iterator;
-    typedef value_type* pointer;
-    typedef value_type& reference;
-    typedef pointer iterator;
-    //typedef ... const_reverse_iterator;
-    //typedef const_reverse_iterator reverse_iterator;
-    typedef typename ArrayRef<T>::size_type size_type;
-    typedef typename ArrayRef<T>::difference_type difference_type;
+    using value_type = typename ArrayRef<T>::value_type;
+    using const_pointer = typename ArrayRef<T>::const_pointer;
+    using const_reference = typename ArrayRef<T>::const_reference;
+    using const_iterator = typename ArrayRef<T>::const_iterator;
+    using pointer = value_type*;
+    using reference = value_type&;
+    using iterator = pointer;
+    //using const_reverse_iterator = ...;
+    //using reverse_iterator = const_reverse_iterator;
+    using size_type = typename ArrayRef<T>::size_type;
+    using difference_type = typename ArrayRef<T>::difference_type;
 
     constexpr MutableArrayRef() noexcept : ArrayRef<T>() {}
 
@@ -240,6 +240,6 @@ public:
     }
 };
 
-typedef MutableArrayRef<unsigned char> BufferRef;
+using BufferRef = MutableArrayRef<unsigned char>;
 
 } // namespace etk

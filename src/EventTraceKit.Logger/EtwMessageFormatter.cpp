@@ -30,6 +30,39 @@ void RemoveTrailingSpace(EVENT_MAP_INFO* mapInfo)
     }
 }
 
+template<typename T>
+DWORD GetProperty(EVENT_RECORD* record, PROPERTY_DATA_DESCRIPTOR& pdd, T& value)
+{
+    DWORD propertySize = 0;
+    DWORD ec = TdhGetPropertySize(record, 0, nullptr, 1, &pdd, &propertySize);
+    if (ec != ERROR_SUCCESS)
+        return ec;
+
+    if (propertySize > sizeof(value))
+        return ERROR_INSUFFICIENT_BUFFER;
+
+    return TdhGetProperty(record, 0, nullptr, 1, &pdd, sizeof(value),
+                          reinterpret_cast<PBYTE>(&value));
+}
+
+DWORD GetProperty(EventInfo info, EVENT_PROPERTY_INFO const& property, USHORT& value)
+{
+    PROPERTY_DATA_DESCRIPTOR pdd = {};
+    if (!info.TryGetAt(property.NameOffset, pdd.PropertyName))
+        return ERROR_EVT_INVALID_EVENT_DATA;
+    pdd.ArrayIndex = ULONG_MAX;
+
+    DWORD count = 0; // Expects the count to be defined by a UINT16 or UINT32
+    DWORD ec = GetProperty(info.Record(), pdd, count);
+    if (ec != ERROR_SUCCESS) {
+        value = 0;
+        return ec;
+    }
+
+    value = static_cast<USHORT>(count);
+    return ec;
+}
+
 // Get the size of the array. For MOF-based events, the size is specified in the declaration or using
 // the MAX qualifier. For manifest-based events, the property can specify the size of the array
 // using the count attribute. The count attribute can specify the size directly or specify the name
@@ -42,54 +75,50 @@ DWORD GetArraySize(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
         return ERROR_SUCCESS;
     }
 
-    DWORD st = ERROR_SUCCESS;
-
     EVENT_PROPERTY_INFO const& paramInfo =
         info->EventPropertyInfoArray[propInfo.countPropertyIndex];
+    return GetProperty(info, paramInfo, *arraySize);
 
     PROPERTY_DATA_DESCRIPTOR pdd = {};
-    pdd.PropertyName = info.GetAt<ULONGLONG>(paramInfo.NameOffset);
+    if (!info.TryGetAt(paramInfo.NameOffset, pdd.PropertyName))
+        return ERROR_EVT_INVALID_EVENT_DATA;
     pdd.ArrayIndex = ULONG_MAX;
 
-    DWORD size = 0;
-    st = TdhGetPropertySize(info.record, 0, nullptr, 1, &pdd, &size);
-
     DWORD count = 0; // Expects the count to be defined by a UINT16 or UINT32
-    st = TdhGetProperty(info.record, 0, nullptr, 1, &pdd, size, reinterpret_cast<PBYTE>(&count));
+    DWORD ec = GetProperty(info.Record(), pdd, count);
+    if (ec != ERROR_SUCCESS) {
+        *arraySize = 0;
+        return ec;
+    }
 
     *arraySize = static_cast<USHORT>(count);
 
-    return st;
+    return ec;
 }
-
 
 // Both MOF-based events and manifest-based events can specify name/value maps. The
 // map values can be integer values or bit values. If the property specifies a value
 // map, get the map.
-DWORD GetMapInfo(EVENT_RECORD* event, LPWSTR mapName, DWORD decodingSource,
-                 vstruct_ptr<EVENT_MAP_INFO>& mapInfo)
+DWORD GetEventMapInfo(EVENT_RECORD* event, LPWSTR mapName, DWORD decodingSource,
+                      vstruct_ptr<EVENT_MAP_INFO>& mapInfo)
 {
-    DWORD st = ERROR_SUCCESS;
-
     // Retrieve the required buffer size for the map info.
     DWORD bufferSize = 0;
-    st = TdhGetEventMapInformation(event, mapName, mapInfo.get(), &bufferSize);
+    DWORD ec = TdhGetEventMapInformation(event, mapName, nullptr, &bufferSize);
 
-    if (st == ERROR_INSUFFICIENT_BUFFER) {
+    if (ec == ERROR_INSUFFICIENT_BUFFER) {
         mapInfo = make_vstruct<EVENT_MAP_INFO>(bufferSize);
-        st = TdhGetEventMapInformation(event, mapName, mapInfo.get(), &bufferSize);
+        ec = TdhGetEventMapInformation(event, mapName, mapInfo.get(), &bufferSize);
     }
 
-    if (st == ERROR_SUCCESS) {
+    if (ec == ERROR_SUCCESS) {
         if (decodingSource == DecodingSourceXMLFile)
             RemoveTrailingSpace(mapInfo.get());
-    } else if (st == ERROR_NOT_FOUND) {
-        st = ERROR_SUCCESS; // This case is okay.
-    } else {
-        wprintf(L"TdhGetEventMapInformation failed with 0x%x.\n", st);
+    } else if (ec == ERROR_NOT_FOUND) {
+        ec = ERROR_SUCCESS; // This case is okay.
     }
 
-    return st;
+    return ec;
 }
 
 // Get the length of the property data. For MOF-based events, the size is inferred from the data type
@@ -101,51 +130,53 @@ DWORD GetMapInfo(EVENT_RECORD* event, LPWSTR mapName, DWORD decodingSource,
 DWORD GetPropertyLength(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
                         USHORT* propertyLength)
 {
-    DWORD st = ERROR_SUCCESS;
-    PROPERTY_DATA_DESCRIPTOR DataDescriptor;
-    DWORD PropertySize = 0;
-
-    // If the property is a binary blob and is defined in a manifest, the property can 
-    // specify the blob's size or it can point to another property that defines the 
-    // blob's size. The PropertyParamLength flag tells you where the blob's size is defined.
-
+    // If the property is a binary blob and is defined in a manifest, the
+    // property can specify the blob's size or it can point to another property
+    // that defines the  blob's size. The PropertyParamLength flag indicates
+    // where the blob's size is defined.
     if ((propInfo.Flags & PropertyParamLength) == PropertyParamLength) {
-        DWORD Length = 0;  // Expects the length to be defined by a UINT16 or UINT32
-        DWORD j = propInfo.lengthPropertyIndex;
-        ZeroMemory(&DataDescriptor, sizeof(PROPERTY_DATA_DESCRIPTOR));
-        DataDescriptor.PropertyName = (ULONGLONG)((PBYTE)(info.info) + info->EventPropertyInfoArray[j].NameOffset);
-        DataDescriptor.ArrayIndex = ULONG_MAX;
-        st = TdhGetPropertySize(info.record, 0, NULL, 1, &DataDescriptor, &PropertySize);
-        st = TdhGetProperty(info.record, 0, NULL, 1, &DataDescriptor, PropertySize, (PBYTE)&Length);
-        *propertyLength = (USHORT)Length;
-    } else if (propInfo.length > 0) {
-        *propertyLength = propInfo.length;
-    } else {
-        // If the property is a binary blob and is defined in a MOF class, the extension
-        // qualifier is used to determine the size of the blob. However, if the extension 
-        // is IPAddrV6, you must set the PropertyLength variable yourself because the 
-        // EVENT_PROPERTY_INFO.length field will be zero.
+        auto const& lengthProperty =
+            info->EventPropertyInfoArray[propInfo.lengthPropertyIndex];
+        return GetProperty(info, lengthProperty, *propertyLength);
 
-        if (TDH_INTYPE_BINARY == propInfo.nonStructType.InType &&
-            TDH_OUTTYPE_IPV6 == propInfo.nonStructType.OutType) {
-            *propertyLength = (USHORT)sizeof(IN6_ADDR);
-        } else if (TDH_INTYPE_UNICODESTRING == propInfo.nonStructType.InType ||
-                   TDH_INTYPE_ANSISTRING == propInfo.nonStructType.InType ||
-                   (propInfo.Flags & PropertyStruct) == PropertyStruct) {
-            *propertyLength = propInfo.length;
-        } else {
-            wprintf(L"Unexpected length of 0 for intype %d and outtype %d\n",
-                    propInfo.nonStructType.InType,
-                    propInfo.nonStructType.OutType);
+        PROPERTY_DATA_DESCRIPTOR pdd = {};
+        if (!info.TryGetAt(lengthProperty.NameOffset, pdd.PropertyName))
+            return ERROR_EVT_INVALID_EVENT_DATA;
+        pdd.ArrayIndex = ULONG_MAX;
 
-            st = ERROR_EVT_INVALID_EVENT_DATA;
-            goto cleanup;
-        }
+        DWORD length = 0; // Expects the length to be defined by a UINT16 or UINT32
+        DWORD ec = GetProperty(info.Record(), pdd, length);
+        if (ec == ERROR_SUCCESS)
+            *propertyLength = static_cast<USHORT>(length);
+        return ec;
     }
 
-cleanup:
+    if (propInfo.length > 0) {
+        *propertyLength = propInfo.length;
+        return ERROR_SUCCESS;
+    }
 
-    return st;
+    // If the property is a binary blob and is defined in a MOF class, the
+    // extension qualifier is used to determine the size of the blob.
+    // However, if the extension is IPAddrV6, we must determine the property
+    // length because the EVENT_PROPERTY_INFO.length field will be zero.
+
+    if (propInfo.nonStructType.InType == TDH_INTYPE_BINARY &&
+        propInfo.nonStructType.OutType == TDH_OUTTYPE_IPV6) {
+        *propertyLength = static_cast<USHORT>(sizeof(IN6_ADDR));
+    } else if (propInfo.nonStructType.InType == TDH_INTYPE_UNICODESTRING ||
+               propInfo.nonStructType.InType == TDH_INTYPE_ANSISTRING ||
+               (propInfo.Flags & PropertyStruct) == PropertyStruct) {
+        *propertyLength = propInfo.length;
+    } else {
+        wprintf(L"Unexpected length of 0 for intype %d and outtype %d\n",
+                propInfo.nonStructType.InType,
+                propInfo.nonStructType.OutType);
+
+        return ERROR_EVT_INVALID_EVENT_DATA;
+    }
+
+    return ERROR_SUCCESS;
 }
 
 DWORD FormatProperty(
@@ -153,20 +184,18 @@ DWORD FormatProperty(
     size_t pointerSize, ArrayRef<uint8_t>& userData, std::wstring& sink,
     std::vector<wchar_t>& buffer)
 {
-    DWORD st = ERROR_SUCCESS;
+    DWORD ec = ERROR_SUCCESS;
 
     USHORT propertyLength = 0;
-    st = GetPropertyLength(info, propInfo, &propertyLength);
-    if (st != ERROR_SUCCESS) {
-        return st;
-    }
+    ec = GetPropertyLength(info, propInfo, &propertyLength);
+    if (ec != ERROR_SUCCESS)
+        return ec;
 
     // Get the size of the array if the property is an array.
     USHORT arraySize = 0;
-    st = GetArraySize(info, propInfo, &arraySize);
-    if (st != ERROR_SUCCESS) {
-        return st;
-    }
+    ec = GetArraySize(info, propInfo, &arraySize);
+    if (ec != ERROR_SUCCESS)
+        return ec;
 
     for (USHORT k = 0; k < arraySize; ++k) {
         // If the property is a structure, print the members of the structure.
@@ -176,59 +205,31 @@ DWORD FormatProperty(
 
             for (USHORT j = propInfo.structType.StructStartIndex; j < lastMember; ++j) {
                 EVENT_PROPERTY_INFO const& pi = info->EventPropertyInfoArray[j];
-                st = FormatProperty(info, pi, pointerSize, userData, sink, buffer);
-                if (st != ERROR_SUCCESS) {
-                    return st;
-                }
+                ec = FormatProperty(info, pi, pointerSize, userData, sink, buffer);
+                if (ec != ERROR_SUCCESS)
+                    return ec;
             }
+
             continue;
         }
 
         // Get the name/value mapping if the property specifies a value map.
         vstruct_ptr<EVENT_MAP_INFO> mapInfo;
         if (propInfo.nonStructType.MapNameOffset != 0) {
-            st = GetMapInfo(info.record,
-                            GetAt<PWCHAR>(info.info, propInfo.nonStructType.MapNameOffset),
+            ec = GetEventMapInfo(info.Record(),
+                            GetAt<PWCHAR>(info.Info(), propInfo.nonStructType.MapNameOffset),
                             info->DecodingSource,
                             mapInfo);
-
-            if (st != ERROR_SUCCESS) {
-                return st;
-            }
+            if (ec != ERROR_SUCCESS)
+                return ec;
         }
 
         DWORD bufferSize = 0;
         USHORT userDataConsumed = 0;
 
-        if (propInfo.nonStructType.InType == TDH_INTYPE_INT32 &&
-            propInfo.nonStructType.OutType == TDH_OUTTYPE_INT) {
-
-            //int intVal;
-            //std::memcpy(&intVal, userData.data(), sizeof(intVal));
-            //userData.remove_prefix(4);
-            //sink += std::to_wstring(intVal);
-
-            wchar_t buf[10 + 1];
-            bufferSize = 10 + 1;
-            st = TdhFormatProperty(
-                info.info,
-                mapInfo.get(),
-                static_cast<ULONG>(pointerSize),
-                propInfo.nonStructType.InType,
-                propInfo.nonStructType.OutType,
-                propertyLength,
-                static_cast<USHORT>(userData.size()),
-                const_cast<BYTE*>(userData.data()),
-                &bufferSize,
-                buf,
-                &userDataConsumed);
-            continue;
-        }
-
-        buffer.clear();
         bufferSize = static_cast<DWORD>(buffer.size());
-        st = TdhFormatProperty(
-            info.info,
+        ec = TdhFormatProperty(
+            info.Info(),
             mapInfo.get(),
             static_cast<ULONG>(pointerSize),
             propInfo.nonStructType.InType,
@@ -240,11 +241,11 @@ DWORD FormatProperty(
             buffer.data(),
             &userDataConsumed);
 
-        if (st == ERROR_INSUFFICIENT_BUFFER) {
+        if (ec == ERROR_INSUFFICIENT_BUFFER) {
             buffer.resize(bufferSize);
             bufferSize = static_cast<DWORD>(buffer.size());
-            st = TdhFormatProperty(
-                info.info,
+            ec = TdhFormatProperty(
+                info.Info(),
                 mapInfo.get(),
                 static_cast<ULONG>(pointerSize),
                 propInfo.nonStructType.InType,
@@ -257,14 +258,14 @@ DWORD FormatProperty(
                 &userDataConsumed);
         }
 
-        if (st != ERROR_SUCCESS)
-            return st;
+        if (ec != ERROR_SUCCESS)
+            return ec;
 
         userData.remove_prefix(userDataConsumed);
         sink.append(buffer.data());
     }
 
-    return st;
+    return ec;
 }
 
 } // namespace
@@ -275,13 +276,11 @@ bool EtwMessageFormatter::FormatEventMessage(
     if (!info)
         return false;
 
-    ArrayRef<uint8_t> userData(static_cast<uint8_t*>(info.record->UserData),
-                               static_cast<size_t>(info.record->UserDataLength));
-
     formattedProperties.clear();
     formattedPropertiesOffsets.clear();
     formattedPropertiesPointers.clear();
 
+    ArrayRef<uint8_t> userData = info.UserData();
     DWORD ec;
     for (ULONG i = 0; i < info->TopLevelPropertyCount; ++i) {
         auto const& pi = info->EventPropertyInfoArray[i];
@@ -301,7 +300,7 @@ bool EtwMessageFormatter::FormatEventMessage(
     auto const Flags = FORMAT_MESSAGE_FROM_STRING | FORMAT_MESSAGE_ARGUMENT_ARRAY;
     DWORD numWritten = FormatMessageW(
         Flags, info.EventMessage(), 0, 0, buffer, bufferSize,
-        (va_list*)formattedPropertiesPointers.data());
+        reinterpret_cast<va_list*>(formattedPropertiesPointers.data()));
 
     if (numWritten == 0)
         return false;
