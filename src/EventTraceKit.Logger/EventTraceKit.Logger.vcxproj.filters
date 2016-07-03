@@ -12,9 +12,9 @@
     <ClCompile Include="Support\SetThreadName.cpp" />
     <ClCompile Include="TraceSession.cpp" />
     <ClCompile Include="EtwMessageFormatter.cpp" />
-    <ClCompile Include="EtwMessageFormatterManaged.cpp" />
     <ClCompile Include="EtwTraceLog.cpp" />
     <ClCompile Include="WatchDog.cpp" />
+    <ClCompile Include="EtwMessageFormatterManaged.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EtwTraceProcessor.h" />

@@ -11,91 +11,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ADT\Guid.cpp">
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
-    </ClCompile>
-    <ClCompile Include="ADT\WaitEvent.cpp">
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
-    </ClCompile>
-    <ClCompile Include="EtwMessageFormatter.cpp">
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
-    </ClCompile>
-    <ClCompile Include="EtwTraceLog.cpp">
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
-    </ClCompile>
-    <ClCompile Include="EtwTraceProcessor.cpp">
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
-    </ClCompile>
-    <ClCompile Include="EtwTraceSession.cpp">
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
-    </ClCompile>
-    <ClCompile Include="EventInfoCache.cpp">
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
-    </ClCompile>
-    <ClCompile Include="Main.cpp">
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
-    </ClCompile>
-    <ClCompile Include="Support\ErrorHandling.cpp">
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
-    </ClCompile>
-    <ClCompile Include="Support\SetThreadName.cpp">
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
-    </ClCompile>
-    <ClCompile Include="TraceSession.cpp">
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
-    </ClCompile>
-    <ClCompile Include="WatchDog.cpp" />
-    <ClCompile Include="Win32Exception.cpp">
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
-      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="ADT\ArrayRef.h" />
-    <ClInclude Include="EtwMessageFormatter.h" />
-    <ClCompile Include="EtwMessageFormatterManaged.cpp">
-      <FileType>CppHeader</FileType>
-    </ClCompile>
-    <ClInclude Include="ITraceLog.h" />
-    <ClInclude Include="EventInfo.h" />
-    <ClInclude Include="EventInfoCache.h" />
-    <ClInclude Include="IEventSink.h" />
-    <ClInclude Include="Support\Allocator.h" />
-    <ClInclude Include="Support\Hashing.h" />
-    <ClInclude Include="ITraceProcessor.h" />
-    <ClInclude Include="ADT\Guid.h" />
-    <ClInclude Include="ADT\Handle.h" />
-    <ClInclude Include="ADT\LruCache.h" />
-    <ClInclude Include="ADT\StringView.h" />
-    <ClInclude Include="ADT\VarStructPtr.h" />
-    <ClInclude Include="ADT\WaitEvent.h" />
-    <ClInclude Include="EtwTraceProcessor.h" />
-    <ClInclude Include="EtwTraceSession.h" />
-    <ClInclude Include="ITraceSession.h" />
-    <ClInclude Include="Support\ByteCount.h" />
-    <ClInclude Include="Support\CompilerConfig.h" />
-    <ClInclude Include="Support\CompilerSupport.h" />
-    <ClInclude Include="Support\CountOf.h" />
-    <ClInclude Include="Support\Debug.h" />
-    <ClInclude Include="Support\ErrorHandling.h" />
-    <ClInclude Include="Support\RangeAdaptors.h" />
-    <ClInclude Include="Support\SetThreadName.h" />
-    <ClInclude Include="Support\StringFormat.h" />
-    <ClInclude Include="WatchDog.h" />
-    <ClInclude Include="Win32Exception.h" />
-  </ItemGroup>
-  <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
   </ItemGroup>
@@ -103,6 +18,7 @@
     <ProjectGuid>{3EDE8E61-F8E3-4645-A940-337F91A9DF65}</ProjectGuid>
     <RootNamespace>EventTraceKitLogger</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -110,7 +26,6 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-    <CLRSupport>true</CLRSupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -118,7 +33,6 @@
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <CLRSupport>true</CLRSupport>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -150,6 +64,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>dbghelp.lib;tdh.lib;wevtapi.lib;ntdll.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -168,6 +83,86 @@
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ItemGroup>
+    <ClCompile Include="ADT\Guid.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
+    </ClCompile>
+    <ClCompile Include="ADT\WaitEvent.cpp" />
+    <ClCompile Include="EtwMessageFormatter.cpp" />
+    <ClCompile Include="EtwMessageFormatterManaged.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</BasicRuntimeChecks>
+      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</BasicRuntimeChecks>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Async</ExceptionHandling>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Async</ExceptionHandling>
+      <MinimalRebuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</MinimalRebuild>
+      <MinimalRebuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</MinimalRebuild>
+    </ClCompile>
+    <ClCompile Include="EtwTraceLog.cpp" />
+    <ClCompile Include="EtwTraceProcessor.cpp" />
+    <ClCompile Include="EtwTraceSession.cpp" />
+    <ClCompile Include="EventInfoCache.cpp" />
+    <ClCompile Include="Main.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
+    </ClCompile>
+    <ClCompile Include="Support\ErrorHandling.cpp" />
+    <ClCompile Include="Support\SetThreadName.cpp" />
+    <ClCompile Include="TraceSession.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <MinimalRebuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</MinimalRebuild>
+      <MinimalRebuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</MinimalRebuild>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Async</ExceptionHandling>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Async</ExceptionHandling>
+      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</BasicRuntimeChecks>
+      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</BasicRuntimeChecks>
+    </ClCompile>
+    <ClCompile Include="WatchDog.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <MinimalRebuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</MinimalRebuild>
+      <MinimalRebuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</MinimalRebuild>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Async</ExceptionHandling>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Async</ExceptionHandling>
+      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</BasicRuntimeChecks>
+      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</BasicRuntimeChecks>
+    </ClCompile>
+    <ClCompile Include="Win32Exception.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ADT\ArrayRef.h" />
+    <ClInclude Include="EtwMessageFormatter.h" />
+    <ClInclude Include="ITraceLog.h" />
+    <ClInclude Include="EventInfo.h" />
+    <ClInclude Include="EventInfoCache.h" />
+    <ClInclude Include="IEventSink.h" />
+    <ClInclude Include="Support\Allocator.h" />
+    <ClInclude Include="Support\Hashing.h" />
+    <ClInclude Include="ITraceProcessor.h" />
+    <ClInclude Include="ADT\Guid.h" />
+    <ClInclude Include="ADT\Handle.h" />
+    <ClInclude Include="ADT\LruCache.h" />
+    <ClInclude Include="ADT\StringView.h" />
+    <ClInclude Include="ADT\VarStructPtr.h" />
+    <ClInclude Include="ADT\WaitEvent.h" />
+    <ClInclude Include="EtwTraceProcessor.h" />
+    <ClInclude Include="EtwTraceSession.h" />
+    <ClInclude Include="ITraceSession.h" />
+    <ClInclude Include="Support\ByteCount.h" />
+    <ClInclude Include="Support\CompilerConfig.h" />
+    <ClInclude Include="Support\CompilerSupport.h" />
+    <ClInclude Include="Support\CountOf.h" />
+    <ClInclude Include="Support\Debug.h" />
+    <ClInclude Include="Support\ErrorHandling.h" />
+    <ClInclude Include="Support\RangeAdaptors.h" />
+    <ClInclude Include="Support\SetThreadName.h" />
+    <ClInclude Include="Support\StringFormat.h" />
+    <ClInclude Include="WatchDog.h" />
+    <ClInclude Include="Win32Exception.h" />
+  </ItemGroup>
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
