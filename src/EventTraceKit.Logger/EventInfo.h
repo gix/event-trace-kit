@@ -47,7 +47,7 @@ public:
     ETK_ALWAYS_INLINE bool TryGetAt(size_t offset, T& value) const
     {
         if (offset >= infoSize) return false;
-        value = reinterpret_cast<T>(reinterpret_cast<uint8_t const*>(info) + offset);
+        value = reinterpret_cast<T>(reinterpret_cast<uint8_t*>(info) + offset);
         return true;
     }
 

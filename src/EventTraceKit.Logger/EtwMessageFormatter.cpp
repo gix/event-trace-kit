@@ -63,70 +63,14 @@ DWORD GetProperty(EventInfo info, EVENT_PROPERTY_INFO const& property, USHORT& v
     return ec;
 }
 
-// Get the size of the array. For MOF-based events, the size is specified in the declaration or using
-// the MAX qualifier. For manifest-based events, the property can specify the size of the array
-// using the count attribute. The count attribute can specify the size directly or specify the name
-// of another property in the event data that contains the size.
-DWORD GetArraySize(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
-                   USHORT* arraySize)
-{
-    if ((propInfo.Flags & PropertyParamCount) == 0) {
-        *arraySize = propInfo.count;
-        return ERROR_SUCCESS;
-    }
-
-    EVENT_PROPERTY_INFO const& paramInfo =
-        info->EventPropertyInfoArray[propInfo.countPropertyIndex];
-    return GetProperty(info, paramInfo, *arraySize);
-
-    PROPERTY_DATA_DESCRIPTOR pdd = {};
-    if (!info.TryGetAt(paramInfo.NameOffset, pdd.PropertyName))
-        return ERROR_EVT_INVALID_EVENT_DATA;
-    pdd.ArrayIndex = ULONG_MAX;
-
-    DWORD count = 0; // Expects the count to be defined by a UINT16 or UINT32
-    DWORD ec = GetProperty(info.Record(), pdd, count);
-    if (ec != ERROR_SUCCESS) {
-        *arraySize = 0;
-        return ec;
-    }
-
-    *arraySize = static_cast<USHORT>(count);
-
-    return ec;
-}
-
-// Both MOF-based events and manifest-based events can specify name/value maps. The
-// map values can be integer values or bit values. If the property specifies a value
-// map, get the map.
-DWORD GetEventMapInfo(EVENT_RECORD* event, LPWSTR mapName, DWORD decodingSource,
-                      vstruct_ptr<EVENT_MAP_INFO>& mapInfo)
-{
-    // Retrieve the required buffer size for the map info.
-    DWORD bufferSize = 0;
-    DWORD ec = TdhGetEventMapInformation(event, mapName, nullptr, &bufferSize);
-
-    if (ec == ERROR_INSUFFICIENT_BUFFER) {
-        mapInfo = make_vstruct<EVENT_MAP_INFO>(bufferSize);
-        ec = TdhGetEventMapInformation(event, mapName, mapInfo.get(), &bufferSize);
-    }
-
-    if (ec == ERROR_SUCCESS) {
-        if (decodingSource == DecodingSourceXMLFile)
-            RemoveTrailingSpace(mapInfo.get());
-    } else if (ec == ERROR_NOT_FOUND) {
-        ec = ERROR_SUCCESS; // This case is okay.
-    }
-
-    return ec;
-}
-
-// Get the length of the property data. For MOF-based events, the size is inferred from the data type
-// of the property. For manifest-based events, the property can specify the size of the property value
-// using the length attribute. The length attribute can specify the size directly or specify the name
-// of another property in the event data that contains the size. If the property does not include the
-// length attribute, the size is inferred from the data type. The length will be zero for variable
-// length, null-terminated strings and structures.
+// Get the length of the property data. For MOF-based events, the size is
+// inferred from the data type of the property. For manifest-based events, the
+// property can specify the size of the property value using the length
+// attribute. The length attribute can specify the size directly or specify the
+// name of another property in the event data that contains the size. If the
+// property does not include the length attribute, the size is inferred from the
+// data type. The length will be zero for variable length, null-terminated
+// strings and structures.
 DWORD GetPropertyLength(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
                         USHORT* propertyLength)
 {
@@ -138,17 +82,6 @@ DWORD GetPropertyLength(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
         auto const& lengthProperty =
             info->EventPropertyInfoArray[propInfo.lengthPropertyIndex];
         return GetProperty(info, lengthProperty, *propertyLength);
-
-        PROPERTY_DATA_DESCRIPTOR pdd = {};
-        if (!info.TryGetAt(lengthProperty.NameOffset, pdd.PropertyName))
-            return ERROR_EVT_INVALID_EVENT_DATA;
-        pdd.ArrayIndex = ULONG_MAX;
-
-        DWORD length = 0; // Expects the length to be defined by a UINT16 or UINT32
-        DWORD ec = GetProperty(info.Record(), pdd, length);
-        if (ec == ERROR_SUCCESS)
-            *propertyLength = static_cast<USHORT>(length);
-        return ec;
     }
 
     if (propInfo.length > 0) {
@@ -179,12 +112,74 @@ DWORD GetPropertyLength(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
     return ERROR_SUCCESS;
 }
 
+// Gets the size of the array. For MOF-based events, the size is specified in
+// the declaration or using the MAX qualifier. For manifest-based events, the
+// property can specify the size of the array using the count attribute. The
+// count attribute can specify the size directly or specify the name of another
+// property in the event data that contains the size.
+DWORD GetArraySize(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
+                   USHORT* arraySize)
+{
+    if ((propInfo.Flags & PropertyParamCount) == 0) {
+        *arraySize = propInfo.count;
+        return ERROR_SUCCESS;
+    }
+
+    EVENT_PROPERTY_INFO const& paramInfo =
+        info->EventPropertyInfoArray[propInfo.countPropertyIndex];
+    return GetProperty(info, paramInfo, *arraySize);
+}
+
+// Both MOF-based events and manifest-based events can specify name/value maps.
+// The map values can be integer values or bit values. If the property specifies
+// a value map, get the map.
+DWORD GetEventMapInfo(EVENT_RECORD* event, LPWSTR mapName, DWORD decodingSource,
+                      vstruct_ptr<EVENT_MAP_INFO>& mapInfo)
+{
+    // Retrieve the required buffer size for the map info.
+    DWORD bufferSize = 0;
+    DWORD ec = TdhGetEventMapInformation(event, mapName, nullptr, &bufferSize);
+
+    if (ec == ERROR_INSUFFICIENT_BUFFER) {
+        mapInfo = make_vstruct<EVENT_MAP_INFO>(bufferSize);
+        ec = TdhGetEventMapInformation(event, mapName, mapInfo.get(), &bufferSize);
+    }
+
+    if (ec == ERROR_SUCCESS) {
+        if (decodingSource == DecodingSourceXMLFile)
+            RemoveTrailingSpace(mapInfo.get());
+    } else if (ec == ERROR_NOT_FOUND) {
+        ec = ERROR_SUCCESS; // This case is okay.
+    }
+
+    return ec;
+}
+
+DWORD GetEventMapInfo(EventInfo info, EVENT_PROPERTY_INFO const& propertyInfo,
+                      vstruct_ptr<EVENT_MAP_INFO>& mapInfo)
+{
+    if (propertyInfo.nonStructType.MapNameOffset == 0)
+        return ERROR_SUCCESS;
+
+    PWCHAR mapName;
+    DWORD ec = info.TryGetAt(propertyInfo.nonStructType.MapNameOffset, mapName);
+    if (ec != ERROR_SUCCESS)
+        return ec;
+
+    ec = GetEventMapInfo(info.Record(), mapName, info->DecodingSource,
+                         mapInfo);
+    if (ec != ERROR_SUCCESS)
+        return ec;
+
+    return ERROR_SUCCESS;
+}
+
 DWORD FormatProperty(
     EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
     size_t pointerSize, ArrayRef<uint8_t>& userData, std::wstring& sink,
     std::vector<wchar_t>& buffer)
 {
-    DWORD ec = ERROR_SUCCESS;
+    DWORD ec;
 
     USHORT propertyLength = 0;
     ec = GetPropertyLength(info, propInfo, &propertyLength);
@@ -216,10 +211,7 @@ DWORD FormatProperty(
         // Get the name/value mapping if the property specifies a value map.
         vstruct_ptr<EVENT_MAP_INFO> mapInfo;
         if (propInfo.nonStructType.MapNameOffset != 0) {
-            ec = GetEventMapInfo(info.Record(),
-                            GetAt<PWCHAR>(info.Info(), propInfo.nonStructType.MapNameOffset),
-                            info->DecodingSource,
-                            mapInfo);
+            ec = GetEventMapInfo(info, propInfo, mapInfo);
             if (ec != ERROR_SUCCESS)
                 return ec;
         }

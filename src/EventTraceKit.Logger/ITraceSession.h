@@ -3,9 +3,9 @@
 
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <vector>
-#include <windows.h>
-#include <evntrace.h>
+#include <guiddef.h>
 
 namespace etk
 {

@@ -47,22 +47,22 @@ private:
 };
 
 template<typename Allocator>
-static EVENT_RECORD* CopyEvent(Allocator& alloc, EVENT_RECORD const* event)
+EVENT_RECORD* CopyEvent(Allocator& alloc, EVENT_RECORD const* record)
 {
     auto copy = alloc.Allocate<EVENT_RECORD>();
-    *copy = *event;
+    *copy = *record;
     // Explicitly clear any supplied context as it may not be valid later on.
     copy->UserContext = nullptr;
 
-    copy->UserData = alloc.Allocate(event->UserDataLength, Alignment(1));
-    std::memcpy(copy->UserData, event->UserData, event->UserDataLength);
+    copy->UserData = alloc.Allocate(record->UserDataLength, Alignment(1));
+    std::memcpy(copy->UserData, record->UserData, record->UserDataLength);
 
     copy->ExtendedData =
-        alloc.Allocate<EVENT_HEADER_EXTENDED_DATA_ITEM>(event->ExtendedDataCount);
-    std::copy_n(event->ExtendedData, event->ExtendedDataCount, copy->ExtendedData);
+        alloc.Allocate<EVENT_HEADER_EXTENDED_DATA_ITEM>(record->ExtendedDataCount);
+    std::copy_n(record->ExtendedData, record->ExtendedDataCount, copy->ExtendedData);
 
-    for (unsigned i = 0; i < event->ExtendedDataCount; ++i) {
-        auto const& src = event->ExtendedData[i];
+    for (unsigned i = 0; i < record->ExtendedDataCount; ++i) {
+        auto const& src = record->ExtendedData[i];
         auto& dst = copy->ExtendedData[i];
 
         void* mem = alloc.Allocate(src.DataSize, Alignment(1));
@@ -76,9 +76,9 @@ static EVENT_RECORD* CopyEvent(Allocator& alloc, EVENT_RECORD const* event)
     return copy;
 }
 
-} // namespace
+void NullCallback(size_t) {}
 
-static void NullCallback(size_t) {}
+} // namespace
 
 EtwTraceLog::EtwTraceLog(TraceLogEventsChangedCallback* callback /*= nullptr*/)
     : changedCallback(callback ? callback : &NullCallback)

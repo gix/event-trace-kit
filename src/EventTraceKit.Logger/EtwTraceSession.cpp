@@ -1,21 +1,24 @@
-#include "EtwTraceSession.h"
+#include "ITraceSession.h"
 
 #include "ADT/ArrayRef.h"
+#include "ADT/StringView.h"
 #include "Support/ByteCount.h"
 #include "Support/ErrorHandling.h"
+#include "Support/Hashing.h"
 #include "Support/RangeAdaptors.h"
 
 #include <algorithm>
+#include <unordered_set>
 #include <memory>
 
+#include <windows.h>
 #include <evntcons.h>
+#include <evntrace.h>
 
 static bool operator <(GUID const& x, GUID const& y)
 {
     return std::memcmp(&x, &y, sizeof(GUID)) < 0;
 }
-
-using namespace etk;
 
 namespace etk
 {
@@ -79,6 +82,46 @@ struct EqualProviderId
     {
         return provider.Id == id;
     }
+};
+
+class EventTraceProperties : public EVENT_TRACE_PROPERTIES
+{
+public:
+    static std::unique_ptr<EventTraceProperties> Create(wstring_view name);
+    void* operator new(size_t n, wstring_view name);
+    void operator delete(void* mem);
+private:
+    EventTraceProperties() = default;
+};
+
+class EtwTraceSession : public ITraceSession
+{
+public:
+    EtwTraceSession(wstring_view name, TraceProperties const& properties);
+    virtual ~EtwTraceSession();
+
+    virtual void Start() override;
+    virtual void Stop() override;
+    virtual void Flush() override;
+    virtual void Query(TraceStatistics& stats) override;
+
+    virtual bool AddProvider(TraceProviderDescriptor const& provider) override;
+    virtual bool RemoveProvider(GUID const& providerId) override;
+    virtual bool EnableProvider(GUID const& providerId) override;
+    virtual bool DisableProvider(GUID const& providerId) override;
+    virtual void EnableAllProviders() override;
+    virtual void DisableAllProviders() override;
+
+private:
+    void SetProperties(TraceProperties const& properties);
+    HRESULT EnableProviderTrace(TraceProviderDescriptor const& provider) const;
+    HRESULT DisableProviderTrace(GUID const& providerId) const;
+
+    std::wstring sessionName;
+    std::unique_ptr<EventTraceProperties> traceProperties;
+    TRACEHANDLE traceHandle;
+    std::vector<TraceProviderDescriptor> providers;
+    std::unordered_set<GUID> enabledProviders;
 };
 
 } // namespace

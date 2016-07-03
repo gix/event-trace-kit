@@ -16,7 +16,8 @@ class IEventSink;
 class EtwTraceProcessor : public ITraceProcessor
 {
 public:
-    EtwTraceProcessor(std::wstring loggerName, ArrayRef<TraceProviderDescriptor> providers);
+    EtwTraceProcessor(std::wstring loggerName,
+                      ArrayRef<TraceProviderDescriptor> providers);
     virtual ~EtwTraceProcessor();
 
     virtual void SetEventSink(IEventSink* sink) override;

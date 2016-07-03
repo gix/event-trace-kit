@@ -18,10 +18,10 @@ namespace etk
 namespace
 {
 
-bool IsEventTraceHeader(EVENT_RECORD const& event)
+bool IsEventTraceHeader(EVENT_RECORD const& record)
 {
-    return event.EventHeader.ProviderId == EventTraceGuid &&
-           event.EventHeader.EventDescriptor.Opcode == EVENT_TRACE_TYPE_INFO;
+    return record.EventHeader.ProviderId == EventTraceGuid &&
+           record.EventHeader.EventDescriptor.Opcode == EVENT_TRACE_TYPE_INFO;
 }
 
 } // namespace

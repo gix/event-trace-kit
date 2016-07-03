@@ -3,7 +3,6 @@
   <ItemGroup>
     <ClCompile Include="EtwTraceProcessor.cpp" />
     <ClCompile Include="EtwTraceSession.cpp" />
-    <ClCompile Include="Main.cpp" />
     <ClCompile Include="Support\ErrorHandling.cpp" />
     <ClCompile Include="ADT\Guid.cpp" />
     <ClCompile Include="ADT\WaitEvent.cpp" />
@@ -18,7 +17,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EtwTraceProcessor.h" />
-    <ClInclude Include="EtwTraceSession.h" />
     <ClInclude Include="ITraceSession.h" />
     <ClInclude Include="ADT\StringView.h" />
     <ClInclude Include="Support\CompilerConfig.h" />
