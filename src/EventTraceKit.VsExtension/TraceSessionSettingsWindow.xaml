@@ -5,9 +5,12 @@
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
   xmlns:ui="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
+  xmlns:VsExtension="clr-namespace:EventTraceKit.VsExtension"
   mc:Ignorable="d"
-  Width="506"
-  Height="364">
+  d:DataContext="{d:DesignInstance {x:Type VsExtension:TraceSessionSettingsViewModel}, d:IsDesignTimeCreatable=False}"
+  Title="Trace Session Settings"
+  Width="1000"
+  Height="700">
   <ui:DialogWindow.Resources>
     <Style x:Key="{x:Type Button}" TargetType="Button">
       <Setter Property="MinWidth" Value="75"/>
@@ -20,31 +23,34 @@
       <RowDefinition/>
       <RowDefinition Height="Auto"/>
     </Grid.RowDefinitions>
-    <HeaderedContentControl>
-      <HeaderedContentControl.Header>
-        <Grid Margin="0,0,0,8">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="Auto"/>
-          </Grid.ColumnDefinitions>
-          <TextBlock VerticalAlignment="Center">Providers</TextBlock>
-          <Button Grid.Column="1" Margin="8,0,0,0" Content="Add Provider" Command="{Binding AddProviderCommand}"/>
-          <Button Grid.Column="2" Margin="8,0,0,0" Content="Add Manifest" Command="{Binding AddManifestCommand}"/>
-          <Button Grid.Column="3" Margin="8,0,0,0" Content="Add Binary" Command="{Binding AddBinaryCommand}"/>
-        </Grid>
-      </HeaderedContentControl.Header>
-      <DataGrid GridLinesVisibility="Horizontal"
+    <DockPanel>
+      <Grid Margin="0,0,0,8" DockPanel.Dock="Top">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <TextBlock VerticalAlignment="Center" FontWeight="Bold">Providers</TextBlock>
+        <Button Grid.Column="1" Margin="8,0,0,0" Content="Add Provider" Command="{Binding AddProviderCommand}"/>
+        <Button Grid.Column="2" Margin="8,0,0,0" Content="Add Manifest" Command="{Binding AddManifestCommand}"/>
+        <Button Grid.Column="3" Margin="8,0,0,0" Content="Add Binary" Command="{Binding AddBinaryCommand}"/>
+      </Grid>
+      <DataGrid ItemsSource="{Binding Providers}"
+                GridLinesVisibility="Horizontal"
+                RowDetailsVisibilityMode="VisibleWhenSelected"
+                AutoGenerateColumns="False"
                 CanUserAddRows="False"
                 CanUserDeleteRows="True"
-                RowHeaderWidth="0">
+                RowHeaderWidth="0"
+                EnableRowVirtualization="True"
+                VirtualizingPanel.ScrollUnit="Item">
         <DataGrid.Columns>
           <DataGridCheckBoxColumn Binding="{Binding IsEnabled}"/>
-          <DataGridTextColumn Header="Name" Binding="{Binding Name}" IsReadOnly="True" Width="*"/>
+          <DataGridTextColumn Header="Name" Binding="{Binding DisplayName}" IsReadOnly="True" Width="*"/>
           <DataGridTextColumn Header="Level" Binding="{Binding Level}"/>
-          <DataGridTextColumn Header="MatchAnyKeywords" Binding="{Binding MatchAnyKeywords}"/>
-          <DataGridTextColumn Header="MatchAllKeywords" Binding="{Binding MatchAllKeywords}"/>
+          <DataGridTextColumn Header="MatchAnyKeywords" Binding="{Binding MatchAnyKeyword}"/>
+          <DataGridTextColumn Header="MatchAllKeywords" Binding="{Binding MatchAllKeyword}"/>
           <DataGridCheckBoxColumn Binding="{Binding IncludeStackTrace}">
             <DataGridCheckBoxColumn.Header>
               <TextBlock Text="ST" ToolTip="Include Stacktrace"/>
@@ -61,8 +67,26 @@
             </DataGridCheckBoxColumn.Header>
           </DataGridCheckBoxColumn>
         </DataGrid.Columns>
+        <DataGrid.RowDetailsTemplate>
+          <DataTemplate DataType="{x:Type VsExtension:TraceProviderDescriptorViewModel}">
+            <DataGrid ItemsSource="{Binding Events}" AutoGenerateColumns="False"
+                      IsReadOnly="True" MaxHeight="300"
+                      ScrollViewer.CanContentScroll="False">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="Id" Binding="{Binding Descriptor.Id}"/>
+                <DataGridTextColumn Header="Version" Binding="{Binding Descriptor.Version}"/>
+                <DataGridTextColumn Header="Channel" Binding="{Binding Descriptor.Channel}"/>
+                <DataGridTextColumn Header="Level" Binding="{Binding Descriptor.Level}"/>
+                <DataGridTextColumn Header="Task" Binding="{Binding Descriptor.Task}"/>
+                <DataGridTextColumn Header="Opcode" Binding="{Binding Descriptor.Opcode}"/>
+                <DataGridTextColumn Header="Keyword" Binding="{Binding Descriptor.Keyword}"/>
+                <DataGridTextColumn Header="Message" Binding="{Binding Message}"/>
+              </DataGrid.Columns>
+            </DataGrid>
+          </DataTemplate>
+        </DataGrid.RowDetailsTemplate>
       </DataGrid>
-    </HeaderedContentControl>
+    </DockPanel>
     <StackPanel Grid.Row="1" Margin="0,8,0,0" Orientation="Horizontal" HorizontalAlignment="Right">
       <Button Margin="8,0,0,0" Content="OK" IsDefault="True"/>
       <Button Margin="8,0,0,0" Content="Cancel" IsCancel="True"/>

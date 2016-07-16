@@ -104,6 +104,14 @@
     <ClCompile Include="EtwTraceProcessor.cpp" />
     <ClCompile Include="EtwTraceSession.cpp" />
     <ClCompile Include="EventInfoCache.cpp" />
+    <ClCompile Include="ManifestInfo.cpp">
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
+      <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
+      <MinimalRebuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</MinimalRebuild>
+      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</BasicRuntimeChecks>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Async</ExceptionHandling>
+      <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Async</ExceptionHandling>
+    </ClCompile>
     <ClCompile Include="Support\ErrorHandling.cpp" />
     <ClCompile Include="Support\SetThreadName.cpp" />
     <ClCompile Include="TraceSession.cpp">
@@ -131,6 +139,7 @@
   <ItemGroup>
     <ClInclude Include="ADT\ArrayRef.h" />
     <ClInclude Include="EtwMessageFormatter.h" />
+    <ClInclude Include="InteropHelper.h" />
     <ClInclude Include="ITraceLog.h" />
     <ClInclude Include="EventInfo.h" />
     <ClInclude Include="EventInfoCache.h" />

@@ -2,6 +2,9 @@ namespace EventTraceKit.VsExtension.UITests
 {
     using System;
     using System.Collections.ObjectModel;
+    using System.Threading.Tasks;
+    using System.Windows;
+    using System.Windows.Controls;
     using System.Windows.Input;
     using EventTraceKit.VsExtension;
     using Microsoft.VisualStudio.PlatformUI;
@@ -9,14 +12,15 @@ namespace EventTraceKit.VsExtension.UITests
     public class TraceLogTestViewModel : TraceLogWindowViewModel
     {
         private string selectedTheme;
-        private bool running;
+        private bool isRunning;
 
         public TraceLogTestViewModel()
-            : base(new StubOperationalModeProvider())
+            : base(new OperationalModeProviderStub())
         {
-            StartCommand = new DelegateCommand(Start, CanStart);
+            StartCommand = new AsyncDelegateCommand(Start, CanStart);
             StopCommand = new DelegateCommand(Stop, CanStop);
             ClearCommand = new DelegateCommand(Clear);
+            ConfigureCommand = new DelegateCommand(Configure);
 
             foreach (var name in App.Current.AvailableThemes)
                 Themes.Add(name);
@@ -43,27 +47,36 @@ namespace EventTraceKit.VsExtension.UITests
         public ICommand StartCommand { get; }
         public ICommand StopCommand { get; }
         public ICommand ClearCommand { get; }
+        public ICommand ConfigureCommand { get; }
+
+        public bool IsRunning
+        {
+            get { return isRunning; }
+            set { SetProperty(ref isRunning, value); }
+        }
 
         private bool CanStart(object obj)
         {
-            return !running;
+            return !IsRunning;
         }
 
-        private void Start(object param)
+        private async Task Start(object param)
         {
-            StartCapture();
-            running = true;
+            await StartCapture();
+            IsRunning = true;
+            CommandManager.InvalidateRequerySuggested();
         }
 
         private bool CanStop(object obj)
         {
-            return running;
+            return IsRunning;
         }
 
         private void Stop(object param)
         {
             StopCapture();
-            running = false;
+            IsRunning = false;
+            CommandManager.InvalidateRequerySuggested();
         }
 
         private void Clear(object param)
@@ -71,7 +84,17 @@ namespace EventTraceKit.VsExtension.UITests
             base.Clear();
         }
 
-        private class StubOperationalModeProvider : IOperationalModeProvider
+        private void Configure(object obj)
+        {
+            var viewModel = new TraceSessionSettingsViewModel();
+            var dialog = new TraceSessionSettingsWindow();
+            dialog.DataContext = viewModel;
+            dialog.HasDialogFrame = false;
+            if (dialog.ShowDialog() != true)
+                return;
+        }
+
+        private sealed class OperationalModeProviderStub : IOperationalModeProvider
         {
             public VsOperationalMode CurrentMode => VsOperationalMode.Design;
             public event EventHandler<VsOperationalMode> OperationalModeChanged;

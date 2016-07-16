@@ -18,6 +18,7 @@
     using EventTraceKit.VsExtension.Controls;
     using Microsoft.VisualStudio.Shell;
     using Task = System.Threading.Tasks.Task;
+    using EventDescriptor = EventTraceKit.EventDescriptor;
 
     public class TraceLogWindowViewModel : ViewModel, IEventInfoSource
     {
@@ -124,12 +125,12 @@
             return sessionDescriptor.Providers.Count > 0;
         }
 
-        private void ToggleCapture()
+        private async void ToggleCapture()
         {
             if (IsCollecting)
                 StopCapture();
             else if (CanStartCapture())
-                StartCapture();
+                await StartCapture();
         }
 
         public void Clear()
@@ -144,7 +145,7 @@
             }
         }
 
-        public void StartCapture()
+        public async Task StartCapture()
         {
             if (!CanStartCapture() || session != null)
                 return;
@@ -154,7 +155,7 @@
                 traceLog = new TraceLog();
                 traceLog.EventsChanged += OnEventsChanged;
                 session = new TraceSession(sessionDescriptor);
-                session.Start(traceLog);
+                await session.StartAsync(traceLog);
                 IsCollecting = true;
                 updateStatisticsTimer.Start();
             } catch (Exception ex) {
@@ -211,9 +212,9 @@
 
         private void Configure()
         {
-            var viewModel = new TraceSessionSettingsWindowViewModel();
+            var viewModel = new TraceSessionSettingsViewModel();
             foreach (var provider in sessionDescriptor.Providers)
-                viewModel.Providers.Add(new TraceProviderSpecViewModel(provider));
+                viewModel.Providers.Add(new TraceProviderDescriptorViewModel(provider));
 
             var window = new TraceSessionSettingsWindow();
             window.DataContext = viewModel;
@@ -224,7 +225,7 @@
             sessionDescriptor.Providers.AddRange(viewModel.Providers.Select(x => x.ToModel()));
         }
 
-        private async void UpdateStats()
+        private void UpdateStats()
         {
             if (session == null)
                 return;
@@ -307,7 +308,7 @@
             Configure();
         }
 
-        private void OnOperationalModeChanged(object sender, VsOperationalMode newMode)
+        private async void OnOperationalModeChanged(object sender, VsOperationalMode newMode)
         {
             if (!AutoLog)
                 return;
@@ -317,7 +318,7 @@
                     StopCapture();
                     break;
                 case VsOperationalMode.Debug:
-                    StartCapture();
+                    await StartCapture();
                     break;
             }
         }
@@ -420,8 +421,22 @@
         }
     }
 
-    public class TraceProviderSpecViewModel : ViewModel
+    public class TraceEventDescriptorViewModel : ViewModel
     {
+        public TraceEventDescriptorViewModel(ProviderEventInfo info)
+        {
+            Descriptor = info.Descriptor;
+            Message = info.Message;
+        }
+
+        public EventDescriptor Descriptor { get; }
+        public string Message { get; }
+    }
+
+    public class TraceProviderDescriptorViewModel : ViewModel
+    {
+        private bool isEnabled;
+
         private byte level;
         private ulong matchAnyKeyword;
         private ulong matchAllKeyword;
@@ -432,15 +447,17 @@
 
         private string manifestOrProvider;
 
-        public TraceProviderSpecViewModel(Guid id)
+        public TraceProviderDescriptorViewModel(Guid id, string name)
         {
             Id = id;
+            Name = name;
             ProcessIds = new ObservableCollection<uint>();
             EventIds = new ObservableCollection<ushort>();
+            Events = new ObservableCollection<TraceEventDescriptorViewModel>();
             Level = 0xFF;
         }
 
-        public TraceProviderSpecViewModel(TraceProviderDescriptor provider)
+        public TraceProviderDescriptorViewModel(TraceProviderDescriptor provider)
         {
             Id = provider.Id;
             Level = provider.Level;
@@ -457,6 +474,15 @@
         }
 
         public Guid Id { get; }
+        public string Name { get; }
+
+        public bool IsEnabled
+        {
+            get { return isEnabled; }
+            set { SetProperty(ref isEnabled, value); }
+        }
+
+        public string DisplayName => Name + " (" + (Events?.Count ?? 0) + ")";
 
         public byte Level
         {
@@ -502,25 +528,28 @@
 
         public ObservableCollection<uint> ProcessIds { get; }
         public ObservableCollection<ushort> EventIds { get; }
+        public ObservableCollection<TraceEventDescriptorViewModel> Events { get; }
+
+        public bool IsMOF { get; set; }
 
         public TraceProviderDescriptor ToModel()
         {
-            var spec = new TraceProviderDescriptor(Id);
-            spec.Level = Level;
-            spec.MatchAnyKeyword = MatchAnyKeyword;
-            spec.MatchAllKeyword = MatchAllKeyword;
-            spec.IncludeSecurityId = IncludeSecurityId;
-            spec.IncludeTerminalSessionId = IncludeTerminalSessionId;
-            spec.IncludeStackTrace = IncludeStackTrace;
+            var descriptor = new TraceProviderDescriptor(Id);
+            descriptor.Level = Level;
+            descriptor.MatchAnyKeyword = MatchAnyKeyword;
+            descriptor.MatchAllKeyword = MatchAllKeyword;
+            descriptor.IncludeSecurityId = IncludeSecurityId;
+            descriptor.IncludeTerminalSessionId = IncludeTerminalSessionId;
+            descriptor.IncludeStackTrace = IncludeStackTrace;
             if (string.IsNullOrWhiteSpace(ManifestOrProvider)) {
                 if (ManifestOrProvider.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) || ManifestOrProvider.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-                    spec.SetManifest(ManifestOrProvider);
+                    descriptor.SetManifest(ManifestOrProvider);
                 else
-                    spec.SetProviderBinary(ManifestOrProvider);
+                    descriptor.SetProviderBinary(ManifestOrProvider);
             }
-            spec.ProcessIds.AddRange(ProcessIds);
-            spec.EventIds.AddRange(EventIds);
-            return spec;
+            descriptor.ProcessIds.AddRange(ProcessIds);
+            descriptor.EventIds.AddRange(EventIds);
+            return descriptor;
         }
     }
 

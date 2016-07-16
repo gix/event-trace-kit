@@ -1,6 +1,7 @@
 namespace EventTraceKit.VsExtension
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using Microsoft.VisualStudio.Shell.Interop;
 
@@ -13,69 +14,56 @@ namespace EventTraceKit.VsExtension
     /// </summary>
     public sealed class WindowStatus : IVsWindowFrameNotify3
     {
-        // Private fields to keep track of the last known state
-        private int x = 0;
-        private int y = 0;
-        private int width = 0;
-        private int height = 0;
-        private bool dockable = false;
         // Output window service
-        IVsOutputWindowPane outputPane = null;
+        private readonly IVsOutputWindowPane outputPane;
         // IVsWindowFrame associated with this status monitor
-        IVsWindowFrame frame;
+        private IVsWindowFrame frame;
 
-        #region Public properties
+        // Private fields to keep track of the last known state
+        private int x;
+        private int y;
+        private int width;
+        private int height;
+        private bool dockable;
+
         /// <summary>
         /// Return the current horizontal position of the window
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly")]
-        public int X
-        {
-            get { return x; }
-        }
+        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly")]
+        public int X => x;
+
         /// <summary>
         /// Return the current vertical position of the window
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly")]
-        public int Y
-        {
-            get { return y; }
-        }
+        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly")]
+        public int Y => y;
+
         /// <summary>
         /// Return the current width of the window
         /// </summary>
-        public int Width
-        {
-            get { return width; }
-        }
+        public int Width => width;
+
         /// <summary>
         /// Return the current height of the window
         /// </summary>
-        public int Height
-        {
-            get { return height; }
-        }
+        public int Height => height;
+
         /// <summary>
         /// Is the window dockable
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly")]
-        public bool IsDockable
-        {
-            get { return dockable; }
-        }
+        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly")]
+        public bool IsDockable => dockable;
 
         /// <summary>
         /// Event that gets fired when the position or the docking state of the window changes
         /// </summary>
         public event EventHandler<EventArgs> StatusChange;
 
-        #endregion
-
         /// <summary>
         /// WindowStatus Constructor.
         /// </summary>
         /// <param name="outputWindowPane">Events will be reported in the output pane if this interface is provided.</param>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1702")]
+        [SuppressMessage("Microsoft.Naming", "CA1702")]
         public WindowStatus(IVsOutputWindowPane outputWindowPane, IVsWindowFrame frame)
         {
             outputPane = outputWindowPane;
@@ -83,7 +71,7 @@ namespace EventTraceKit.VsExtension
 
             if (frame != null)
             {
-                VSSETFRAMEPOS[] pos = new VSSETFRAMEPOS[1];
+                var pos = new VSSETFRAMEPOS[1];
                 int x;
                 int y;
                 int width;
@@ -121,7 +109,7 @@ namespace EventTraceKit.VsExtension
         /// <param name="w">New width</param>
         /// <param name="h">New Height</param>
         /// <returns>HRESULT</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1500:VariableNamesShouldNotMatchFieldNames", MessageId = "y"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1500:VariableNamesShouldNotMatchFieldNames", MessageId = "x")]
+        [SuppressMessage("Microsoft.Maintainability", "CA1500:VariableNamesShouldNotMatchFieldNames", MessageId = "y"), SuppressMessage("Microsoft.Maintainability", "CA1500:VariableNamesShouldNotMatchFieldNames", MessageId = "x")]
         public int OnDockableChange(int fDockable, int x, int y, int w, int h)
         {
             this.x = x;
@@ -143,7 +131,7 @@ namespace EventTraceKit.VsExtension
         /// <param name="w">New width</param>
         /// <param name="h">New Height</param>
         /// <returns>HRESULT</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1500:VariableNamesShouldNotMatchFieldNames", MessageId = "y"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1500:VariableNamesShouldNotMatchFieldNames", MessageId = "x")]
+        [SuppressMessage("Microsoft.Maintainability", "CA1500:VariableNamesShouldNotMatchFieldNames", MessageId = "y"), SuppressMessage("Microsoft.Maintainability", "CA1500:VariableNamesShouldNotMatchFieldNames", MessageId = "x")]
         public int OnMove(int x, int y, int w, int h)
         {
             this.x = x;
@@ -178,7 +166,7 @@ namespace EventTraceKit.VsExtension
         /// <param name="w">New width</param>
         /// <param name="h">New Height</param>
         /// <returns>HRESULT</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1500:VariableNamesShouldNotMatchFieldNames", MessageId = "x"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1500:VariableNamesShouldNotMatchFieldNames", MessageId = "y")]
+        [SuppressMessage("Microsoft.Maintainability", "CA1500:VariableNamesShouldNotMatchFieldNames", MessageId = "x"), SuppressMessage("Microsoft.Maintainability", "CA1500:VariableNamesShouldNotMatchFieldNames", MessageId = "y")]
         public int OnSize(int x, int y, int w, int h)
         {
             this.x = x;

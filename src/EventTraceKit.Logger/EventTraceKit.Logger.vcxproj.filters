@@ -14,6 +14,7 @@
     <ClCompile Include="EtwTraceLog.cpp" />
     <ClCompile Include="WatchDog.cpp" />
     <ClCompile Include="EtwMessageFormatterManaged.cpp" />
+    <ClCompile Include="ManifestInfo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EtwTraceProcessor.h" />
@@ -44,5 +45,6 @@
     <ClInclude Include="IEventSink.h" />
     <ClInclude Include="ITraceLog.h" />
     <ClInclude Include="WatchDog.h" />
+    <ClInclude Include="InteropHelper.h" />
   </ItemGroup>
 </Project>

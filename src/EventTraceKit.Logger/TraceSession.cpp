@@ -1,13 +1,9 @@
 #include "ADT/Guid.h"
+#include "InteropHelper.h"
 #include "ITraceLog.h"
 #include "ITraceProcessor.h"
 #include "ITraceSession.h"
 #include "WatchDog.h"
-
-#include <msclr/lock.h>
-#include <msclr/marshal.h>
-#include <msclr/marshal_cppstd.h>
-#include <vcclr.h>
 
 #include <memory>
 #include <string>
@@ -16,6 +12,7 @@ using namespace System;
 using namespace System::Linq;
 using namespace System::Collections::Generic;
 using namespace System::Runtime::InteropServices;
+using namespace System::Threading::Tasks;
 using msclr::interop::marshal_as;
 
 
@@ -138,51 +135,6 @@ namespace interop
 {
 
 template<>
-inline System::DateTime marshal_as<System::DateTime, ::FILETIME>(::FILETIME const& time)
-{
-    uint64_t ticks = (uint64_t(time.dwHighDateTime) << 32) | time.dwLowDateTime;
-    return System::DateTime::FromFileTime(ticks);
-}
-
-template<>
-inline String^ marshal_as(etk::wstring_view const& str)
-{
-    auto size = static_cast<int>(
-        std::min(static_cast<size_t>(System::Int32::MaxValue), str.size()));
-    return gcnew System::String(str.data(), 0, size);
-}
-
-template<>
-inline System::Guid marshal_as(GUID const& guid)
-{
-    return System::Guid(
-        guid.Data1, guid.Data2, guid.Data3,
-        guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3],
-        guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
-}
-
-template<>
-inline GUID marshal_as(System::Guid const& guid)
-{
-    array<System::Byte>^ guidData = const_cast<System::Guid&>(guid).ToByteArray();
-    pin_ptr<System::Byte> data = &(guidData[0]);
-    return *reinterpret_cast<GUID*>(data);
-}
-
-template<typename T>
-inline std::vector<T> marshal_as_vector(List<T>^ list)
-{
-    if (list == nullptr)
-        return std::vector<T>();
-
-    std::vector<T> result;
-    result.reserve(list->Count);
-    for each (T item in list)
-        result.push_back(item);
-    return result;
-}
-
-template<>
 inline etk::TraceProviderDescriptor marshal_as(EventTraceKit::TraceProviderDescriptor^ const& provider)
 {
     etk::TraceProviderDescriptor native(
@@ -227,6 +179,7 @@ public value struct EventInfo
 public ref class TraceLog : public System::IDisposable
 {
 public:
+    [UnmanagedFunctionPointer(CallingConvention::Cdecl)]
     delegate void EventsChangedDelegate(UIntPtr);
 
     TraceLog()
@@ -236,6 +189,8 @@ public:
         auto nativeCallback = static_cast<etk::TraceLogEventsChangedCallback*>(
             Marshal::GetFunctionPointerForDelegate(onEventsChangedCallback).ToPointer());
         auto nativeLog = etk::CreateEtwTraceLog(nativeCallback);
+        if (!nativeLog)
+            throw gcnew Exception("Failed to create native trave log.");
 
         this->nativeLog = nativeLog.release();
     }
@@ -283,6 +238,7 @@ public:
     !TraceSession();
 
     void Start(TraceLog^ traceLog);
+    Task^ StartAsync(TraceLog^ traceLog);
     void Stop();
     void Flush();
     TraceStatistics^ Query();
@@ -301,6 +257,17 @@ public:
     }
 
 private:
+    ref struct StartAsyncHelper
+    {
+        StartAsyncHelper(TraceSession^ parent, TraceLog^ traceLog)
+            : parent(parent), traceLog(traceLog) {}
+
+        void Run();
+
+        TraceSession^ parent;
+        TraceLog^ traceLog;
+    };
+
     TraceSessionDescriptor^ descriptor;
     std::wstring* loggerName = nullptr;
     std::vector<etk::TraceProviderDescriptor>* nativeProviders = nullptr;
@@ -361,6 +328,27 @@ void TraceSession::Start(TraceLog^ traceLog)
 
     this->processor = processor.release();
     this->processor->StartProcessing();
+}
+
+Task^ TraceSession::StartAsync(TraceLog^ traceLog)
+{
+    if (!traceLog)
+        throw gcnew ArgumentNullException("traceLog");
+
+    auto helper = gcnew StartAsyncHelper(this, traceLog);
+    return Task::Run(gcnew Action(helper, &StartAsyncHelper::Run));
+}
+
+void TraceSession::StartAsyncHelper::Run()
+{
+    parent->watchDog->Start();
+    parent->session->Start();
+
+    auto processor = etk::CreateEtwTraceProcessor(*parent->loggerName, *parent->nativeProviders);
+    processor->SetEventSink(traceLog->Native());
+
+    parent->processor = processor.release();
+    parent->processor->StartProcessing();
 }
 
 void TraceSession::Stop()

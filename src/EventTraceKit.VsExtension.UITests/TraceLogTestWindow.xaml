@@ -15,17 +15,16 @@
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
       <RowDefinition/>
-      <!--<RowDefinition Height="Auto"/>
-      <RowDefinition/>
-      <RowDefinition Height="Auto"/>
-      <RowDefinition/>-->
     </Grid.RowDefinitions>
     <StackPanel Orientation="Horizontal" Margin="6">
       <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding SelectedTheme}"/>
       <Button Margin="7,0,0,0" Content="Start" Command="{Binding StartCommand}"/>
       <Button Margin="7,0,0,0" Content="Stop" Command="{Binding StopCommand}"/>
       <Button Margin="7,0,0,0" Content="Clear" Command="{Binding ClearCommand}"/>
+      <Button Margin="7,0,0,0" Content="Configure" Command="{Binding ConfigureCommand}"/>
       <TextBlock Margin="7,0,0,0" Text="{Binding EventsDataView.RowCount}"/>
+      <Controls:ActivityRing IsActive="{Binding IsRunning}" Margin="10,0,0,0"
+                             Width="16" Height="16"/>
     </StackPanel>
 
     <Controls:AsyncDataGrid
@@ -42,40 +41,6 @@
       RowInactiveSelectionForeground="{DynamicResource {x:Static EtkVs:Colors.TraceLogInactiveSelectedForegroundKey}}"
       RowInactiveSelectionBackground="{DynamicResource {x:Static EtkVs:Colors.TraceLogInactiveSelectedBackgroundKey}}"
       RowFocusBorderBrush="{DynamicResource {x:Static EtkVs:CommonControlBrushes.FocusVisualForegroundKey}}"/>
-
-    <!--<GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch"/>
-    <DataGrid Grid.Row="3" SelectionUnit="FullRow" SelectionMode="Extended"
-              FrozenColumnCount="2">
-      <DataGrid.Items>
-        <uit:VirtCompTraceEvent Channel="C1" ChannelId="1" Message="Foo"/>
-        <uit:VirtCompTraceEvent Channel="C2" ChannelId="2" Message="Bar"/>
-      </DataGrid.Items>
-      <DataGrid.Columns>
-        <DataGridTextColumn Header="ChannelId" Binding="{Binding ChannelId}"/>
-        <DataGridTextColumn Header="Channel" Binding="{Binding Channel}" CanUserResize="False"/>
-        <DataGridTextColumn Header="Message" Binding="{Binding Message}"/>
-      </DataGrid.Columns>
-    </DataGrid>
-    <GridSplitter Grid.Row="4" Height="5" HorizontalAlignment="Stretch"/>
-    <ListView Grid.Row="5">
-      <ListView.View>
-        <GridView>
-          <GridView.Columns>
-            <GridViewColumn Header="ChannelId" DisplayMemberBinding="{Binding ChannelId}"/>
-            <GridViewColumn Header="Channel" DisplayMemberBinding="{Binding Channel}"/>
-            <GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}"/>
-          </GridView.Columns>
-        </GridView>
-      </ListView.View>
-      <ListView.Items>
-        <uit:VirtCompTraceEvent Channel="C1" ChannelId="1" Message="Foo"/>
-        <uit:VirtCompTraceEvent Channel="C2" ChannelId="2" Message="Bar"/>
-        <uit:VirtCompTraceEvent Channel="C2" ChannelId="2" Message="Bar"/>
-        <uit:VirtCompTraceEvent Channel="C2" ChannelId="2" Message="Bar"/>
-        <uit:VirtCompTraceEvent Channel="C2" ChannelId="2" Message="Bar"/>
-        <uit:VirtCompTraceEvent Channel="C2" ChannelId="2" Message="Bar"/>
-      </ListView.Items>
-    </ListView>-->
   </Grid>
 </Window>
 

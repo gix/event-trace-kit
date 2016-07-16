@@ -165,6 +165,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsyncDelegateCommand.cs" />
     <Compile Include="CharCPtrUtils.cs" />
     <Compile Include="Collections\Extensions.cs" />
     <Compile Include="HdvColumnViewModelPreset.cs" />
@@ -256,7 +257,7 @@
     <Compile Include="TraceSessionSettingsWindow.xaml.cs">
       <DependentUpon>TraceSessionSettingsWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="TraceSessionSettingsWindowViewModel.cs" />
+    <Compile Include="TraceSessionSettingsViewModel.cs" />
     <Compile Include="ViewModel.cs" />
     <Compile Include="WindowList.cs" />
     <Compile Include="WindowStatus.cs" />

@@ -10,7 +10,6 @@
     using System.Windows.Media;
     using System.Xml.Linq;
     using System.Xml.XPath;
-    using EventTraceKit.VsExtension;
     using EventTraceKit.VsExtension.Windows;
     using Microsoft.VisualStudio.PlatformUI;
     using Microsoft.VisualStudio.Settings;
@@ -22,7 +21,7 @@
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
-    public partial class App : Application
+    public partial class App
     {
         private readonly List<string> availableThemes = new List<string>();
 
@@ -34,11 +33,9 @@
 
             var setGlobalProvider = typeof(ServiceProvider)
                 .GetMethod("SetGlobalProvider", BindingFlags.NonPublic | BindingFlags.Static);
-
             setGlobalProvider.Invoke(null, new object[] { CreateServiceProvider() });
 
-            var sm = ServiceProvider.GlobalProvider.GetService(typeof(SVsSettingsManager)) as IVsSettingsManager;
-
+            ServiceProvider.GlobalProvider.GetService(typeof(SVsSettingsManager));
             EnvironmentRenderCapabilities.Current.VisualEffectsAllowed = 1 | 2;
 
             availableThemes.AddRange(FindAvailableThemes());
@@ -50,193 +47,6 @@
             var provider = new ServiceProviderStub();
             provider.AddService<SVsSettingsManager>(new VsSettingsManagerStub());
             return new ServiceProvider(provider);
-        }
-
-        private class ServiceProviderStub : Microsoft.VisualStudio.OLE.Interop.IServiceProvider
-        {
-            private readonly Dictionary<Guid, object> services = new Dictionary<Guid, object>();
-
-            public void AddService<TService>(object service)
-            {
-                AddService(typeof(TService).GUID, service);
-            }
-
-            public void AddService(Guid guidService, object service)
-            {
-                services.Add(guidService, service);
-            }
-
-            public int QueryService(ref Guid guidService, ref Guid riid, out IntPtr ppvObject)
-            {
-                object obj;
-                if (services.TryGetValue(guidService, out obj)) {
-                    var punk = Marshal.GetIUnknownForObject(obj);
-                    return Marshal.QueryInterface(punk, ref riid, out ppvObject);
-                }
-
-                ppvObject = new IntPtr();
-                return -1;
-            }
-        }
-
-        private class VsSettingsManagerStub : IVsSettingsManager
-        {
-            private readonly VsSettingsStoreStub readOnlyStore = new VsSettingsStoreStub();
-
-            public int GetCollectionScopes(string collectionPath, out uint scopes)
-            {
-                throw new NotImplementedException();
-            }
-
-            public int GetPropertyScopes(string collectionPath, string propertyName, out uint scopes)
-            {
-                throw new NotImplementedException();
-            }
-
-            public int GetReadOnlySettingsStore(uint scope, out IVsSettingsStore store)
-            {
-                if (scope != (uint)SettingsScope.UserSettings) {
-                    store = null;
-                    return -1;
-                }
-
-                store = readOnlyStore;
-                return 0;
-            }
-
-            public int GetWritableSettingsStore(uint scope, out IVsWritableSettingsStore writableStore)
-            {
-                throw new NotImplementedException();
-            }
-
-            public int GetApplicationDataFolder(uint folder, out string folderPath)
-            {
-                throw new NotImplementedException();
-            }
-
-            public int GetCommonExtensionsSearchPaths(uint paths, string[] commonExtensionsPaths, out uint actualPaths)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        private class VsSettingsStoreStub : IVsSettingsStore
-        {
-            public int GetBool(string collectionPath, string propertyName, out int value)
-            {
-                throw new NotImplementedException();
-            }
-
-            public int GetInt(string collectionPath, string propertyName, out int value)
-            {
-                throw new NotImplementedException();
-            }
-
-            public int GetUnsignedInt(string collectionPath, string propertyName, out uint value)
-            {
-                throw new NotImplementedException();
-            }
-
-            public int GetInt64(string collectionPath, string propertyName, out long value)
-            {
-                throw new NotImplementedException();
-            }
-
-            public int GetUnsignedInt64(string collectionPath, string propertyName, out ulong value)
-            {
-                throw new NotImplementedException();
-            }
-
-            public int GetString(string collectionPath, string propertyName, out string value)
-            {
-                throw new NotImplementedException();
-            }
-
-            public int GetBinary(
-                string collectionPath,
-                string propertyName,
-                uint byteLength,
-                byte[] pBytes = null,
-                uint[] actualByteLength = null)
-            {
-                throw new NotImplementedException();
-            }
-
-            public int GetBoolOrDefault(string collectionPath, string propertyName, int defaultValue, out int value)
-            {
-                value = defaultValue;
-                return 1;
-            }
-
-            public int GetIntOrDefault(string collectionPath, string propertyName, int defaultValue, out int value)
-            {
-                value = defaultValue;
-                return 1;
-            }
-
-            public int GetUnsignedIntOrDefault(string collectionPath, string propertyName, uint defaultValue, out uint value)
-            {
-                value = defaultValue;
-                return 1;
-            }
-
-            public int GetInt64OrDefault(string collectionPath, string propertyName, long defaultValue, out long value)
-            {
-                value = defaultValue;
-                return 1;
-            }
-
-            public int GetUnsignedInt64OrDefault(string collectionPath, string propertyName, ulong defaultValue, out ulong value)
-            {
-                value = defaultValue;
-                return 1;
-            }
-
-            public int GetStringOrDefault(string collectionPath, string propertyName, string defaultValue, out string value)
-            {
-                value = defaultValue;
-                return 1;
-            }
-
-            public int GetPropertyType(string collectionPath, string propertyName, out uint type)
-            {
-                throw new NotImplementedException();
-            }
-
-            public int PropertyExists(string collectionPath, string propertyName, out int pfExists)
-            {
-                throw new NotImplementedException();
-            }
-
-            public int CollectionExists(string collectionPath, out int pfExists)
-            {
-                throw new NotImplementedException();
-            }
-
-            public int GetSubCollectionCount(string collectionPath, out uint subCollectionCount)
-            {
-                throw new NotImplementedException();
-            }
-
-            public int GetPropertyCount(string collectionPath, out uint propertyCount)
-            {
-                throw new NotImplementedException();
-            }
-
-            public int GetLastWriteTime(string collectionPath, SYSTEMTIME[] lastWriteTime)
-            {
-                throw new NotImplementedException();
-            }
-
-            public int GetSubCollectionName(string collectionPath, uint index, out string subCollectionName)
-            {
-                throw new NotImplementedException();
-            }
-
-            public int GetPropertyName(string collectionPath, uint index, out string propertyName)
-            {
-                throw new NotImplementedException();
-            }
         }
 
         public IReadOnlyList<string> AvailableThemes => availableThemes;
@@ -415,6 +225,193 @@
                 default:
                     return null;
             }
+        }
+    }
+
+    internal sealed class ServiceProviderStub : Microsoft.VisualStudio.OLE.Interop.IServiceProvider
+    {
+        private readonly Dictionary<Guid, object> services = new Dictionary<Guid, object>();
+
+        public void AddService<TService>(object service)
+        {
+            AddService(typeof(TService).GUID, service);
+        }
+
+        public void AddService(Guid guidService, object service)
+        {
+            services.Add(guidService, service);
+        }
+
+        public int QueryService(ref Guid guidService, ref Guid riid, out IntPtr ppvObject)
+        {
+            object obj;
+            if (services.TryGetValue(guidService, out obj)) {
+                var punk = Marshal.GetIUnknownForObject(obj);
+                return Marshal.QueryInterface(punk, ref riid, out ppvObject);
+            }
+
+            ppvObject = new IntPtr();
+            return -1;
+        }
+    }
+
+    internal sealed class VsSettingsManagerStub : IVsSettingsManager
+    {
+        private readonly VsSettingsStoreStub readOnlyStore = new VsSettingsStoreStub();
+
+        public int GetCollectionScopes(string collectionPath, out uint scopes)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int GetPropertyScopes(string collectionPath, string propertyName, out uint scopes)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int GetReadOnlySettingsStore(uint scope, out IVsSettingsStore store)
+        {
+            if (scope != (uint)SettingsScope.UserSettings) {
+                store = null;
+                return -1;
+            }
+
+            store = readOnlyStore;
+            return 0;
+        }
+
+        public int GetWritableSettingsStore(uint scope, out IVsWritableSettingsStore writableStore)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int GetApplicationDataFolder(uint folder, out string folderPath)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int GetCommonExtensionsSearchPaths(uint paths, string[] commonExtensionsPaths, out uint actualPaths)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    internal sealed class VsSettingsStoreStub : IVsSettingsStore
+    {
+        public int GetBool(string collectionPath, string propertyName, out int value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int GetInt(string collectionPath, string propertyName, out int value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int GetUnsignedInt(string collectionPath, string propertyName, out uint value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int GetInt64(string collectionPath, string propertyName, out long value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int GetUnsignedInt64(string collectionPath, string propertyName, out ulong value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int GetString(string collectionPath, string propertyName, out string value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int GetBinary(
+            string collectionPath,
+            string propertyName,
+            uint byteLength,
+            byte[] pBytes = null,
+            uint[] actualByteLength = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int GetBoolOrDefault(string collectionPath, string propertyName, int defaultValue, out int value)
+        {
+            value = defaultValue;
+            return 1;
+        }
+
+        public int GetIntOrDefault(string collectionPath, string propertyName, int defaultValue, out int value)
+        {
+            value = defaultValue;
+            return 1;
+        }
+
+        public int GetUnsignedIntOrDefault(string collectionPath, string propertyName, uint defaultValue, out uint value)
+        {
+            value = defaultValue;
+            return 1;
+        }
+
+        public int GetInt64OrDefault(string collectionPath, string propertyName, long defaultValue, out long value)
+        {
+            value = defaultValue;
+            return 1;
+        }
+
+        public int GetUnsignedInt64OrDefault(string collectionPath, string propertyName, ulong defaultValue, out ulong value)
+        {
+            value = defaultValue;
+            return 1;
+        }
+
+        public int GetStringOrDefault(string collectionPath, string propertyName, string defaultValue, out string value)
+        {
+            value = defaultValue;
+            return 1;
+        }
+
+        public int GetPropertyType(string collectionPath, string propertyName, out uint type)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int PropertyExists(string collectionPath, string propertyName, out int pfExists)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int CollectionExists(string collectionPath, out int pfExists)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int GetSubCollectionCount(string collectionPath, out uint subCollectionCount)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int GetPropertyCount(string collectionPath, out uint propertyCount)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int GetLastWriteTime(string collectionPath, SYSTEMTIME[] lastWriteTime)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int GetSubCollectionName(string collectionPath, uint index, out string subCollectionName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int GetPropertyName(string collectionPath, uint index, out string propertyName)
+        {
+            throw new NotImplementedException();
         }
     }
 }

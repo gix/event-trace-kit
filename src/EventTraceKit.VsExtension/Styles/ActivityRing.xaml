@@ -42,8 +42,8 @@
             </VisualStateManager.VisualStateGroups>
             <Grid x:Name="Ring"
                   Margin="{TemplateBinding Padding}"
-                  MaxWidth="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.MaxSideLength}"
-                  MaxHeight="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.MaxSideLength}"
+                  MaxWidth="{Binding TemplateSettings.MaxSideLength, RelativeSource={RelativeSource TemplatedParent}}"
+                  MaxHeight="{Binding TemplateSettings.MaxSideLength, RelativeSource={RelativeSource TemplatedParent}}"
                   Visibility="Collapsed"
                   RenderTransformOrigin=".5,.5"
                   FlowDirection="LeftToRight">
@@ -52,7 +52,9 @@
                   <RotateTransform x:Name="Rotation"/>
                 </Canvas.RenderTransform>
                 <Path Stroke="{TemplateBinding Foreground}"
-                      StrokeThickness="{Binding TemplateSettings.ArcThickness, RelativeSource={RelativeSource TemplatedParent}}">
+                      StrokeThickness="{Binding TemplateSettings.ArcThickness, RelativeSource={RelativeSource TemplatedParent}}"
+                      StrokeDashCap="Flat"
+                      Fill="{x:Null}">
                   <Path.Data>
                     <PathGeometry>
                       <PathFigure StartPoint="{Binding TemplateSettings.ArcStartPoint, RelativeSource={RelativeSource TemplatedParent}}">
