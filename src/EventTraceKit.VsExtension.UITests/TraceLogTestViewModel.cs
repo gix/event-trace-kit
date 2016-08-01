@@ -1,10 +1,9 @@
 namespace EventTraceKit.VsExtension.UITests
 {
     using System;
+    using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Threading.Tasks;
-    using System.Windows;
-    using System.Windows.Controls;
     using System.Windows.Input;
     using EventTraceKit.VsExtension;
     using Microsoft.VisualStudio.PlatformUI;
@@ -15,7 +14,7 @@ namespace EventTraceKit.VsExtension.UITests
         private bool isRunning;
 
         public TraceLogTestViewModel()
-            : base(new OperationalModeProviderStub())
+            : base(new OperationalModeProviderStub(), () => new StubSolutionFileGatherer())
         {
             StartCommand = new AsyncDelegateCommand(Start, CanStart);
             StopCommand = new DelegateCommand(Stop, CanStop);
@@ -86,12 +85,21 @@ namespace EventTraceKit.VsExtension.UITests
 
         private void Configure(object obj)
         {
-            var viewModel = new TraceSessionSettingsViewModel();
+            var gatherer = new StubSolutionFileGatherer();
+            var viewModel = new TraceSessionSettingsViewModel(gatherer);
             var dialog = new TraceSessionSettingsWindow();
             dialog.DataContext = viewModel;
             dialog.HasDialogFrame = false;
             if (dialog.ShowDialog() != true)
                 return;
+        }
+
+        private class StubSolutionFileGatherer : ISolutionFileGatherer
+        {
+            public IEnumerable<string> GetFiles()
+            {
+                yield break;
+            }
         }
 
         private sealed class OperationalModeProviderStub : IOperationalModeProvider

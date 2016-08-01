@@ -39,9 +39,13 @@
         private DispatcherSynchronizationContext syncCtx;
         private TaskScheduler scheduler;
         private TaskFactory taskFactory;
+        private readonly Func<ISolutionFileGatherer> gathererFactory;
 
-        public TraceLogWindowViewModel(IOperationalModeProvider modeProvider)
+        public TraceLogWindowViewModel(
+            IOperationalModeProvider modeProvider,
+            Func<ISolutionFileGatherer> gathererFactory)
         {
+            this.gathererFactory = gathererFactory;
             if (modeProvider != null)
                 modeProvider.OperationalModeChanged += OnOperationalModeChanged;
 
@@ -212,7 +216,8 @@
 
         private void Configure()
         {
-            var viewModel = new TraceSessionSettingsViewModel();
+            var gatherer = gathererFactory();
+            var viewModel = new TraceSessionSettingsViewModel(gatherer);
             foreach (var provider in sessionDescriptor.Providers)
                 viewModel.Providers.Add(new TraceProviderDescriptorViewModel(provider));
 
@@ -341,7 +346,7 @@
     public class TraceLogWindowDesignTimeModel : TraceLogWindowViewModel
     {
         public TraceLogWindowDesignTimeModel()
-            : base(null)
+            : base(null, null)
         {
             Statistics.TotalEvents = 1429;
             Statistics.EventsLost = 30;
@@ -426,11 +431,20 @@
         public TraceEventDescriptorViewModel(ProviderEventInfo info)
         {
             Descriptor = info.Descriptor;
-            Message = info.Message;
+            Symbol = info.Message;
+        }
+
+        public TraceEventDescriptorViewModel(ushort id, byte version, string symbol)
+        {
+            Descriptor = new EventDescriptor {
+                Id = id,
+                Version = version
+            };
+            Symbol = symbol;
         }
 
         public EventDescriptor Descriptor { get; }
-        public string Message { get; }
+        public string Symbol { get; }
     }
 
     public class TraceProviderDescriptorViewModel : ViewModel

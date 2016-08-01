@@ -80,7 +80,7 @@
                 <DataGridTextColumn Header="Task" Binding="{Binding Descriptor.Task}"/>
                 <DataGridTextColumn Header="Opcode" Binding="{Binding Descriptor.Opcode}"/>
                 <DataGridTextColumn Header="Keyword" Binding="{Binding Descriptor.Keyword}"/>
-                <DataGridTextColumn Header="Message" Binding="{Binding Message}"/>
+                <DataGridTextColumn Header="Symbol" Binding="{Binding Symbol}"/>
               </DataGrid.Columns>
             </DataGrid>
           </DataTemplate>

@@ -2,9 +2,8 @@
 {
     using System;
     using System.ComponentModel.Design;
-    using System.IO;
     using System.Runtime.InteropServices;
-    using System.Windows.Input;
+    using EnvDTE;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
 
@@ -23,12 +22,6 @@
 
             Caption = "Trace Log";
             ToolBar = new CommandID(Guids.TraceLogCmdSet, PkgCmdId.TraceLogToolbar);
-
-            var control = new TraceLogWindowControl {
-                DataContext = new TraceLogWindowViewModel(package)
-            };
-
-            Content = control;
         }
 
         public TraceLogWindow()
@@ -40,10 +33,16 @@
         {
             base.Initialize();
 
-            var viewModel = (Content as TraceLogWindowControl)?.DataContext as TraceLogWindowViewModel;
-            var mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            var dte = (DTE)GetService(typeof(DTE));
+            var traceLog = new TraceLogWindowViewModel(package, () => new SolutionFileGatherer(dte));
+
+            Content = new TraceLogWindowControl {
+                DataContext = traceLog
+            };
+
+            var mcs = GetService(typeof(IMenuCommandService)) as MenuCommandService;
             if (mcs != null)
-                viewModel?.Attach(mcs);
+                traceLog.Attach(mcs);
         }
 
         public override IVsSearchTask CreateSearch(
