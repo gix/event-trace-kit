@@ -5,6 +5,7 @@
   <Application.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="Resources.xaml"/>
         <ResourceDictionary Source="pack://application:,,,/EventTraceKit.VsExtension;component/Themes/generic.xaml"/>
       </ResourceDictionary.MergedDictionaries>
     </ResourceDictionary>

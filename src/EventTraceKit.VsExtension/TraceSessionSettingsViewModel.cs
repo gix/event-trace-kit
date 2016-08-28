@@ -3,45 +3,71 @@
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using System.Net;
+    using System.Runtime.InteropServices;
     using System.Threading;
-    using System.Windows;
-    using System.Windows.Controls;
     using System.Windows.Input;
-    using System.Xml;
-    using System.Xml.Linq;
-    using System.Xml.XPath;
     using EventTraceKit.VsExtension.Collections;
-    using Microsoft.VisualStudio.PlatformUI;
+    using Microsoft.Internal.VisualStudio.PlatformUI;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
     using Microsoft.Win32;
+    using Microsoft.Windows.TaskDialogs;
+    using Microsoft.Windows.TaskDialogs.Controls;
     using Task = System.Threading.Tasks.Task;
 
     public class TraceSessionSettingsViewModel : ViewModel
     {
         private readonly ISolutionFileGatherer gatherer;
+        private bool? dialogResult;
 
         public TraceSessionSettingsViewModel(ISolutionFileGatherer gatherer)
         {
             this.gatherer = gatherer;
 
-            AddProviderCommand = new AsyncDelegateCommand(AddProvider);
-            AddManifestCommand = new DelegateCommand(AddManifest);
-            AddBinaryCommand = new DelegateCommand(AddBinary);
+            AcceptCommand = new AsyncDelegateCommand(Accept);
+            NewProviderCommand = new AsyncDelegateCommand(NewProvider);
+            RemoveProviderCommand = new AsyncDelegateCommand(RemoveProvider);
+            AddManifestCommand = new AsyncDelegateCommand(AddManifest);
             Providers = new ObservableCollection<TraceProviderDescriptorViewModel>();
         }
 
-        public ICommand AddProviderCommand { get; }
+        public bool? DialogResult
+        {
+            get { return dialogResult; }
+            set { SetProperty(ref dialogResult, value); }
+        }
+
+        public ICommand AcceptCommand { get; }
+        public ICommand NewProviderCommand { get; }
+        public ICommand RemoveProviderCommand { get; }
         public ICommand AddManifestCommand { get; }
-        public ICommand AddBinaryCommand { get; }
         public ObservableCollection<TraceProviderDescriptorViewModel> Providers { get; }
 
-        private async Task AddProvider(object obj)
+        private Task Accept()
         {
-            Providers.Clear();
+            DialogResult = true;
+            return Task.CompletedTask;
+        }
 
+        private Task NewProvider()
+        {
+            var provider = new TraceProviderDescriptorViewModel(Guid.Empty, null);
+            Providers.Add(provider);
+            return Task.CompletedTask;
+        }
+
+        private Task RemoveProvider(object parameter)
+        {
+            var provider = parameter as TraceProviderDescriptorViewModel;
+            if (provider != null)
+                Providers.Remove(provider);
+            return Task.CompletedTask;
+        }
+
+        private async Task Foo()
+        {
             var vstwdf = (IVsThreadedWaitDialogFactory)ServiceProvider.GlobalProvider.GetService(
                 typeof(SVsThreadedWaitDialogFactory));
 
@@ -60,100 +86,139 @@
                     new CancellationToken(),
                     new Progress<ManifestInfoProcess>()));
 
-            foreach (var providerInfo in manifestInfo.Providers ?? Enumerable.Empty<ProviderInfo>()) {
-                var p = new TraceProviderDescriptorViewModel(providerInfo.Id, providerInfo.Name);
-                p.IsMOF = providerInfo.IsMOF;
-                foreach (var evtDesc in providerInfo.Events ?? Enumerable.Empty<ProviderEventInfo>())
-                    p.Events.Add(new TraceEventDescriptorViewModel(evtDesc));
+            //foreach (var providerInfo in manifestInfo.Providers ?? Enumerable.Empty<ProviderInfo>()) {
+            //    var p = new TraceProviderDescriptorViewModel(providerInfo.Id, providerInfo.Name);
+            //    p.IsMOF = providerInfo.IsMOF;
+            //    foreach (var evtDesc in providerInfo.Events ?? Enumerable.Empty<ProviderEventInfo>())
+            //        p.Events.Add(new TraceEventDescriptorViewModel(evtDesc));
 
-                Providers.Add(p);
-            }
+            //    Providers.Add(p);
+            //}
         }
 
-        private void AddManifest(object obj)
+        private async Task AddManifest()
         {
-            var files = gatherer.GetFiles();
-            var dlg = new Window();
-            var listBox = new ListBox();
-            listBox.ItemsSource = files;
-            dlg.Content = listBox;
-            dlg.Width = 500;
-            dlg.Height = 500;
-            dlg.ShowDialog();
+            string manifestPath = PromptManifest();
+            if (manifestPath == null)
+                return;
 
-            var dialog = new OpenFileDialog();
-            if (dialog.ShowDialog() == true) {
-                ParseManifest(dialog.FileName);
+            List<TraceProviderDescriptorViewModel> newProviders;
+            try {
+                newProviders = await Task.Run(() => {
+                    var parser = new SimpleInstrumentationManifestParser(manifestPath);
+                    return parser.ReadProviders().ToList();
+                });
+            } catch (Exception ex) {
+                ShowErrorDialog("Failed to add manifest", ex);
+                return;
             }
-        }
 
-        private static readonly XNamespace EventManifestSchemaNamespace =
-            "http://schemas.microsoft.com/win/2004/08/events";
+            MergeStrategy? pinnedMergeStrategy = null;
 
-        private static readonly XNamespace EventSchemaNamespace =
-            "http://schemas.microsoft.com/win/2004/08/events/event";
-
-        private static readonly XNamespace WinEventSchemaNamespace =
-            "http://manifests.microsoft.com/win/2004/08/windows/events";
-
-        private void ParseManifest(string fileName)
-        {
-            var reader = XmlReader.Create(fileName);
-            var doc = XDocument.Load(reader);
-
-            var xnsMgr = new XmlNamespaceManager(reader.NameTable ?? new NameTable());
-            xnsMgr.AddNamespace("e", EventManifestSchemaNamespace.NamespaceName);
-            xnsMgr.AddNamespace("w", WinEventSchemaNamespace.NamespaceName);
-
-            const string providerXPath = "e:instrumentationManifest/e:instrumentation/e:events/e:provider";
-            foreach (var providerElem in doc.XPathSelectElements(providerXPath, xnsMgr)) {
-                var provider = ReadProvider(providerElem, xnsMgr);
-                if (provider != null)
+            foreach (var provider in newProviders) {
+                var existingProvider = Providers.FirstOrDefault(x => x.Id == provider.Id);
+                if (existingProvider == null) {
                     Providers.Add(provider);
+                    continue;
+                }
+
+                MergeStrategy? mergeStrategy = pinnedMergeStrategy;
+                if (mergeStrategy == null) {
+                    var result = PromptConflictResolution(provider);
+                    mergeStrategy = (MergeStrategy)(int)result.Button;
+                    if (result.VerificationFlagChecked)
+                        pinnedMergeStrategy = mergeStrategy;
+                }
+
+                switch (mergeStrategy) {
+                    case MergeStrategy.Merge:
+                        MergeProviders(existingProvider, provider);
+                        break;
+                    case MergeStrategy.Overwrite:
+                        Providers.Remove(existingProvider);
+                        Providers.Add(provider);
+                        break;
+                }
             }
         }
 
-        private static TraceProviderDescriptorViewModel ReadProvider(
-            XElement providerElem, XmlNamespaceManager xnsMgr)
+        private static string PromptManifest()
         {
-            string name = providerElem.Attribute("name").AsString();
-            string symbol = providerElem.Attribute("symbol").AsString();
-            Guid? id = providerElem.Attribute("guid").AsGuid();
-            if (id == null)
+            var dialog = new OpenFileDialog();
+            dialog.Title = "Add Manifest";
+            if (dialog.ShowDialog() != true)
                 return null;
 
-            var provider = new TraceProviderDescriptorViewModel(
-                id.Value, name ?? symbol ?? $"<id:{id.Value}>");
-
-            provider.Events.AddRange(ReadEvents(providerElem, xnsMgr));
-
-            return provider;
+            return dialog.FileName;
         }
 
-        private static IEnumerable<TraceEventDescriptorViewModel> ReadEvents(
-            XElement providerElem, XmlNamespaceManager xnsMgr)
+        private void ShowErrorDialog(string message, Exception exception)
         {
-            foreach (var eventElem in providerElem.XPathSelectElements("e:events/e:event", xnsMgr)) {
-                var eventInfo = ReadEvent(eventElem, xnsMgr);
-                if (eventInfo != null)
-                    yield return eventInfo;
+            var dialog = new TaskDialog();
+            dialog.Caption = "Error";
+            dialog.Content = message;
+            dialog.ExpandedInfo = exception.Message;
+            dialog.ExpandedInfoLocation = TaskDialogExpandedInfoLocation.Footer;
+            dialog.ExpandedButtonLabel = "Details";
+            dialog.Show();
+        }
+
+        private enum MergeStrategy
+        {
+            Merge = TaskDialog.MinimumCustomButtonId,
+            Keep = TaskDialog.MinimumCustomButtonId + 1,
+            Overwrite = TaskDialog.MinimumCustomButtonId + 2
+        }
+
+        private static TaskDialogResult PromptConflictResolution(
+                TraceProviderDescriptorViewModel duplicateProvider)
+        {
+            var dialog = new TaskDialog();
+            dialog.Caption = "Provider Conflict";
+            dialog.Instruction = $"Provider {duplicateProvider.DisplayName} exists already";
+            dialog.Controls.Add(new TaskDialogCommandLink((int)MergeStrategy.Merge, "Merge both"));
+            dialog.Controls.Add(new TaskDialogCommandLink((int)MergeStrategy.Keep, "Keep existing provider"));
+            dialog.Controls.Add(new TaskDialogCommandLink((int)MergeStrategy.Overwrite, "Overwrite existing provider"));
+            dialog.VerificationCheckBoxText = "Do this for the next conflicts";
+            return dialog.Show();
+        }
+
+        private void MergeProviders(
+            TraceProviderDescriptorViewModel target,
+            TraceProviderDescriptorViewModel source)
+        {
+            if (target.Name == null)
+                target.Name = source.Name;
+
+            var targetEvents = target.Events.ToDictionary(x => x.CreateKey());
+            var sourceEvents = source.Events.ToDictionary(x => x.CreateKey());
+
+            var newKeys = sourceEvents.Keys.Except(targetEvents.Keys);
+            var mergeKeys = sourceEvents.Keys.Intersect(targetEvents.Keys);
+
+            foreach (var key in mergeKeys) {
+                var targetEvent = targetEvents[key];
+                var sourceEvent = sourceEvents[key];
+                MergeEvent(targetEvent, sourceEvent);
             }
+
+            foreach (var key in newKeys)
+                targetEvents.Add(key, sourceEvents[key]);
+
+            target.Events.Clear();
+            target.Events.AddRange(targetEvents.OrderBy(x => x.Key).Select(x => x.Value));
         }
 
-        private static TraceEventDescriptorViewModel ReadEvent(
-            XElement eventElem, XmlNamespaceManager xnsMgr)
+        private void MergeEvent(
+            TraceEventDescriptorViewModel target,
+            TraceEventDescriptorViewModel source)
         {
-            string symbol = eventElem.Attribute("symbol").AsString();
-            ushort? id = eventElem.Attribute("value").AsUShort();
-            byte version = eventElem.Attribute("version").AsByte().GetValueOrDefault(0);
-            if (id == null)
-                return null;
-
-            return new TraceEventDescriptorViewModel(id.Value, version, symbol ?? $"<id:{id.Value}>");
-        }
-
-        private void AddBinary(object obj)
-        {
+            target.Symbol = target.Symbol ?? source.Symbol;
+            target.Level = target.Level ?? source.Level;
+            target.Channel = target.Channel ?? source.Channel;
+            target.Task = target.Task ?? source.Task;
+            target.Opcode = target.Opcode ?? source.Opcode;
+            target.Keywords = target.Keywords ?? source.Keywords;
         }
 
         public TraceSessionDescriptor GetDescriptor()
@@ -161,46 +226,6 @@
             var descriptor = new TraceSessionDescriptor();
             descriptor.Providers.AddRange(Providers.Select(x => x.ToModel()));
             return descriptor;
-        }
-    }
-
-    public static class XElementExtensions
-    {
-        public static string AsString(this XAttribute attribute)
-        {
-            return attribute?.Value;
-        }
-
-        public static byte? AsByte(this XAttribute attribute)
-        {
-            byte value;
-            if (attribute != null && byte.TryParse(attribute.Value, out value))
-                return value;
-            return null;
-        }
-
-        public static ushort? AsUShort(this XAttribute attribute)
-        {
-            ushort value;
-            if (attribute != null && ushort.TryParse(attribute.Value, out value))
-                return value;
-            return null;
-        }
-
-        public static int? AsInt(this XAttribute attribute)
-        {
-            int value;
-            if (attribute != null && int.TryParse(attribute.Value, out value))
-                return value;
-            return null;
-        }
-
-        public static Guid? AsGuid(this XAttribute attribute)
-        {
-            Guid value;
-            if (attribute != null && Guid.TryParse(attribute.Value, out value))
-                return value;
-            return null;
         }
     }
 }

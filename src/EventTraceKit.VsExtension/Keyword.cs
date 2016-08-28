@@ -7,7 +7,7 @@ namespace EventTraceKit.VsExtension
     [StructLayout(LayoutKind.Sequential)]
     public struct Keyword
         : IEquatable<Keyword>
-            , IComparable<Keyword>
+        , IComparable<Keyword>
     {
         public Keyword(ulong keywordValue)
         {

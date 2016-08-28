@@ -83,5 +83,16 @@
             IEnumerator e = source.GetEnumerator();
             return e.MoveNext();
         }
+
+        public static HashSet<T> ToSet<T>(this IEnumerable<T> collection)
+        {
+            return new HashSet<T>(collection);
+        }
+
+        public static HashSet<T> ToSet<T>(
+            this IEnumerable<T> collection, IEqualityComparer<T> comparer)
+        {
+            return new HashSet<T>(collection, comparer);
+        }
     }
 }

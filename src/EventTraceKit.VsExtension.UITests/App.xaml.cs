@@ -11,6 +11,7 @@
     using System.Xml.Linq;
     using System.Xml.XPath;
     using EventTraceKit.VsExtension.Windows;
+    using Microsoft.Internal.VisualStudio.Shell.Interop;
     using Microsoft.VisualStudio.PlatformUI;
     using Microsoft.VisualStudio.Settings;
     using Microsoft.VisualStudio.Shell;
@@ -27,16 +28,27 @@
 
         public new static App Current => Application.Current as App;
 
-        protected override void OnStartup(StartupEventArgs e)
+        public App()
         {
-            base.OnStartup(e);
-
-            var setGlobalProvider = typeof(ServiceProvider)
-                .GetMethod("SetGlobalProvider", BindingFlags.NonPublic | BindingFlags.Static);
-            setGlobalProvider.Invoke(null, new object[] { CreateServiceProvider() });
+            SetGlobalServiceProvider(CreateServiceProvider());
 
             ServiceProvider.GlobalProvider.GetService(typeof(SVsSettingsManager));
             EnvironmentRenderCapabilities.Current.VisualEffectsAllowed = 1 | 2;
+
+            var key1 = VsResourceKeys.ScrollBarStyleKey;
+            var key2 = VsResourceKeys.ScrollViewerStyleKey;
+        }
+
+        private static void SetGlobalServiceProvider(ServiceProvider serviceProvider)
+        {
+            var setGlobalProvider = typeof(ServiceProvider)
+               .GetMethod("SetGlobalProvider", BindingFlags.NonPublic | BindingFlags.Static);
+            setGlobalProvider.Invoke(null, new object[] { serviceProvider });
+        }
+
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            base.OnStartup(e);
 
             availableThemes.AddRange(FindAvailableThemes());
             TryLoadTheme("VisualStudio.Light");
@@ -46,6 +58,7 @@
         {
             var provider = new ServiceProviderStub();
             provider.AddService<SVsSettingsManager>(new VsSettingsManagerStub());
+            provider.AddService<SVsWindowManager>(new VsWindowManager2Stub());
             return new ServiceProvider(provider);
         }
 
@@ -225,6 +238,19 @@
                 default:
                     return null;
             }
+        }
+    }
+
+    internal class VsWindowManager2Stub : IVsWindowManager2
+    {
+        public void _VtblGap1_3()
+        {
+            throw new NotImplementedException();
+        }
+
+        public object GetResourceKeyReferenceType(object requestedResource)
+        {
+            return requestedResource;
         }
     }
 
@@ -413,5 +439,34 @@
         {
             throw new NotImplementedException();
         }
+    }
+}
+
+namespace Microsoft.Internal.VisualStudio.Shell.Interop
+{
+    using System.Runtime.CompilerServices;
+    using System.Runtime.InteropServices;
+
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [Guid("45652379-D0E3-4EA0-8B60-F2579AA29C93")]
+    [TypeIdentifier]
+    [ComImport]
+    public interface SVsWindowManager
+    {
+    }
+
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    [Guid("D73DC67C-3E91-4073-9A5E-5D09AA74529B")]
+    [TypeIdentifier]
+    [ComImport]
+    public interface IVsWindowManager2
+    {
+        [SpecialName]
+        [MethodImpl(MethodCodeType = MethodCodeType.Runtime)]
+        void _VtblGap1_3();
+
+        [MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime)]
+        [return: MarshalAs(UnmanagedType.IUnknown)]
+        object GetResourceKeyReferenceType([MarshalAs(UnmanagedType.IUnknown), In] object requestedResource);
     }
 }

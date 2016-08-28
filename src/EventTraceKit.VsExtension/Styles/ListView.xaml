@@ -15,10 +15,8 @@
       <Trigger Property="IsSelected" Value="True">
         <!-- A subset of TreeViewColors are used for applying styles to the ListView.  A TreeView
              has a superset of the colors required by a ListView (for expanders). -->
-        <Setter Property="Background"
-                Value="{DynamicResource {x:Static vsp:TreeViewColors.SelectedItemActiveBrushKey}}"/>
-        <Setter Property="Foreground"
-                Value="{DynamicResource {x:Static vsp:TreeViewColors.SelectedItemActiveTextBrushKey}}"/>
+        <Setter Property="Background" Value="{DynamicResource {x:Static vsp:TreeViewColors.SelectedItemActiveBrushKey}}"/>
+        <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:TreeViewColors.SelectedItemActiveTextBrushKey}}"/>
       </Trigger>
 
       <!-- Selected but not active (control focused) -->
@@ -27,10 +25,8 @@
           <Condition Property="IsSelected" Value="True"/>
           <Condition Property="Selector.IsSelectionActive" Value="False"/>
         </MultiTrigger.Conditions>
-        <Setter Property="Background"
-                Value="{DynamicResource {x:Static vsp:TreeViewColors.SelectedItemInactiveBrushKey}}"/>
-        <Setter Property="Foreground"
-                Value="{DynamicResource {x:Static vsp:TreeViewColors.SelectedItemInactiveTextBrushKey}}"/>
+        <Setter Property="Background" Value="{DynamicResource {x:Static vsp:TreeViewColors.SelectedItemInactiveBrushKey}}"/>
+        <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:TreeViewColors.SelectedItemInactiveTextBrushKey}}"/>
       </MultiTrigger>
     </ControlTemplate.Triggers>
   </ControlTemplate>
@@ -77,21 +73,19 @@
       <!-- Hover -->
       <Trigger Property="IsMouseOver" Value="true">
         <Setter Property="Background" Value="{DynamicResource {x:Static vsp:HeaderColors.MouseOverBrushKey}}"/>
-        <Setter Property="Foreground"
-                Value="{DynamicResource {x:Static vsp:HeaderColors.MouseOverTextBrushKey}}"/>
+        <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:HeaderColors.MouseOverTextBrushKey}}"/>
       </Trigger>
 
       <!-- Clicked (Mouse down) -->
       <Trigger Property="IsPressed" Value="true">
         <Setter Property="Background" Value="{DynamicResource {x:Static vsp:HeaderColors.MouseDownBrushKey}}"/>
-        <Setter Property="Foreground"
-                Value="{DynamicResource {x:Static vsp:HeaderColors.MouseDownTextBrushKey}}"/>
+        <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:HeaderColors.MouseDownTextBrushKey}}"/>
       </Trigger>
     </ControlTemplate.Triggers>
   </ControlTemplate>
 
   <!-- ListView Grid header glyph style -->
-  <Style TargetType="{x:Type Path}">
+  <!--<Style TargetType="{x:Type Path}">
     <Setter Property="Fill" Value="{DynamicResource {x:Static vsp:HeaderColors.GlyphBrushKey}}"/>
     <Style.Triggers>
       <DataTrigger
@@ -105,7 +99,7 @@
         <Setter Property="Fill" Value="{DynamicResource {x:Static vsp:HeaderColors.MouseDownGlyphBrushKey}}"/>
       </DataTrigger>
     </Style.Triggers>
-  </Style>
+  </Style>-->
 
   <!-- ListView Style -->
   <Style TargetType="{x:Type ListView}">

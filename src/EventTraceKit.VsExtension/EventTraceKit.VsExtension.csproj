@@ -151,6 +151,10 @@
       <HintPath>..\packages\Microsoft.VisualStudio.Validation.14.1.111\lib\net45\Microsoft.VisualStudio.Validation.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.Windows, Version=1.0.6084.34995, Culture=neutral, PublicKeyToken=de91bd32a6ee7004, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Windows.1.0.0\lib\Microsoft.Windows.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="PresentationFramework.Aero2" />
@@ -171,7 +175,16 @@
     <Compile Include="Collections\Extensions.cs" />
     <Compile Include="HdvColumnViewModelPreset.cs" />
     <Compile Include="HdvViewModel.cs" />
+    <Compile Include="TraceEventDescriptorViewModel.cs" />
+    <Compile Include="TraceLogStatsModel.cs" />
+    <Compile Include="Windows\KeyDownEventTrigger.cs" />
+    <Compile Include="SimpleInstrumentationManifestParser.cs" />
     <Compile Include="SolutionFileGatherer.cs" />
+    <Compile Include="ThemedDialogWindow.cs" />
+    <Compile Include="Windows\ToggleSelectOnSpace.cs" />
+    <Compile Include="TraceLogWindowViewModel.cs" />
+    <Compile Include="TraceProviderDescriptorViewModel.cs" />
+    <Compile Include="Windows\HexNumberConverter.cs" />
     <Compile Include="Windows\MenuPopupPositionerExtension.cs" />
     <Compile Include="Controls\VsMenuScrollViewer.cs" />
     <Compile Include="Windows\ColorExtensions.cs" />
@@ -263,7 +276,9 @@
     <Compile Include="ViewModel.cs" />
     <Compile Include="WindowList.cs" />
     <Compile Include="WindowStatus.cs" />
-    <Compile Include="TraceLogWindowViewModel.cs" />
+    <Compile Include="Stuff.cs" />
+    <Compile Include="Windows\ValueConverter.cs" />
+    <Compile Include="XElementExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources.resx">
@@ -304,7 +319,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Styles\DataGridStyle.xaml">
+    <Page Include="Styles\DataGrid.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -312,7 +327,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Styles\ListViewStyle.xaml">
+    <Page Include="Styles\ListView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -384,6 +399,10 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Controls\Primitives\Split.cur" />
+    <Content Include="BindingPaths.pkgdef">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="Resources\ToolWindow1Command.png" />
     <Content Include="Resources\ToolWindow1Package.ico" />
   </ItemGroup>

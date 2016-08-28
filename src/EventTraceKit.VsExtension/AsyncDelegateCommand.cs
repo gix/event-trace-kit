@@ -15,6 +15,11 @@ namespace EventTraceKit.VsExtension
         {
         }
 
+        public AsyncDelegateCommand(Func<Task> execute)
+            : this(async obj => await execute(), null)
+        {
+        }
+
         public AsyncDelegateCommand(
             Func<object, Task> execute, Predicate<object> canExecute)
         {
