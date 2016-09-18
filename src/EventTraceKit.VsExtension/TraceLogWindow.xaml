@@ -9,7 +9,7 @@
   xmlns:vsfx="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.14.0"
   xmlns:etkvs="clr-namespace:EventTraceKit.VsExtension"
   xmlns:Controls="clr-namespace:EventTraceKit.VsExtension.Controls"
-  x:Class="EventTraceKit.VsExtension.TraceLogWindowControl"
+  x:Class="EventTraceKit.VsExtension.TraceLogWindow"
   UseLayoutRounding="True"
   Background="{DynamicResource {x:Static vsfx:VsBrushes.WindowKey}}"
   Foreground="{DynamicResource {x:Static vsfx:VsBrushes.WindowTextKey}}"

@@ -171,11 +171,12 @@
           <ColumnDefinition MinWidth="50"/>
         </Grid.ColumnDefinitions>
         <ListBox x:Name="Providers" ItemsSource="{Binding Providers}"
-                 SelectionMode="Single" BorderThickness="1">
+                 SelectionMode="Single" BorderThickness="1"
+                 SelectedValue="{Binding SelectedProvider}">
           <i:Interaction.Triggers>
             <etkw:KeyDownEventTrigger Key="Delete" Modifiers="{x:Static ModifierKeys.None}">
               <i:InvokeCommandAction Command="{Binding RemoveProviderCommand}"
-                                     CommandParameter="{Binding SelectedItem, ElementName=Providers}"/>
+                                     CommandParameter="{Binding SelectedValue, ElementName=Providers}"/>
             </etkw:KeyDownEventTrigger>
           </i:Interaction.Triggers>
           <ListBox.ItemTemplate>
@@ -188,7 +189,7 @@
           </ListBox.ItemTemplate>
         </ListBox>
         <GridSplitter Grid.Column="1" Width="11" HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
-        <ContentPresenter Grid.Column="2" Content="{Binding SelectedItem, ElementName=Providers}"/>
+        <ContentPresenter Grid.Column="2" Content="{Binding SelectedProvider}"/>
       </Grid>
     </DockPanel>
     <StackPanel Grid.Row="1" Margin="0,8,0,0" Orientation="Horizontal" HorizontalAlignment="Right">

@@ -3,13 +3,10 @@
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Windows.Input;
     using EventTraceKit.VsExtension.Collections;
-    using Microsoft.Internal.VisualStudio.PlatformUI;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
     using Microsoft.Win32;
@@ -21,6 +18,7 @@
     {
         private readonly ISolutionFileGatherer gatherer;
         private bool? dialogResult;
+        private TraceProviderDescriptorViewModel selectedProvider;
 
         public TraceSessionSettingsViewModel(ISolutionFileGatherer gatherer)
         {
@@ -45,6 +43,12 @@
         public ICommand AddManifestCommand { get; }
         public ObservableCollection<TraceProviderDescriptorViewModel> Providers { get; }
 
+        public TraceProviderDescriptorViewModel SelectedProvider
+        {
+            get { return selectedProvider; }
+            set { SetProperty(ref selectedProvider, value); }
+        }
+
         private Task Accept()
         {
             DialogResult = true;
@@ -55,6 +59,7 @@
         {
             var provider = new TraceProviderDescriptorViewModel(Guid.Empty, null);
             Providers.Add(provider);
+            SelectedProvider = provider;
             return Task.CompletedTask;
         }
 

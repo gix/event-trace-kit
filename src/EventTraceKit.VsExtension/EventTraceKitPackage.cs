@@ -10,45 +10,6 @@
     using Microsoft.VisualStudio;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
-    using Microsoft.Win32;
-
-    //[PackageRegistration(UseManagedResourcesOnly = true)]
-    //[InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)]
-    //[ProvideMenuResource("Menus.ctmenu", 1)]
-    //[ProvideToolWindow(typeof(TraceLogWindow))]
-    //[Guid(PackageGuidString)]
-    //[SuppressMessage(
-    //    "StyleCop.CSharp.DocumentationRules",
-    //    "SA1650:ElementDocumentationMustBeSpelledCorrectly",
-    //    Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
-    //public sealed class EventTraceKitPackage : Package
-    //{
-    //    /// <summary>
-    //    /// ToolWindow1Package GUID string.
-    //    /// </summary>
-    //    public const string PackageGuidString = "4cb5ce07-d27f-4321-8705-dd4d1927d67e";
-
-    //    /// <summary>
-    //    ///   Initializes a new instance of the <see cref="TraceLogWindow"/> class.
-    //    /// </summary>
-    //    public EventTraceKitPackage()
-    //    {
-    //        // Inside this method you can place any initialization code that does not require
-    //        // any Visual Studio service because at this point the package object is created but
-    //        // not sited yet inside Visual Studio environment. The place to do all the other
-    //        // initialization is the Initialize method.
-    //    }
-
-    //    /// <summary>
-    //    /// Initialization of the package; this method is called right after the package is sited, so this is the place
-    //    /// where you can put all the initialization code that rely on services provided by VisualStudio.
-    //    /// </summary>
-    //    protected override void Initialize()
-    //    {
-    //        TraceLogWindowCommand.Initialize(this);
-    //        base.Initialize();
-    //    }
-    //}
 
     /// <summary>
     /// The Package class is responsible for the following:
@@ -93,34 +54,24 @@
     /// this means that it is possible to cause the window to be displayed simply by
     /// creating a solution/project.
     /// </summary>
-    [ProvideToolWindow(
-        typeof(PersistedWindowPane), Style = VsDockStyle.Tabbed,
-        Window = "3ae79031-e1bc-11d0-8f78-00a0c9110057")]
-    [ProvideToolWindow(
-        typeof(DynamicWindowPane), PositionX = 250, PositionY = 250,
-        Width = 160, Height = 180, Transient = true)]
-    [ProvideToolWindowVisibility(
-        typeof(DynamicWindowPane), /*UICONTEXT_SolutionExists*/"f1536ef8-92ec-443c-9ed7-fdadf150da82")]
-    [ProvideToolWindow(typeof(TraceLogWindow))]
+    [ProvideToolWindow(typeof(TraceLogPane))]
     [ProvideMenuResource(1000, 1)]
-    //[ProvideMenuResource("Menus.ctmenu", 1)]
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)]
     [Guid(PackageGuidString)]
-    [ProvideProfile(typeof(PersistCurrentDesign), "MyDesigner", "CurrentDesign", 1004, 1005, false)]
+    [ProvideProfile(typeof(EventTraceKitSettings), "EventTraceKit", "General", 1000, 1001, false)]
     [SuppressMessage(
         "StyleCop.CSharp.DocumentationRules",
         "SA1650:ElementDocumentationMustBeSpelledCorrectly",
         Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
-    public class EventTraceKitPackage : Package, IOperationalModeProvider
+    public class EventTraceKitPackage : Package
     {
         public const string PackageGuidString = "7867DA46-69A8-40D7-8B8F-92B0DE8084D8";
 
-        // Cache the Menu Command Service since we will use it multiple times
         private OleMenuCommandService menuService;
-        private TraceLogWindow traceLog;
-        private DTE dte;
-        private DebuggerEvents debuggerEvents;
+        private IOperationalModeProvider operationalModeProvider;
+
+        private Lazy<TraceLogPane> traceLogWindow = new Lazy<TraceLogPane>(() => null);
 
         /// <summary>
         /// Initialization of the package; this is the place where you can put all the initialization
@@ -132,75 +83,18 @@
 
             AddMenuCommandHandlers();
 
-            dte = (DTE)GetGlobalService(typeof(SDTE));
-            debuggerEvents = dte.Events.DebuggerEvents;
-            debuggerEvents.OnEnterRunMode += DebuggerEventsOnEnterRunMode;
-            debuggerEvents.OnEnterDesignMode += DebuggerEventsOnEnterDesignMode;
-            debuggerEvents.OnEnterBreakMode += DebuggerEventsOnEnterBreakMode;
-
-            switch (dte.Mode) {
-                case vsIDEMode.vsIDEModeDesign:
-                    currentOperationalMode = VsOperationalMode.Design;
-                    break;
-                case vsIDEMode.vsIDEModeDebug:
-                    currentOperationalMode = VsOperationalMode.Debug;
-                    break;
-            }
+            var dte = (DTE)GetGlobalService(typeof(SDTE));
+            operationalModeProvider = new DteOperationalModeProvider(dte, this);
+            traceLogWindow = new Lazy<TraceLogPane>(() => new TraceLogPane(operationalModeProvider));
         }
 
         private void AddMenuCommandHandlers()
         {
-            var id = new CommandID(Guids.guidClientCmdSet, PkgCmdId.cmdidPersistedWindow);
-            DefineCommandHandler(ShowPersistedWindow, id);
-
-            id = new CommandID(Guids.guidClientCmdSet, PkgCmdId.cmdidUiEventsWindow);
-            DefineCommandHandler(ShowDynamicWindow, id);
-
-            id = new CommandID(Guids.TraceLogCmdSet, PkgCmdId.cmdidTraceLog);
+            var id = new CommandID(Guids.TraceLogCmdSet, PkgCmdId.cmdidTraceLog);
             DefineCommandHandler(ShowTraceLogWindow, id);
         }
 
-        private VsOperationalMode currentOperationalMode;
-        private event EventHandler<VsOperationalMode> OperationalModeChanged;
-
-        VsOperationalMode IOperationalModeProvider.CurrentMode => currentOperationalMode;
-
-        event EventHandler<VsOperationalMode> IOperationalModeProvider.OperationalModeChanged
-        {
-            add { OperationalModeChanged += value; }
-            remove { OperationalModeChanged -= value; }
-        }
-
-        private void DebuggerEventsOnEnterRunMode(dbgEventReason reason)
-        {
-            FireModeChanged(VsOperationalMode.Debug);
-        }
-
-        private void DebuggerEventsOnEnterDesignMode(dbgEventReason reason)
-        {
-            FireModeChanged(VsOperationalMode.Design);
-        }
-
-        private void DebuggerEventsOnEnterBreakMode(
-            dbgEventReason reason, ref dbgExecutionAction executionAction)
-        {
-            FireModeChanged(VsOperationalMode.Debug);
-        }
-
-        private void FireModeChanged(VsOperationalMode newMode)
-        {
-            OutputString(
-                VSConstants.OutputWindowPaneGuid.DebugPane_guid,
-                $"{currentOperationalMode} -> {newMode}");
-
-            if (currentOperationalMode == newMode)
-                return;
-
-            currentOperationalMode = newMode;
-            OperationalModeChanged?.Invoke(this, newMode);
-        }
-
-        private void OutputString(Guid guidPane, string text)
+        internal void OutputString(Guid paneId, string text)
         {
             const int DO_NOT_CLEAR_WITH_SOLUTION = 0;
             const int VISIBLE = 1;
@@ -209,17 +103,15 @@
             if (outputWindow == null)
                 return;
 
-            int hr;
-
             // The General pane is not created by default. We must force its creation
-            if (guidPane == VSConstants.OutputWindowPaneGuid.GeneralPane_guid) {
-                hr = outputWindow.CreatePane(guidPane, "General", VISIBLE, DO_NOT_CLEAR_WITH_SOLUTION);
-                ErrorHandler.ThrowOnFailure(hr);
+            if (paneId == VSConstants.OutputWindowPaneGuid.GeneralPane_guid) {
+                ErrorHandler.ThrowOnFailure(
+                    outputWindow.CreatePane(paneId, "General", VISIBLE, DO_NOT_CLEAR_WITH_SOLUTION));
             }
 
             IVsOutputWindowPane outputWindowPane;
-            hr = outputWindow.GetPane(guidPane, out outputWindowPane);
-            ErrorHandler.ThrowOnFailure(hr);
+            ErrorHandler.ThrowOnFailure(
+                outputWindow.GetPane(paneId, out outputWindowPane));
 
             outputWindowPane?.OutputString(text);
         }
@@ -253,8 +145,8 @@
 
         protected override WindowPane InstantiateToolWindow(Type toolWindowType)
         {
-            if (toolWindowType == typeof(TraceLogWindow))
-                return TraceLog;
+            if (toolWindowType == typeof(TraceLogPane))
+                return traceLogWindow.Value;
             return base.InstantiateToolWindow(toolWindowType);
         }
 
@@ -275,60 +167,10 @@
             return resourceValue;
         }
 
-        /// <summary>
-        /// Event handler for our menu item.
-        /// This results in the tool window being shown.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="arguments"></param>
-        private void ShowPersistedWindow(object sender, EventArgs arguments)
-        {
-            // Get the 1 (index 0) and only instance of our tool window (if it does not already exist it will get created)
-            ToolWindowPane pane = FindToolWindow(typeof(PersistedWindowPane), 0, true);
-            if (pane == null)
-                throw new COMException(GetResourceString("@101"));
-            IVsWindowFrame frame = pane.Frame as IVsWindowFrame;
-            if (frame == null)
-                throw new COMException(GetResourceString("@102"));
-            // Bring the tool window to the front and give it focus
-            ErrorHandler.ThrowOnFailure(frame.Show());
-        }
-
-        /// <summary>
-        /// Event handler for our menu item.
-        /// This result in the tool window being shown.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="arguments"></param>
-        private void ShowDynamicWindow(object sender, EventArgs arguments)
-        {
-            // Get the one (index 0) and only instance of our tool window (if it does not already exist it will get created)
-            ToolWindowPane pane = FindToolWindow(typeof(DynamicWindowPane), 0, true);
-            if (pane == null)
-                throw new COMException(GetResourceString("@101"));
-            IVsWindowFrame frame = pane.Frame as IVsWindowFrame;
-            if (frame == null)
-                throw new COMException(GetResourceString("@102"));
-            // Bring the tool window to the front and give it focus
-            ErrorHandler.ThrowOnFailure(frame.Show());
-        }
-
         private void ShowTraceLogWindow(object sender, EventArgs e)
         {
-            ShowToolWindow<TraceLogWindow>();
+            this.ShowToolWindow<TraceLogPane>();
         }
-
-        private void ShowToolWindow<T>() where T : ToolWindowPane
-        {
-            ToolWindowPane window = FindToolWindow(typeof(T), 0, true);
-            if (window?.Frame == null)
-                throw new NotSupportedException("Cannot create tool window");
-
-            IVsWindowFrame windowFrame = (IVsWindowFrame)window.Frame;
-            ErrorHandler.ThrowOnFailure(windowFrame.Show());
-        }
-
-        internal TraceLogWindow TraceLog => traceLog ?? (traceLog = new TraceLogWindow(this));
 
         protected override void OnLoadOptions(string key, Stream stream)
         {
@@ -341,7 +183,7 @@
 
     [ComVisible(true)]
     [Guid("9619B7BF-69E2-4F5F-B95C-F2E6EDA02205")]
-    public class UserOptions : Component, IProfileManager
+    public class EventTraceKitSettings : Component, IProfileManager
     {
         public void LoadSettingsFromStorage()
         {
@@ -364,29 +206,7 @@
         }
     }
 
-    public interface IOperationalModeProvider
-    {
-        VsOperationalMode CurrentMode { get; }
-        event EventHandler<VsOperationalMode> OperationalModeChanged;
-    }
-
-    public enum VsOperationalMode
-    {
-        Design = 0,
-        Debug = 1,
-    }
-
-    internal class VsOperationalModeChangedEventArgs : EventArgs
-    {
-        public VsOperationalModeChangedEventArgs(VsOperationalMode newMode)
-        {
-            NewMode = newMode;
-        }
-
-        public VsOperationalMode NewMode { get; }
-    }
-
-    [Guid("BF25126E-595C-42FC-BCF7-2DBE958E0C77")]
+    [Guid("EB043E0E-2F43-4369-A5B9-670C03DD7088")]
     internal class PersistCurrentDesign : Component, IProfileManager
     {
         public void SaveSettingsToXml(IVsSettingsWriter writer)

@@ -8,8 +8,6 @@ namespace EventTraceKit.VsExtension
     /// </summary>
     internal static class Guids
     {
-        // Now define the list of guids as public static members.
-        public static readonly Guid guidClientCmdSet = new Guid("A5BCFF42-2F6E-465A-9484-9B4FC3C8B2AC");
         public static readonly Guid TraceLogCmdSet = new Guid("46A772AB-D554-45B9-8DE2-EF68FCEF6732");
 
         /// <summary>

@@ -262,7 +262,7 @@ namespace EventTraceKit.VsExtension
             commandService.AddCommand(
                 new OleMenuCommand(OnToggleAutoLog, null, OnQueryToggleAutoLog, id));
 
-            id = new CommandID(Guids.TraceLogCmdSet, PkgCmdId.cmdidConfigureLog);
+            id = new CommandID(Guids.TraceLogCmdSet, PkgCmdId.cmdidConfigureSession);
             commandService.AddCommand(new OleMenuCommand(OnConfigureLog, id));
         }
 

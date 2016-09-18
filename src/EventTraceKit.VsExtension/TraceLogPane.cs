@@ -8,25 +8,20 @@
     using Microsoft.VisualStudio.Shell.Interop;
 
     [Guid("D7E4C7D7-6A52-4586-9D42-D1AD0A407E4F")]
-    public class TraceLogWindow : ToolWindowPane
+    public class TraceLogPane : ToolWindowPane
     {
-        private readonly EventTraceKitPackage package;
+        private readonly IOperationalModeProvider operationalModeProvider;
 
         /// <summary>
-        ///   Initializes a new instance of the <see cref="TraceLogWindow"/>
+        ///   Initializes a new instance of the <see cref="TraceLogPane"/>
         ///   class.
         /// </summary>
-        public TraceLogWindow(EventTraceKitPackage package)
+        public TraceLogPane(IOperationalModeProvider operationalModeProvider)
         {
-            this.package = package;
+            this.operationalModeProvider = operationalModeProvider;
 
             Caption = "Trace Log";
             ToolBar = new CommandID(Guids.TraceLogCmdSet, PkgCmdId.TraceLogToolbar);
-        }
-
-        public TraceLogWindow()
-            : this(null)
-        {
         }
 
         protected override void Initialize()
@@ -34,9 +29,10 @@
             base.Initialize();
 
             var dte = (DTE)GetService(typeof(DTE));
-            var traceLog = new TraceLogWindowViewModel(package, () => new SolutionFileGatherer(dte));
+            var traceLog = new TraceLogWindowViewModel(
+                operationalModeProvider, () => new SolutionFileGatherer(dte));
 
-            Content = new TraceLogWindowControl {
+            Content = new TraceLogWindow {
                 DataContext = traceLog
             };
 
@@ -57,17 +53,17 @@
 
         public override void ClearSearch()
         {
-            var control = (TraceLogWindowControl)Content;
+            var control = (TraceLogWindow)Content;
             //control.SearchResultsTextBox.Text = control.SearchContent;
         }
 
         private class SearchTask : VsSearchTask
         {
-            private readonly TraceLogWindow toolwindow;
+            private readonly TraceLogPane toolwindow;
 
             public SearchTask(
                 uint dwCookie, IVsSearchQuery pSearchQuery,
-                IVsSearchCallback pSearchCallback, TraceLogWindow toolwindow)
+                IVsSearchCallback pSearchCallback, TraceLogPane toolwindow)
                 : base(dwCookie, pSearchQuery, pSearchCallback)
             {
                 this.toolwindow = toolwindow;
@@ -77,7 +73,7 @@
             {
                 // Use the original content of the text box as the target of the search. 
                 var separator = new[] { Environment.NewLine };
-                var control = (TraceLogWindowControl)toolwindow.Content;
+                var control = (TraceLogWindow)toolwindow.Content;
 
                 SearchResults = 0;
 

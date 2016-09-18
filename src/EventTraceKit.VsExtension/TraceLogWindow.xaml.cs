@@ -6,13 +6,13 @@
     using EventTraceKit.VsExtension.Windows;
     using Microsoft.VisualStudio.PlatformUI;
 
-    /// <summary>Interaction logic for TraceLogWindowControl.</summary>
-    public partial class TraceLogWindowControl
+    /// <summary>Interaction logic for TraceLogWindow.</summary>
+    public partial class TraceLogWindow
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="TraceLogWindowControl"/> class.
+        /// Initializes a new instance of the <see cref="TraceLogWindow"/> class.
         /// </summary>
-        public TraceLogWindowControl()
+        public TraceLogWindow()
         {
             InitializeComponent();
             UpdateThemeResources();

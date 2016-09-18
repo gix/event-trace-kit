@@ -24,8 +24,6 @@ namespace EventTraceKit.VsExtension
         private bool includeStackTrace;
         private bool filterEvents;
 
-        private string manifestOrProvider;
-
         public TraceProviderDescriptorViewModel(Guid id, string name)
         {
             ProcessIds = new ObservableCollection<uint>();
