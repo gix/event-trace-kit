@@ -53,7 +53,7 @@ namespace EventTraceKit.VsExtension
         private void OnRowCountChanged(object sender, EventArgs eventArgs)
         {
             rowCountChangedThrottler.Run(
-                () => workManager.UIThread.Post(() => RaiseUpdate(false)));
+                () => workManager.UIThreadTaskFactory.StartNew(() => RaiseUpdate(false)));
         }
 
         public AsyncDataGridViewModel GridViewModel { get; }
@@ -217,13 +217,12 @@ namespace EventTraceKit.VsExtension
             DataColumnViewInfo[] columnViewInfos = GetDataColumnViewInfosFromPreset(preset).ToArray();
             WaitForReadOperationToComplete();
 
-            WorkManager.BackgroundThread.Post(delegate {
+            WorkManager.BackgroundTaskFactory.StartNew(delegate {
                 dataView.BeginDataUpdate();
                 dataView.ApplyColumnView(columnViewInfos);
                 //this.columnViewReady = true;
                 dataView.EndDataUpdate();
-                WorkManager.UIThread.Post(callbackOnComplete);
-            });
+            }).ContinueWith(t => callbackOnComplete(), WorkManager.UIThreadTaskScheduler);
         }
 
         private IEnumerable<DataColumnViewInfo> GetDataColumnViewInfosFromPreset(
@@ -298,7 +297,7 @@ namespace EventTraceKit.VsExtension
                 ExceptionUtils.ThrowInvalidOperationException(
                     "The system is ready, you aren't continuing an async operation?");
             this.refreshViewModelFromModelOnReady |= refreshViewModelFromModelOnReady;
-            WorkManager.BackgroundThread.Post(callback);
+            WorkManager.BackgroundTaskFactory.StartNew(callback);
         }
 
         private void CompleteAsyncOrSyncUpdate()
@@ -363,12 +362,11 @@ namespace EventTraceKit.VsExtension
 
         internal CellValue GetCellValue(int rowIndex, int visibleColumnIndex)
         {
-            CellValue result = null;
-            workManager.BackgroundThread.Send(() => {
-                result = dataView.GetCellValue(rowIndex, visibleColumnIndex);
-                result.PrecomputeString();
-            });
-            return result;
+            return workManager.BackgroundTaskFactory.StartNew(() => {
+                var value = dataView.GetCellValue(rowIndex, visibleColumnIndex);
+                value.PrecomputeString();
+                return value;
+            }).Result;
         }
 
         internal HdvViewModelPreset CreatePresetFromUIThatHasBeenModified()
@@ -403,11 +401,10 @@ namespace EventTraceKit.VsExtension
             columnsViewModel?.OnUIPropertyChanged(column);
         }
 
-        internal void PerformAsyncReadOperation(
-            Action<CancellationToken> callback)
+        internal void PerformAsyncReadOperation(Action<CancellationToken> callback)
         {
             if (TryBeginReadOperation()) {
-                WorkManager.BackgroundThread.Post(delegate {
+                WorkManager.BackgroundTaskFactory.StartNew(delegate {
                     callback(readCancellationTokenSource.Token);
                     Thread.Sleep(TimeSpan.FromSeconds(1));
                     CompleteAsyncRead();
@@ -415,26 +412,27 @@ namespace EventTraceKit.VsExtension
             } else {
                 var cancelledToken = new CancellationTokenSource();
                 cancelledToken.Cancel();
-                WorkManager.BackgroundThread.Post(() => callback(cancelledToken.Token));
+                WorkManager.BackgroundTaskFactory.StartNew(() => callback(cancelledToken.Token));
             }
         }
 
         internal bool TryBeginReadOperation()
         {
             VerifyAccess();
-            if (!allowBackgroundThreads) {
+            if (!allowBackgroundThreads)
                 ExceptionUtils.ThrowInvalidOperationException("Cannot perform background operation in this state.");
-            }
+
             lock (asyncReadWorkQueueLock) {
                 if (countReadOperationInProgress == 0) {
-                    if (readCancellationTokenSource != null) {
+                    if (readCancellationTokenSource != null)
                         ExceptionUtils.ThrowInvalidOperationException("The async read count is out of sync with the token source");
-                    }
+
                     readCancellationTokenSource = new CancellationTokenSource();
                     asyncReadQueueComplete.Reset();
                 }
                 countReadOperationInProgress++;
             }
+
             return true;
         }
 
@@ -442,13 +440,13 @@ namespace EventTraceKit.VsExtension
 
         internal void CompleteAsyncRead()
         {
-            if (WorkManager.UIThread.CheckAccess()) {
-                ExceptionUtils.ThrowInternalErrorException("Must invoke this method not from the UI thread");
-            }
+            if (WorkManager.UIThread.CheckAccess())
+                ExceptionUtils.ThrowInternalErrorException("Must not invoke this method from the UI thread");
+
             lock (asyncReadWorkQueueLock) {
-                if (countReadOperationInProgress == 0) {
+                if (countReadOperationInProgress == 0)
                     ExceptionUtils.ThrowInternalErrorException("There was no read operation to complete.");
-                }
+
                 countReadOperationInProgress--;
                 if (countReadOperationInProgress == 0) {
                     readCancellationTokenSource.Dispose();
@@ -456,6 +454,13 @@ namespace EventTraceKit.VsExtension
                     asyncReadQueueComplete.Set();
                 }
             }
+        }
+
+        internal object DataValidityToken => Hdv.DataValidityToken;
+
+        public bool IsValidDataValidityToken(object dataValidityToken)
+        {
+            return Hdv.IsValidDataValidityToken(dataValidityToken);
         }
     }
 }

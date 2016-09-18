@@ -308,6 +308,8 @@ namespace EventTraceKit.VsExtension.Controls
         public static readonly DependencyProperty ColumnNameProperty =
             ColumnNamePropertyKey.DependencyProperty;
 
+        private object cachedHdvValidityToken;
+
         /// <summary>
         ///   Gets or sets the column name.
         /// </summary>
@@ -395,18 +397,15 @@ namespace EventTraceKit.VsExtension.Controls
         private void ClearCachedRows()
         {
             Array.Clear(cachedRowValues, 0, cachedRowValues.Length);
-            //this.cachedHdvValidityToken = this.hdvViewModel.DataValidityToken;
-            //this.cachedColumnValidityToken = this.ColumnModel.Column.DataValidityToken;
+            cachedHdvValidityToken = hdv.DataValidityToken;
         }
 
         private int GetCacheIndex(int rowIndex)
         {
             int offset = rowIndex - startCacheRowValueIndex;
             if (rowIndex >= startCacheRowValueIndex &&
-                offset < cachedRowValues.Length // &&
-                                                //(this.hdvViewModel.IsValidDataValidityToken(this.cachedHdvValidityToken) &&
-                                                //(this.cachedColumnValidityToken == this.ColumnModel.Column.DataValidityToken))
-                )
+                offset < cachedRowValues.Length &&
+                hdv.IsValidDataValidityToken(cachedHdvValidityToken))
                 return offset;
 
             return -1;

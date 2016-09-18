@@ -3,13 +3,12 @@ namespace EventTraceKit.VsExtension
     using System;
     using System.Collections.Generic;
     using System.Globalization;
-    using System.Linq;
     using System.Security.Principal;
-    using System.Text;
+    using System.Threading;
     using System.Windows;
+    using Collections;
     using EventTraceKit.VsExtension.Controls;
     using EventTraceKit.VsExtension.Windows;
-    using Microsoft.VisualStudio.Shell.Interop;
 
     public sealed class GenericEventsViewModelSource
     {
@@ -29,6 +28,7 @@ namespace EventTraceKit.VsExtension
         private readonly HdvColumnViewModelPreset eventNamePreset;
         private readonly HdvColumnViewModelPreset messagePreset;
         private readonly HdvColumnViewModelPreset eventTypePreset;
+        private readonly HdvColumnViewModelPreset symbolPreset;
         private readonly HdvColumnViewModelPreset cpuPreset;
         private readonly HdvColumnViewModelPreset processIdPreset;
         private readonly HdvColumnViewModelPreset threadIdPreset;
@@ -39,7 +39,8 @@ namespace EventTraceKit.VsExtension
         private readonly HdvColumnViewModelPreset sessionIdPreset;
         private readonly HdvColumnViewModelPreset eventKeyPreset;
         private readonly HdvColumnViewModelPreset timePointGeneratorPreset;
-        private readonly HdvColumnViewModelPreset datetimeGeneratorPreset;
+        private readonly HdvColumnViewModelPreset timeAbsoluteGeneratorPreset;
+        private readonly HdvColumnViewModelPreset timeRelativeGeneratorPreset;
         private readonly HdvColumnViewModelPreset decodingSourcePreset;
         private readonly HdvColumnViewModelPreset modernProcessDataPreset;
         private readonly HdvColumnViewModelPreset processNamePreset;
@@ -61,14 +62,14 @@ namespace EventTraceKit.VsExtension
                     Id = new Guid("934D2438-65F3-4AE9-8FEA-94B81AA5A4A6"),
                     Name = "Provider Name",
                     IsVisible = true,
-                    Width = 200
+                    Width = 150
                 }.EnsureFrozen();
             idPreset =
                 new HdvColumnViewModelPreset {
                     Id = new Guid("0FE03A19-FBCB-4514-9441-2D0B1AB5E2E1"),
                     Name = "Id",
-                    IsVisible = false,
-                    Width = 80
+                    IsVisible = true,
+                    Width = 50
                 }.EnsureFrozen();
             versionPreset =
                 new HdvColumnViewModelPreset {
@@ -147,13 +148,13 @@ namespace EventTraceKit.VsExtension
                     Id = new Guid("89F731F6-D4D2-40E8-9615-6EB5A5A68A75"),
                     Name = "Message",
                     IsVisible = true,
-                    Width = 100
+                    Width = 500
                 }.EnsureFrozen();
             eventNamePreset =
                 new HdvColumnViewModelPreset {
                     Id = new Guid("B82277B9-7066-4938-A959-EABF0C689087"),
                     Name = "Event Name",
-                    IsVisible = true,
+                    IsVisible = false,
                     Width = 100
                 }.EnsureFrozen();
             eventTypePreset =
@@ -163,11 +164,18 @@ namespace EventTraceKit.VsExtension
                     IsVisible = false,
                     Width = 100
                 }.EnsureFrozen();
+            symbolPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("79423887-739E-4DFF-9045-3DCF243E2922"),
+                    Name = "Symbol",
+                    IsVisible = false,
+                    Width = 100
+                }.EnsureFrozen();
             cpuPreset =
                 new HdvColumnViewModelPreset {
                     Id = new Guid("452A05E3-A1C0-4686-BB6B-C39AFF2F24BE"),
-                    Name = "Cpu",
-                    IsVisible = true,
+                    Name = "CPU",
+                    IsVisible = false,
                     Width = 30
                 }.EnsureFrozen();
             threadIdPreset =
@@ -175,14 +183,14 @@ namespace EventTraceKit.VsExtension
                     Id = new Guid("6BEB4F24-53DC-4A9D-8EEA-ED8F69990349"),
                     Name = "ThreadId",
                     IsVisible = true,
-                    Width = 50
+                    Width = 40
                 }.EnsureFrozen();
             processIdPreset =
                 new HdvColumnViewModelPreset {
                     Id = new Guid("7600E8FD-D7C2-4BA4-9DE4-AADE5230DC53"),
                     Name = "ProcessId",
                     IsVisible = true,
-                    Width = 50,
+                    Width = 40,
                     HelpText = "(0 = PID Not Found)"
                 }.EnsureFrozen();
             userDataLengthPreset =
@@ -230,17 +238,27 @@ namespace EventTraceKit.VsExtension
             timePointGeneratorPreset =
                 new HdvColumnViewModelPreset {
                     Id = new Guid("9C75AA69-046E-42AE-B594-B4AD24335A0A"),
-                    Name = "Time",
-                    IsVisible = true,
-                    Width = 80,
+                    Name = "Time (Raw)",
+                    IsVisible = false,
+                    Width = 145,
                     TextAlignment = TextAlignment.Right,
                     CellFormat = TimePointFormatter.FormatSecondsGrouped
                 }.EnsureFrozen();
-            datetimeGeneratorPreset =
+            timeAbsoluteGeneratorPreset =
+                new HdvColumnViewModelPreset {
+                    Id = new Guid("FC87155E-AD2A-4294-A425-55E914FA1821"),
+                    Name = "Time",
+                    IsVisible = false,
+                    Width = 100,
+                    CellFormat = "HH:mm:ss.fffffff"
+                }.EnsureFrozen();
+            timeRelativeGeneratorPreset =
                 new HdvColumnViewModelPreset {
                     Id = new Guid("8823874B-917D-4D64-ABDF-EA29E6C87789"),
-                    Name = "DateTime (Local)",
-                    Width = 150,
+                    Name = "Time Elapsed",
+                    IsVisible = true,
+                    Width = 100,
+                    CellFormat = "HH:mm:ss.fffffff"
                 }.EnsureFrozen();
             decodingSourcePreset =
                 new HdvColumnViewModelPreset {
@@ -286,19 +304,21 @@ namespace EventTraceKit.VsExtension
         }
 
         public Tuple<DataTable, HdvViewModelPreset> CreateTable(
-            IEventInfoSource eventInfoSource)
+            IEventInfoSource eventInfoSource, EventSymbolSource symbolSource)
         {
             var table = new DataTable("Generic Events");
             var defaultPreset = new HdvViewModelPreset();
             var formatter = new NativeTdhFormatter();
-            var info = new CrimsonEventsInfo(eventInfoSource, formatter);
+            var info = new CrimsonEventsInfo(eventInfoSource, formatter, symbolSource);
 
             AddColumn(table, defaultPreset, timePointGeneratorPreset, DataColumn.Create(info.ProjectTimePoint));
-            AddColumn(table, defaultPreset, datetimeGeneratorPreset, DataColumn.Create(info.ProjectDateTime));
+            AddColumn(table, defaultPreset, timeAbsoluteGeneratorPreset, DataColumn.Create(info.ProjectTimeAbsolute));
+            AddColumn(table, defaultPreset, timeRelativeGeneratorPreset, DataColumn.Create(info.ProjectTimeRelative));
             AddColumn(table, defaultPreset, providerIdPreset, DataColumn.Create(info.ProjectProviderId));
             AddColumn(table, defaultPreset, providerNamePreset, DataColumn.Create(info.ProjectProviderName));
             AddColumn(table, defaultPreset, idPreset, DataColumn.Create(info.ProjectId));
             AddColumn(table, defaultPreset, versionPreset, DataColumn.Create(info.ProjectVersion));
+            AddColumn(table, defaultPreset, symbolPreset, DataColumn.Create(info.ProjectSymbol));
             AddColumn(table, defaultPreset, channelPreset, DataColumn.Create(info.ProjectChannel));
             AddColumn(table, defaultPreset, channelNamePreset, DataColumn.Create(info.ProjectChannelName));
             AddColumn(table, defaultPreset, taskPreset, DataColumn.Create(info.ProjectTask));
@@ -346,14 +366,22 @@ namespace EventTraceKit.VsExtension
 
         private sealed class CrimsonEventsInfo
         {
+            private static readonly Guid ActivityIdSentinel =
+                new Guid("D733D8B0-7D18-4AEB-A3FC-8C4613BC2A40");
+
             private readonly IEventInfoSource eventInfoSource;
             private readonly IMessageFormatter messageFormatter;
+            private readonly EventSymbolSource eventSymbolSource;
+
+            private readonly ParseTdhContext tdhContext = new ParseTdhContext();
 
             public CrimsonEventsInfo(
-                IEventInfoSource eventInfoSource, IMessageFormatter messageFormatter)
+                IEventInfoSource eventInfoSource, IMessageFormatter messageFormatter,
+                EventSymbolSource eventSymbolSource)
             {
                 this.eventInfoSource = eventInfoSource;
                 this.messageFormatter = messageFormatter;
+                this.eventSymbolSource = eventSymbolSource;
             }
 
             private EventInfo GetEventInfo(int index)
@@ -463,9 +491,19 @@ namespace EventTraceKit.VsExtension
 
             public EventType ProjectEventType(int index)
             {
-                if (!GetEventRecord(index).IsTraceLoggingEvent())
-                    return EventType.Manifested;
-                return EventType.TraceLogging;
+                var record = GetEventRecord(index);
+                if (record.IsClassicEvent())
+                    return EventType.Classic;
+                if (record.IsTraceLoggingEvent())
+                    return EventType.TraceLogging;
+                return EventType.Manifested;
+            }
+
+            public string ProjectSymbol(int index)
+            {
+                var info = GetTraceEventInfo(index);
+                var key = new EventKey(info.ProviderId, info.Id, info.Version);
+                return eventSymbolSource.TryGetSymbol(key);
             }
 
             public ushort ProjectUserDataLength(int index)
@@ -477,11 +515,6 @@ namespace EventTraceKit.VsExtension
             {
                 return GetEventRecord(index).EventHeader.ActivityId;
             }
-
-            private static readonly Guid ActivityIdSentinel =
-                new Guid("D733D8B0-7D18-4AEB-A3FC-8C4613BC2A40");
-
-            private readonly ParseTdhContext tdhContext = new ParseTdhContext();
 
             public unsafe Guid ProjectRelatedActivityId(int index)
             {
@@ -524,15 +557,30 @@ namespace EventTraceKit.VsExtension
 
             public TimePoint ProjectTimePoint(int index)
             {
-                var sessionInfo = eventInfoSource.GetInfo();
-                var startTime = new TimePoint(sessionInfo.StartTime);
-                var time = GetEventRecord(index).TimePoint;
-                return new TimePoint(time.ToNanoseconds - startTime.ToNanoseconds);
+                return GetEventRecord(index).TimePoint;
             }
 
-            public DateTime ProjectDateTime(int index)
+            private TimePoint GetStartTime()
             {
-                return DateTime.MaxValue;
+                var sessionInfo = eventInfoSource.GetInfo();
+                if (sessionInfo.StartTime != 0)
+                    return new TimePoint(sessionInfo.StartTime);
+
+                return GetEventRecord(0).TimePoint;
+            }
+
+            public DateTime ProjectTimeAbsolute(int index)
+            {
+                var timePoint = GetEventRecord(index).TimePoint;
+                return new DateTime(timePoint.Ticks, DateTimeKind.Utc).ToLocalTime();
+            }
+
+            public DateTime ProjectTimeRelative(int index)
+            {
+                var startTime = GetStartTime();
+                var time = GetEventRecord(index).TimePoint;
+                var elapsedTicks = time.Ticks - startTime.Ticks;
+                return new DateTime(elapsedTicks, DateTimeKind.Unspecified);
             }
 
             public ulong ProjectCpu(int index)
@@ -549,6 +597,63 @@ namespace EventTraceKit.VsExtension
             {
                 return GetTraceEventInfo(index).DecodingSource;
             }
+        }
+    }
+
+    public struct EventKey : IEquatable<EventKey>
+    {
+        public EventKey(Guid providerId, ushort id, byte version)
+        {
+            ProviderId = providerId;
+            EventIdAndVersion = (uint)(id << 16) | version;
+        }
+
+        public Guid ProviderId { get; }
+        public uint EventIdAndVersion { get; }
+
+        public bool Equals(EventKey other)
+        {
+            return ProviderId.Equals(other.ProviderId) && EventIdAndVersion == other.EventIdAndVersion;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            return obj is EventKey && Equals((EventKey)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked {
+                return (ProviderId.GetHashCode() * 397) ^ (int)EventIdAndVersion;
+            }
+        }
+
+        public static bool operator ==(EventKey left, EventKey right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(EventKey left, EventKey right)
+        {
+            return !left.Equals(right);
+        }
+    }
+
+    public class EventSymbolSource
+    {
+        private Dictionary<EventKey, string> symbols = new Dictionary<EventKey, string>();
+
+        public string TryGetSymbol(EventKey eventKey)
+        {
+            string symbol;
+            symbols.TryGetValue(eventKey, out symbol);
+            return symbol;
+        }
+
+        public void Update(Dictionary<EventKey, string> newSymbols)
+        {
+            Interlocked.Exchange(ref symbols, newSymbols);
         }
     }
 

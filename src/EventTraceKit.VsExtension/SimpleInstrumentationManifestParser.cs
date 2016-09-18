@@ -18,13 +18,15 @@ namespace EventTraceKit.VsExtension
         public static readonly XNamespace WinEventSchemaNamespace =
             "http://manifests.microsoft.com/win/2004/08/windows/events";
 
+        private readonly string manifestFilePath;
         private readonly XmlReader reader;
         private readonly XDocument document;
         private readonly XmlNamespaceManager xnsMgr;
 
-        public SimpleInstrumentationManifestParser(string fileName)
+        public SimpleInstrumentationManifestParser(string manifestFilePath)
         {
-            reader = XmlReader.Create(fileName);
+            this.manifestFilePath = manifestFilePath;
+            reader = XmlReader.Create(manifestFilePath);
             document = XDocument.Load(reader);
 
             xnsMgr = new XmlNamespaceManager(reader.NameTable ?? new NameTable());
@@ -58,6 +60,7 @@ namespace EventTraceKit.VsExtension
             var provider = new TraceProviderDescriptorViewModel(
                 id.Value, name ?? symbol ?? $"<id:{id.Value}>");
 
+            provider.Manifest = manifestFilePath;
             provider.Events.AddRange(ReadEvents(providerElem));
 
             return provider;

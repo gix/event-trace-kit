@@ -14,9 +14,11 @@
   Background="{DynamicResource {x:Static vsfx:VsBrushes.WindowKey}}"
   Foreground="{DynamicResource {x:Static vsfx:VsBrushes.WindowTextKey}}"
   Title="Trace Session Settings"
-  DialogResult="{Binding DialogResult}"
   Width="1000"
   Height="700">
+  <i:Interaction.Behaviors>
+    <etkw:DialogResult Binding="{Binding DialogResult}"/>
+  </i:Interaction.Behaviors>
   <etkv:ThemedDialogWindow.Resources>
     <Style x:Key="UnrelatedControlsSeparator" TargetType="Separator">
       <Setter Property="Height" Value="11"/>
@@ -72,6 +74,7 @@
             <RowDefinition/>
             <RowDefinition/>
             <RowDefinition/>
+            <RowDefinition/>
           </Grid.RowDefinitions>
           <Label Grid.Row="0" Grid.Column="0"
                  Content="Provider Id" Target="{Binding ElementName=id}"/>
@@ -84,23 +87,28 @@
                    Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
 
           <Label Grid.Row="2" Grid.Column="0"
-                 Content="Level" Target="{Binding ElementName=level}"/>
-          <TextBox Grid.Row="2" Grid.Column="1" x:Name="level"
-                   Text="{Binding Level, Converter={x:Static etkw:HexNumberConverter.Instance}, ConverterParameter='2'}"/>
+                 Content="Manifest" Target="{Binding ElementName=manifest}"/>
+          <TextBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" x:Name="manifest"
+                   Text="{Binding Manifest, UpdateSourceTrigger=PropertyChanged}"/>
 
           <Label Grid.Row="3" Grid.Column="0"
-                 Content="Match Any Keywords" Target="{Binding ElementName=matchAnyKeywords}"/>
-          <TextBox Grid.Row="3" Grid.Column="1" x:Name="matchAnyKeywords"
-                   Text="{Binding MatchAnyKeyword, Converter={x:Static etkw:HexNumberConverter.Instance}, ConverterParameter='16'}"/>
+                 Content="Level" Target="{Binding ElementName=level}"/>
+          <TextBox Grid.Row="3" Grid.Column="1" x:Name="level"
+                   Text="{Binding Level, Converter={x:Static etkw:HexNumberConverter.Instance}, ConverterParameter='2'}"/>
 
           <Label Grid.Row="4" Grid.Column="0"
+                 Content="Match Any Keywords" Target="{Binding ElementName=matchAnyKeywords}"/>
+          <TextBox Grid.Row="4" Grid.Column="1" x:Name="matchAnyKeywords"
+                   Text="{Binding MatchAnyKeyword, Converter={x:Static etkw:HexNumberConverter.Instance}, ConverterParameter='16'}"/>
+
+          <Label Grid.Row="5" Grid.Column="0"
                  Content="Match All Keywords" Target="{Binding ElementName=matchAllKeyword}"/>
-          <TextBox Grid.Row="4" Grid.Column="1" x:Name="matchAllKeyword"
+          <TextBox Grid.Row="5" Grid.Column="1" x:Name="matchAllKeyword"
                    Text="{Binding MatchAllKeyword, Converter={x:Static etkw:HexNumberConverter.Instance}, ConverterParameter='16'}"/>
 
-          <CheckBox Grid.Row="2" Grid.Column="3" IsChecked="{Binding IncludeStackTrace, UpdateSourceTrigger=PropertyChanged}">Include Stacktrace</CheckBox>
-          <CheckBox Grid.Row="3" Grid.Column="3" IsChecked="{Binding IncludeSecurityId, UpdateSourceTrigger=PropertyChanged}">Include Security Id</CheckBox>
-          <CheckBox Grid.Row="4" Grid.Column="3" IsChecked="{Binding IncludeTerminalSessionId, UpdateSourceTrigger=PropertyChanged}">Include Terminal Session Id</CheckBox>
+          <CheckBox Grid.Row="3" Grid.Column="3" IsChecked="{Binding IncludeStackTrace, UpdateSourceTrigger=PropertyChanged}">Include Stacktrace</CheckBox>
+          <CheckBox Grid.Row="4" Grid.Column="3" IsChecked="{Binding IncludeSecurityId, UpdateSourceTrigger=PropertyChanged}">Include Security Id</CheckBox>
+          <CheckBox Grid.Row="5" Grid.Column="3" IsChecked="{Binding IncludeTerminalSessionId, UpdateSourceTrigger=PropertyChanged}">Include Terminal Session Id</CheckBox>
         </Grid>
         <Separator Grid.Row="1" Style="{StaticResource UnrelatedControlsSeparator}"/>
         <CheckBox Grid.Row="2" Grid.Column="0" IsChecked="{Binding FilterEvents, UpdateSourceTrigger=PropertyChanged}">Filter Events</CheckBox>

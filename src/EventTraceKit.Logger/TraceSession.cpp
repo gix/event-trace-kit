@@ -65,6 +65,9 @@ public:
         Level = 0xFF;
         MatchAnyKeyword = 0xFFFFFFFFFFFFFFFFULL;
         MatchAllKeyword = 0;
+
+        ProcessIds = gcnew List<unsigned>();
+        EventIds = gcnew List<uint16_t>();
     }
 
     property Guid Id;
@@ -76,11 +79,14 @@ public:
     property bool IncludeTerminalSessionId;
     property bool IncludeStackTrace;
 
+    property List<unsigned>^ ProcessIds;
+    property List<uint16_t>^ EventIds;
+
     property String^ Manifest
     {
         String^ get()
         {
-            if (manifestOrProviderBinary->Length == 0 || !isManifest)
+            if (String::IsNullOrEmpty(manifestOrProviderBinary) || !isManifest)
                 return nullptr;
             return manifestOrProviderBinary;
         }
@@ -90,7 +96,7 @@ public:
     {
         String^ get()
         {
-            if (manifestOrProviderBinary->Length == 0 || isManifest)
+            if (String::IsNullOrEmpty(manifestOrProviderBinary) || isManifest)
                 return nullptr;
             return manifestOrProviderBinary;
         }
@@ -107,9 +113,6 @@ public:
         manifestOrProviderBinary = path;
         isManifest = false;
     }
-
-    List<unsigned>^ ProcessIds;
-    List<uint16_t>^ EventIds;
 
 private:
     String^ manifestOrProviderBinary;

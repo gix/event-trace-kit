@@ -25,7 +25,7 @@ EventInfoCache::CreateEventInfo(EVENT_RECORD& record)
     TraceEventInfoPtr info;
 
     ULONG bufferSize = 0;
-    DWORD ec = TdhGetEventInformation(&record, 0, nullptr, nullptr, &bufferSize);
+    TDHSTATUS ec = TdhGetEventInformation(&record, 0, nullptr, nullptr, &bufferSize);
     if (ec == ERROR_INSUFFICIENT_BUFFER) {
         std::get<0>(info) = make_vstruct<TRACE_EVENT_INFO>(bufferSize);
         ec = TdhGetEventInformation(&record, 0, nullptr, std::get<0>(info).get(), &bufferSize);

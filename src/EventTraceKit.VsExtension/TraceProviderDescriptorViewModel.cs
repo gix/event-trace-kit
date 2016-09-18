@@ -11,6 +11,7 @@ namespace EventTraceKit.VsExtension
     public class TraceProviderDescriptorViewModel : ViewModel
     {
         private Guid id;
+        private string manifest;
         private string name;
         private bool isEnabled;
 
@@ -43,13 +44,13 @@ namespace EventTraceKit.VsExtension
             ToggleSelectedEventsCommand = new AsyncDelegateCommand(ToggleSelectedEvents);
 
             Id = provider.Id;
+            Manifest = provider.Manifest ?? provider.ProviderBinary;
             Level = provider.Level;
             MatchAnyKeyword = provider.MatchAnyKeyword;
             MatchAllKeyword = provider.MatchAllKeyword;
             IncludeSecurityId = provider.IncludeSecurityId;
             IncludeTerminalSessionId = provider.IncludeTerminalSessionId;
             IncludeStackTrace = provider.IncludeStackTrace;
-            ManifestOrProvider = provider.Manifest ?? provider.ProviderBinary;
             if (provider.ProcessIds != null)
                 ProcessIds.AddRange(provider.ProcessIds);
             if (provider.EventIds != null)
@@ -76,6 +77,12 @@ namespace EventTraceKit.VsExtension
                 if (SetProperty(ref id, value))
                     RaisePropertyChanged(nameof(DisplayName));
             }
+        }
+
+        public string Manifest
+        {
+            get { return manifest; }
+            set { SetProperty(ref manifest, value); }
         }
 
         public string Name
@@ -136,14 +143,6 @@ namespace EventTraceKit.VsExtension
             set { SetProperty(ref filterEvents, value); }
         }
 
-        public string ManifestOrProvider
-        {
-            get { return manifestOrProvider; }
-            set { SetProperty(ref manifestOrProvider, value); }
-        }
-
-        public bool IsMOF { get; set; }
-
         public ObservableCollection<uint> ProcessIds { get; }
         public ObservableCollection<TraceEventDescriptorViewModel> Events { get; }
 
@@ -158,12 +157,15 @@ namespace EventTraceKit.VsExtension
             descriptor.IncludeSecurityId = IncludeSecurityId;
             descriptor.IncludeTerminalSessionId = IncludeTerminalSessionId;
             descriptor.IncludeStackTrace = IncludeStackTrace;
-            if (string.IsNullOrWhiteSpace(ManifestOrProvider)) {
-                if (ManifestOrProvider.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) || ManifestOrProvider.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-                    descriptor.SetManifest(ManifestOrProvider);
+
+            if (!string.IsNullOrWhiteSpace(Manifest)) {
+                var binaryExtensions = new[] { ".dll", ".exe" };
+                if (binaryExtensions.Any(x => Manifest.EndsWith(x, StringComparison.OrdinalIgnoreCase)))
+                    descriptor.SetProviderBinary(Manifest);
                 else
-                    descriptor.SetProviderBinary(ManifestOrProvider);
+                    descriptor.SetManifest(Manifest);
             }
+
             descriptor.ProcessIds.AddRange(ProcessIds);
             descriptor.EventIds.AddRange(Events.Where(x => x.IsEnabled).Select(x => x.Id));
             return descriptor;

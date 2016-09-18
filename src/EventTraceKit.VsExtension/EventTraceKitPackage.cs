@@ -4,11 +4,13 @@
     using System.ComponentModel;
     using System.ComponentModel.Design;
     using System.Diagnostics.CodeAnalysis;
+    using System.IO;
     using System.Runtime.InteropServices;
     using EnvDTE;
     using Microsoft.VisualStudio;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
+    using Microsoft.Win32;
 
     //[PackageRegistration(UseManagedResourcesOnly = true)]
     //[InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)]
@@ -327,6 +329,39 @@
         }
 
         internal TraceLogWindow TraceLog => traceLog ?? (traceLog = new TraceLogWindow(this));
+
+        protected override void OnLoadOptions(string key, Stream stream)
+        {
+        }
+
+        protected override void OnSaveOptions(string key, Stream stream)
+        {
+        }
+    }
+
+    [ComVisible(true)]
+    [Guid("9619B7BF-69E2-4F5F-B95C-F2E6EDA02205")]
+    public class UserOptions : Component, IProfileManager
+    {
+        public void LoadSettingsFromStorage()
+        {
+        }
+
+        public void LoadSettingsFromXml(IVsSettingsReader reader)
+        {
+        }
+
+        public void ResetSettings()
+        {
+        }
+
+        public void SaveSettingsToStorage()
+        {
+        }
+
+        public void SaveSettingsToXml(IVsSettingsWriter writer)
+        {
+        }
     }
 
     public interface IOperationalModeProvider

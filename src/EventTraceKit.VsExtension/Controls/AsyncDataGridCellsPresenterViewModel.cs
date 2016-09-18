@@ -88,7 +88,7 @@ namespace EventTraceKit.VsExtension.Controls
             IList<AsyncDataGridColumn> visibleColumns = cellPresenter.VisibleColumns;
             for (int i = firstVisibleColumn; i <= lastVisibleColumn; ++i) {
                 AsyncDataGridColumn column = visibleColumns[i];
-                column.IsSafeToReadCellValuesFromUIThread = false;
+                column.IsSafeToReadCellValuesFromUIThread = true; // FIXME: false
             }
 
             hdv.PerformAsyncReadOperation(delegate (CancellationToken cancellationToken) {

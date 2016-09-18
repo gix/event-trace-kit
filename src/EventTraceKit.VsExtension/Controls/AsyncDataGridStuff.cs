@@ -28,10 +28,6 @@
     public abstract class FreezableCustomSerializerAccessBase
         : Freezable, IDependencyObjectCustomSerializerAccess
     {
-        protected FreezableCustomSerializerAccessBase()
-        {
-        }
-
         object IDependencyObjectCustomSerializerAccess.GetValue(DependencyProperty dp)
         {
             return GetValue(dp);
@@ -47,7 +43,6 @@
     {
         public SerializePropertyInProfileAttribute(string name)
         {
-
         }
     }
 
@@ -216,11 +211,6 @@
             return cmp;
         }
 
-        protected override void CloneCore(Freezable sourceFreezable)
-        {
-            base.CloneCore(sourceFreezable);
-        }
-
         protected override Freezable CreateInstanceCore()
         {
             return new HdvViewModelPreset();
@@ -311,6 +301,8 @@
         void BeginDataUpdate();
         bool EndDataUpdate();
         void ApplyColumnView(DataColumnViewInfo[] dataColumnViewInfos);
+        object DataValidityToken { get; }
+        bool IsValidDataValidityToken(object dataValidityToken);
     }
 
     public sealed class DataColumnViewInfo

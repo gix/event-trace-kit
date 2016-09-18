@@ -43,7 +43,8 @@ EtwTraceProcessor::EtwTraceProcessor(std::wstring loggerName,
 
     traceLogFile.LogFileName = nullptr;
     traceLogFile.LoggerName = const_cast<wchar_t*>(this->loggerName.c_str());
-    traceLogFile.ProcessTraceMode = PROCESS_TRACE_MODE_EVENT_RECORD | PROCESS_TRACE_MODE_REAL_TIME;
+    traceLogFile.ProcessTraceMode = PROCESS_TRACE_MODE_EVENT_RECORD |
+                                    PROCESS_TRACE_MODE_REAL_TIME;
     traceLogFile.BufferCallback = nullptr;
     traceLogFile.EventRecordCallback = EventRecordCallback;
     traceLogFile.Context = this;

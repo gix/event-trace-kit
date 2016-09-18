@@ -16,7 +16,7 @@ namespace EventTraceKit.VsExtension
         public const string FormatSecondsGrouped = "sN";
         public const string FormatWithUnits = "U";
 
-        public static string ToString(long nanoseconds, string format, IFormatProvider formatProvider)
+        public static string ToString(long ticks, string format, IFormatProvider formatProvider)
         {
             TimeUnit unit;
             bool includeUnits;
@@ -24,11 +24,11 @@ namespace EventTraceKit.VsExtension
             if (!TryParseFormat(format, out unit, out includeUnits, out includeThousandsSeparator))
                 throw new FormatException("Invalid or unsupported format.");
 
-            return ToString(nanoseconds, formatProvider, unit, includeUnits, includeThousandsSeparator);
+            return ToString(ticks, formatProvider, unit, includeUnits, includeThousandsSeparator);
         }
 
         public static string ToString(
-            long nanoseconds, IFormatProvider formatProvider,
+            long ticks, IFormatProvider formatProvider,
             TimeUnit timeUnits, bool includeUnits, bool includeThousandsSeparator)
         {
             decimal value;
@@ -36,25 +36,25 @@ namespace EventTraceKit.VsExtension
             string digitsFormat;
             switch (timeUnits) {
                 case TimeUnit.Seconds:
-                    value = nanoseconds / 1000000000M;
+                    value = ticks / 10000000M;
                     unitSymbol = "s";
                     digitsFormat = includeThousandsSeparator ? "N9" : "F9";
                     break;
 
                 case TimeUnit.Milliseconds:
-                    value = nanoseconds / 1000000M;
+                    value = ticks / 10000M;
                     unitSymbol = "ms";
                     digitsFormat = includeThousandsSeparator ? "N6" : "F6";
                     break;
 
                 case TimeUnit.Microseconds:
-                    value = nanoseconds / 1000M;
+                    value = ticks / 10M;
                     unitSymbol = "us";
                     digitsFormat = includeThousandsSeparator ? "N3" : "F3";
                     break;
 
                 case TimeUnit.Nanoseconds:
-                    value = nanoseconds;
+                    value = ticks * 100;
                     unitSymbol = "ns";
                     digitsFormat = includeThousandsSeparator ? "N0" : "F0";
                     break;

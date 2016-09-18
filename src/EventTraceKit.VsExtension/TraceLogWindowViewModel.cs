@@ -2,6 +2,7 @@ namespace EventTraceKit.VsExtension
 {
     using System;
     using System.ComponentModel.Design;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows;
@@ -29,6 +30,7 @@ namespace EventTraceKit.VsExtension
         private DispatcherSynchronizationContext syncCtx;
         private TaskScheduler scheduler;
         private TaskFactory taskFactory;
+        private EventSymbolSource eventSymbolSource = new EventSymbolSource();
         private readonly Func<ISolutionFileGatherer> gathererFactory;
 
         public TraceLogWindowViewModel(
@@ -39,7 +41,7 @@ namespace EventTraceKit.VsExtension
             if (modeProvider != null)
                 modeProvider.OperationalModeChanged += OnOperationalModeChanged;
 
-            var tableTuple = new GenericEventsViewModelSource().CreateTable(this);
+            var tableTuple = new GenericEventsViewModelSource().CreateTable(this, eventSymbolSource);
             var dataTable = tableTuple.Item1;
             var preset = tableTuple.Item2;
 
@@ -195,19 +197,27 @@ namespace EventTraceKit.VsExtension
             }
         }
 
+        private TraceSessionSettingsViewModel settingsViewModel;
+
         private void Configure()
         {
-            var gatherer = gathererFactory();
-            var viewModel = new TraceSessionSettingsViewModel(gatherer);
-            foreach (var provider in sessionDescriptor.Providers)
-                viewModel.Providers.Add(new TraceProviderDescriptorViewModel(provider));
+            if (settingsViewModel == null) {
+                var gatherer = gathererFactory();
+                settingsViewModel = new TraceSessionSettingsViewModel(gatherer);
+            }
 
             var window = new TraceSessionSettingsWindow();
-            window.DataContext = viewModel;
-            if (window.ShowModal() != true)
-                return;
+            try {
+                window.DataContext = settingsViewModel;
+                if (window.ShowModal() != true)
+                    return;
+            } finally {
+                window.DataContext = null;
+                settingsViewModel.DialogResult = null;
+            }
 
-            sessionDescriptor = viewModel.GetDescriptor();
+            sessionDescriptor = settingsViewModel.GetDescriptor();
+            eventSymbolSource.Update(settingsViewModel.GetEventSymbols());
         }
 
         private void UpdateStats()

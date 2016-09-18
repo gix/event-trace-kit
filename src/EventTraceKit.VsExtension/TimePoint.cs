@@ -11,26 +11,31 @@ namespace EventTraceKit.VsExtension
             , IEquatable<TimePoint>
             , IFormattable
     {
-        private readonly long nanoseconds;
+        private readonly long ns100Ticks;
 
-        public TimePoint(long nanoseconds)
+        public TimePoint(long ns100Ticks)
         {
-            this.nanoseconds = nanoseconds;
+            this.ns100Ticks = ns100Ticks;
         }
 
         public static TimePoint FromNanoseconds(long nanoseconds)
         {
-            return new TimePoint(nanoseconds);
+            return new TimePoint(nanoseconds * 100);
         }
 
-        public long ToNanoseconds => nanoseconds;
-        public long ToMicroseconds => nanoseconds / 1000;
-        public long ToMilliseconds => nanoseconds / 1000000;
-        public long ToSeconds => nanoseconds / 1000000000;
+        public static TimePoint Zero => new TimePoint();
+        public static TimePoint MinValue => new TimePoint(long.MinValue);
+        public static TimePoint MaxValue => new TimePoint(long.MaxValue);
+
+        public long Ticks => ns100Ticks;
+        public long ToNanoseconds => ns100Ticks * 100;
+        public long ToMicroseconds => ns100Ticks / 10;
+        public long ToMilliseconds => ns100Ticks / 10000;
+        public long ToSeconds => ns100Ticks / 10000000;
 
         public static TimePoint Abs(TimePoint value)
         {
-            return FromNanoseconds(Math.Abs(value.nanoseconds));
+            return FromNanoseconds(Math.Abs(value.ns100Ticks));
         }
 
         public static TimePoint Min(TimePoint lhs, TimePoint rhs)
@@ -43,23 +48,17 @@ namespace EventTraceKit.VsExtension
             return new TimePoint(Math.Max(lhs.ToNanoseconds, rhs.ToNanoseconds));
         }
 
-        public static TimePoint Zero => new TimePoint();
-
-        public static TimePoint MinValue => new TimePoint(-9223372036854775808L);
-
-        public static TimePoint MaxValue => new TimePoint(9223372036854775807);
-
         public int CompareTo(TimePoint other)
         {
             return
-                nanoseconds < other.nanoseconds ? -1 :
-                    nanoseconds <= other.nanoseconds ? 0 :
-                        1;
+                ns100Ticks < other.ns100Ticks ? -1 :
+                ns100Ticks <= other.ns100Ticks ? 0 :
+                1;
         }
 
         public bool Equals(TimePoint other)
         {
-            return nanoseconds == other.nanoseconds;
+            return ns100Ticks == other.ns100Ticks;
         }
 
         public static bool operator ==(TimePoint lhs, TimePoint rhs)
@@ -99,17 +98,17 @@ namespace EventTraceKit.VsExtension
 
         public override int GetHashCode()
         {
-            return nanoseconds.GetHashCode();
+            return ns100Ticks.GetHashCode();
         }
 
         public override string ToString()
         {
-            return nanoseconds.ToString("F0");
+            return ns100Ticks.ToString("D");
         }
 
         public string ToString(string format, IFormatProvider formatProvider)
         {
-            return TimePointFormatter.ToString(nanoseconds, format, formatProvider);
+            return TimePointFormatter.ToString(ns100Ticks, format, formatProvider);
         }
 
         public static TimePoint Parse(string s)

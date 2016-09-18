@@ -177,6 +177,7 @@
     <Compile Include="HdvViewModel.cs" />
     <Compile Include="TraceEventDescriptorViewModel.cs" />
     <Compile Include="TraceLogStatsModel.cs" />
+    <Compile Include="Windows\DialogResult.cs" />
     <Compile Include="Windows\KeyDownEventTrigger.cs" />
     <Compile Include="SimpleInstrumentationManifestParser.cs" />
     <Compile Include="SolutionFileGatherer.cs" />

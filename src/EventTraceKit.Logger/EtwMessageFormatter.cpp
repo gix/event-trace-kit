@@ -4,6 +4,7 @@
 #include <evntcons.h>
 #include <Tdh.h>
 #include <in6addr.h>
+#include <strsafe.h>
 
 namespace etk
 {
@@ -31,10 +32,10 @@ void RemoveTrailingSpace(EVENT_MAP_INFO* mapInfo)
 }
 
 template<typename T>
-DWORD GetProperty(EVENT_RECORD* record, PROPERTY_DATA_DESCRIPTOR& pdd, T& value)
+ULONG GetProperty(EVENT_RECORD* record, PROPERTY_DATA_DESCRIPTOR& pdd, T& value)
 {
     DWORD propertySize = 0;
-    DWORD ec = TdhGetPropertySize(record, 0, nullptr, 1, &pdd, &propertySize);
+    ULONG ec = TdhGetPropertySize(record, 0, nullptr, 1, &pdd, &propertySize);
     if (ec != ERROR_SUCCESS)
         return ec;
 
@@ -45,7 +46,7 @@ DWORD GetProperty(EVENT_RECORD* record, PROPERTY_DATA_DESCRIPTOR& pdd, T& value)
                           reinterpret_cast<PBYTE>(&value));
 }
 
-DWORD GetProperty(EventInfo info, EVENT_PROPERTY_INFO const& property, USHORT& value)
+ULONG GetProperty(EventInfo info, EVENT_PROPERTY_INFO const& property, USHORT& value)
 {
     PROPERTY_DATA_DESCRIPTOR pdd = {};
     if (!info.TryGetAt(property.NameOffset, pdd.PropertyName))
@@ -53,7 +54,7 @@ DWORD GetProperty(EventInfo info, EVENT_PROPERTY_INFO const& property, USHORT& v
     pdd.ArrayIndex = ULONG_MAX;
 
     DWORD count = 0; // Expects the count to be defined by a UINT16 or UINT32
-    DWORD ec = GetProperty(info.Record(), pdd, count);
+    ULONG ec = GetProperty(info.Record(), pdd, count);
     if (ec != ERROR_SUCCESS) {
         value = 0;
         return ec;
@@ -71,7 +72,7 @@ DWORD GetProperty(EventInfo info, EVENT_PROPERTY_INFO const& property, USHORT& v
 // property does not include the length attribute, the size is inferred from the
 // data type. The length will be zero for variable length, null-terminated
 // strings and structures.
-DWORD GetPropertyLength(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
+ULONG GetPropertyLength(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
                         USHORT* propertyLength)
 {
     // If the property is a binary blob and is defined in a manifest, the
@@ -117,7 +118,7 @@ DWORD GetPropertyLength(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
 // property can specify the size of the array using the count attribute. The
 // count attribute can specify the size directly or specify the name of another
 // property in the event data that contains the size.
-DWORD GetArraySize(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
+ULONG GetArraySize(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
                    USHORT* arraySize)
 {
     if ((propInfo.Flags & PropertyParamCount) == 0) {
@@ -133,12 +134,12 @@ DWORD GetArraySize(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
 // Both MOF-based events and manifest-based events can specify name/value maps.
 // The map values can be integer values or bit values. If the property specifies
 // a value map, get the map.
-DWORD GetEventMapInfo(EVENT_RECORD* event, LPWSTR mapName, DWORD decodingSource,
+ULONG GetEventMapInfo(EVENT_RECORD* event, LPWSTR mapName, DWORD decodingSource,
                       vstruct_ptr<EVENT_MAP_INFO>& mapInfo)
 {
     // Retrieve the required buffer size for the map info.
     DWORD bufferSize = 0;
-    DWORD ec = TdhGetEventMapInformation(event, mapName, nullptr, &bufferSize);
+    ULONG ec = TdhGetEventMapInformation(event, mapName, nullptr, &bufferSize);
 
     if (ec == ERROR_INSUFFICIENT_BUFFER) {
         mapInfo = make_vstruct<EVENT_MAP_INFO>(bufferSize);
@@ -155,31 +156,30 @@ DWORD GetEventMapInfo(EVENT_RECORD* event, LPWSTR mapName, DWORD decodingSource,
     return ec;
 }
 
-DWORD GetEventMapInfo(EventInfo info, EVENT_PROPERTY_INFO const& propertyInfo,
+ULONG GetEventMapInfo(EventInfo info, EVENT_PROPERTY_INFO const& propertyInfo,
                       vstruct_ptr<EVENT_MAP_INFO>& mapInfo)
 {
     if (propertyInfo.nonStructType.MapNameOffset == 0)
         return ERROR_SUCCESS;
 
     PWCHAR mapName;
-    DWORD ec = info.TryGetAt(propertyInfo.nonStructType.MapNameOffset, mapName);
-    if (ec != ERROR_SUCCESS)
-        return ec;
+    if (!info.TryGetAt(propertyInfo.nonStructType.MapNameOffset, mapName))
+        return ERROR_EVT_INVALID_EVENT_DATA;
 
-    ec = GetEventMapInfo(info.Record(), mapName, info->DecodingSource,
-                         mapInfo);
+    ULONG ec = GetEventMapInfo(info.Record(), mapName, info->DecodingSource,
+                               mapInfo);
     if (ec != ERROR_SUCCESS)
         return ec;
 
     return ERROR_SUCCESS;
 }
 
-DWORD FormatProperty(
+ULONG FormatProperty(
     EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
     size_t pointerSize, ArrayRef<uint8_t>& userData, std::wstring& sink,
     std::vector<wchar_t>& buffer)
 {
-    DWORD ec;
+    ULONG ec;
 
     USHORT propertyLength = 0;
     ec = GetPropertyLength(info, propInfo, &propertyLength);
@@ -253,6 +253,7 @@ DWORD FormatProperty(
         if (ec != ERROR_SUCCESS)
             return ec;
 
+        buffer.resize(bufferSize);
         userData.remove_prefix(userDataConsumed);
         sink.append(buffer.data());
     }
@@ -268,20 +269,43 @@ bool EtwMessageFormatter::FormatEventMessage(
     if (!info)
         return false;
 
+    ArrayRef<uint8_t> userData = info.UserData();
+    if (info.IsStringOnly()) {
+        (void)StringCchCopyNW(
+            buffer, bufferSize,
+            reinterpret_cast<wchar_t const*>(userData.data()),
+            userData.length());
+        return true;
+    }
+
     formattedProperties.clear();
     formattedPropertiesOffsets.clear();
     formattedPropertiesPointers.clear();
 
-    ArrayRef<uint8_t> userData = info.UserData();
+    wchar_t const* const message = info.EventMessage();
+
     DWORD ec;
     for (ULONG i = 0; i < info->TopLevelPropertyCount; ++i) {
         auto const& pi = info->EventPropertyInfoArray[i];
+
+        if (!message) {
+            if (wchar_t const* propertyName = info.GetStringAt(pi.NameOffset)) {
+                formattedProperties.append(propertyName);
+                formattedProperties.append(L": ");
+            }
+        }
+
         size_t begin = formattedProperties.size();
         ec = FormatProperty(info, pi, pointerSize, userData, formattedProperties, propertyBuffer);
         if (ec != ERROR_SUCCESS)
             return false;
 
-        formattedProperties.push_back(0);
+        if (message) {
+            formattedProperties.push_back(0);
+        } else {
+            formattedProperties.append(L"; ");
+        }
+
         formattedPropertiesOffsets.push_back(begin);
     }
 
@@ -289,9 +313,17 @@ bool EtwMessageFormatter::FormatEventMessage(
         formattedPropertiesPointers.push_back(
             reinterpret_cast<DWORD_PTR>(&formattedProperties[begin]));
 
+    if (!message) {
+        (void)StringCchCopyNW(
+            buffer, bufferSize,
+            formattedProperties.data(),
+            formattedProperties.length());
+        return true;
+    }
+
     auto const Flags = FORMAT_MESSAGE_FROM_STRING | FORMAT_MESSAGE_ARGUMENT_ARRAY;
     DWORD numWritten = FormatMessageW(
-        Flags, info.EventMessage(), 0, 0, buffer, bufferSize,
+        Flags, message, 0, 0, buffer, bufferSize,
         reinterpret_cast<va_list*>(formattedPropertiesPointers.data()));
 
     if (numWritten == 0)

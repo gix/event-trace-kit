@@ -56,6 +56,8 @@
             if (table == null)
                 throw new ArgumentNullException(nameof(table));
             this.table = table;
+
+            ClearCache();
         }
 
         public DataViewColumnsCollection Columns =>
@@ -138,6 +140,9 @@
             if (newCount == RowCount)
                 return;
 
+            if (newCount == 0)
+                ClearCache();
+
             RowCount = newCount;
             //Application.Current.Dispatcher.Invoke(delegate {
             //    Updated?.Invoke(this, trueEventArgs);
@@ -159,6 +164,18 @@
 
         public void Clear()
         {
+            ClearCache();
+        }
+
+        private void ClearCache()
+        {
+        }
+
+        public object DataValidityToken { get; private set; }
+
+        public bool IsValidDataValidityToken(object dataValidityToken)
+        {
+            return dataValidityToken != null && dataValidityToken == DataValidityToken;
         }
 
         public int GetDataColumnViewIndex(DataColumnView column)
@@ -336,6 +353,34 @@
         void VerifyAccess();
     }
 
+    public static class AsyncExtensions
+    {
+        public static TaskScheduler ToTaskScheduler(
+            this Dispatcher dispatcher,
+            DispatcherPriority priority = DispatcherPriority.Normal)
+        {
+            return dispatcher.Invoke(
+                TaskScheduler.FromCurrentSynchronizationContext, priority);
+        }
+
+        public static Task<TaskScheduler> ToTaskSchedulerAsync(
+            this Dispatcher dispatcher,
+            DispatcherPriority priority = DispatcherPriority.Normal)
+        {
+            var completionSource = new TaskCompletionSource<TaskScheduler>();
+
+            var invocation = dispatcher.BeginInvoke(
+                new Action(() =>
+                    completionSource.SetResult(
+                        TaskScheduler.FromCurrentSynchronizationContext())),
+                priority);
+
+            invocation.Aborted += (s, e) => completionSource.SetCanceled();
+
+            return completionSource.Task;
+        }
+    }
+
     internal sealed class UIWorkManager : IWorkManager
     {
         private readonly Dispatcher dispatcher;
@@ -345,7 +390,13 @@
             if (dispatcher == null)
                 throw new ArgumentNullException(nameof(dispatcher));
             this.dispatcher = dispatcher;
+
+            TaskScheduler = dispatcher.ToTaskScheduler();
+            TaskFactory = new TaskFactory(TaskScheduler);
         }
+
+        public TaskScheduler TaskScheduler { get; }
+        public TaskFactory TaskFactory { get; }
 
         public bool CheckAccess()
         {
@@ -395,7 +446,11 @@
             uiWorkManager = new UIWorkManager(uiDispatcher);
         }
 
+        public TaskScheduler BackgroundTaskScheduler => backgroundWorkManager.TaskScheduler;
+        public TaskFactory BackgroundTaskFactory => backgroundWorkManager.TaskFactory;
         public IWorkManager BackgroundThread => backgroundWorkManager;
+        public TaskScheduler UIThreadTaskScheduler => uiWorkManager.TaskScheduler;
+        public TaskFactory UIThreadTaskFactory => uiWorkManager.TaskFactory;
         public IWorkManager UIThread => uiWorkManager;
 
         private enum WorkThreadID
@@ -425,6 +480,9 @@
         public void VerifyAccess()
         {
         }
+
+        public TaskScheduler TaskScheduler => TaskScheduler.Default;
+        public TaskFactory TaskFactory => Task.Factory;
     }
 
     public static class ExceptionUtils

@@ -224,8 +224,22 @@
         public TraceSessionDescriptor GetDescriptor()
         {
             var descriptor = new TraceSessionDescriptor();
-            descriptor.Providers.AddRange(Providers.Select(x => x.ToModel()));
+            descriptor.Providers.AddRange(
+                from x in Providers where x.IsEnabled select x.ToModel());
             return descriptor;
+        }
+
+        public Dictionary<EventKey, string> GetEventSymbols()
+        {
+            var symbols = new Dictionary<EventKey, string>();
+            foreach (var provider in Providers.Where(x => x.IsEnabled)) {
+                foreach (var evt in provider.Events) {
+                    if (evt.Symbol != null)
+                        symbols.Add(new EventKey(provider.Id, evt.Id, evt.Version), evt.Symbol);
+                }
+            }
+
+            return symbols;
         }
     }
 }

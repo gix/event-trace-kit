@@ -367,7 +367,7 @@ namespace EventTraceKit.VsExtension.Controls
             dataViewModel.PrefetchAllDataAndQueueUpdateRender(
                 cellsPresenter, firstVisibleColumn, lastVisibleColumn,
                 firstVisibleRow, lastVisibleRow, highlightAndSelectionPrefetched, callBackWhenFinished);
-            return false;
+            return true; //FIXME: false
         }
     }
 }

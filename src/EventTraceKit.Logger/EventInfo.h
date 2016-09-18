@@ -32,9 +32,19 @@ public:
             static_cast<size_t>(record->UserDataLength) };
     }
 
+    bool IsStringOnly() const
+    {
+        return (record->EventHeader.Flags & EVENT_HEADER_FLAG_STRING_ONLY) != 0;
+    }
+
     wchar_t const* EventMessage() const
     {
         return GetStringAt(info->EventMessageOffset);
+    }
+
+    ETK_ALWAYS_INLINE bool IsValidOffset(size_t offset) const
+    {
+        return offset >= sizeof(*info) && offset < infoSize;
     }
 
     template<typename T>
@@ -46,14 +56,14 @@ public:
     template<typename T>
     ETK_ALWAYS_INLINE bool TryGetAt(size_t offset, T& value) const
     {
-        if (offset >= infoSize) return false;
+        if (!IsValidOffset(offset)) return false;
         value = reinterpret_cast<T>(reinterpret_cast<uint8_t*>(info) + offset);
         return true;
     }
 
     ETK_ALWAYS_INLINE wchar_t const* GetStringAt(size_t offset) const
     {
-        return offset >= 0 && offset < infoSize ? GetAt<wchar_t const*>(offset) : nullptr;
+        return IsValidOffset(offset) ? GetAt<wchar_t const*>(offset) : nullptr;
     }
 
 private:

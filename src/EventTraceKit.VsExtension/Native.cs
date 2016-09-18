@@ -751,6 +751,15 @@
             return null;
         }
 
+
+        public bool IsClassicEvent()
+        {
+            if (!HasData)
+                return false;
+
+            return EventHeader.HasData && EventHeader.Pointer->ClassicHeader;
+        }
+
         public bool IsTraceLoggingEvent()
         {
             if (!HasData)
