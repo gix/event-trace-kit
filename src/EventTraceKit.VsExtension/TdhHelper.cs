@@ -135,11 +135,11 @@ namespace EventTraceKit.VsExtension
 
     public static class TdhHelper
     {
-        private const int maxMessageSizeSupported = 0x1000;
+        private const int MaxMessageSizeSupported = 0x1000;
         private static char[] messageBuffer;
-        private const uint sizeofIPV6Address = 0x10;
+        private const uint SizeofIPV6Address = 0x10;
         private const int sizeOfSOCKADDR_STORAGE = 0x80;
-        private static readonly byte[] tempByteArrayForIpV6Parsing = new byte[0x10];
+        private static readonly byte[] tempByteArrayForIpV6Parsing = new byte[SizeofIPV6Address];
         private static readonly char[] temporaryStringForSockAddressString = new char[0x100];
         private static readonly object tokenLock = new object();
         private static List<List<IntPtr>> tokens = new List<List<IntPtr>>();
@@ -179,7 +179,7 @@ namespace EventTraceKit.VsExtension
                 }
 
                 if (messageBuffer == null)
-                    messageBuffer = new char[0x1000];
+                    messageBuffer = new char[MaxMessageSizeSupported];
 
                 fixed (char* ptr = messageBuffer)
                 {

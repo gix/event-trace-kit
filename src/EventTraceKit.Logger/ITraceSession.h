@@ -35,6 +35,7 @@ struct TraceProperties
     unsigned MaximumBuffers;
     unsigned FlushTimer;
     ClockResolutionType ClockResolution;
+    std::wstring LogFileName;
 };
 
 struct TraceStatistics

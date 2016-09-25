@@ -8,7 +8,7 @@ namespace EventTraceKit.VsExtension
     using EventTraceKit.VsExtension.Collections;
     using EventTraceKit.VsExtension.Controls;
 
-    public class HdvViewModel : DependencyObject
+    public class DataViewViewModel : DependencyObject
     {
         private readonly WorkManager workManager;
         private readonly IDataView dataView;
@@ -23,10 +23,10 @@ namespace EventTraceKit.VsExtension
 
         internal CancellationTokenSource readCancellationTokenSource;
         private readonly ManualResetEvent asyncReadQueueComplete;
-        private object asyncReadWorkQueueLock;
+        private readonly object asyncReadWorkQueueLock;
         private bool allowBackgroundThreads;
 
-        public HdvViewModel(IDataView dataView)
+        public DataViewViewModel(IDataView dataView)
         {
             if (dataView == null)
                 throw new ArgumentNullException(nameof(dataView));
@@ -58,17 +58,17 @@ namespace EventTraceKit.VsExtension
 
         public AsyncDataGridViewModel GridViewModel { get; }
 
-        #region
+        #region public HdvViewModelPreset HdvViewModelPreset
 
         public static readonly DependencyProperty HdvViewModelPresetProperty =
             DependencyProperty.Register(
                 nameof(HdvViewModelPreset),
                 typeof(HdvViewModelPreset),
-                typeof(HdvViewModel),
+                typeof(DataViewViewModel),
                 new PropertyMetadata(
                     null,
-                    (s, e) => ((HdvViewModel)s).HdvViewModelPresetPropertyChanged(e),
-                    (dO, bV) => ((HdvViewModel)dO).CoerceHdvViewModelPresetProperty(bV)));
+                    (s, e) => ((DataViewViewModel)s).HdvViewModelPresetPropertyChanged(e),
+                    (d, e) => ((DataViewViewModel)d).CoerceHdvViewModelPresetProperty(e)));
 
         public HdvViewModelPreset HdvViewModelPreset
         {
@@ -99,7 +99,7 @@ namespace EventTraceKit.VsExtension
                     return;
                 }
                 //this.UpdateHelpTextFromPreset(preset.HelpText);
-                //ColumnChangingContext columnChangingContext = HdvViewModel.columnChangingContext;
+                //ColumnChangingContext columnChangingContext = DataViewViewModel.columnChangingContext;
                 //if (columnChangingContext != null) {
                 //    this.columnMetadataCollection.PresetMetadataEntries = preset.ColumnMetadataEntries;
                 //    if (this.HasAnyVisibleColumnAffectedByChange(preset, columnChangingContext.ColumnChangingPredicate)) {
@@ -114,11 +114,10 @@ namespace EventTraceKit.VsExtension
                 //    this.SaveTableRowSelectionAndFocus();
                 //}
 
-                string presetName = preset.Name ?? string.Empty;
-                //this.Hdv.BeginDataUpdate();
+                //this.DataView.BeginDataUpdate();
                 ApplyPresetToGridModel(
                     preset,
-                    () => ContinuePresetAfterGridModelInSync(presetName, preset));
+                    () => ContinuePresetAfterGridModelInSync(preset));
             }
             //this.HdvViewModelPresetChanged.Raise<HdvViewModelPreset>(this, e);
             //this.ResetIsPresetError();
@@ -150,7 +149,7 @@ namespace EventTraceKit.VsExtension
             DependencyProperty.RegisterReadOnly(
                 nameof(IsReady),
                 typeof(bool),
-                typeof(HdvViewModel),
+                typeof(DataViewViewModel),
                 new PropertyMetadata(Boxed.True, OnIsReadyChanged));
 
         public static readonly DependencyProperty IsReadyProperty = IsReadyPropertyKey.DependencyProperty;
@@ -164,7 +163,7 @@ namespace EventTraceKit.VsExtension
         private static void OnIsReadyChanged(
             DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((HdvViewModel)d).OnIsReadyChanged(e.NewValue);
+            ((DataViewViewModel)d).OnIsReadyChanged(e.NewValue);
         }
 
         private void OnIsReadyChanged(object newValue)
@@ -256,22 +255,18 @@ namespace EventTraceKit.VsExtension
                 stillWaitingCallback?.Invoke();
         }
 
-        private void ContinuePresetAfterGridModelInSync(
-            string presetName, HdvViewModelPreset preset)
+        private void ContinuePresetAfterGridModelInSync(HdvViewModelPreset preset)
         {
             bool ignoreInitialSelection = false;
-            bool ignoreInitialExpansion = false;
             columnsViewModel.ApplyPresetAssumeGridModelInSync(preset);
             ContinueAsyncOperation(
-                () => CompleteApplyPreset(presetName, ignoreInitialSelection, ignoreInitialExpansion), true);
+                () => CompleteApplyPreset(ignoreInitialSelection), true);
         }
 
-        private void CompleteApplyPreset(
-            string presetName, bool ignoreInitialSelection,
-            bool ignoreInitialExpansion)
+        private void CompleteApplyPreset(bool ignoreInitialSelection)
         {
 
-            //if (!this.Hdv.EndDataUpdate()) {
+            //if (!this.DataView.EndDataUpdate()) {
             //    ExceptionUtils.ThrowInternalErrorException("Expected data update nesting depth to be 0");
             //}
 
@@ -281,15 +276,9 @@ namespace EventTraceKit.VsExtension
             CompleteAsyncOrSyncUpdate();
         }
 
-        internal WorkManager WorkManager
-        {
-            get
-            {
-                return workManager;
-            }
-        }
+        internal WorkManager WorkManager => workManager;
 
-        public IDataView Hdv => dataView;
+        public IDataView DataView => dataView;
 
         private void ContinueAsyncOperation(Action callback, bool refreshViewModelFromModelOnReady = true)
         {
@@ -312,7 +301,7 @@ namespace EventTraceKit.VsExtension
             EnableTableAfterAsyncOperation();
             //if (this.checkForColumnChangingOnReady) {
             //    this.checkForColumnChangingOnReady = false;
-            //    ColumnChangingContext columnChangingContext = HdvViewModel.columnChangingContext;
+            //    ColumnChangingContext columnChangingContext = DataViewViewModel.columnChangingContext;
             //    HdvViewModelPreset preset = presetBeingApplied ?? presetToApplyOnReady;
             //    if (this.HasAnyVisibleColumnAffectedByChange(preset, columnChangingContext.ColumnChangingPredicate)) {
             //        this.DisableTableForAsyncOperation();
@@ -369,31 +358,32 @@ namespace EventTraceKit.VsExtension
             }).Result;
         }
 
-        internal HdvViewModelPreset CreatePresetFromUIThatHasBeenModified()
+        internal HdvViewModelPreset CreatePresetFromModifiedUI()
         {
             VerifyIsReady();
-            HdvViewModelPreset preset = new HdvViewModelPreset();
-            HdvViewModelPreset hdvViewModelPreset = HdvViewModelPreset;
-            string name = hdvViewModelPreset.Name;
+
+            var newPreset = new HdvViewModelPreset();
+            HdvViewModelPreset currentPreset = HdvViewModelPreset;
+            string name = currentPreset.Name;
             if (name != null)
-                preset.Name = name;
+                newPreset.Name = name;
 
-            preset.IsModified = true;
+            newPreset.IsModified = true;
 
-            preset.ConfigurableColumns.Clear();
-            preset.ConfigurableColumns.AddRange(
+            newPreset.ConfigurableColumns.Clear();
+            newPreset.ConfigurableColumns.AddRange(
                 from column in columnsViewModel.WritableColumns
                 where column.IsConnected
                 select column.ToPreset());
 
-            return preset;
+            return newPreset;
         }
 
         public void VerifyIsReady()
         {
             if (!IsReady)
                 ExceptionUtils.ThrowInvalidOperationException(
-                    "HdvViewModel needs to be ready for this operation");
+                    "DataViewViewModel needs to be ready for this operation");
         }
 
         internal void OnUIPropertyChanged(AsyncDataGridColumn column)
@@ -404,9 +394,8 @@ namespace EventTraceKit.VsExtension
         internal void PerformAsyncReadOperation(Action<CancellationToken> callback)
         {
             if (TryBeginReadOperation()) {
-                WorkManager.BackgroundTaskFactory.StartNew(delegate {
+                WorkManager.BackgroundTaskFactory.StartNew(() => {
                     callback(readCancellationTokenSource.Token);
-                    Thread.Sleep(TimeSpan.FromSeconds(1));
                     CompleteAsyncRead();
                 });
             } else {
@@ -430,7 +419,8 @@ namespace EventTraceKit.VsExtension
                     readCancellationTokenSource = new CancellationTokenSource();
                     asyncReadQueueComplete.Reset();
                 }
-                countReadOperationInProgress++;
+
+                ++countReadOperationInProgress;
             }
 
             return true;
@@ -438,7 +428,7 @@ namespace EventTraceKit.VsExtension
 
         private int countReadOperationInProgress;
 
-        internal void CompleteAsyncRead()
+        private void CompleteAsyncRead()
         {
             if (WorkManager.UIThread.CheckAccess())
                 ExceptionUtils.ThrowInternalErrorException("Must not invoke this method from the UI thread");
@@ -447,7 +437,7 @@ namespace EventTraceKit.VsExtension
                 if (countReadOperationInProgress == 0)
                     ExceptionUtils.ThrowInternalErrorException("There was no read operation to complete.");
 
-                countReadOperationInProgress--;
+                --countReadOperationInProgress;
                 if (countReadOperationInProgress == 0) {
                     readCancellationTokenSource.Dispose();
                     readCancellationTokenSource = null;
@@ -456,11 +446,11 @@ namespace EventTraceKit.VsExtension
             }
         }
 
-        internal object DataValidityToken => Hdv.DataValidityToken;
+        internal object DataValidityToken => DataView.DataValidityToken;
 
         public bool IsValidDataValidityToken(object dataValidityToken)
         {
-            return Hdv.IsValidDataValidityToken(dataValidityToken);
+            return DataView.IsValidDataValidityToken(dataValidityToken);
         }
     }
 }

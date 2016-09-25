@@ -10,7 +10,7 @@ namespace EventTraceKit.VsExtension.Controls
         private readonly ObservableCollection<AsyncDataGridColumn> visibleColumns;
         private readonly ObservableCollection<AsyncDataGridColumn> configurableColumns;
 
-        public AsyncDataGridColumnsViewModel(HdvViewModel hdvViewModel)
+        public AsyncDataGridColumnsViewModel(DataViewViewModel hdvViewModel)
         {
             HdvViewModel = hdvViewModel;
             columns = new ObservableCollection<AsyncDataGridColumn>();
@@ -24,7 +24,7 @@ namespace EventTraceKit.VsExtension.Controls
             ExpanderHeaderColumn = new ExpanderHeaderColumn(this, hdvViewModel);
         }
 
-        internal HdvViewModel HdvViewModel { get; }
+        internal DataViewViewModel HdvViewModel { get; }
         internal ObservableCollection<AsyncDataGridColumn> WritableColumns => columns;
 
         #region public ReadOnlyObservableCollection<AsyncDataGridColumnViewModel> VisibleColumns
@@ -157,17 +157,17 @@ namespace EventTraceKit.VsExtension.Controls
                 WritableColumns.Move(oldIndex, newIndex);
 
             RefreshAllObservableCollections();
-            HdvViewModelPreset preset = HdvViewModel.CreatePresetFromUIThatHasBeenModified();
+            HdvViewModelPreset preset = HdvViewModel.CreatePresetFromModifiedUI();
             HdvViewModel.HdvViewModelPreset = preset;
         }
 
         internal void ApplyPresetAssumeGridModelInSync(HdvViewModelPreset preset)
         {
             IsApplyingPreset = true;
-            HdvViewModel.Hdv.BeginDataUpdate();
+            HdvViewModel.DataView.BeginDataUpdate();
             WritableColumns.Clear();
             int index = 0;
-            foreach (var dataColumn in HdvViewModel.Hdv.Columns) {
+            foreach (var dataColumn in HdvViewModel.DataView.Columns) {
                 var column = new AsyncDataGridColumn(
                     this, dataColumn, HdvViewModel, false);
                 WritableColumns.Add(column);
@@ -180,7 +180,7 @@ namespace EventTraceKit.VsExtension.Controls
             }
 
             //preset.PlaceSeparatorsInList<HierarchicalDataGridColumnViewModel>(base.ColumnsWriteable, base.LeftFreezableAreaSeparatorColumn, base.RightFreezableAreaSeparatorColumn, this.graphingAreaSeparatorColumn, this.keysValuesSeparatorColumn, forcedColumnLeftCount);
-            HdvViewModel.Hdv.EndDataUpdate();
+            HdvViewModel.DataView.EndDataUpdate();
             RefreshAllObservableCollections();
             IsApplyingPreset = false;
             //UpdateFreezableColumnsWidth();

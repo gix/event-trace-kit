@@ -24,25 +24,26 @@ namespace EventTraceKit.VsExtension
         private bool includeStackTrace;
         private bool filterEvents;
 
-        public TraceProviderDescriptorViewModel(Guid id, string name)
+        private TraceProviderDescriptorViewModel()
         {
             ProcessIds = new ObservableCollection<uint>();
             Events = new ObservableCollection<TraceEventDescriptorViewModel>();
-            ToggleSelectedEventsCommand = new AsyncDelegateCommand(ToggleSelectedEvents);
+            ToggleSelectedEventsCommand = new AsyncDelegateCommand<object>(ToggleSelectedEvents);
+        }
 
+        public TraceProviderDescriptorViewModel(Guid id, string name)
+            : this()
+        {
             Id = id;
             Name = name;
             Level = 0xFF;
         }
 
         public TraceProviderDescriptorViewModel(TraceProviderDescriptor provider)
+            : this()
         {
-            ProcessIds = new ObservableCollection<uint>();
-            Events = new ObservableCollection<TraceEventDescriptorViewModel>();
-            ToggleSelectedEventsCommand = new AsyncDelegateCommand(ToggleSelectedEvents);
-
             Id = provider.Id;
-            Manifest = provider.Manifest ?? provider.ProviderBinary;
+            Manifest = provider.Manifest;
             Level = provider.Level;
             MatchAnyKeyword = provider.MatchAnyKeyword;
             MatchAllKeyword = provider.MatchAllKeyword;
@@ -52,7 +53,7 @@ namespace EventTraceKit.VsExtension
             if (provider.ProcessIds != null)
                 ProcessIds.AddRange(provider.ProcessIds);
             if (provider.EventIds != null)
-                Events.AddRange(provider.EventIds.Select(x => new TraceEventDescriptorViewModel { Id = x }));
+                Events.AddRange(provider.EventIds.Select(x => new TraceEventDescriptorViewModel(x)));
         }
 
         private Task ToggleSelectedEvents(object selectedObjects)
@@ -155,18 +156,27 @@ namespace EventTraceKit.VsExtension
             descriptor.IncludeSecurityId = IncludeSecurityId;
             descriptor.IncludeTerminalSessionId = IncludeTerminalSessionId;
             descriptor.IncludeStackTrace = IncludeStackTrace;
-
-            if (!string.IsNullOrWhiteSpace(Manifest)) {
-                var binaryExtensions = new[] { ".dll", ".exe" };
-                if (binaryExtensions.Any(x => Manifest.EndsWith(x, StringComparison.OrdinalIgnoreCase)))
-                    descriptor.SetProviderBinary(Manifest);
-                else
-                    descriptor.SetManifest(Manifest);
-            }
-
+            if (!string.IsNullOrWhiteSpace(Manifest))
+                descriptor.Manifest = Manifest;
             descriptor.ProcessIds.AddRange(ProcessIds);
             descriptor.EventIds.AddRange(Events.Where(x => x.IsEnabled).Select(x => x.Id));
             return descriptor;
+        }
+
+        public TraceProviderDescriptorViewModel DeepClone()
+        {
+            var clone = new TraceProviderDescriptorViewModel();
+            clone.Id = Id;
+            clone.Manifest = Manifest;
+            clone.Level = Level;
+            clone.MatchAnyKeyword = MatchAnyKeyword;
+            clone.MatchAllKeyword = MatchAllKeyword;
+            clone.IncludeSecurityId = IncludeSecurityId;
+            clone.IncludeTerminalSessionId = IncludeTerminalSessionId;
+            clone.IncludeStackTrace = IncludeStackTrace;
+            clone.ProcessIds.AddRange(ProcessIds);
+            clone.Events.AddRange(Events.Select(x => x.DeepClone()));
+            return clone;
         }
     }
 }

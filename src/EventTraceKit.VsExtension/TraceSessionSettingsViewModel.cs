@@ -7,6 +7,7 @@
     using System.Threading;
     using System.Windows.Input;
     using EventTraceKit.VsExtension.Collections;
+    using Microsoft.Internal.VisualStudio.PlatformUI;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
     using Microsoft.Win32;
@@ -16,43 +17,87 @@
 
     public class TraceSessionSettingsViewModel : ViewModel
     {
-        private readonly ISolutionFileGatherer gatherer;
-        private bool? dialogResult;
+        private ICommand newProviderCommand;
+        private ICommand removeProviderCommand;
+        private ICommand addManifestCommand;
+        private ICommand browseLogFileCommand;
+
+        private string name;
+        private string logFileName;
+        private uint? bufferSize;
+        private uint? minimumBuffers;
+        private uint? maximumBuffers;
         private TraceProviderDescriptorViewModel selectedProvider;
 
-        public TraceSessionSettingsViewModel(ISolutionFileGatherer gatherer)
+        public TraceSessionSettingsViewModel()
         {
-            this.gatherer = gatherer;
-
-            AcceptCommand = new AsyncDelegateCommand(Accept);
-            NewProviderCommand = new AsyncDelegateCommand(NewProvider);
-            RemoveProviderCommand = new AsyncDelegateCommand(RemoveProvider);
-            AddManifestCommand = new AsyncDelegateCommand(AddManifest);
-            Providers = new ObservableCollection<TraceProviderDescriptorViewModel>();
         }
 
-        public bool? DialogResult
+        public TraceSessionSettingsViewModel DeepClone()
         {
-            get { return dialogResult; }
-            set { SetProperty(ref dialogResult, value); }
+            var clone = new TraceSessionSettingsViewModel();
+            clone.Name = Name;
+            clone.LogFileName = LogFileName;
+            clone.BufferSize = BufferSize;
+            clone.MinimumBuffers = MinimumBuffers;
+            clone.MaximumBuffers = MaximumBuffers;
+            clone.Providers.AddRange(Providers.Select(x => x.DeepClone()));
+            return clone;
         }
 
-        public ICommand AcceptCommand { get; }
-        public ICommand NewProviderCommand { get; }
-        public ICommand RemoveProviderCommand { get; }
-        public ICommand AddManifestCommand { get; }
+        public ICommand NewProviderCommand =>
+            newProviderCommand ??
+            (newProviderCommand = new AsyncDelegateCommand(NewProvider));
+
+        public ICommand RemoveProviderCommand =>
+            removeProviderCommand ??
+            (removeProviderCommand = new AsyncDelegateCommand<TraceProviderDescriptorViewModel>(RemoveProvider));
+
+        public ICommand AddManifestCommand =>
+            addManifestCommand ??
+            (addManifestCommand = new AsyncDelegateCommand(AddManifest));
+
+        public ICommand BrowseLogFileCommand =>
+            browseLogFileCommand ??
+            (browseLogFileCommand = new AsyncDelegateCommand(BrowseLogFile));
+
         public ObservableCollection<TraceProviderDescriptorViewModel> Providers { get; }
+            = new ObservableCollection<TraceProviderDescriptorViewModel>();
+
+        public string Name
+        {
+            get { return name; }
+            set { SetProperty(ref name, value); }
+        }
+
+        public string LogFileName
+        {
+            get { return logFileName; }
+            set { SetProperty(ref logFileName, value); }
+        }
+
+        public uint? BufferSize
+        {
+            get { return bufferSize; }
+            set { SetProperty(ref bufferSize, value); }
+        }
+
+        public uint? MinimumBuffers
+        {
+            get { return minimumBuffers; }
+            set { SetProperty(ref minimumBuffers, value); }
+        }
+
+        public uint? MaximumBuffers
+        {
+            get { return maximumBuffers; }
+            set { SetProperty(ref maximumBuffers, value); }
+        }
 
         public TraceProviderDescriptorViewModel SelectedProvider
         {
             get { return selectedProvider; }
             set { SetProperty(ref selectedProvider, value); }
-        }
-
-        private Task Accept()
-        {
-            DialogResult = true;
-            return Task.CompletedTask;
         }
 
         private Task NewProvider()
@@ -63,11 +108,9 @@
             return Task.CompletedTask;
         }
 
-        private Task RemoveProvider(object parameter)
+        private Task RemoveProvider(TraceProviderDescriptorViewModel provider)
         {
-            var provider = parameter as TraceProviderDescriptorViewModel;
-            if (provider != null)
-                Providers.Remove(provider);
+            Providers.Remove(provider);
             return Task.CompletedTask;
         }
 
@@ -147,10 +190,30 @@
             }
         }
 
+        private Task BrowseLogFile()
+        {
+            var dialog = new SaveFileDialog();
+            dialog.Title = "Log File";
+            dialog.Filter = "Event Trace Logs (*.etl)|*.etl|" +
+                            "All Files (*.*)|*.*";
+            dialog.DefaultExt = ".etl";
+            dialog.OverwritePrompt = true;
+            dialog.AddExtension = true;
+            if (dialog.ShowDialog() != true)
+                return Task.CompletedTask;
+
+            LogFileName = dialog.FileName;
+            return Task.CompletedTask;
+        }
+
         private static string PromptManifest()
         {
             var dialog = new OpenFileDialog();
             dialog.Title = "Add Manifest";
+            dialog.Filter = "Manifest Files (*.man)|*.man|" +
+                            "Binary Providers (*.dll, *.exe)|*.dll, *.exe|" +
+                            "All Files (*.*)|*.*";
+            dialog.DefaultExt = ".man";
             if (dialog.ShowDialog() != true)
                 return null;
 
@@ -229,6 +292,10 @@
         public TraceSessionDescriptor GetDescriptor()
         {
             var descriptor = new TraceSessionDescriptor();
+            descriptor.LogFileName = LogFileName;
+            descriptor.BufferSize = BufferSize;
+            descriptor.MinimumBuffers = MinimumBuffers;
+            descriptor.MaximumBuffers = MaximumBuffers;
             descriptor.Providers.AddRange(
                 from x in Providers where x.IsEnabled select x.ToModel());
             return descriptor;

@@ -7,7 +7,7 @@ namespace EventTraceKit.VsExtension.Controls
     {
         private readonly AsyncDataGridColumnsViewModel columns;
         private readonly DataColumnView columnModel;
-        private readonly HdvViewModel hdv;
+        private readonly DataViewViewModel hdv;
         private readonly bool isInitializing;
 
         private CellValue[] cachedRowValues = new CellValue[0];
@@ -17,7 +17,7 @@ namespace EventTraceKit.VsExtension.Controls
         public AsyncDataGridColumn(
             AsyncDataGridColumnsViewModel columns,
             DataColumnView columnModel,
-            HdvViewModel hdv,
+            DataViewViewModel hdv,
             bool isDisconnected)
         {
             this.columns = columns;
@@ -376,7 +376,7 @@ namespace EventTraceKit.VsExtension.Controls
 
             //this.columnsViewModel.UpdateFreezableColumnsWidth();
             if (hdv.IsReady) {
-                HdvViewModelPreset preset = hdv.CreatePresetFromUIThatHasBeenModified();
+                HdvViewModelPreset preset = hdv.CreatePresetFromModifiedUI();
                 preset.IsUIModified = true;
                 hdv.HdvViewModelPreset = preset;
             }
@@ -451,7 +451,7 @@ namespace EventTraceKit.VsExtension.Controls
             if (IsDisconnected)
                 return -1;
 
-            int index = hdv.Hdv.Columns.IndexOf(columnModel);
+            int index = hdv.DataView.Columns.IndexOf(columnModel);
             if (index == -1)
                 throw new Exception("Unable to find the model column index for: " + ColumnName);
             return index;
@@ -462,7 +462,7 @@ namespace EventTraceKit.VsExtension.Controls
             if (IsDisconnected || !columnModel.IsVisible)
                 return -1;
 
-            int index = hdv.Hdv.VisibleColumns.IndexOf(columnModel);
+            int index = hdv.DataView.VisibleColumns.IndexOf(columnModel);
             if (index == -1)
                 throw new Exception("Unable to find the visible model column index for: " + ColumnName);
             return index;

@@ -19,32 +19,6 @@ using msclr::interop::marshal_as;
 namespace EventTraceKit
 {
 
-public ref struct TraceEvent
-{
-    property System::Guid ProviderId;
-    property uint16_t Id;
-    property uint8_t Version;
-    property uint8_t ChannelId;
-    property uint8_t LevelId;
-    property uint8_t OpcodeId;
-    property uint16_t TaskId;
-    property uint64_t KeywordMask;
-
-    property String^ Provider;
-    property String^ Channel;
-    property String^ Level;
-    property String^ Opcode;
-    property String^ Task;
-    property String^ Keywords;
-
-    property DateTime Time;
-    property unsigned ProcessId;
-    property unsigned ThreadId;
-    property uint64_t ProcessorTime;
-    property String^ Message;
-    property bool Formatted;
-};
-
 public ref struct TraceStatistics
 {
     property unsigned NumberOfBuffers;
@@ -79,44 +53,9 @@ public:
     property bool IncludeTerminalSessionId;
     property bool IncludeStackTrace;
 
+    property String^ Manifest;
     property List<unsigned>^ ProcessIds;
     property List<uint16_t>^ EventIds;
-
-    property String^ Manifest
-    {
-        String^ get()
-        {
-            if (String::IsNullOrEmpty(manifestOrProviderBinary) || !isManifest)
-                return nullptr;
-            return manifestOrProviderBinary;
-        }
-    }
-
-    property String^ ProviderBinary
-    {
-        String^ get()
-        {
-            if (String::IsNullOrEmpty(manifestOrProviderBinary) || isManifest)
-                return nullptr;
-            return manifestOrProviderBinary;
-        }
-    }
-
-    void SetManifest(String^ path)
-    {
-        manifestOrProviderBinary = path;
-        isManifest = true;
-    }
-
-    void SetProviderBinary(String^ path)
-    {
-        manifestOrProviderBinary = path;
-        isManifest = false;
-    }
-
-private:
-    String^ manifestOrProviderBinary;
-    bool isManifest = false;
 };
 
 public ref class TraceSessionDescriptor
@@ -127,6 +66,10 @@ public:
         Providers = gcnew List<TraceProviderDescriptor^>();
     }
 
+    property Nullable<unsigned> BufferSize;
+    property Nullable<unsigned> MinimumBuffers;
+    property Nullable<unsigned> MaximumBuffers;
+    property String^ LogFileName;
     property IList<TraceProviderDescriptor^>^ Providers;
 };
 
@@ -137,6 +80,13 @@ namespace msclr
 namespace interop
 {
 
+static bool IsProviderBinary(String^ filePath)
+{
+    return
+        filePath->EndsWith(L".exe", StringComparison::OrdinalIgnoreCase) ||
+        filePath->EndsWith(L".dll", StringComparison::OrdinalIgnoreCase);
+}
+
 template<>
 inline etk::TraceProviderDescriptor marshal_as(EventTraceKit::TraceProviderDescriptor^ const& provider)
 {
@@ -146,10 +96,13 @@ inline etk::TraceProviderDescriptor marshal_as(EventTraceKit::TraceProviderDescr
     native.IncludeSecurityId = provider->IncludeSecurityId;
     native.IncludeTerminalSessionId = provider->IncludeTerminalSessionId;
     native.IncludeStackTrace = provider->IncludeStackTrace;
-    if (provider->Manifest)
-        native.SetManifest(marshal_as<std::wstring>(provider->Manifest));
-    if (provider->ProviderBinary)
-        native.SetProviderBinary(marshal_as<std::wstring>(provider->ProviderBinary));
+    if (provider->Manifest) {
+        auto manifest = marshal_as<std::wstring>(provider->Manifest);
+        if (IsProviderBinary(provider->Manifest))
+            native.SetProviderBinary(manifest);
+        else
+            native.SetManifest(manifest);
+    }
 
     native.ProcessIds = marshal_as_vector(provider->ProcessIds);
     native.EventIds = marshal_as_vector(provider->EventIds);
@@ -162,8 +115,6 @@ inline etk::TraceProviderDescriptor marshal_as(EventTraceKit::TraceProviderDescr
 
 namespace EventTraceKit
 {
-
-class EventSink;
 
 public value struct TraceSessionInfo
 {
@@ -288,13 +239,27 @@ static std::wstring CreateLoggerName()
     return LoggerNameBase + L"_" + std::to_wstring(pid);
 }
 
+static etk::TraceProperties CreateTraceProperties(TraceSessionDescriptor^ descriptor)
+{
+    etk::TraceProperties properties(marshal_as<GUID>(System::Guid::NewGuid()));
+    if (descriptor->BufferSize.HasValue)
+        properties.BufferSize = descriptor->BufferSize.Value;
+    if (descriptor->MinimumBuffers.HasValue)
+        properties.MinimumBuffers = descriptor->MinimumBuffers.Value;
+    if (descriptor->MaximumBuffers.HasValue)
+        properties.MaximumBuffers = descriptor->MaximumBuffers.Value;
+    if (descriptor->LogFileName)
+        properties.LogFileName = marshal_as<std::wstring>(descriptor->LogFileName);
+    return properties;
+}
+
 TraceSession::TraceSession(TraceSessionDescriptor^ descriptor)
     : descriptor(descriptor)
     , loggerName(new std::wstring(CreateLoggerName()))
 {
     watchDog = gcnew WatchDog(marshal_as<String^>(*loggerName));
 
-    etk::TraceProperties properties(marshal_as<GUID>(System::Guid::NewGuid()));
+    etk::TraceProperties properties = CreateTraceProperties(descriptor);
     auto session = etk::CreateEtwTraceSession(*loggerName, properties);
 
     nativeProviders = new std::vector<etk::TraceProviderDescriptor>();

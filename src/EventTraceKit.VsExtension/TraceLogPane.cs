@@ -71,7 +71,7 @@
 
             protected override void OnStartSearch()
             {
-                // Use the original content of the text box as the target of the search. 
+                // Use the original content of the text box as the target of the search.
                 var separator = new[] { Environment.NewLine };
                 var control = (TraceLogWindow)toolwindow.Content;
 

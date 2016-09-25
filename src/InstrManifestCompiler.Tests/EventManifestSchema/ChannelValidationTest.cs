@@ -61,7 +61,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
                 location1.FilePath,
                 location1.LineNumber,
                 location1.ColumnNumber + "name=\"foo&#x".Length);
-  
+
             Assert.True(diags.Errors[0].Location == location1 ||
                         diags.Errors[0].Location == location2,
                         string.Format("({0} || {1}) != {2}", location1, location2, diags.Errors[0].Location));

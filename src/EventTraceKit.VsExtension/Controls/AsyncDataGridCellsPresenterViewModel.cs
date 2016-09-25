@@ -9,16 +9,16 @@ namespace EventTraceKit.VsExtension.Controls
     public sealed class AsyncDataGridCellsPresenterViewModel
         : DependencyObject
     {
-        private readonly HdvViewModel hdv;
+        private readonly DataViewViewModel hdv;
 
-        public AsyncDataGridCellsPresenterViewModel(HdvViewModel hdv)
+        public AsyncDataGridCellsPresenterViewModel(DataViewViewModel hdv)
         {
             this.hdv = hdv;
 
             RowSelection = new AsyncDataGridRowSelection(this);
         }
 
-        public int RowCount => hdv.Hdv.RowCount;
+        public int RowCount => hdv.DataView.RowCount;
 
         public AsyncDataGridRowSelection RowSelection { get; }
 
@@ -91,7 +91,7 @@ namespace EventTraceKit.VsExtension.Controls
                 column.IsSafeToReadCellValuesFromUIThread = true; // FIXME: false
             }
 
-            hdv.PerformAsyncReadOperation(delegate (CancellationToken cancellationToken) {
+            hdv.PerformAsyncReadOperation(cancellationToken => {
                 //if (!cancellationToken.IsCancellationRequested) {
                 //    lock (RowSelection) {
                 //        RowSelection.RefreshDataIfNecessary(cancellationToken);
@@ -100,7 +100,7 @@ namespace EventTraceKit.VsExtension.Controls
 
                 selectionPrefetched(cancellationToken.IsCancellationRequested);
                 if (!cancellationToken.IsCancellationRequested) {
-                    List<AsyncDataGridColumn> list = new List<AsyncDataGridColumn>();
+                    var list = new List<AsyncDataGridColumn>();
                     for (int m = firstVisibleColumn; m <= lastVisibleColumn; m++) {
                         AsyncDataGridColumn item = visibleColumns[m];
                         list.Add(item);

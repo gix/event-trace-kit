@@ -11,7 +11,7 @@ using namespace etk;
 
 static void CloseTraceSession(std::wstring const& loggerName)
 {
-    size_t const bufferSize = sizeof(EVENT_TRACE_PROPERTIES) + ByteCount(loggerName);
+    size_t const bufferSize = sizeof(EVENT_TRACE_PROPERTIES) + ZStringByteCount(loggerName);
     std::vector<char> buffer(bufferSize);
 
     auto traceProperties = new(buffer.data()) EVENT_TRACE_PROPERTIES();
@@ -19,7 +19,7 @@ static void CloseTraceSession(std::wstring const& loggerName)
     traceProperties->Wnode.BufferSize = static_cast<ULONG>(bufferSize);
     traceProperties->LoggerNameOffset = sizeof(EVENT_TRACE_PROPERTIES);
     std::memcpy(buffer.data() + traceProperties->LoggerNameOffset,
-                loggerName.data(), ByteCount(loggerName));
+                loggerName.data(), ZStringByteCount(loggerName));
 
     ULONG ec = ControlTraceW(0, loggerName.c_str(), traceProperties,
                              EVENT_TRACE_CONTROL_STOP);

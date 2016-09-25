@@ -46,7 +46,7 @@ namespace EventTraceKit.VsExtension
             var preset = tableTuple.Item2;
 
             EventsDataView = new TraceEventsView(dataTable);
-            HdvViewModel = new HdvViewModel(EventsDataView);
+            HdvViewModel = new DataViewViewModel(EventsDataView);
             GridModel = HdvViewModel.GridViewModel;
 
             HdvViewModel.HdvViewModelPreset = preset;
@@ -65,8 +65,18 @@ namespace EventTraceKit.VsExtension
             updateStatisticsTimer.Tick += (s, a) => UpdateStats();
         }
 
+        public class TraceEventsView : DataView
+        {
+            public TraceEventsView(DataTable table)
+                : base(table)
+            {
+            }
+
+            public int EventCount => RowCount;
+        }
+
         public TraceEventsView EventsDataView { get; }
-        public HdvViewModel HdvViewModel { get; }
+        public DataViewViewModel HdvViewModel { get; }
         public AsyncDataGridViewModel GridModel { get; }
 
         public TraceLogStatsModel Statistics { get; }
@@ -109,7 +119,7 @@ namespace EventTraceKit.VsExtension
 
         private bool CanStartCapture()
         {
-            return sessionDescriptor.Providers.Count > 0;
+            return sessionDescriptor != null && sessionDescriptor.Providers.Count > 0;
         }
 
         private async void ToggleCapture()
@@ -197,13 +207,13 @@ namespace EventTraceKit.VsExtension
             }
         }
 
-        private TraceSessionSettingsViewModel settingsViewModel;
+        private TraceSettingsViewModel settingsViewModel;
 
         private void Configure()
         {
             if (settingsViewModel == null) {
                 var gatherer = gathererFactory();
-                settingsViewModel = new TraceSessionSettingsViewModel(gatherer);
+                settingsViewModel = new TraceSettingsViewModel(gatherer);
             }
 
             var window = new TraceSessionSettingsWindow();
@@ -212,7 +222,9 @@ namespace EventTraceKit.VsExtension
                 if (window.ShowModal() != true)
                     return;
             } finally {
+                var selectedPreset = settingsViewModel.SelectedSessionPreset;
                 window.DataContext = null;
+                settingsViewModel.SelectedSessionPreset = selectedPreset;
                 settingsViewModel.DialogResult = null;
             }
 

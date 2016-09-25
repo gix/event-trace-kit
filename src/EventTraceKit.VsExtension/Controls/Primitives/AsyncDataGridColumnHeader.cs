@@ -429,7 +429,7 @@
         private void OnLeftHeaderGripperPartMouseDoubleClick(
             object sender, MouseButtonEventArgs e)
         {
-            if (Column == null || e.Handled) // || !ViewModel.HdvViewModel.IsReady)
+            if (Column == null || e.Handled) // || !ViewModel.DataViewViewModel.IsReady)
                 return;
 
             double change = ParentGrid.AutoSize(Column);
@@ -470,7 +470,7 @@
         private void OnRightHeaderGripperPartMouseDoubleClick(
             object sender, MouseButtonEventArgs e)
         {
-            if (Column == null || e.Handled) // || !ViewModel.HdvViewModel.IsReady)
+            if (Column == null || e.Handled) // || !ViewModel.DataViewViewModel.IsReady)
                 return;
 
             double change = ParentGrid.AutoSize(Column);

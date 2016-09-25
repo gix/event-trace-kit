@@ -9,36 +9,23 @@
   <!-- Commands definition for the client package -->
   <Commands package="guidClientPkg">
     <Menus>
-      <!-- A toolbar is a menu with itself as the "Relative to Group" and a "Type" of "ToolWindowToolbar" -->
       <Menu guid="guidTraceLogCmdSet" id="idTraceLogToolbar" type="ToolWindowToolbar">
         <Strings>
           <ButtonText>Trace Log</ButtonText>
         </Strings>
       </Menu>
-      <Menu guid="guidClientCmdSet" id="MyToolbar" priority="0x0000" type="ToolWindowToolbar">
-        <Parent guid="guidClientCmdSet" id="MyToolbar"/>
-        <Strings>
-          <ButtonText>Window ToolBar</ButtonText>
-        </Strings>
-      </Menu>
     </Menus>
 
     <Groups>
-      <!-- On the toolbar (menu) we can have 1 or more group that will contain the buttons -->
       <Group guid="guidTraceLogCmdSet" id="idTraceLogToolbarCaptureGroup" priority="0x1000">
         <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbar"/>
       </Group>
       <Group guid="guidTraceLogCmdSet" id="idTraceLogToolbarConfigGroup" priority="0x2000">
         <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbar"/>
       </Group>
-      <Group guid="guidClientCmdSet" id="MyToolbarGroup" priority="0x0500">
-        <Parent guid="guidClientCmdSet" id="MyToolbar"/>
-      </Group>
     </Groups>
 
-    <!--  Buttons (commands) defined by the package.
-          This section defines the elements the user can interact with, like a menu command or a button
-          or combo box in a toolbar. -->
+    <!--  Buttons (commands) defined by the package. -->
     <Buttons>
       <Button guid="guidTraceLogCmdSet" id="cmdidTraceLog" priority="0x0100" type="Button">
         <Icon guid="guidTraceLogToolbarImages" id="bmpTraceLog"/>
@@ -71,62 +58,17 @@
           <ToolTipText>&amp;Automatically Log When Debugging or Running</ToolTipText>
         </Strings>
       </Button>
-      <Button guid="guidTraceLogCmdSet" id="cmdidConfigureLog" priority="0x1040" type="Button">
+      <Button guid="guidTraceLogCmdSet" id="cmdidConfigureSession" priority="0x1040" type="Button">
         <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarConfigGroup"/>
         <Icon guid="guidTraceLogToolbarImages" id="bmpSettings"/>
         <Strings>
-          <ButtonText>C&amp;onfigure Logger</ButtonText>
-        </Strings>
-      </Button>
-
-      <!-- An element inside this section is defined by its ID and must specify a parent group, a display
-           priority, an image, a type, some visibility flags (optional) and a default text. -->
-      <Button guid="guidClientCmdSet" id="cmdidPersistedWindow" priority="0x100" type="Button">
-        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
-        <Icon guid="ImageCatalogGuid" id="OneX"/>
-        <CommandFlag>IconIsMoniker</CommandFlag>
-        <Strings>
-          <ButtonText>&amp;Persisted Window</ButtonText>
-        </Strings>
-      </Button>
-      <Button guid="guidClientCmdSet" id="cmdidUiEventsWindow" priority="0x101" type="Button">
-        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
-        <Icon guid="ImageCatalogGuid" id="TwoX"/>
-        <CommandFlag>IconIsMoniker</CommandFlag>
-        <Strings>
-          <ButtonText>&amp;Dynamic Visibility Window</ButtonText>
-        </Strings>
-      </Button>
-      <!-- The following command will appear on the tool window toolbar -->
-      <Button guid="guidClientCmdSet" id="cmdidRefreshWindowsList" priority="0x100" type="Button">
-        <Parent guid="guidClientCmdSet" id="MyToolbarGroup"/>
-        <Icon guid="ImageCatalogGuid" id="Refresh"/>
-        <CommandFlag>IconIsMoniker</CommandFlag>
-        <Strings>
-          <ButtonText>Refresh</ButtonText>
-        </Strings>
-      </Button>
-      <!--The menu items will be placed in one of the first group of the View->Other Windows menu. To
-      find IDG_VS_WNDO_OTRWNDWS1 (which is the group ID), we searched ShellCmdPlace.ctc for Other
-      Windows from which we got the IDM_VS_CSCD_WINDOWS menu, and searching for that showed us 
-      which groups were already part of that menu. Of those we picked IDG_VS_WNDO_OTRWNDWS1. -->
-      <Button guid="guidToolWindow1PackageCmdSet" id="ToolWindow1CommandId" priority="0x0100" type="Button">
-        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
-        <Icon guid="guidImages" id="bmpPic1"/>
-        <Strings>
-          <ButtonText>ToolWindow1</ButtonText>
+          <ButtonText>C&amp;onfigure Tracing Session</ButtonText>
         </Strings>
       </Button>
     </Buttons>
 
     <!--The bitmaps section is used to define the bitmaps that are used for the commands.-->
     <Bitmaps>
-      <!--  The bitmap id is defined in a way that is a little bit different from the others:
-            the declaration starts with a guid for the bitmap strip, then there is the resource id of the
-            bitmap strip containing the bitmaps and then there are the numeric ids of the elements used
-            inside a button definition. An important aspect of this declaration is that the element id
-            must be the actual index (1-based) of the bitmap inside the bitmap strip. -->
-      <Bitmap guid="guidImages" href="Resources\ToolWindow1Command.png" usedList="bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows, bmpPicStrikethrough"/>
       <Bitmap guid="guidTraceLogToolbarImages" href="Resources\Toolbar.png"/>
     </Bitmaps>
   </Commands>
@@ -138,33 +80,7 @@
   </CommandPlacements>
 
   <Symbols>
-    <!--
-    The definition of symbols in a VSCT file derives from the way the IDs of the elements are defined
-    by the command table. We have seen that the ID is a GUID/Number pair, where the GUID is also called
-    Command Set and it provides the context in which the numeric ID is evaluated.
-    It makes then sense for the VSCT schema to define the GuidSymbl tag as top level element containig
-    the definiton of the numeric IDs.
-    -->
-
-    <!--The first GUID defined here is the one for the package. It does not contains numeric IDs.-->
     <GuidSymbol name="guidClientPkg" value="{7867DA46-69A8-40D7-8B8F-92B0DE8084D8}"/>
-
-    <GuidSymbol name="guidToolWindow1PackageCmdSet" value="{611FDE30-3F6A-436C-B63D-9DDA9BEB915C}">
-      <IDSymbol name="ToolWindow1CommandId" value="0x0100"/>
-    </GuidSymbol>
-
-    <!--The GUID for the command set is the one that contains the numeric IDs used in this sample
-        with the only exception of the one used for the bitmap.-->
-    <GuidSymbol name="guidClientCmdSet" value="{A5BCFF42-2F6E-465A-9484-9B4FC3C8B2AC}">
-      <!--Menus-->
-      <IDSymbol name="MyToolbar" value="0x101"/>
-      <!--Groups-->
-      <IDSymbol name="MyToolbarGroup" value="0x1001"/>
-      <!--Commands-->
-      <IDSymbol name="cmdidPersistedWindow" value="0x2001"/>
-      <IDSymbol name="cmdidUiEventsWindow" value="0x2002"/>
-      <IDSymbol name="cmdidRefreshWindowsList" value="0x2003"/>
-    </GuidSymbol>
 
     <GuidSymbol name="guidTraceLogCmdSet" value="{46A772AB-D554-45B9-8DE2-EF68FCEF6732}">
       <IDSymbol name="idTraceLogToolbar" value="0x1000"/>
@@ -174,7 +90,7 @@
       <IDSymbol name="cmdidAutoLog" value="0x0200"/>
       <IDSymbol name="cmdidCaptureLog" value="0x0300"/>
       <IDSymbol name="cmdidClearLog" value="0x0400"/>
-      <IDSymbol name="cmdidConfigureLog" value="0x0500"/>
+      <IDSymbol name="cmdidConfigureSession" value="0x0500"/>
     </GuidSymbol>
 
     <GuidSymbol name="guidTraceLogToolbarImages" value="{B053DA21-1C9B-42B4-AF85-4C75F075C5E6}">
@@ -183,15 +99,6 @@
       <IDSymbol name="bmpClearLog" value="3"/>
       <IDSymbol name="bmpSettings" value="4"/>
       <IDSymbol name="bmpCapture" value="5"/>
-    </GuidSymbol>
-
-    <GuidSymbol name="guidImages" value="{F5992F72-F7F3-478B-B379-DF16F85D84D3}" >
-      <IDSymbol name="bmpPic1" value="1"/>
-      <IDSymbol name="bmpPic2" value="2"/>
-      <IDSymbol name="bmpPicSearch" value="3"/>
-      <IDSymbol name="bmpPicX" value="4"/>
-      <IDSymbol name="bmpPicArrows" value="5"/>
-      <IDSymbol name="bmpPicStrikethrough" value="6"/>
     </GuidSymbol>
   </Symbols>
 </CommandTable>

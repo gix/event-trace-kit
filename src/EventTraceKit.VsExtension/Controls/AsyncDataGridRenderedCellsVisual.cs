@@ -353,13 +353,13 @@ namespace EventTraceKit.VsExtension.Controls
             cachedDataValidityToken = dataViewModel.DataValidityToken;
             isAsyncPrefetchInProgress = true;
 
-            Action<bool> callBackWhenFinished = delegate (bool wasCancelled) {
+            Action<bool> callBackWhenFinished = wasCancelled => {
                 lastPrefetchCancelled = wasCancelled;
                 isAsyncPrefetchInProgress = false;
                 if (!wasCancelled)
                     cellsPresenter.PostUpdateRendering();
             };
-            Action<bool> highlightAndSelectionPrefetched = delegate (bool wasCancelled) {
+            Action<bool> highlightAndSelectionPrefetched = wasCancelled => {
                 if (!wasCancelled)
                     cellsPresenter.PostUpdateRendering();
             };

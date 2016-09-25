@@ -87,8 +87,9 @@ struct EqualProviderId
 class EventTraceProperties : public EVENT_TRACE_PROPERTIES
 {
 public:
-    static std::unique_ptr<EventTraceProperties> Create(wstring_view name);
-    void* operator new(size_t n, wstring_view name);
+    static std::unique_ptr<EventTraceProperties> Create(
+        wstring_view loggerName, wstring_view logFileName);
+    void* operator new(size_t n, size_t loggerNameBytes, size_t logFileNameBytes);
     void operator delete(void* mem);
 private:
     EventTraceProperties() = default;
@@ -124,22 +125,45 @@ private:
     std::unordered_set<GUID> enabledProviders;
 };
 
+template<typename T, typename U>
+ETK_ALWAYS_INLINE
+T OffsetPtr(U* ptr, size_t offset)
+{
+    return reinterpret_cast<T>(reinterpret_cast<uint8_t*>(ptr) + offset);
+}
+
+void ZStringCopy(wstring_view str, wchar_t* dst)
+{
+    size_t numChars = str.copy(dst, str.length());
+    dst[numChars] = 0;
+}
+
 } // namespace
 
-std::unique_ptr<EventTraceProperties> EventTraceProperties::Create(wstring_view name)
+std::unique_ptr<EventTraceProperties> EventTraceProperties::Create(
+    wstring_view loggerName, wstring_view logFileName)
 {
-    size_t const bufferSize = sizeof(EVENT_TRACE_PROPERTIES) + ByteCount(name);
+    size_t const loggerNameBytes = ZStringByteCount(loggerName);
+    size_t const logFileNameBytes = !loggerName.empty() ? ZStringByteCount(logFileName) : 0;
+    size_t const bufferSize = sizeof(EVENT_TRACE_PROPERTIES) +
+                              loggerNameBytes + logFileNameBytes;
 
-    std::unique_ptr<EventTraceProperties> p(new(name) EventTraceProperties());
+    std::unique_ptr<EventTraceProperties> p(
+        new(loggerNameBytes, logFileNameBytes) EventTraceProperties());
     p->Wnode.BufferSize = static_cast<ULONG>(bufferSize);
     // NB: The actual name is copied later by StartTraceW().
-    p->LoggerNameOffset = sizeof(EVENT_TRACE_PROPERTIES);
+    p->LoggerNameOffset = static_cast<ULONG>(sizeof(EVENT_TRACE_PROPERTIES));
+    if (logFileNameBytes) {
+        p->LogFileNameOffset = static_cast<ULONG>(p->LoggerNameOffset + loggerNameBytes);
+        ZStringCopy(logFileName, OffsetPtr<wchar_t*>(p.get(), p->LogFileNameOffset));
+    }
     return p;
 }
 
-void* EventTraceProperties::operator new(size_t n, wstring_view name)
+void* EventTraceProperties::operator new(
+    size_t n, size_t loggerNameBytes, size_t logFileNameBytes)
 {
-    return ::operator new(n + ByteCount(name));
+    return ::operator new(n + loggerNameBytes + logFileNameBytes);
 }
 
 void EventTraceProperties::operator delete(void* mem)
@@ -170,7 +194,7 @@ EtwTraceSession::~EtwTraceSession()
 
 void EtwTraceSession::SetProperties(TraceProperties const& properties)
 {
-    traceProperties = EventTraceProperties::Create(sessionName);
+    traceProperties = EventTraceProperties::Create(sessionName, properties.LogFileName);
     traceProperties->Wnode.Guid = properties.Id;
     traceProperties->Wnode.ClientContext = static_cast<ULONG>(properties.ClockResolution);
     traceProperties->Wnode.Flags = WNODE_FLAG_TRACED_GUID;
@@ -178,10 +202,10 @@ void EtwTraceSession::SetProperties(TraceProperties const& properties)
     traceProperties->MinimumBuffers = static_cast<ULONG>(properties.MinimumBuffers);
     traceProperties->MaximumBuffers = static_cast<ULONG>(properties.MaximumBuffers);
     traceProperties->MaximumFileSize = 0;
-    traceProperties->LogFileMode = EVENT_TRACE_REAL_TIME_MODE | EVENT_TRACE_STOP_ON_HYBRID_SHUTDOWN;
+    traceProperties->LogFileMode = EVENT_TRACE_REAL_TIME_MODE |
+                                   EVENT_TRACE_STOP_ON_HYBRID_SHUTDOWN;
     traceProperties->FlushTimer = static_cast<ULONG>(properties.FlushTimer);
     traceProperties->EnableFlags = 0;
-    traceProperties->LogFileNameOffset = 0;
 }
 
 void EtwTraceSession::Start()

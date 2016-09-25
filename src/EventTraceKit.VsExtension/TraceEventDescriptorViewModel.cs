@@ -14,8 +14,14 @@
         private string opcode;
         private string keywords;
 
+        [UsedImplicitly("Adding new items to DataGrid")]
         public TraceEventDescriptorViewModel()
         {
+        }
+
+        public TraceEventDescriptorViewModel(ushort id)
+        {
+            Id = id;
         }
 
         public TraceEventDescriptorViewModel(ushort id, byte version, string symbol)
@@ -79,6 +85,21 @@
         {
             get { return keywords; }
             set { SetProperty(ref keywords, value); }
+        }
+
+        public TraceEventDescriptorViewModel DeepClone()
+        {
+            var clone = new TraceEventDescriptorViewModel();
+            clone.IsEnabled = IsEnabled;
+            clone.Id = Id;
+            clone.Version = Version;
+            clone.Symbol = Symbol;
+            clone.Level = Level;
+            clone.Channel = Channel;
+            clone.Task = Task;
+            clone.Opcode = Opcode;
+            clone.Keywords = Keywords;
+            return clone;
         }
     }
 }

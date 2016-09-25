@@ -16,7 +16,7 @@ namespace EventTraceKit.VsExtension.UITests
         public TraceLogTestViewModel()
             : base(new OperationalModeProviderStub(), () => new StubSolutionFileGatherer())
         {
-            StartCommand = new AsyncDelegateCommand(Start, CanStart);
+            StartCommand = new AsyncDelegateCommand<object>(Start, CanStart);
             StopCommand = new DelegateCommand(Stop, CanStop);
             ClearCommand = new DelegateCommand(Clear);
             ConfigureCommand = new DelegateCommand(Configure);
@@ -86,7 +86,7 @@ namespace EventTraceKit.VsExtension.UITests
         private void Configure(object obj)
         {
             var gatherer = new StubSolutionFileGatherer();
-            var viewModel = new TraceSessionSettingsViewModel(gatherer);
+            var viewModel = new TraceSettingsViewModel(gatherer);
             var dialog = new TraceSessionSettingsWindow();
             dialog.DataContext = viewModel;
             dialog.HasDialogFrame = false;
