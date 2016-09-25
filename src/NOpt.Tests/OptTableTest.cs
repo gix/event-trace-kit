@@ -40,7 +40,7 @@ namespace NOpt.Tests
         public void RejectsDuplicateUnknownOption()
         {
             var optInfos = new[] {
-                new UnknownOption(1), 
+                new UnknownOption(1),
                 new UnknownOption(2)
             };
 
