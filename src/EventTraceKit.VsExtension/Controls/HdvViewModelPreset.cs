@@ -5,34 +5,9 @@
     using System.Windows;
     using EventTraceKit.VsExtension.Collections;
     using EventTraceKit.VsExtension.Windows;
+    using Serialization;
 
-    public interface IDependencyObjectCustomSerializerAccess
-    {
-        object GetValue(DependencyProperty dp);
-        bool ShouldSerializeProperty(DependencyProperty dp);
-    }
-
-    public abstract class FreezableCustomSerializerAccessBase
-        : Freezable, IDependencyObjectCustomSerializerAccess
-    {
-        object IDependencyObjectCustomSerializerAccess.GetValue(DependencyProperty dp)
-        {
-            return GetValue(dp);
-        }
-
-        bool IDependencyObjectCustomSerializerAccess.ShouldSerializeProperty(DependencyProperty dp)
-        {
-            return ShouldSerializeProperty(dp);
-        }
-    }
-
-    public class SerializePropertyInProfileAttribute : Attribute
-    {
-        public SerializePropertyInProfileAttribute(string name)
-        {
-        }
-    }
-
+    [SerializedShape(typeof(Settings.ProfilePreset))]
     public sealed class HdvViewModelPreset
         : FreezableCustomSerializerAccessBase
         , IComparable<HdvViewModelPreset>
@@ -54,7 +29,7 @@
                 typeof(HdvViewModelPreset),
                 PropertyMetadataUtils.DefaultNull);
 
-        [SerializePropertyInProfile("Name")]
+        [Serialize]
         public string Name
         {
             get { return (string)GetValue(NameProperty); }
@@ -106,7 +81,7 @@
                 typeof(HdvViewModelPreset),
                 new PropertyMetadata(Boxed.Int32(0)));
 
-        [SerializePropertyInProfile("LeftFrozenColumnCount")]
+        [Serialize]
         public int LeftFrozenColumnCount
         {
             get { return (int)GetValue(LeftFrozenColumnCountProperty); }
@@ -124,7 +99,7 @@
                 typeof(HdvViewModelPreset),
                 new PropertyMetadata(Boxed.Int32(0)));
 
-        [SerializePropertyInProfile("RightFrozenColumnCount")]
+        [Serialize]
         public int RightFrozenColumnCount
         {
             get { return (int)GetValue(RightFrozenColumnCountProperty); }
@@ -142,7 +117,7 @@
                 typeof(HdvViewModelPreset),
                 PropertyMetadataUtils.DefaultNull);
 
-        [SerializePropertyInProfile("Columns")]
+        [Serialize(serializedName: nameof(Settings.ProfilePreset.Columns))]
         public FreezableCollection<HdvColumnViewModelPreset> ConfigurableColumns
         {
             get

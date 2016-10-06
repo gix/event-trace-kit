@@ -1,6 +1,5 @@
 ﻿namespace EventTraceKit.VsExtension
 {
-    using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Threading.Tasks;
@@ -8,16 +7,14 @@
 
     public class TraceSettingsViewModel : ViewModel
     {
-        private readonly ISolutionFileGatherer gatherer;
         private bool? dialogResult;
         private TraceSessionSettingsViewModel selectedSessionPreset;
         private ICommand newPresetCommand;
         private ICommand copyPresetCommand;
         private ICommand deletePresetCommand;
 
-        public TraceSettingsViewModel(ISolutionFileGatherer gatherer)
+        public TraceSettingsViewModel()
         {
-            this.gatherer = gatherer;
             AcceptCommand = new AsyncDelegateCommand(Accept);
         }
 
@@ -29,15 +26,6 @@
             set { SetProperty(ref dialogResult, value); }
         }
 
-        public TraceSessionSettingsViewModel SelectedSessionPreset
-        {
-            get { return selectedSessionPreset; }
-            set { SetProperty(ref selectedSessionPreset, value); }
-        }
-
-        public ObservableCollection<TraceSessionSettingsViewModel> SessionPresets { get; }
-            = new ObservableCollection<TraceSessionSettingsViewModel>();
-
         public ICommand NewPresetCommand =>
             newPresetCommand ?? (newPresetCommand = new AsyncDelegateCommand(NewPreset));
 
@@ -46,6 +34,15 @@
 
         public ICommand DeletePresetCommand =>
             deletePresetCommand ?? (deletePresetCommand = new AsyncDelegateCommand(DeletePreset, CanDeletePreset));
+
+        public TraceSessionSettingsViewModel SelectedSessionPreset
+        {
+            get { return selectedSessionPreset; }
+            set { SetProperty(ref selectedSessionPreset, value); }
+        }
+
+        public ObservableCollection<TraceSessionSettingsViewModel> SessionPresets { get; }
+            = new ObservableCollection<TraceSessionSettingsViewModel>();
 
         private Task NewPreset()
         {

@@ -10,15 +10,15 @@
     [Guid("D7E4C7D7-6A52-4586-9D42-D1AD0A407E4F")]
     public class TraceLogPane : ToolWindowPane
     {
-        private readonly IOperationalModeProvider operationalModeProvider;
+        private readonly Func<IServiceProvider, TraceLogWindow> traceLogFactory;
 
         /// <summary>
         ///   Initializes a new instance of the <see cref="TraceLogPane"/>
         ///   class.
         /// </summary>
-        public TraceLogPane(IOperationalModeProvider operationalModeProvider)
+        public TraceLogPane(Func<IServiceProvider, TraceLogWindow> traceLogFactory)
         {
-            this.operationalModeProvider = operationalModeProvider;
+            this.traceLogFactory = traceLogFactory;
 
             Caption = "Trace Log";
             ToolBar = new CommandID(Guids.TraceLogCmdSet, PkgCmdId.TraceLogToolbar);
@@ -27,18 +27,7 @@
         protected override void Initialize()
         {
             base.Initialize();
-
-            var dte = (DTE)GetService(typeof(DTE));
-            var traceLog = new TraceLogWindowViewModel(
-                operationalModeProvider, () => new SolutionFileGatherer(dte));
-
-            Content = new TraceLogWindow {
-                DataContext = traceLog
-            };
-
-            var mcs = GetService(typeof(IMenuCommandService)) as MenuCommandService;
-            if (mcs != null)
-                traceLog.Attach(mcs);
+            Content = traceLogFactory(this);
         }
 
         public override IVsSearchTask CreateSearch(

@@ -2,9 +2,10 @@ namespace EventTraceKit.VsExtension
 {
     using System;
     using System.Windows;
-    using EventTraceKit.VsExtension.Controls;
     using EventTraceKit.VsExtension.Windows;
+    using Serialization;
 
+    [SerializedShape(typeof(Settings.ProfileColumn))]
     public class HdvColumnViewModelPreset :
         FreezableCustomSerializerAccessBase
         , IComparable<HdvColumnViewModelPreset>
@@ -19,7 +20,7 @@ namespace EventTraceKit.VsExtension
                 typeof(HdvColumnViewModelPreset),
                 new PropertyMetadata(Guid.Empty));
 
-        [SerializePropertyInProfile("Id")]
+        [Serialize]
         public Guid Id
         {
             get { return (Guid)GetValue(IdProperty); }
@@ -37,7 +38,7 @@ namespace EventTraceKit.VsExtension
                 typeof(HdvColumnViewModelPreset),
                 PropertyMetadataUtils.DefaultNull);
 
-        [SerializePropertyInProfile("Name")]
+        [Serialize]
         public string Name
         {
             get { return (string)GetValue(NameProperty); }
@@ -55,7 +56,7 @@ namespace EventTraceKit.VsExtension
                 typeof(HdvColumnViewModelPreset),
                 PropertyMetadataUtils.DefaultNull);
 
-        [SerializePropertyInProfile("HelpText")]
+        [Serialize]
         public string HelpText
         {
             get { return (string)GetValue(HelpTextProperty); }
@@ -74,7 +75,7 @@ namespace EventTraceKit.VsExtension
                 new PropertyMetadata(
                     0, null, CoerceWidth));
 
-        [SerializePropertyInProfile("Width")]
+        [Serialize]
         public int Width
         {
             get { return (int)GetValue(WidthProperty); }
@@ -98,7 +99,7 @@ namespace EventTraceKit.VsExtension
                 typeof(HdvColumnViewModelPreset),
                 new PropertyMetadata(Boxed.False));
 
-        [SerializePropertyInProfile("IsVisible")]
+        [Serialize]
         public bool IsVisible
         {
             get { return (bool)GetValue(IsVisibleProperty); }
@@ -116,7 +117,7 @@ namespace EventTraceKit.VsExtension
                 typeof(HdvColumnViewModelPreset),
                 new PropertyMetadata(TextAlignment.Left));
 
-        [SerializePropertyInProfile("TextAlignment")]
+        [Serialize]
         public TextAlignment TextAlignment
         {
             get { return (TextAlignment)GetValue(TextAlignmentProperty); }
@@ -134,7 +135,7 @@ namespace EventTraceKit.VsExtension
                 typeof(HdvColumnViewModelPreset),
                 new PropertyMetadata(null));
 
-        [SerializePropertyInProfile("CellFormat")]
+        [Serialize]
         public string CellFormat
         {
             get { return (string)GetValue(CellFormatProperty); }

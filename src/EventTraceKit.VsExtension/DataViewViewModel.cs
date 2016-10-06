@@ -7,7 +7,9 @@ namespace EventTraceKit.VsExtension
     using System.Windows;
     using EventTraceKit.VsExtension.Collections;
     using EventTraceKit.VsExtension.Controls;
+    using Serialization;
 
+    [SerializedShape(typeof(Settings.ProfilePreset))]
     public class DataViewViewModel : DependencyObject
     {
         private readonly WorkManager workManager;

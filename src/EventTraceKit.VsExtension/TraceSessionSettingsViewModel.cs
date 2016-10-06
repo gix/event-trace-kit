@@ -7,14 +7,15 @@
     using System.Threading;
     using System.Windows.Input;
     using EventTraceKit.VsExtension.Collections;
-    using Microsoft.Internal.VisualStudio.PlatformUI;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
     using Microsoft.Win32;
     using Microsoft.Windows.TaskDialogs;
     using Microsoft.Windows.TaskDialogs.Controls;
+    using Serialization;
     using Task = System.Threading.Tasks.Task;
 
+    [SerializedShape(typeof(Settings.TraceSession))]
     public class TraceSessionSettingsViewModel : ViewModel
     {
         private ICommand newProviderCommand;
@@ -22,16 +23,13 @@
         private ICommand addManifestCommand;
         private ICommand browseLogFileCommand;
 
+        private Guid id = Guid.NewGuid();
         private string name;
         private string logFileName;
         private uint? bufferSize;
         private uint? minimumBuffers;
         private uint? maximumBuffers;
         private TraceProviderDescriptorViewModel selectedProvider;
-
-        public TraceSessionSettingsViewModel()
-        {
-        }
 
         public TraceSessionSettingsViewModel DeepClone()
         {
@@ -63,6 +61,12 @@
 
         public ObservableCollection<TraceProviderDescriptorViewModel> Providers { get; }
             = new ObservableCollection<TraceProviderDescriptorViewModel>();
+
+        public Guid Id
+        {
+            get { return id; }
+            set { SetProperty(ref id, value); }
+        }
 
         public string Name
         {

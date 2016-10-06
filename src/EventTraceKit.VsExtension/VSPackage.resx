@@ -121,7 +121,10 @@
     <value>Event Trace Kit</value>
   </data>
   <data name="1002" xml:space="preserve">
-    <value>General</value>
+    <value>ETK General</value>
+  </data>
+  <data name="1003" xml:space="preserve">
+    <value>Event Trace Kit Desc</value>
   </data>
   <data name="110" xml:space="preserve">
     <value>Event Trace Kit Extension</value>

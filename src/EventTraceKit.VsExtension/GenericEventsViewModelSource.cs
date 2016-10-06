@@ -6,7 +6,6 @@ namespace EventTraceKit.VsExtension
     using System.Security.Principal;
     using System.Threading;
     using System.Windows;
-    using Collections;
     using EventTraceKit.VsExtension.Controls;
     using EventTraceKit.VsExtension.Windows;
 

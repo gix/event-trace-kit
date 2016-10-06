@@ -7,14 +7,16 @@ namespace EventTraceKit.VsExtension
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Threading;
+    using Collections;
     using Controls;
     using Microsoft.VisualStudio.Shell;
     using Task = System.Threading.Tasks.Task;
 
     public class TraceLogWindowViewModel : ViewModel, IEventInfoSource
     {
+        private readonly IEventTraceKitSettingsService settings;
         private readonly DispatcherTimer updateStatisticsTimer;
-        private TraceSessionDescriptor sessionDescriptor = new TraceSessionDescriptor();
+        protected TraceSessionDescriptor sessionDescriptor = new TraceSessionDescriptor();
 
         private string status;
         private bool showStatistics;
@@ -31,13 +33,12 @@ namespace EventTraceKit.VsExtension
         private TaskScheduler scheduler;
         private TaskFactory taskFactory;
         private EventSymbolSource eventSymbolSource = new EventSymbolSource();
-        private readonly Func<ISolutionFileGatherer> gathererFactory;
 
         public TraceLogWindowViewModel(
-            IOperationalModeProvider modeProvider,
-            Func<ISolutionFileGatherer> gathererFactory)
+            IEventTraceKitSettingsService settings,
+            IOperationalModeProvider modeProvider)
         {
-            this.gathererFactory = gathererFactory;
+            this.settings = settings;
             if (modeProvider != null)
                 modeProvider.OperationalModeChanged += OnOperationalModeChanged;
 
@@ -212,8 +213,8 @@ namespace EventTraceKit.VsExtension
         private void Configure()
         {
             if (settingsViewModel == null) {
-                var gatherer = gathererFactory();
-                settingsViewModel = new TraceSettingsViewModel(gatherer);
+                settingsViewModel = new TraceSettingsViewModel();
+                settingsViewModel.SessionPresets.AddRange(settings.GlobalSettings.Sessions);
             }
 
             var window = new TraceSessionSettingsWindow();
@@ -230,6 +231,9 @@ namespace EventTraceKit.VsExtension
 
             sessionDescriptor = settingsViewModel.GetDescriptor();
             eventSymbolSource.Update(settingsViewModel.GetEventSymbols());
+
+            settings.GlobalSettings.Sessions.Clear();
+            settings.GlobalSettings.Sessions.AddRange(settingsViewModel.SessionPresets);
         }
 
         private void UpdateStats()
@@ -261,7 +265,7 @@ namespace EventTraceKit.VsExtension
                 $"{Statistics.RealTimeBuffersLost} real-time buffers lost)";
         }
 
-        public void Attach(MenuCommandService commandService)
+        public void Attach(IMenuCommandService commandService)
         {
             var id = new CommandID(Guids.TraceLogCmdSet, PkgCmdId.cmdidCaptureLog);
             commandService.AddCommand(

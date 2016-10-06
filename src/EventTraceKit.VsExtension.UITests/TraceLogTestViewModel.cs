@@ -3,8 +3,11 @@ namespace EventTraceKit.VsExtension.UITests
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
+    using System.IO;
+    using System.Linq;
     using System.Threading.Tasks;
     using System.Windows.Input;
+    using Collections;
     using EventTraceKit.VsExtension;
     using Microsoft.VisualStudio.PlatformUI;
 
@@ -14,11 +17,11 @@ namespace EventTraceKit.VsExtension.UITests
         private bool isRunning;
 
         public TraceLogTestViewModel()
-            : base(new OperationalModeProviderStub(), () => new StubSolutionFileGatherer())
+            : base(new StubSettingsService(), new OperationalModeProviderStub())
         {
-            StartCommand = new AsyncDelegateCommand<object>(Start, CanStart);
-            StopCommand = new DelegateCommand(Stop, CanStop);
-            ClearCommand = new DelegateCommand(Clear);
+            StartCommand = new AsyncDelegateCommand(Start, CanStart);
+            StopCommand = new AsyncDelegateCommand(Stop, CanStop);
+            ClearCommand = new AsyncDelegateCommand(Clear);
             ConfigureCommand = new DelegateCommand(Configure);
 
             foreach (var name in App.Current.AvailableThemes)
@@ -54,44 +57,64 @@ namespace EventTraceKit.VsExtension.UITests
             set { SetProperty(ref isRunning, value); }
         }
 
-        private bool CanStart(object obj)
+        private bool CanStart()
         {
-            return !IsRunning;
+            return !IsRunning && sessionDescriptor != null;
         }
 
-        private async Task Start(object param)
+        private async Task Start()
         {
             await StartCapture();
             IsRunning = true;
             CommandManager.InvalidateRequerySuggested();
         }
 
-        private bool CanStop(object obj)
+        private bool CanStop()
         {
             return IsRunning;
         }
 
-        private void Stop(object param)
+        private Task Stop()
         {
             StopCapture();
             IsRunning = false;
             CommandManager.InvalidateRequerySuggested();
+            return Task.CompletedTask;
         }
 
-        private void Clear(object param)
+        private new Task Clear()
         {
             base.Clear();
+            return Task.CompletedTask;
         }
+
+        private TraceSettingsViewModel viewModel;
 
         private void Configure(object obj)
         {
-            var gatherer = new StubSolutionFileGatherer();
-            var viewModel = new TraceSettingsViewModel(gatherer);
+            if (viewModel == null) {
+                viewModel = new TraceSettingsViewModel();
+            }
+
             var dialog = new TraceSessionSettingsWindow();
             dialog.DataContext = viewModel;
-            dialog.HasDialogFrame = false;
-            if (dialog.ShowDialog() != true)
-                return;
+            try {
+                if (dialog.ShowDialog() != true)
+                    return;
+            } finally {
+                var selectedSession = viewModel.SelectedSessionPreset;
+                dialog.DataContext = null;
+                viewModel.SelectedSessionPreset = selectedSession;
+                viewModel.DialogResult = null;
+            }
+
+            sessionDescriptor = viewModel.GetDescriptor();
+        }
+
+        private class StubSettingsService : IEventTraceKitSettingsService
+        {
+            public GlobalSettings GlobalSettings { get; set; } = new GlobalSettings();
+            public SolutionSettings SolutionSettings { get; set; }
         }
 
         private class StubSolutionFileGatherer : ISolutionFileGatherer

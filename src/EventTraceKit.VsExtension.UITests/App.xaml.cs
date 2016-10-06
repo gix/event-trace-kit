@@ -34,9 +34,6 @@
 
             ServiceProvider.GlobalProvider.GetService(typeof(SVsSettingsManager));
             EnvironmentRenderCapabilities.Current.VisualEffectsAllowed = 1 | 2;
-
-            var key1 = VsResourceKeys.ScrollBarStyleKey;
-            var key2 = VsResourceKeys.ScrollViewerStyleKey;
         }
 
         private static void SetGlobalServiceProvider(ServiceProvider serviceProvider)
@@ -138,6 +135,9 @@
 
                     if (background == null && name == "Plain Text")
                         SetColor(id, name, SystemColors.ControlColor, false);
+
+                    if (name == "Window" && background != null)
+                        Resources[VsBrushes.WindowKey] = new SolidColorBrush(background.Value);
                 }
             }
         }

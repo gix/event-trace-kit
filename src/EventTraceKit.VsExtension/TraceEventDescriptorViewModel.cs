@@ -1,7 +1,9 @@
 ﻿namespace EventTraceKit.VsExtension
 {
     using System;
+    using Serialization;
 
+    [SerializedShape(typeof(Settings.TraceEvent))]
     public class TraceEventDescriptorViewModel : ViewModel
     {
         private bool isEnabled;

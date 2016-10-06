@@ -7,7 +7,9 @@ namespace EventTraceKit.VsExtension
     using System.Threading.Tasks;
     using System.Windows.Input;
     using Collections;
+    using Serialization;
 
+    [SerializedShape(typeof(Settings.TraceProvider))]
     public class TraceProviderDescriptorViewModel : ViewModel
     {
         private Guid id;
@@ -24,7 +26,7 @@ namespace EventTraceKit.VsExtension
         private bool includeStackTrace;
         private bool filterEvents;
 
-        private TraceProviderDescriptorViewModel()
+        public TraceProviderDescriptorViewModel()
         {
             ProcessIds = new ObservableCollection<uint>();
             Events = new ObservableCollection<TraceEventDescriptorViewModel>();
@@ -39,34 +41,9 @@ namespace EventTraceKit.VsExtension
             Level = 0xFF;
         }
 
-        public TraceProviderDescriptorViewModel(TraceProviderDescriptor provider)
-            : this()
-        {
-            Id = provider.Id;
-            Manifest = provider.Manifest;
-            Level = provider.Level;
-            MatchAnyKeyword = provider.MatchAnyKeyword;
-            MatchAllKeyword = provider.MatchAllKeyword;
-            IncludeSecurityId = provider.IncludeSecurityId;
-            IncludeTerminalSessionId = provider.IncludeTerminalSessionId;
-            IncludeStackTrace = provider.IncludeStackTrace;
-            if (provider.ProcessIds != null)
-                ProcessIds.AddRange(provider.ProcessIds);
-            if (provider.EventIds != null)
-                Events.AddRange(provider.EventIds.Select(x => new TraceEventDescriptorViewModel(x)));
-        }
-
-        private Task ToggleSelectedEvents(object selectedObjects)
-        {
-            var selectedEvents = ((IList)selectedObjects).Cast<TraceEventDescriptorViewModel>().ToList();
-            bool enabled = !selectedEvents.All(x => x.IsEnabled);
-            foreach (var evt in selectedEvents)
-                evt.IsEnabled = enabled;
-
-            return Task.CompletedTask;
-        }
-
         public string DisplayName => !string.IsNullOrWhiteSpace(Name) ? Name : Id.ToString();
+
+        public ICommand ToggleSelectedEventsCommand { get; }
 
         public Guid Id
         {
@@ -143,9 +120,8 @@ namespace EventTraceKit.VsExtension
         }
 
         public ObservableCollection<uint> ProcessIds { get; }
-        public ObservableCollection<TraceEventDescriptorViewModel> Events { get; }
 
-        public ICommand ToggleSelectedEventsCommand { get; }
+        public ObservableCollection<TraceEventDescriptorViewModel> Events { get; }
 
         public TraceProviderDescriptor ToModel()
         {
@@ -177,6 +153,16 @@ namespace EventTraceKit.VsExtension
             clone.ProcessIds.AddRange(ProcessIds);
             clone.Events.AddRange(Events.Select(x => x.DeepClone()));
             return clone;
+        }
+
+        private Task ToggleSelectedEvents(object selectedObjects)
+        {
+            var selectedEvents = ((IList)selectedObjects).Cast<TraceEventDescriptorViewModel>().ToList();
+            bool enabled = !selectedEvents.All(x => x.IsEnabled);
+            foreach (var evt in selectedEvents)
+                evt.IsEnabled = enabled;
+
+            return Task.CompletedTask;
         }
     }
 }

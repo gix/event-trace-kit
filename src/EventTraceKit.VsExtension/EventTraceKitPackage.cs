@@ -1,68 +1,29 @@
 ﻿namespace EventTraceKit.VsExtension
 {
     using System;
-    using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.ComponentModel;
+    using System.ComponentModel.Composition;
     using System.ComponentModel.Design;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Runtime.InteropServices;
-    using System.Windows.Documents;
-    using System.Xml;
+    using Controls;
     using EnvDTE;
     using Microsoft.VisualStudio;
+    using Microsoft.VisualStudio.Settings;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
+    using Microsoft.VisualStudio.Shell.Settings;
+    using Serialization;
+    using Settings;
 
-    /// <summary>
-    /// The Package class is responsible for the following:
-    ///		- Attributes to enable registration of the components
-    ///		- Enable the creation of our tool windows
-    ///		- Respond to our commands
-    ///
-    /// The following attributes are covered in other samples:
-    ///		PackageRegistration:   Reference.Package
-    ///		ProvideMenuResource:   Reference.MenuAndCommands
-    ///
-    /// Our initialize method defines the command handlers for the commands that
-    /// we provide under View|Other Windows to show our tool windows
-    ///
-    /// The first new attribute we are using is ProvideToolWindow. That attribute
-    /// is used to advertise that our package provides a tool window. In addition
-    /// it can specify optional parameters to describe the default start location
-    /// of the tool window. For example, the PersistedWindowPane will start tabbed
-    /// with Solution Explorer. The default position is only used the very first
-    /// time a tool window with a specific Guid is shown for a user. After that,
-    /// the position is persisted based on the last known position of the window.
-    /// When trying different default start positions, you may find it useful to
-    /// delete *.prf from:
-    ///		"%USERPROFILE%\Application Data\Microsoft\VisualStudio\10.0Exp\"
-    /// as this is where the positions of the tool windows are persisted.
-    ///
-    /// To get the Guid corresponding to the Solution Explorer window, we ran this
-    /// sample, made sure the Solution Explorer was visible, selected it in the
-    /// Persisted Tool Window and looked at the properties in the Properties
-    /// window. You can do the same for any window.
-    ///
-    /// The DynamicWindowPane makes use of a different set of optional properties.
-    /// First it specifies a default position and size (again note that this only
-    /// affects the very first time the window is displayed). Then it specifies the
-    /// Transient flag which means it will not be persisted when Visual Studio is
-    /// closed and reopened.
-    ///
-    /// The second new attribute is ProvideToolWindowVisibility. This attribute
-    /// is used to specify that a tool window visibility should be controled
-    /// by a UI Context. For a list of predefined UI Context, look in vsshell.idl
-    /// and search for "UICONTEXT_". Since we are using the UICONTEXT_SolutionExists,
-    /// this means that it is possible to cause the window to be displayed simply by
-    /// creating a solution/project.
-    /// </summary>
-    [ProvideToolWindow(typeof(TraceLogPane))]
-    [ProvideMenuResource(1000, 1)]
     [PackageRegistration(UseManagedResourcesOnly = true)]
-    [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)]
+    [InstalledProductRegistration("#110", "#112", productId: "1.0", IconResourceID = 400)]
+    [ProvideMenuResource("Menus.ctmenu", 1)]
+    [ProvideToolWindow(typeof(TraceLogPane))]
+    [ProvideProfile(typeof(EventTraceKitProfileManager), "EventTraceKit", "General", 1001, 1002, false, DescriptionResourceID = 1003)]
     [Guid(PackageGuidString)]
-    [ProvideProfile(typeof(EventTraceKitSettingsProfile), "EventTraceKit", "General", 1001, 1002, false)]
     [SuppressMessage(
         "StyleCop.CSharp.DocumentationRules",
         "SA1650:ElementDocumentationMustBeSpelledCorrectly",
@@ -72,9 +33,9 @@
         public const string PackageGuidString = "7867DA46-69A8-40D7-8B8F-92B0DE8084D8";
 
         private OleMenuCommandService menuService;
-        private IOperationalModeProvider operationalModeProvider;
 
         private Lazy<TraceLogPane> traceLogPane = new Lazy<TraceLogPane>(() => null);
+        private GlobalSettings globalSettings;
 
         public EventTraceKitPackage()
         {
@@ -89,11 +50,65 @@
         {
             base.Initialize();
 
+            LoadSettings();
+
             AddMenuCommandHandlers();
 
-            var dte = (DTE)GetGlobalService(typeof(SDTE));
-            operationalModeProvider = new DteOperationalModeProvider(dte, this);
-            traceLogPane = new Lazy<TraceLogPane>(() => new TraceLogPane(operationalModeProvider));
+            Func<IServiceProvider, TraceLogWindow> traceLogFactory = sp => {
+                var dte = sp.GetService<SDTE, DTE>();
+                var operationalModeProvider = new DteOperationalModeProvider(dte, this);
+
+                var traceLog = new TraceLogWindowViewModel(this, operationalModeProvider);
+
+                var mcs = sp.GetService<IMenuCommandService>();
+                if (mcs != null)
+                    traceLog.Attach(mcs);
+
+                return new TraceLogWindow { DataContext = traceLog };
+            };
+
+            traceLogPane = new Lazy<TraceLogPane>(() => new TraceLogPane(traceLogFactory));
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            SaveSettings();
+            base.Dispose(disposing);
+        }
+
+        private WritableSettingsStore CreateSettingsStore()
+        {
+            var mgr = new ShellSettingsManager(this);
+            return mgr.GetWritableSettingsStore(SettingsScope.UserSettings);
+        }
+
+        private void LoadSettings()
+        {
+            var store = CreateSettingsStore();
+            if (!store.PropertyExists("EventTraceKit", "GlobalSettings")) {
+                GlobalSettings = new GlobalSettings();
+                return;
+            }
+
+            var serializer = new SettingsSerializer();
+            using (var stream = store.GetMemoryStream("EventTraceKit", "GlobalSettings"))
+                GlobalSettings = serializer.Load<GlobalSettings>(stream);
+        }
+
+        private void SaveSettings()
+        {
+            if (GlobalSettings == null)
+                return;
+
+            var settingsStore = CreateSettingsStore();
+            if (!settingsStore.CollectionExists("EventTraceKit"))
+                settingsStore.CreateCollection("EventTraceKit");
+
+            var serializer = new SettingsSerializer();
+            using (var stream = new MemoryStream()) {
+                serializer.Save(GlobalSettings, stream);
+                settingsStore.SetMemoryStream("EventTraceKit", "GlobalSettings", stream);
+            }
         }
 
         private void AddMenuCommandHandlers()
@@ -140,7 +155,7 @@
             if (menuService == null) {
                 // Get the OleCommandService object provided by the MPF; this object is the one
                 // responsible for handling the collection of commands implemented by the package.
-                menuService = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+                menuService = this.GetService<IMenuCommandService, OleMenuCommandService>();
             }
 
             if (menuService == null)
@@ -200,51 +215,159 @@
 
         private const string EventTraceKitOptionKey = "ETK_D438FC6445E7BF9BDEA29EA3B07";
 
-        public TraceSessionSettings Settings { get; set; }
-    }
-
-    public class TraceProviderSettings
-    {
-        public
-            TraceProviderSettings(Guid id)
+        public GlobalSettings GlobalSettings
         {
-            Id = id;
-            Level = 0xFF;
-            MatchAnyKeyword = 0xFFFFFFFFFFFFFFFFUL;
-            MatchAllKeyword = 0;
-
-            ProcessIds = new List<uint>();
-            EventIds = new List<ushort>();
+            get { return globalSettings ?? (globalSettings = new GlobalSettings()); }
+            set { globalSettings = value; }
         }
 
-        public Guid Id { get; set; }
-        public byte Level { get; set; }
-        public ulong MatchAnyKeyword { get; set; }
-        public ulong MatchAllKeyword { get; set; }
-
-        public bool IncludeSecurityId { get; set; }
-        public bool IncludeTerminalSessionId { get; set; }
-        public bool IncludeStackTrace { get; set; }
-
-        public string Manifest { get; set; }
-        public List<uint> ProcessIds { get; set; }
-        public List<ushort> EventIds { get; set; }
+        public SolutionSettings SolutionSettings { get; set; }
     }
 
-    public class TraceSessionSettings
+    public static partial class Extensions
     {
-        public IList<TraceProviderSettings> Providers { get; } =
-            new List<TraceProviderSettings>();
+        public static WritableSettingsStore GetWritableSettingsStore(this SVsServiceProvider vsServiceProvider)
+        {
+            var shellSettingsManager = new ShellSettingsManager(vsServiceProvider);
+            return shellSettingsManager.GetWritableSettingsStore(SettingsScope.UserSettings);
+        }
+    }
+
+    public interface IEtkGlobalSettings
+    {
+    }
+
+    [Export(typeof(IEtkGlobalSettings))]
+    internal sealed class EtkGlobalSettings : IEtkGlobalSettings
+    {
+        private const string CollectionPath = "EventTraceKit";
+        private const string GlobalSettingsName = "GlobalSettings";
+        private const string ErrorGetFormat = "Cannot get setting {0}";
+        private const string ErrorSetFormat = "Cannot set setting {0}";
+
+        private readonly WritableSettingsStore settingsStore;
+        private GlobalSettings globalSettings;
+
+        [ImportingConstructor]
+        internal EtkGlobalSettings(
+            SVsServiceProvider vsServiceProvider)
+            : this(vsServiceProvider.GetWritableSettingsStore())
+        {
+        }
+
+        internal EtkGlobalSettings(WritableSettingsStore settingsStore)
+        {
+            this.settingsStore = settingsStore;
+        }
+
+        private void Report(string format, Exception exception)
+        {
+            // FIXME
+        }
+
+        private void EnsureCollectionExists()
+        {
+            if (!settingsStore.CollectionExists(CollectionPath))
+                settingsStore.CreateCollection(CollectionPath);
+        }
+
+        private string GetString(string propertyName, string defaultValue)
+        {
+            EnsureCollectionExists();
+            try {
+                if (!settingsStore.PropertyExists(CollectionPath, propertyName))
+                    return defaultValue;
+                return settingsStore.GetString(CollectionPath, propertyName);
+            } catch (Exception ex) {
+                Report(string.Format(ErrorGetFormat, propertyName), ex);
+                return defaultValue;
+            }
+        }
+
+        private void SetString(string propertyName, string value)
+        {
+            EnsureCollectionExists();
+            try {
+                settingsStore.SetString(CollectionPath, propertyName, value);
+            } catch (Exception ex) {
+                Report(string.Format(ErrorSetFormat, propertyName), ex);
+            }
+        }
+
+        private T GetObject<T>(string propertyName, Func<T> defaultValue)
+        {
+            EnsureCollectionExists();
+            try {
+                if (!settingsStore.PropertyExists(CollectionPath, propertyName))
+                    return defaultValue();
+                var serializer = new SettingsSerializer();
+                var stream = settingsStore.GetMemoryStream(CollectionPath, propertyName);
+                using (stream)
+                    return serializer.Load<T>(stream);
+            } catch (Exception ex) {
+                Report(string.Format(ErrorGetFormat, propertyName), ex);
+                return defaultValue();
+            }
+        }
+
+        private void SetObject<T>(string propertyName, T value)
+        {
+            EnsureCollectionExists();
+            try {
+                var serializer = new SettingsSerializer();
+                var stream = serializer.SaveToStream(value);
+                settingsStore.SetMemoryStream(CollectionPath, propertyName, stream);
+            } catch (Exception ex) {
+                Report(string.Format(ErrorSetFormat, propertyName), ex);
+            }
+        }
+
+        public GlobalSettings GlobalSettings
+        {
+            get { return globalSettings ?? (GlobalSettings = GetObject(GlobalSettingsName, () => new GlobalSettings())); }
+            set
+            {
+                globalSettings = value;
+                SetObject(GlobalSettingsName, value);
+            }
+        }
+    }
+
+    [SerializedShape(typeof(Settings.GlobalSettings))]
+    public class GlobalSettings
+    {
+        public ObservableCollection<HdvViewModelPreset> ModifiedPresets { get; } =
+            new ObservableCollection<HdvViewModelPreset>();
+
+        public ObservableCollection<HdvViewModelPreset> PersistedPresets { get; } =
+            new ObservableCollection<HdvViewModelPreset>();
+
+        public Guid ActiveSession { get; set; }
+
+        public ObservableCollection<TraceSessionSettingsViewModel> Sessions { get; } =
+            new ObservableCollection<TraceSessionSettingsViewModel>();
+    }
+
+    public class SolutionSettings
+    {
+        public Collection<ProfilePreset> ModifiedPresets { get; set; }
+
+        public Collection<ProfilePreset> PersistedPresets { get; set; }
+
+        public Guid ActiveSession { get; set; }
+
+        public Collection<TraceSession> Sessions { get; set; }
     }
 
     public interface IEventTraceKitSettingsService
     {
-        TraceSessionSettings Settings { get; set; }
+        GlobalSettings GlobalSettings { get; }
+        SolutionSettings SolutionSettings { get; }
     }
 
     [ComVisible(true)]
     [Guid("9619B7BF-69E2-4F5F-B95C-F2E6EDA02205")]
-    public sealed class EventTraceKitSettingsProfile : Component, IProfileManager
+    public sealed class EventTraceKitProfileManager : Component, IProfileManager
     {
         private EventTraceKitPackage package;
 
@@ -264,6 +387,18 @@
 
         public void LoadSettingsFromXml(IVsSettingsReader reader)
         {
+            if (package == null)
+                return;
+
+            string xml;
+            if (reader.ReadSettingXmlAsString("GlobalSettings", out xml) != VSConstants.S_OK)
+                return;
+
+            var serializer = new SettingsSerializer();
+            try {
+                package.GlobalSettings = serializer.LoadFromString<GlobalSettings>(xml);
+            } catch {
+            }
         }
 
         public void ResetSettings()
@@ -276,15 +411,13 @@
 
         public void SaveSettingsToXml(IVsSettingsWriter writer)
         {
-        }
-    }
+            var settings = package?.GlobalSettings;
+            if (settings == null)
+                return;
 
-    public static class ServiceProviderExtensions
-    {
-        public static T GetService<T>(this IServiceProvider provider)
-            where T : class
-        {
-            return provider.GetService(typeof(T)) as T;
+            var serializer = new SettingsSerializer();
+            var xml = serializer.SaveToString(settings);
+            writer.WriteSettingXmlFromString(xml);
         }
     }
 }

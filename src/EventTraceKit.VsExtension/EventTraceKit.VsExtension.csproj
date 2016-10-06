@@ -147,10 +147,6 @@
       <HintPath>..\packages\Microsoft.VisualStudio.Utilities.14.3.25407\lib\net45\Microsoft.VisualStudio.Utilities.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.Validation, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.VisualStudio.Validation.14.1.111\lib\net45\Microsoft.VisualStudio.Validation.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Microsoft.Windows, Version=1.0.6084.34995, Culture=neutral, PublicKeyToken=de91bd32a6ee7004, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Windows.1.0.0\lib\Microsoft.Windows.dll</HintPath>
       <Private>True</Private>
@@ -159,6 +155,7 @@
     <Reference Include="PresentationFramework" />
     <Reference Include="PresentationFramework.Aero2" />
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
     <Reference Include="System.Design" />
@@ -176,6 +173,24 @@
     <Compile Include="CharCPtrUtils.cs" />
     <Compile Include="Collections\Extensions.cs" />
     <Compile Include="ComparisonUtils.cs" />
+    <Compile Include="Serialization\ActivatorUtils.cs" />
+    <Compile Include="Serialization\CustomXamlSerializer.cs" />
+    <Compile Include="Serialization\DictionaryExtensions.cs" />
+    <Compile Include="Serialization\EnumerableExtensions.cs" />
+    <Compile Include="Serialization\IXamlSerializer.cs" />
+    <Compile Include="Serialization\SafeXamlSerializer.cs" />
+    <Compile Include="Serialization\SerializationShaper.cs" />
+    <Compile Include="Serialization\SerializableElementHelperOld.cs" />
+    <Compile Include="Serialization\SerializeAttribute.cs" />
+    <Compile Include="Serialization\SerializedShapeAttribute.cs" />
+    <Compile Include="Serialization\SettingsSerializer.cs" />
+    <Compile Include="Serialization\ShapingXamlSerializer.cs" />
+    <Compile Include="Serialization\SafeXamlSchemaContext.cs" />
+    <Compile Include="Serialization\TypeExtensions.cs" />
+    <Compile Include="Serialization\TypeHelper.cs" />
+    <Compile Include="Serialization\XamlSerializerExtensions.cs" />
+    <Compile Include="ServiceProviderExtensions.cs" />
+    <Compile Include="Windows\FreezableCustomSerializerAccessBase.cs" />
     <Compile Include="DataTable.cs" />
     <Compile Include="IDataView.cs" />
     <Compile Include="DataView.cs" />
@@ -188,6 +203,7 @@
     <Compile Include="ItemEventHandler.cs" />
     <Compile Include="IWorkManager.cs" />
     <Compile Include="PackageExtensions.cs" />
+    <Compile Include="Settings\Settings.cs" />
     <Compile Include="TraceEventDescriptorViewModel.cs" />
     <Compile Include="TraceLogStatsModel.cs" />
     <Compile Include="TraceSettingsViewModel.cs" />
@@ -260,11 +276,6 @@
     <Compile Include="Controls\Primitives\AsyncDataGridCellsPresenter.cs" />
     <Compile Include="PkgCmdId.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Include="ResourceUtils.cs" />
     <Compile Include="TdhHelper.cs" />
     <Compile Include="TimePoint.cs" />
@@ -284,13 +295,10 @@
     <Compile Include="XElementExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
+    <EmbeddedResource Include="VSPackage.resx">
       <MergeWithCTO>true</MergeWithCTO>
+      <ManifestResourceName>VSPackage</ManifestResourceName>
     </EmbeddedResource>
-    <EmbeddedResource Include="VSPackage.resx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Key.snk" />
@@ -301,7 +309,7 @@
   </ItemGroup>
   <ItemGroup>
     <VSCTCompile Include="PkgCmd.vsct">
-      <ResourceName>1000</ResourceName>
+      <ResourceName>Menus.ctmenu</ResourceName>
       <SubType>Designer</SubType>
     </VSCTCompile>
   </ItemGroup>

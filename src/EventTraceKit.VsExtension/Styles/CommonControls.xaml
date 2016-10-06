@@ -131,15 +131,15 @@
   </Style>
 
   <Style x:Key="{x:Type ComboBox}" TargetType="{x:Type ComboBox}"
-         BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogComboBoxStyleKey}}" />
+         BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogComboBoxStyleKey}}"/>
   <Style x:Key="{x:Type RadioButton}" TargetType="{x:Type RadioButton}"
-         BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogRadioButtonStyleKey}}" />
+         BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogRadioButtonStyleKey}}"/>
   <Style x:Key="{x:Type Hyperlink}" TargetType="{x:Type Hyperlink}"
-         BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogHyperlinkStyleKey}}" />
+         BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogHyperlinkStyleKey}}"/>
   <Style x:Key="{x:Type TreeView}" TargetType="{x:Type TreeView}"
-         BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogTreeViewStyleKey}}" />
+         BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogTreeViewStyleKey}}"/>
   <Style x:Key="{x:Type TreeViewItem}" TargetType="{x:Type TreeViewItem}"
-         BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogTreeViewItemStyleKey}}" />
+         BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogTreeViewItemStyleKey}}"/>
 
   <Style x:Key="{x:Type ScrollBar}" TargetType="{x:Type ScrollBar}"
          BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ScrollBarStyleKey}}"/>
