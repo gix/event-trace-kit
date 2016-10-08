@@ -5,7 +5,7 @@
     using System.Windows.Controls.Primitives;
     using System.Windows.Interop;
     using System.Windows.Markup;
-    using EventTraceKit.VsExtension.Native;
+    using Native;
     using Microsoft.VisualStudio.PlatformUI;
 
     public sealed class MenuPopupPositionerExtension : MarkupExtension

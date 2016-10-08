@@ -47,10 +47,10 @@ namespace EventTraceKit.VsExtension
             var preset = tableTuple.Item2;
 
             EventsDataView = new TraceEventsView(dataTable);
-            HdvViewModel = new DataViewViewModel(EventsDataView);
-            GridModel = HdvViewModel.GridViewModel;
+            AdvModel = new AsyncDataViewModel(EventsDataView);
+            GridModel = AdvModel.GridViewModel;
 
-            HdvViewModel.HdvViewModelPreset = preset;
+            AdvModel.Preset = preset;
 
             syncCtx = new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher);
             SynchronizationContext.SetSynchronizationContext(syncCtx);
@@ -77,7 +77,7 @@ namespace EventTraceKit.VsExtension
         }
 
         public TraceEventsView EventsDataView { get; }
-        public DataViewViewModel HdvViewModel { get; }
+        public AsyncDataViewModel AdvModel { get; }
         public AsyncDataGridViewModel GridModel { get; }
 
         public TraceLogStatsModel Statistics { get; }
@@ -236,6 +236,11 @@ namespace EventTraceKit.VsExtension
             settings.GlobalSettings.Sessions.AddRange(settingsViewModel.SessionPresets);
         }
 
+        private void OpenViewEditor()
+        {
+            PresetManagerDialog.ShowPresetManagerDialog(AdvModel, null);
+        }
+
         private void UpdateStats()
         {
             if (session == null)
@@ -272,7 +277,7 @@ namespace EventTraceKit.VsExtension
                 new OleMenuCommand(OnToggleCaptureLog, null, OnQueryToggleCaptureLog, id));
 
             id = new CommandID(Guids.TraceLogCmdSet, PkgCmdId.cmdidClearLog);
-            commandService.AddCommand(new OleMenuCommand(OnClearLog, id));
+            commandService.AddCommand(new OleMenuCommand((s, e) => Clear(), id));
 
             id = new CommandID(Guids.TraceLogCmdSet, PkgCmdId.cmdidAutoLog);
             commandService.AddCommand(
@@ -280,6 +285,9 @@ namespace EventTraceKit.VsExtension
 
             id = new CommandID(Guids.TraceLogCmdSet, PkgCmdId.cmdidConfigureSession);
             commandService.AddCommand(new OleMenuCommand(OnConfigureLog, id));
+
+            id = new CommandID(Guids.TraceLogCmdSet, PkgCmdId.cmdidOpenViewEditor);
+            commandService.AddCommand(new OleMenuCommand((s, e) => OpenViewEditor(), id));
         }
 
         private void OnQueryToggleCaptureLog(object sender, EventArgs e)
@@ -307,11 +315,6 @@ namespace EventTraceKit.VsExtension
         private void OnToggleCaptureLog(object sender, EventArgs e)
         {
             ToggleCapture();
-        }
-
-        private void OnClearLog(object sender, EventArgs e)
-        {
-            Clear();
         }
 
         private void OnConfigureLog(object sender, EventArgs e)

@@ -3,7 +3,7 @@
     using System;
     using System.Windows;
     using System.Windows.Media;
-    using EventTraceKit.VsExtension.Windows;
+    using Windows;
     using Microsoft.VisualStudio.PlatformUI;
 
     /// <summary>Interaction logic for TraceLogWindow.</summary>

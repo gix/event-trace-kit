@@ -5,7 +5,7 @@
     using System.Globalization;
     using System.Windows;
     using System.Windows.Data;
-    using EventTraceKit.VsExtension.Collections;
+    using Collections;
 
     [ValueConversion(typeof(object), typeof(bool))]
     public sealed class IsEmptyEnumerableConverter : IValueConverter

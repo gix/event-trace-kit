@@ -6,7 +6,7 @@
     using System.Linq;
     using System.Threading;
     using System.Windows.Input;
-    using EventTraceKit.VsExtension.Collections;
+    using Collections;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
     using Microsoft.Win32;
