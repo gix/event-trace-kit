@@ -39,4 +39,39 @@ namespace EventTraceKit.VsExtension.Windows
 
         }
     }
+
+    public sealed class DelegateValueConverter<TValue, TParam, TResult> : IValueConverter
+    {
+        private readonly Func<TValue, TParam, TResult> converter;
+        private readonly Func<TResult, TParam, TValue> convertBack;
+
+        public DelegateValueConverter(Func<TValue, TParam, TResult> converter)
+            : this(converter, null)
+        {
+        }
+
+        public DelegateValueConverter(
+            Func<TValue, TParam, TResult> converter, Func<TResult, TParam, TValue> convertBack)
+        {
+            this.converter = converter;
+            this.convertBack = convertBack;
+        }
+
+        public object Convert(
+            object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is TValue && parameter is TParam)
+                return converter((TValue)value, (TParam)parameter);
+            return DependencyProperty.UnsetValue;
+
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (convertBack != null && value is TResult && parameter is TParam)
+                return convertBack((TResult)value, (TParam)parameter);
+            return DependencyProperty.UnsetValue;
+
+        }
+    }
 }

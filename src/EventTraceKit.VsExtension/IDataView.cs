@@ -20,6 +20,7 @@
         void ApplyColumnView(DataColumnViewInfo[] dataColumnViewInfos);
         object DataValidityToken { get; }
         bool IsValidDataValidityToken(object dataValidityToken);
+        DataColumnView CreateDataColumnViewFromInfo(DataColumnViewInfo dataColumnViewInfo);
     }
 
     public sealed class DataViewColumnsCollection : IEnumerable<DataColumnView>

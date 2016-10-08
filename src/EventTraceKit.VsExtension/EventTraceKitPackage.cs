@@ -2,10 +2,8 @@
 {
     using System;
     using System.Collections.ObjectModel;
-    using System.ComponentModel;
     using System.ComponentModel.Composition;
     using System.ComponentModel.Design;
-    using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Runtime.InteropServices;
     using Controls;
@@ -24,15 +22,11 @@
     [ProvideToolWindow(typeof(TraceLogPane))]
     [ProvideProfile(typeof(EventTraceKitProfileManager), "EventTraceKit", "General", 1001, 1002, false, DescriptionResourceID = 1003)]
     [Guid(PackageGuidString)]
-    [SuppressMessage(
-        "StyleCop.CSharp.DocumentationRules",
-        "SA1650:ElementDocumentationMustBeSpelledCorrectly",
-        Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     public class EventTraceKitPackage : Package, IEventTraceKitSettingsService
     {
         public const string PackageGuidString = "7867DA46-69A8-40D7-8B8F-92B0DE8084D8";
 
-        private OleMenuCommandService menuService;
+        private IMenuCommandService menuService;
 
         private Lazy<TraceLogPane> traceLogPane = new Lazy<TraceLogPane>(() => null);
         private GlobalSettings globalSettings;
@@ -42,10 +36,6 @@
             AddOptionKey(EventTraceKitOptionKey);
         }
 
-        /// <summary>
-        /// Initialization of the package; this is the place where you can put all the initialization
-        /// code that rely on services provided by VisualStudio.
-        /// </summary>
         protected override void Initialize()
         {
             base.Initialize();
@@ -114,7 +104,7 @@
         private void AddMenuCommandHandlers()
         {
             var id = new CommandID(Guids.TraceLogCmdSet, PkgCmdId.cmdidTraceLog);
-            DefineCommandHandler(ShowTraceLogWindow, id);
+            DefineCommandHandler(id, ShowTraceLogWindow);
         }
 
         internal void OutputString(Guid paneId, string text)
@@ -122,7 +112,7 @@
             const int DO_NOT_CLEAR_WITH_SOLUTION = 0;
             const int VISIBLE = 1;
 
-            var outputWindow = GetService(typeof(SVsOutputWindow)) as IVsOutputWindow;
+            var outputWindow = this.GetService<SVsOutputWindow, IVsOutputWindow>();
             if (outputWindow == null)
                 return;
 
@@ -140,23 +130,26 @@
         }
 
         /// <summary>
-        /// Define a command handler.
-        /// When the user press the button corresponding to the CommandID
-        /// the EventHandler will be called.
+        ///   Defines a command handler. When the user press the button corresponding
+        ///   to the CommandID the EventHandler will be called.
         /// </summary>
-        /// <param name="id">The CommandID (Guid/ID pair) as defined in the .vsct file</param>
-        /// <param name="handler">Method that should be called to implement the command</param>
-        /// <returns>The menu command. This can be used to set parameter such as the default visibility once the package is loaded</returns>
-        internal OleMenuCommand DefineCommandHandler(EventHandler handler, CommandID id)
+        /// <param name="id">
+        ///   The CommandID (Guid/ID pair) as defined in the. vsct file
+        /// </param>
+        /// <param name="handler">
+        ///   Method that should be called to implement the command
+        /// </param>
+        /// <returns>
+        ///   The menu command. This can be used to set parameter such as the
+        ///   default visibility once the package is loaded
+        /// </returns>
+        private OleMenuCommand DefineCommandHandler(CommandID id, EventHandler handler)
         {
             if (Zombied)
                 return null;
 
-            if (menuService == null) {
-                // Get the OleCommandService object provided by the MPF; this object is the one
-                // responsible for handling the collection of commands implemented by the package.
-                menuService = this.GetService<IMenuCommandService, OleMenuCommandService>();
-            }
+            if (menuService == null)
+                menuService = this.GetService<IMenuCommandService>();
 
             if (menuService == null)
                 return null;
@@ -336,11 +329,11 @@
     [SerializedShape(typeof(Settings.GlobalSettings))]
     public class GlobalSettings
     {
-        public ObservableCollection<HdvViewModelPreset> ModifiedPresets { get; } =
-            new ObservableCollection<HdvViewModelPreset>();
+        public ObservableCollection<AsyncDataViewModelPreset> ModifiedPresets { get; } =
+            new ObservableCollection<AsyncDataViewModelPreset>();
 
-        public ObservableCollection<HdvViewModelPreset> PersistedPresets { get; } =
-            new ObservableCollection<HdvViewModelPreset>();
+        public ObservableCollection<AsyncDataViewModelPreset> PersistedPresets { get; } =
+            new ObservableCollection<AsyncDataViewModelPreset>();
 
         public Guid ActiveSession { get; set; }
 
@@ -363,61 +356,5 @@
     {
         GlobalSettings GlobalSettings { get; }
         SolutionSettings SolutionSettings { get; }
-    }
-
-    [ComVisible(true)]
-    [Guid("9619B7BF-69E2-4F5F-B95C-F2E6EDA02205")]
-    public sealed class EventTraceKitProfileManager : Component, IProfileManager
-    {
-        private EventTraceKitPackage package;
-
-        public override ISite Site
-        {
-            get { return base.Site; }
-            set
-            {
-                base.Site = value;
-                package = Site?.GetService<EventTraceKitPackage>();
-            }
-        }
-
-        public void LoadSettingsFromStorage()
-        {
-        }
-
-        public void LoadSettingsFromXml(IVsSettingsReader reader)
-        {
-            if (package == null)
-                return;
-
-            string xml;
-            if (reader.ReadSettingXmlAsString("GlobalSettings", out xml) != VSConstants.S_OK)
-                return;
-
-            var serializer = new SettingsSerializer();
-            try {
-                package.GlobalSettings = serializer.LoadFromString<GlobalSettings>(xml);
-            } catch {
-            }
-        }
-
-        public void ResetSettings()
-        {
-        }
-
-        public void SaveSettingsToStorage()
-        {
-        }
-
-        public void SaveSettingsToXml(IVsSettingsWriter writer)
-        {
-            var settings = package?.GlobalSettings;
-            if (settings == null)
-                return;
-
-            var serializer = new SettingsSerializer();
-            var xml = serializer.SaveToString(settings);
-            writer.WriteSettingXmlFromString(xml);
-        }
     }
 }

@@ -47,7 +47,7 @@ namespace EventTraceKit.VsExtension
             var preset = tableTuple.Item2;
 
             EventsDataView = new TraceEventsView(dataTable);
-            AdvModel = new AsyncDataViewModel(EventsDataView);
+            AdvModel = new AsyncDataViewModel(EventsDataView, preset);
             GridModel = AdvModel.GridViewModel;
 
             AdvModel.Preset = preset;

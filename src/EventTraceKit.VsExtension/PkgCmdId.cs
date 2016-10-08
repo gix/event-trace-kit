@@ -10,5 +10,6 @@ namespace EventTraceKit.VsExtension
         public const int cmdidCaptureLog = 0x0300;
         public const int cmdidClearLog = 0x0400;
         public const int cmdidConfigureSession = 0x0500;
+        public const int cmdidOpenViewEditor = 0x0600;
     }
 }

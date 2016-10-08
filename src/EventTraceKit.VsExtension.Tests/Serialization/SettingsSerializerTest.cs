@@ -38,16 +38,16 @@
 
             settings.Sessions.Add(session);
 
-            var preset = new HdvViewModelPreset();
+            var preset = new AsyncDataViewModelPreset();
             preset.Name = "Foo Preset";
-            preset.ConfigurableColumns.Add(new HdvColumnViewModelPreset {
+            preset.ConfigurableColumns.Add(new ColumnViewModelPreset {
                 Id = new Guid("C6B4A55A-72BB-4235-8F3C-5EDABC4DBA52"),
                 Name = "Id",
                 Width = 50,
                 IsVisible = true,
                 TextAlignment = TextAlignment.Right
             });
-            preset.ConfigurableColumns.Add(new HdvColumnViewModelPreset {
+            preset.ConfigurableColumns.Add(new ColumnViewModelPreset {
                 Id = new Guid("B6875CD8-AE93-4DC7-943D-8406FE406073"),
                 Name = "Name",
                 Width = 142,
@@ -212,9 +212,9 @@
         {
             var serializer = new SettingsSerializer();
 
-            var preset = new HdvViewModelPreset();
+            var preset = new AsyncDataViewModelPreset();
             preset.Name = "Foo";
-            preset.ConfigurableColumns.Add(new HdvColumnViewModelPreset {
+            preset.ConfigurableColumns.Add(new ColumnViewModelPreset {
                 Id = new Guid("C6B4A55A-72BB-4235-8F3C-5EDABC4DBA52"),
                 Name = "Col",
                 Width = 123,

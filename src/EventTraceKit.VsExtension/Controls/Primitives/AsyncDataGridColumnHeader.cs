@@ -6,7 +6,7 @@
     using System.Windows.Controls.Primitives;
     using System.Windows.Input;
     using System.Windows.Media;
-    using EventTraceKit.VsExtension.Windows;
+    using Windows;
 
     [TemplatePart(Name = PART_LeftHeaderGripper, Type = typeof(Thumb))]
     [TemplatePart(Name = PART_RightHeaderGripper, Type = typeof(Thumb))]
@@ -429,7 +429,7 @@
         private void OnLeftHeaderGripperPartMouseDoubleClick(
             object sender, MouseButtonEventArgs e)
         {
-            if (Column == null || e.Handled) // || !ViewModel.DataViewViewModel.IsReady)
+            if (Column == null || e.Handled) // || !ViewModel.AsyncDataViewModel.IsReady)
                 return;
 
             double change = ParentGrid.AutoSize(Column);
@@ -470,7 +470,7 @@
         private void OnRightHeaderGripperPartMouseDoubleClick(
             object sender, MouseButtonEventArgs e)
         {
-            if (Column == null || e.Handled) // || !ViewModel.DataViewViewModel.IsReady)
+            if (Column == null || e.Handled) // || !ViewModel.AsyncDataViewModel.IsReady)
                 return;
 
             double change = ParentGrid.AutoSize(Column);

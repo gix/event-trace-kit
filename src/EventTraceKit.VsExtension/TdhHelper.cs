@@ -1066,7 +1066,7 @@ namespace EventTraceKit.VsExtension
 
         [DllImport("Kernel32.dll", SetLastError = true)]
         public static extern bool FileTimeToSystemTime(
-            [In] ref System.Runtime.InteropServices.ComTypes.FILETIME lpFileTime, out SYSTEMTIME lpSystemTime);
+            [In] ref FILETIME lpFileTime, out SYSTEMTIME lpSystemTime);
 
         [DllImport("WS2_32.dll", EntryPoint = "WSAAddressToStringW", CharSet = CharSet.Unicode, SetLastError = true)]
         public static extern int WSAAddressToString(

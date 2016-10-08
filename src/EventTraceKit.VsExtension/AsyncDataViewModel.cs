@@ -5,12 +5,11 @@ namespace EventTraceKit.VsExtension
     using System.Linq;
     using System.Threading;
     using System.Windows;
-    using EventTraceKit.VsExtension.Collections;
-    using EventTraceKit.VsExtension.Controls;
-    using Serialization;
+    using Windows;
+    using Collections;
+    using Controls;
 
-    [SerializedShape(typeof(Settings.ProfilePreset))]
-    public class DataViewViewModel : DependencyObject
+    public class AsyncDataViewModel : DependencyObject
     {
         private readonly WorkManager workManager;
         private readonly IDataView dataView;
@@ -18,8 +17,8 @@ namespace EventTraceKit.VsExtension
 
         private bool isInitializedWithFirstPreset;
         private bool shouldApplyPreset;
-        private HdvViewModelPreset presetBeingApplied;
-        private HdvViewModelPreset presetToApplyOnReady;
+        private AsyncDataViewModelPreset presetBeingApplied;
+        private AsyncDataViewModelPreset presetToApplyOnReady;
         private bool refreshViewModelFromModelOnReady;
         private bool refreshViewModelOnUpdateRequest;
 
@@ -28,12 +27,16 @@ namespace EventTraceKit.VsExtension
         private readonly object asyncReadWorkQueueLock;
         private bool allowBackgroundThreads;
 
-        public DataViewViewModel(IDataView dataView)
+        public AsyncDataViewModel(IDataView dataView, AsyncDataViewModelPreset templatePreset)
         {
             if (dataView == null)
                 throw new ArgumentNullException(nameof(dataView));
+            if (templatePreset == null)
+                throw new ArgumentNullException(nameof(templatePreset));
 
             this.dataView = dataView;
+            TemplatePreset = templatePreset.Clone().EnsureFrozen();
+
             workManager = new WorkManager(Dispatcher);
 
             asyncReadQueueComplete = new ManualResetEvent(true);
@@ -49,6 +52,10 @@ namespace EventTraceKit.VsExtension
             dataView.RowCountChanged += OnRowCountChanged;
         }
 
+        public AsyncDataViewModelPreset TemplatePreset { get; }
+
+        public event ValueChangedEventHandler<AsyncDataViewModelPreset> PresetChanged;
+
         private readonly ActionThrottler rowCountChangedThrottler =
             new ActionThrottler(TimeSpan.FromMilliseconds(100));
 
@@ -60,27 +67,27 @@ namespace EventTraceKit.VsExtension
 
         public AsyncDataGridViewModel GridViewModel { get; }
 
-        #region public HdvViewModelPreset HdvViewModelPreset
+        #region public AsyncDataViewModelPreset Preset
 
-        public static readonly DependencyProperty HdvViewModelPresetProperty =
+        public static readonly DependencyProperty PresetProperty =
             DependencyProperty.Register(
-                nameof(HdvViewModelPreset),
-                typeof(HdvViewModelPreset),
-                typeof(DataViewViewModel),
+                nameof(Preset),
+                typeof(AsyncDataViewModelPreset),
+                typeof(AsyncDataViewModel),
                 new PropertyMetadata(
                     null,
-                    (s, e) => ((DataViewViewModel)s).HdvViewModelPresetPropertyChanged(e),
-                    (d, e) => ((DataViewViewModel)d).CoerceHdvViewModelPresetProperty(e)));
+                    (d, e) => ((AsyncDataViewModel)d).OnPresetChanged(e),
+                    (d, v) => ((AsyncDataViewModel)d).CoercePreset(v)));
 
-        public HdvViewModelPreset HdvViewModelPreset
+        public AsyncDataViewModelPreset Preset
         {
-            get { return (HdvViewModelPreset)GetValue(HdvViewModelPresetProperty); }
-            set { SetValue(HdvViewModelPresetProperty, value); }
+            get { return (AsyncDataViewModelPreset)GetValue(PresetProperty); }
+            set { SetValue(PresetProperty, value); }
         }
 
-        private void HdvViewModelPresetPropertyChanged(DependencyPropertyChangedEventArgs e)
+        private void OnPresetChanged(DependencyPropertyChangedEventArgs e)
         {
-            var preset = (HdvViewModelPreset)e.NewValue;
+            var preset = (AsyncDataViewModelPreset)e.NewValue;
             if (preset != null && (!isInitializedWithFirstPreset || shouldApplyPreset)) {
                 if (!preset.IsFrozen)
                     throw new ArgumentException("Preset must be frozen before being applied");
@@ -101,13 +108,13 @@ namespace EventTraceKit.VsExtension
                     return;
                 }
                 //this.UpdateHelpTextFromPreset(preset.HelpText);
-                //ColumnChangingContext columnChangingContext = DataViewViewModel.columnChangingContext;
+                //ColumnChangingContext columnChangingContext = AsyncDataViewModel.columnChangingContext;
                 //if (columnChangingContext != null) {
                 //    this.columnMetadataCollection.PresetMetadataEntries = preset.ColumnMetadataEntries;
                 //    if (this.HasAnyVisibleColumnAffectedByChange(preset, columnChangingContext.ColumnChangingPredicate)) {
                 //        this.DisableTableForAsyncOperation();
                 //        this.presetToApplyOnReady = preset;
-                //        AddChangingHdvViewModel(this);
+                //        AddChangingAdvModel(this);
                 //        return;
                 //    }
                 //}
@@ -121,25 +128,24 @@ namespace EventTraceKit.VsExtension
                     preset,
                     () => ContinuePresetAfterGridModelInSync(preset));
             }
-            //this.HdvViewModelPresetChanged.Raise<HdvViewModelPreset>(this, e);
+
+            PresetChanged.Raise(this, e);
             //this.ResetIsPresetError();
         }
 
-        private object CoerceHdvViewModelPresetProperty(object baseValue)
+        private object CoercePreset(object baseValue)
         {
-            var preset = (HdvViewModelPreset)baseValue;
+            var preset = (AsyncDataViewModelPreset)baseValue;
             if (preset == null)
                 return null;
 
             //bool includeDynamicColumns = this.IsUnmodifiedBuiltInPreset(preset);
-            //HdvViewModelPreset compatiblePreset = preset.CreateCompatiblePreset(
-            //    this.templatePreset, this.viewCreationInfoCollection, includeDynamicColumns);
-            HdvViewModelPreset compatiblePreset = preset;
+            var compatiblePreset = preset.CreateCompatiblePreset(TemplatePreset);
 
             shouldApplyPreset = !compatiblePreset.IsUIModified;
             compatiblePreset.IsUIModified = false;
             compatiblePreset.Freeze();
-            //this.cachedHdvViewModelPreset = compatiblePreset;
+            //this.cachedPreset = compatiblePreset;
             return compatiblePreset;
         }
 
@@ -151,7 +157,7 @@ namespace EventTraceKit.VsExtension
             DependencyProperty.RegisterReadOnly(
                 nameof(IsReady),
                 typeof(bool),
-                typeof(DataViewViewModel),
+                typeof(AsyncDataViewModel),
                 new PropertyMetadata(Boxed.True, OnIsReadyChanged));
 
         public static readonly DependencyProperty IsReadyProperty = IsReadyPropertyKey.DependencyProperty;
@@ -165,7 +171,7 @@ namespace EventTraceKit.VsExtension
         private static void OnIsReadyChanged(
             DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((DataViewViewModel)d).OnIsReadyChanged(e.NewValue);
+            ((AsyncDataViewModel)d).OnIsReadyChanged(e.NewValue);
         }
 
         private void OnIsReadyChanged(object newValue)
@@ -207,7 +213,7 @@ namespace EventTraceKit.VsExtension
         }
 
         private void ApplyPresetToGridModel(
-            HdvViewModelPreset preset, Action callbackOnComplete)
+            AsyncDataViewModelPreset preset, Action callbackOnComplete)
         {
             if (!IsReady)
                 ExceptionUtils.ThrowInvalidOperationException(
@@ -227,19 +233,24 @@ namespace EventTraceKit.VsExtension
         }
 
         private IEnumerable<DataColumnViewInfo> GetDataColumnViewInfosFromPreset(
-            HdvViewModelPreset preset)
+            AsyncDataViewModelPreset preset)
         {
-            foreach (HdvColumnViewModelPreset columnPreset in preset.ConfigurableColumns) {
-                var info = new DataColumnViewInfo {
-                    ColumnId = columnPreset.Id,
-                    Name = columnPreset.Name,
-                    HelpText = columnPreset.HelpText,
-                    IsVisible = columnPreset.IsVisible,
-                    Format = columnPreset.CellFormat,
-                    FormatProvider = null,
-                };
-                yield return info;
-            }
+            foreach (ColumnViewModelPreset columnPreset in preset.ConfigurableColumns)
+                yield return GetDataColumnViewInfoFromPreset(columnPreset);
+        }
+
+        private DataColumnViewInfo GetDataColumnViewInfoFromPreset(
+            ColumnViewModelPreset columnPreset)
+        {
+            var info = new DataColumnViewInfo {
+                ColumnId = columnPreset.Id,
+                Name = columnPreset.Name,
+                HelpText = columnPreset.HelpText,
+                IsVisible = columnPreset.IsVisible,
+                Format = columnPreset.CellFormat,
+                FormatProvider = null,
+            };
+            return info;
         }
 
         internal void WaitForReadOperationToComplete()
@@ -257,7 +268,7 @@ namespace EventTraceKit.VsExtension
                 stillWaitingCallback?.Invoke();
         }
 
-        private void ContinuePresetAfterGridModelInSync(HdvViewModelPreset preset)
+        private void ContinuePresetAfterGridModelInSync(AsyncDataViewModelPreset preset)
         {
             bool ignoreInitialSelection = false;
             columnsViewModel.ApplyPresetAssumeGridModelInSync(preset);
@@ -303,25 +314,25 @@ namespace EventTraceKit.VsExtension
             EnableTableAfterAsyncOperation();
             //if (this.checkForColumnChangingOnReady) {
             //    this.checkForColumnChangingOnReady = false;
-            //    ColumnChangingContext columnChangingContext = DataViewViewModel.columnChangingContext;
-            //    HdvViewModelPreset preset = presetBeingApplied ?? presetToApplyOnReady;
+            //    ColumnChangingContext columnChangingContext = AsyncDataViewModel.columnChangingContext;
+            //    AsyncDataViewModelPreset preset = presetBeingApplied ?? presetToApplyOnReady;
             //    if (this.HasAnyVisibleColumnAffectedByChange(preset, columnChangingContext.ColumnChangingPredicate)) {
             //        this.DisableTableForAsyncOperation();
-            //        AddChangingHdvViewModel(this);
+            //        AddChangingAdvModel(this);
             //        flag = true;
             //    }
-            //    countBusyHdvViewModels--;
+            //    countBusyAdvModels--;
             //    CompleteUpdateWhenAllReady();
             //}
             if (!flag && (presetToApplyOnReady != null)) {
-                HdvViewModelPreset = presetToApplyOnReady;
+                Preset = presetToApplyOnReady;
                 presetToApplyOnReady = null;
                 flag = true;
             }
 
-            //if (!flag && (this.hdvViewModelToCopyStateOnReady != null)) {
-            //    this.TryCopyAllStateFrom(this.hdvViewModelToCopyStateOnReady);
-            //    this.hdvViewModelToCopyStateOnReady = null;
+            //if (!flag && (this.advModelToCopyStateOnReady != null)) {
+            //    this.TryCopyAllStateFrom(this.advModelToCopyStateOnReady);
+            //    this.advModelToCopyStateOnReady = null;
             //    flag = true;
             //}
 
@@ -344,7 +355,7 @@ namespace EventTraceKit.VsExtension
 
                 bool flag3 = RequestUpdate(refreshViewModelFromModel);
                 if (refreshViewModelFromModel && !flag3) {
-                    ExceptionUtils.ThrowInternalErrorException("We should have sent an update for the hdvviewmodel, but didn't");
+                    ExceptionUtils.ThrowInternalErrorException("We should have sent an update for the advmodel, but didn't");
                 }
                 //this.IsTableRefreshing = false;
             }
@@ -360,12 +371,12 @@ namespace EventTraceKit.VsExtension
             }).Result;
         }
 
-        internal HdvViewModelPreset CreatePresetFromModifiedUI()
+        internal AsyncDataViewModelPreset CreatePresetFromModifiedUI()
         {
             VerifyIsReady();
 
-            var newPreset = new HdvViewModelPreset();
-            HdvViewModelPreset currentPreset = HdvViewModelPreset;
+            var newPreset = new AsyncDataViewModelPreset();
+            AsyncDataViewModelPreset currentPreset = Preset;
             string name = currentPreset.Name;
             if (name != null)
                 newPreset.Name = name;
@@ -385,7 +396,7 @@ namespace EventTraceKit.VsExtension
         {
             if (!IsReady)
                 ExceptionUtils.ThrowInvalidOperationException(
-                    "DataViewViewModel needs to be ready for this operation");
+                    "AsyncDataViewModel needs to be ready for this operation");
         }
 
         internal void OnUIPropertyChanged(AsyncDataGridColumn column)
@@ -453,6 +464,12 @@ namespace EventTraceKit.VsExtension
         public bool IsValidDataValidityToken(object dataValidityToken)
         {
             return DataView.IsValidDataValidityToken(dataValidityToken);
+        }
+
+        public DataColumnView GetPrototypeViewForColumnPreset(ColumnViewModelPreset columnPreset)
+        {
+            DataColumnViewInfo columnViewInfo = this.GetDataColumnViewInfoFromPreset(columnPreset);
+            return dataView.CreateDataColumnViewFromInfo(columnViewInfo);
         }
     }
 }

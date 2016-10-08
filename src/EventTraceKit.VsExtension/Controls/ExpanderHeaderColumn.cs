@@ -3,8 +3,8 @@ namespace EventTraceKit.VsExtension.Controls
     internal sealed class ExpanderHeaderColumn : AsyncDataGridColumn
     {
         public ExpanderHeaderColumn(
-            AsyncDataGridColumnsViewModel columns, DataViewViewModel hdv)
-            : base(columns, CreateColumnView(), hdv, true)
+            AsyncDataGridColumnsViewModel columns, AsyncDataViewModel adv)
+            : base(columns, CreateColumnView(), adv, true)
         {
         }
 

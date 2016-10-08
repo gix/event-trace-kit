@@ -2,7 +2,7 @@ namespace EventTraceKit.VsExtension.Controls
 {
     using System.Collections.ObjectModel;
     using System.Windows;
-    using EventTraceKit.VsExtension.Controls.Primitives;
+    using Primitives;
 
     public class AsyncDataGridColumnsViewModel : DependencyObject
     {
@@ -10,9 +10,9 @@ namespace EventTraceKit.VsExtension.Controls
         private readonly ObservableCollection<AsyncDataGridColumn> visibleColumns;
         private readonly ObservableCollection<AsyncDataGridColumn> configurableColumns;
 
-        public AsyncDataGridColumnsViewModel(DataViewViewModel hdvViewModel)
+        public AsyncDataGridColumnsViewModel(AsyncDataViewModel advModel)
         {
-            HdvViewModel = hdvViewModel;
+            AdvModel = advModel;
             columns = new ObservableCollection<AsyncDataGridColumn>();
 
             visibleColumns = new ObservableCollection<AsyncDataGridColumn>();
@@ -21,10 +21,10 @@ namespace EventTraceKit.VsExtension.Controls
             configurableColumns = new ObservableCollection<AsyncDataGridColumn>();
             ConfigurableColumns = new ReadOnlyObservableCollection<AsyncDataGridColumn>(configurableColumns);
 
-            ExpanderHeaderColumn = new ExpanderHeaderColumn(this, hdvViewModel);
+            ExpanderHeaderColumn = new ExpanderHeaderColumn(this, advModel);
         }
 
-        internal DataViewViewModel HdvViewModel { get; }
+        internal AsyncDataViewModel AdvModel { get; }
         internal ObservableCollection<AsyncDataGridColumn> WritableColumns => columns;
 
         #region public ReadOnlyObservableCollection<AsyncDataGridColumnViewModel> VisibleColumns
@@ -157,19 +157,19 @@ namespace EventTraceKit.VsExtension.Controls
                 WritableColumns.Move(oldIndex, newIndex);
 
             RefreshAllObservableCollections();
-            HdvViewModelPreset preset = HdvViewModel.CreatePresetFromModifiedUI();
-            HdvViewModel.HdvViewModelPreset = preset;
+            AsyncDataViewModelPreset preset = AdvModel.CreatePresetFromModifiedUI();
+            AdvModel.Preset = preset;
         }
 
-        internal void ApplyPresetAssumeGridModelInSync(HdvViewModelPreset preset)
+        internal void ApplyPresetAssumeGridModelInSync(AsyncDataViewModelPreset preset)
         {
             IsApplyingPreset = true;
-            HdvViewModel.DataView.BeginDataUpdate();
+            AdvModel.DataView.BeginDataUpdate();
             WritableColumns.Clear();
             int index = 0;
-            foreach (var dataColumn in HdvViewModel.DataView.Columns) {
+            foreach (var dataColumn in AdvModel.DataView.Columns) {
                 var column = new AsyncDataGridColumn(
-                    this, dataColumn, HdvViewModel, false);
+                    this, dataColumn, AdvModel, false);
                 WritableColumns.Add(column);
 
                 var columnPreset = preset.ConfigurableColumns[index];
@@ -180,7 +180,7 @@ namespace EventTraceKit.VsExtension.Controls
             }
 
             //preset.PlaceSeparatorsInList<HierarchicalDataGridColumnViewModel>(base.ColumnsWriteable, base.LeftFreezableAreaSeparatorColumn, base.RightFreezableAreaSeparatorColumn, this.graphingAreaSeparatorColumn, this.keysValuesSeparatorColumn, forcedColumnLeftCount);
-            HdvViewModel.DataView.EndDataUpdate();
+            AdvModel.DataView.EndDataUpdate();
             RefreshAllObservableCollections();
             IsApplyingPreset = false;
             //UpdateFreezableColumnsWidth();
@@ -191,7 +191,7 @@ namespace EventTraceKit.VsExtension.Controls
         internal void OnUIPropertyChanged(AsyncDataGridColumn column)
         {
             if (!IsApplyingPreset)
-                HdvViewModel.RequestUpdate(false);
+                AdvModel.RequestUpdate(false);
         }
     }
 }

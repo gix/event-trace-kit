@@ -4,7 +4,7 @@
     using System.Runtime.InteropServices;
     using System.Windows;
     using System.Windows.Media;
-    using EventTraceKit.VsExtension.Native;
+    using Native;
     using Microsoft.VisualStudio;
     using Microsoft.VisualStudio.Settings;
     using Microsoft.VisualStudio.Shell;

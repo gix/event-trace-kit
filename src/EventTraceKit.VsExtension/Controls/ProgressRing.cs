@@ -3,7 +3,7 @@
     using System;
     using System.Windows;
     using System.Windows.Controls;
-    using EventTraceKit.VsExtension.Windows;
+    using Windows;
 
     /// <summary>
     ///   Represents a control that indicates that an operation is ongoing. The
@@ -162,7 +162,7 @@
         }
 
         private static object CoerceEllipseDiameter(
-            DependencyObject d, object basevalue)
+            DependencyObject d, object baseValue)
         {
             var source = (ProgressRingTemplateSettings)d;
             double length = source.MaxSideLength;
@@ -173,7 +173,7 @@
         }
 
         private static object CoerceEllipseOffset(
-            DependencyObject d, object basevalue)
+            DependencyObject d, object baseValue)
         {
             var source = (ProgressRingTemplateSettings)d;
 

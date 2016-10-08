@@ -11,8 +11,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
     using System.Windows.Input;
     using System.Windows.Media;
     using System.Windows.Media.Animation;
-    using EventTraceKit.VsExtension.Collections;
-    using EventTraceKit.VsExtension.Windows;
+    using Collections;
+    using Windows;
 
     public class AsyncDataGridColumnHeadersPresenter : ItemsControl
     {
@@ -30,7 +30,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             var panelFactory = new FrameworkElementFactory(
                 typeof(AsyncDataGridColumnHeadersPanel));
             panelFactory.SetValue(
-                AsyncDataGridColumnHeadersPanel.OrientationProperty,
+                StackPanel.OrientationProperty,
                 Orientation.Horizontal);
 
             var panelTemplate = new ItemsPanelTemplate(panelFactory);
@@ -70,7 +70,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         {
             if (!e.Handled) {
                 using (ParentGrid.EnterContextMenuVisualState()) {
-                    var chooser = new ColumnChooser(ViewModel.ConfigurableColumns, ViewModel.HdvViewModel) {
+                    var chooser = new ColumnChooser(ViewModel.ConfigurableColumns, ViewModel.AdvModel) {
                         Placement = PlacementMode.MousePoint,
                         PlacementTarget = VisualTreeHelper.GetParent(this) as UIElement
                     };

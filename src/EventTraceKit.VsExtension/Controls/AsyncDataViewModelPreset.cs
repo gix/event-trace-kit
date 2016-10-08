@@ -1,23 +1,25 @@
 ﻿namespace EventTraceKit.VsExtension.Controls
 {
     using System;
+    using System.Collections.Generic;
     using System.ComponentModel;
+    using System.Linq;
     using System.Windows;
-    using EventTraceKit.VsExtension.Collections;
-    using EventTraceKit.VsExtension.Windows;
+    using Collections;
+    using Windows;
     using Serialization;
 
     [SerializedShape(typeof(Settings.ProfilePreset))]
-    public sealed class HdvViewModelPreset
+    public sealed class AsyncDataViewModelPreset
         : FreezableCustomSerializerAccessBase
-        , IComparable<HdvViewModelPreset>
-        , IEquatable<HdvViewModelPreset>
+        , IComparable<AsyncDataViewModelPreset>
+        , IEquatable<AsyncDataViewModelPreset>
         , ICloneable
         , ISupportInitialize
     {
-        public HdvViewModelPreset()
+        public AsyncDataViewModelPreset()
         {
-            ConfigurableColumns = new FreezableCollection<HdvColumnViewModelPreset>();
+            ConfigurableColumns = new FreezableCollection<ColumnViewModelPreset>();
         }
 
         #region public string Name
@@ -26,7 +28,7 @@
             DependencyProperty.Register(
                 nameof(Name),
                 typeof(string),
-                typeof(HdvViewModelPreset),
+                typeof(AsyncDataViewModelPreset),
                 PropertyMetadataUtils.DefaultNull);
 
         [Serialize]
@@ -44,7 +46,7 @@
             DependencyProperty.Register(
                 nameof(IsModified),
                 typeof(bool),
-                typeof(HdvViewModelPreset),
+                typeof(AsyncDataViewModelPreset),
                 new PropertyMetadata(Boxed.Bool(false)));
 
         public bool IsModified
@@ -61,7 +63,7 @@
             DependencyProperty.Register(
                 nameof(IsUIModified),
                 typeof(bool),
-                typeof(HdvViewModelPreset),
+                typeof(AsyncDataViewModelPreset),
                 new PropertyMetadata(Boxed.Bool(false)));
 
         public bool IsUIModified
@@ -78,7 +80,7 @@
             DependencyProperty.Register(
                 nameof(LeftFrozenColumnCount),
                 typeof(int),
-                typeof(HdvViewModelPreset),
+                typeof(AsyncDataViewModelPreset),
                 new PropertyMetadata(Boxed.Int32(0)));
 
         [Serialize]
@@ -96,7 +98,7 @@
             DependencyProperty.Register(
                 nameof(RightFrozenColumnCount),
                 typeof(int),
-                typeof(HdvViewModelPreset),
+                typeof(AsyncDataViewModelPreset),
                 new PropertyMetadata(Boxed.Int32(0)));
 
         [Serialize]
@@ -108,31 +110,31 @@
 
         #endregion
 
-        #region public FreezableCollection<HdvColumnViewModelPreset> ConfigurableColumns
+        #region public FreezableCollection<ColumnViewModelPreset> ConfigurableColumns
 
         public static readonly DependencyProperty ConfigurableColumnsProperty =
             DependencyProperty.Register(
                 nameof(ConfigurableColumns),
-                typeof(FreezableCollection<HdvColumnViewModelPreset>),
-                typeof(HdvViewModelPreset),
+                typeof(FreezableCollection<ColumnViewModelPreset>),
+                typeof(AsyncDataViewModelPreset),
                 PropertyMetadataUtils.DefaultNull);
 
         [Serialize(serializedName: nameof(Settings.ProfilePreset.Columns))]
-        public FreezableCollection<HdvColumnViewModelPreset> ConfigurableColumns
+        public FreezableCollection<ColumnViewModelPreset> ConfigurableColumns
         {
             get
             {
                 return
-                    (FreezableCollection<HdvColumnViewModelPreset>)GetValue(ConfigurableColumnsProperty);
+                    (FreezableCollection<ColumnViewModelPreset>)GetValue(ConfigurableColumnsProperty);
             }
             private set { SetValue(ConfigurableColumnsProperty, value); }
         }
 
         #endregion
 
-        public new HdvViewModelPreset Clone()
+        public new AsyncDataViewModelPreset Clone()
         {
-            return (HdvViewModelPreset)base.Clone();
+            return (AsyncDataViewModelPreset)base.Clone();
         }
 
         object ICloneable.Clone()
@@ -148,12 +150,12 @@
         {
         }
 
-        public bool Equals(HdvViewModelPreset other)
+        public bool Equals(AsyncDataViewModelPreset other)
         {
             return CompareTo(other) == 0;
         }
 
-        public int CompareTo(HdvViewModelPreset other)
+        public int CompareTo(AsyncDataViewModelPreset other)
         {
             if (other == null)
                 throw new ArgumentNullException(nameof(other));
@@ -175,7 +177,7 @@
 
         protected override Freezable CreateInstanceCore()
         {
-            return new HdvViewModelPreset();
+            return new AsyncDataViewModelPreset();
         }
 
         public bool GetColumnVisibility(int configurableColumnIndex)
@@ -189,7 +191,7 @@
             return ConfigurableColumns[configurableColumnIndex].IsVisible;
         }
 
-        public HdvViewModelPreset SetColumnVisibility(
+        public AsyncDataViewModelPreset SetColumnVisibility(
             int configurableColumnIndex, bool visibility)
         {
             if (configurableColumnIndex >= ConfigurableColumns.Count ||
@@ -201,16 +203,107 @@
             if (ConfigurableColumns[configurableColumnIndex].IsVisible == visibility)
                 return this;
 
-            HdvViewModelPreset preset = CreatePresetThatHasBeenModified();
+            AsyncDataViewModelPreset preset = CreateModifiedPreset();
             preset.ConfigurableColumns[configurableColumnIndex].IsVisible = visibility;
             return preset;
         }
 
-        public HdvViewModelPreset CreatePresetThatHasBeenModified()
+        public AsyncDataViewModelPreset CreateModifiedPreset()
         {
-            HdvViewModelPreset preset = Clone();
+            AsyncDataViewModelPreset preset = Clone();
             preset.IsModified = true;
             return preset;
+        }
+
+        public AsyncDataViewModelPreset CreateCompatiblePreset(AsyncDataViewModelPreset template)
+        {
+            if (template == null)
+                return this;
+
+            var compatiblePreset = Clone();
+            var templateColumnsMap = template.GetConfigurableColumnsMap();
+            var canonicalList = compatiblePreset.GetCanonicalList();
+            canonicalList = PruneList(canonicalList, templateColumnsMap);
+            compatiblePreset.ApplyCanonicalList(canonicalList);
+            return compatiblePreset;
+        }
+
+        private static readonly Guid SentinelId = new Guid("D6986295-540C-4A2D-B0B8-CFEBF58323C3");
+        private static readonly ColumnViewModelPreset SentinelLeftFreezePreset =
+            new ColumnViewModelPreset { Id = SentinelId }.EnsureFrozen();
+        private static readonly ColumnViewModelPreset SentinelRightFreezePreset =
+            new ColumnViewModelPreset { Id = SentinelId }.EnsureFrozen();
+
+        private IList<ColumnViewModelPreset> GetCanonicalList()
+        {
+            var canonicalList = CopyCollection(ConfigurableColumns);
+            PlaceSeparatorsInList(canonicalList, SentinelLeftFreezePreset, SentinelRightFreezePreset);
+            return canonicalList;
+        }
+
+        private static FreezableCollection<T> CopyCollection<T>(
+            FreezableCollection<T> collection) where T : DependencyObject
+        {
+            return new FreezableCollection<T>(collection);
+        }
+
+        private void PlaceSeparatorsInList<T>(
+            IList<T> columns,
+            T leftFreezableAreaSeparatorColumn,
+            T rightFreezableAreaSeparatorColumn)
+        {
+            var list = new List<Tuple<int, T>>();
+            AddToList<T>(list, LeftFrozenColumnCount, leftFreezableAreaSeparatorColumn);
+            AddToList<T>(list, RightFrozenColumnCount, rightFreezableAreaSeparatorColumn);
+            list.Sort((x, y) => x.Item1 - y.Item1);
+            foreach (var struct2 in list) {
+                if (struct2.Item1 == columns.Count + 1) {
+                    columns.Add(struct2.Item2);
+                } else {
+                    columns.Insert(struct2.Item1, struct2.Item2);
+                }
+            }
+        }
+
+        private static void AddToList<T>(
+            List<Tuple<int, T>> list, int presetIndex, T column)
+        {
+            list.Add(new Tuple<int, T>(presetIndex, column));
+        }
+
+        private void ApplyCanonicalList(IList<ColumnViewModelPreset> canonicalList)
+        {
+            ConfigurableColumns = new FreezableCollection<ColumnViewModelPreset>(
+                from column in canonicalList
+                where !IsSentinelColumn(column)
+                select column);
+
+            LeftFrozenColumnCount = GetCountOfSentinelColumn(canonicalList, SentinelLeftFreezePreset);
+            RightFrozenColumnCount = GetCountOfSentinelColumn(canonicalList, SentinelRightFreezePreset);
+        }
+
+        private static int GetCountOfSentinelColumn(
+            IList<ColumnViewModelPreset> canonicalList, ColumnViewModelPreset sentinel)
+        {
+            return canonicalList.IndexOf(sentinel);
+        }
+
+        private static bool IsSentinelColumn(ColumnViewModelPreset column)
+        {
+            return column.Id == SentinelId;
+        }
+
+        private static List<ColumnViewModelPreset> PruneList(
+            IList<ColumnViewModelPreset> canonicalColumns,
+            Dictionary<Guid, ColumnViewModelPreset> templateColumnsMap)
+        {
+            return canonicalColumns.Where(
+                x => templateColumnsMap.ContainsKey(x.Id) || IsSentinelColumn(x)).ToList();
+        }
+
+        private Dictionary<Guid, ColumnViewModelPreset> GetConfigurableColumnsMap()
+        {
+            return ConfigurableColumns.ToDictionary(x => x.Id);
         }
     }
 }

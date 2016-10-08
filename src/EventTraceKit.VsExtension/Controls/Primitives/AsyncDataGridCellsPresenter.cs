@@ -11,7 +11,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
     using System.Windows.Input;
     using System.Windows.Media;
     using System.Windows.Threading;
-    using EventTraceKit.VsExtension.Windows;
+    using Windows;
 
     public class AsyncDataGridCellsPresenter : FrameworkElement, IScrollInfo
     {

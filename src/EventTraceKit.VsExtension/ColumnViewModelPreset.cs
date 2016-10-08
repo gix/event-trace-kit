@@ -2,13 +2,13 @@ namespace EventTraceKit.VsExtension
 {
     using System;
     using System.Windows;
-    using EventTraceKit.VsExtension.Windows;
+    using Windows;
     using Serialization;
 
     [SerializedShape(typeof(Settings.ProfileColumn))]
-    public class HdvColumnViewModelPreset :
+    public class ColumnViewModelPreset :
         FreezableCustomSerializerAccessBase
-        , IComparable<HdvColumnViewModelPreset>
+        , IComparable<ColumnViewModelPreset>
         , ICloneable
     {
         #region public Guid Id
@@ -17,7 +17,7 @@ namespace EventTraceKit.VsExtension
             DependencyProperty.Register(
                 nameof(Id),
                 typeof(Guid),
-                typeof(HdvColumnViewModelPreset),
+                typeof(ColumnViewModelPreset),
                 new PropertyMetadata(Guid.Empty));
 
         [Serialize]
@@ -35,7 +35,7 @@ namespace EventTraceKit.VsExtension
             DependencyProperty.Register(
                 nameof(Name),
                 typeof(string),
-                typeof(HdvColumnViewModelPreset),
+                typeof(ColumnViewModelPreset),
                 PropertyMetadataUtils.DefaultNull);
 
         [Serialize]
@@ -53,7 +53,7 @@ namespace EventTraceKit.VsExtension
             DependencyProperty.Register(
                 nameof(HelpText),
                 typeof(string),
-                typeof(HdvColumnViewModelPreset),
+                typeof(ColumnViewModelPreset),
                 PropertyMetadataUtils.DefaultNull);
 
         [Serialize]
@@ -71,7 +71,7 @@ namespace EventTraceKit.VsExtension
             DependencyProperty.Register(
                 nameof(Width),
                 typeof(int),
-                typeof(HdvColumnViewModelPreset),
+                typeof(ColumnViewModelPreset),
                 new PropertyMetadata(
                     0, null, CoerceWidth));
 
@@ -96,7 +96,7 @@ namespace EventTraceKit.VsExtension
             DependencyProperty.Register(
                 nameof(IsVisible),
                 typeof(bool),
-                typeof(HdvColumnViewModelPreset),
+                typeof(ColumnViewModelPreset),
                 new PropertyMetadata(Boxed.False));
 
         [Serialize]
@@ -114,7 +114,7 @@ namespace EventTraceKit.VsExtension
             DependencyProperty.Register(
                 nameof(TextAlignment),
                 typeof(TextAlignment),
-                typeof(HdvColumnViewModelPreset),
+                typeof(ColumnViewModelPreset),
                 new PropertyMetadata(TextAlignment.Left));
 
         [Serialize]
@@ -132,7 +132,7 @@ namespace EventTraceKit.VsExtension
             DependencyProperty.Register(
                 nameof(CellFormat),
                 typeof(string),
-                typeof(HdvColumnViewModelPreset),
+                typeof(ColumnViewModelPreset),
                 new PropertyMetadata(null));
 
         [Serialize]
@@ -146,12 +146,12 @@ namespace EventTraceKit.VsExtension
 
         protected override Freezable CreateInstanceCore()
         {
-            return new HdvColumnViewModelPreset();
+            return new ColumnViewModelPreset();
         }
 
-        public new HdvColumnViewModelPreset Clone()
+        public new ColumnViewModelPreset Clone()
         {
-            return (HdvColumnViewModelPreset)base.Clone();
+            return (ColumnViewModelPreset)base.Clone();
         }
 
         object ICloneable.Clone()
@@ -159,7 +159,7 @@ namespace EventTraceKit.VsExtension
             return Clone();
         }
 
-        public int CompareTo(HdvColumnViewModelPreset other)
+        public int CompareTo(ColumnViewModelPreset other)
         {
             if (other == null)
                 throw new ArgumentNullException(nameof(other));

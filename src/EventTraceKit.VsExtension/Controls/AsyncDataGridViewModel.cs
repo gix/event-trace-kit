@@ -5,9 +5,9 @@ namespace EventTraceKit.VsExtension.Controls
     public class AsyncDataGridViewModel : DependencyObject
     {
         public AsyncDataGridViewModel(
-            DataViewViewModel hdv, AsyncDataGridColumnsViewModel columnsViewModel)
+            AsyncDataViewModel adv, AsyncDataGridColumnsViewModel columnsViewModel)
         {
-            CellsPresenterViewModel = new AsyncDataGridCellsPresenterViewModel(hdv);
+            CellsPresenterViewModel = new AsyncDataGridCellsPresenterViewModel(adv);
             ColumnsViewModel = columnsViewModel;
         }
 

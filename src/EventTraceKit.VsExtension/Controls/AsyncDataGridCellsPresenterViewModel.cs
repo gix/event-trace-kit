@@ -4,21 +4,21 @@ namespace EventTraceKit.VsExtension.Controls
     using System.Collections.Generic;
     using System.Threading;
     using System.Windows;
-    using EventTraceKit.VsExtension.Controls.Primitives;
+    using Primitives;
 
     public sealed class AsyncDataGridCellsPresenterViewModel
         : DependencyObject
     {
-        private readonly DataViewViewModel hdv;
+        private readonly AsyncDataViewModel advModel;
 
-        public AsyncDataGridCellsPresenterViewModel(DataViewViewModel hdv)
+        public AsyncDataGridCellsPresenterViewModel(AsyncDataViewModel advModel)
         {
-            this.hdv = hdv;
+            this.advModel = advModel;
 
             RowSelection = new AsyncDataGridRowSelection(this);
         }
 
-        public int RowCount => hdv.DataView.RowCount;
+        public int RowCount => advModel.DataView.RowCount;
 
         public AsyncDataGridRowSelection RowSelection { get; }
 
@@ -59,7 +59,7 @@ namespace EventTraceKit.VsExtension.Controls
             get
             {
                 VerifyAccess();
-                return hdv.IsReady;
+                return advModel.IsReady;
             }
         }
 
@@ -69,7 +69,7 @@ namespace EventTraceKit.VsExtension.Controls
         {
             VerifyAccess();
             ValidateIsReady();
-            hdv.RequestUpdate(updateFromViewModel);
+            advModel.RequestUpdate(updateFromViewModel);
         }
 
         private void ValidateIsReady()
@@ -83,7 +83,7 @@ namespace EventTraceKit.VsExtension.Controls
             int lastVisibleColumn, int firstVisibleRow, int lastVisibleRow,
             Action<bool> selectionPrefetched, Action<bool> callBackWhenFinished)
         {
-            hdv.VerifyIsReady();
+            advModel.VerifyIsReady();
 
             IList<AsyncDataGridColumn> visibleColumns = cellPresenter.VisibleColumns;
             for (int i = firstVisibleColumn; i <= lastVisibleColumn; ++i) {
@@ -91,7 +91,7 @@ namespace EventTraceKit.VsExtension.Controls
                 column.IsSafeToReadCellValuesFromUIThread = true; // FIXME: false
             }
 
-            hdv.PerformAsyncReadOperation(cancellationToken => {
+            advModel.PerformAsyncReadOperation(cancellationToken => {
                 //if (!cancellationToken.IsCancellationRequested) {
                 //    lock (RowSelection) {
                 //        RowSelection.RefreshDataIfNecessary(cancellationToken);

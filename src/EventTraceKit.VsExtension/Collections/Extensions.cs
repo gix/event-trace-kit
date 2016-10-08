@@ -10,7 +10,7 @@
         public static void AddRange<T>(
             this ICollection<T> collection, IEnumerable<T> newItems)
         {
-            TryAddCapacity<T>(collection, newItems);
+            TryAddCapacity(collection, newItems);
             foreach (T local in newItems)
                 collection.Add(local);
         }

@@ -7,7 +7,7 @@ namespace EventTraceKit.VsExtension.Controls
     {
         private readonly AsyncDataGridColumnsViewModel columns;
         private readonly DataColumnView columnModel;
-        private readonly DataViewViewModel hdv;
+        private readonly AsyncDataViewModel adv;
         private readonly bool isInitializing;
 
         private CellValue[] cachedRowValues = new CellValue[0];
@@ -17,12 +17,12 @@ namespace EventTraceKit.VsExtension.Controls
         public AsyncDataGridColumn(
             AsyncDataGridColumnsViewModel columns,
             DataColumnView columnModel,
-            DataViewViewModel hdv,
+            AsyncDataViewModel adv,
             bool isDisconnected)
         {
             this.columns = columns;
             this.columnModel = columnModel;
-            this.hdv = hdv;
+            this.adv = adv;
             IsDisconnected = isDisconnected;
 
             isInitializing = true;
@@ -123,12 +123,12 @@ namespace EventTraceKit.VsExtension.Controls
 
         private void OnIsVisibleChanged(bool newValue)
         {
-            var preset = hdv.HdvViewModelPreset;
-            if (ModelColumnIndex < 0 || hdv == null || isInitializing ||
+            var preset = adv.Preset;
+            if (ModelColumnIndex < 0 || adv == null || isInitializing ||
                 preset.GetColumnVisibility(ModelColumnIndex) == newValue)
                 return;
 
-            hdv.HdvViewModelPreset = preset.SetColumnVisibility(ModelColumnIndex, newValue);
+            adv.Preset = preset.SetColumnVisibility(ModelColumnIndex, newValue);
         }
 
         #endregion
@@ -308,7 +308,7 @@ namespace EventTraceKit.VsExtension.Controls
         public static readonly DependencyProperty ColumnNameProperty =
             ColumnNamePropertyKey.DependencyProperty;
 
-        private object cachedHdvValidityToken;
+        private object cachedAdvValidityToken;
 
         /// <summary>
         ///   Gets or sets the column name.
@@ -360,7 +360,7 @@ namespace EventTraceKit.VsExtension.Controls
 
         private void OnUIPropertyChanged()
         {
-            hdv?.OnUIPropertyChanged(this);
+            adv?.OnUIPropertyChanged(this);
         }
 
         public void BeginPossiblyResizing()
@@ -375,10 +375,10 @@ namespace EventTraceKit.VsExtension.Controls
                 return;
 
             //this.columnsViewModel.UpdateFreezableColumnsWidth();
-            if (hdv.IsReady) {
-                HdvViewModelPreset preset = hdv.CreatePresetFromModifiedUI();
+            if (adv.IsReady) {
+                AsyncDataViewModelPreset preset = adv.CreatePresetFromModifiedUI();
                 preset.IsUIModified = true;
-                hdv.HdvViewModelPreset = preset;
+                adv.Preset = preset;
             }
         }
 
@@ -397,7 +397,7 @@ namespace EventTraceKit.VsExtension.Controls
         private void ClearCachedRows()
         {
             Array.Clear(cachedRowValues, 0, cachedRowValues.Length);
-            cachedHdvValidityToken = hdv.DataValidityToken;
+            cachedAdvValidityToken = adv.DataValidityToken;
         }
 
         private int GetCacheIndex(int rowIndex)
@@ -405,7 +405,7 @@ namespace EventTraceKit.VsExtension.Controls
             int offset = rowIndex - startCacheRowValueIndex;
             if (rowIndex >= startCacheRowValueIndex &&
                 offset < cachedRowValues.Length &&
-                hdv.IsValidDataValidityToken(cachedHdvValidityToken))
+                adv.IsValidDataValidityToken(cachedAdvValidityToken))
                 return offset;
 
             return -1;
@@ -438,7 +438,7 @@ namespace EventTraceKit.VsExtension.Controls
 
         private CellValue GetCellValueNotCached(int rowIndex)
         {
-            return hdv.GetCellValue(rowIndex, ModelVisibleColumnIndex);
+            return adv.GetCellValue(rowIndex, ModelVisibleColumnIndex);
         }
 
         public bool IsInFreezableArea()
@@ -451,7 +451,7 @@ namespace EventTraceKit.VsExtension.Controls
             if (IsDisconnected)
                 return -1;
 
-            int index = hdv.DataView.Columns.IndexOf(columnModel);
+            int index = adv.DataView.Columns.IndexOf(columnModel);
             if (index == -1)
                 throw new Exception("Unable to find the model column index for: " + ColumnName);
             return index;
@@ -462,7 +462,7 @@ namespace EventTraceKit.VsExtension.Controls
             if (IsDisconnected || !columnModel.IsVisible)
                 return -1;
 
-            int index = hdv.DataView.VisibleColumns.IndexOf(columnModel);
+            int index = adv.DataView.VisibleColumns.IndexOf(columnModel);
             if (index == -1)
                 throw new Exception("Unable to find the visible model column index for: " + ColumnName);
             return index;
@@ -493,9 +493,9 @@ namespace EventTraceKit.VsExtension.Controls
             IsVisible = columnModel.IsVisible;
         }
 
-        public HdvColumnViewModelPreset ToPreset()
+        public ColumnViewModelPreset ToPreset()
         {
-            var preset = new HdvColumnViewModelPreset {
+            var preset = new ColumnViewModelPreset {
                 Id = columnModel.ColumnId,
                 Name = columnModel.Name,
                 HelpText = columnModel.HelpText,

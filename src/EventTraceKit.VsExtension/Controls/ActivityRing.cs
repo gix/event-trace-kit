@@ -4,7 +4,7 @@
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Media;
-    using EventTraceKit.VsExtension.Windows;
+    using Windows;
 
     /// <summary>
     ///   Represents a control that indicates that an activity is ongoing. The
@@ -193,14 +193,14 @@
         }
 
         private static object CoerceArcThickness(
-            DependencyObject d, object basevalue)
+            DependencyObject d, object baseValue)
         {
             var source = (ActivityRingTemplateSettings)d;
             return source.MaxSideLength / 5;
         }
 
         private static object CoerceArcSize(
-            DependencyObject d, object basevalue)
+            DependencyObject d, object baseValue)
         {
             var source = (ActivityRingTemplateSettings)d;
             var length = (source.MaxSideLength - source.ArcThickness) / 2;
@@ -208,7 +208,7 @@
         }
 
         private static object CoerceArcStartPoint(
-            DependencyObject d, object basevalue)
+            DependencyObject d, object baseValue)
         {
             var source = (ActivityRingTemplateSettings)d;
             double y = (source.MaxSideLength / 2) - source.ArcSize.Height;
@@ -216,7 +216,7 @@
         }
 
         private static object CoerceArcEndPoint(
-            DependencyObject d, object basevalue)
+            DependencyObject d, object baseValue)
         {
             var source = (ActivityRingTemplateSettings)d;
             double y = (source.MaxSideLength / 2) - source.ArcSize.Height;

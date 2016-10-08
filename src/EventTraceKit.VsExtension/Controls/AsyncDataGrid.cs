@@ -8,8 +8,8 @@ namespace EventTraceKit.VsExtension.Controls
     using System.Windows.Data;
     using System.Windows.Input;
     using System.Windows.Media;
-    using EventTraceKit.VsExtension.Controls.Primitives;
-    using EventTraceKit.VsExtension.Windows;
+    using Primitives;
+    using Windows;
 
     [TemplatePart(Name = PART_CancelButton, Type = typeof(Button))]
     [TemplatePart(Name = PART_CellsScrollViewer, Type = typeof(ScrollViewer))]
