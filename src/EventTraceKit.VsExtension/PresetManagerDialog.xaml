@@ -10,7 +10,7 @@
   xmlns:vsp="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
   mc:Ignorable="d"
   d:DataContext="{d:DesignInstance {x:Type etkvs:PresetManagerDesignTimeModel}, IsDesignTimeCreatable=True}"
-  x:Name="root"
+  x:Name="Root"
   MinWidth="600"
   MinHeight="450"
   Width="900"
@@ -23,22 +23,6 @@
     <sys:Double x:Key="Double0P375">0.375</sys:Double>
     <sys:Double x:Key="Double0P5">0.5</sys:Double>
     <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
-    <LinearGradientBrush x:Key="AeroItemHoverFill" EndPoint="0,1" StartPoint="0,0">
-      <GradientStop Color="#FFF1FBFF" Offset="0"/>
-      <GradientStop Color="#FFD5F1FE" Offset="1"/>
-    </LinearGradientBrush>
-    <LinearGradientBrush x:Key="AeroItemSelectedFill" EndPoint="0,1" StartPoint="0,0">
-      <GradientStop Color="#FFD9F4FF" Offset="0"/>
-      <GradientStop Color="#FF9BDDFB" Offset="1"/>
-    </LinearGradientBrush>
-    <LinearGradientBrush x:Key="AeroItemSelectedInactiveFill" EndPoint="0,1" StartPoint="0,0">
-      <GradientStop Color="#FFEEEDED" Offset="0"/>
-      <GradientStop Color="#FFDDDDDD" Offset="1"/>
-    </LinearGradientBrush>
-    <LinearGradientBrush x:Key="AeroItemSelectedHoverFill" EndPoint="0,1" StartPoint="0,0">
-      <GradientStop Color="#FFEAF9FF" Offset="0"/>
-      <GradientStop Color="#FFC9EDFD" Offset="1"/>
-    </LinearGradientBrush>
 
     <DataTemplate DataType="{x:Type etkvs:HeaderDropDownMenu}">
       <FrameworkTemplate.Resources>
@@ -136,15 +120,82 @@
       <EventSetter Event="Unloaded" Handler="OnAvailableListItemUnloaded"/>
     </Style>
 
-    <Style x:Key="ListViewItemFocusVisual">
-      <Setter Property="Control.Template">
-        <Setter.Value>
-          <ControlTemplate>
-            <Rectangle StrokeThickness="1" RadiusX="2" RadiusY="2" Stroke="#8E6EA6F5"/>
-          </ControlTemplate>
-        </Setter.Value>
-      </Setter>
-    </Style>
+    <etkvs:PresetManagerColumnContainerStyleSelector x:Key="LayoutListColumnStyleSelector">
+      <etkvs:PresetManagerColumnContainerStyleSelector.ConfigurableColumnStyle>
+        <Style TargetType="{x:Type ListViewItem}" BasedOn="{StaticResource {x:Type ListViewItem}}">
+          <Setter Property="AutomationProperties.Name" Value="{Binding (AutomationProperties.Name), Mode=OneWay}"/>
+          <EventSetter Event="Loaded" Handler="OnLayoutListItemLoaded"/>
+          <EventSetter Event="Unloaded" Handler="OnLayoutListItemUnloaded"/>
+          <EventSetter Event="DragEnter" Handler="OnLayoutListItemDragEnter"/>
+          <EventSetter Event="DragOver" Handler="OnLayoutListItemDragOver"/>
+          <EventSetter Event="Drop" Handler="OnLayoutListItemDrop"/>
+          <Style.Triggers>
+            <MultiDataTrigger>
+              <MultiDataTrigger.Conditions>
+                <Condition Binding="{Binding IsFrozen}" Value="True"/>
+                <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="False"/>
+              </MultiDataTrigger.Conditions>
+              <Setter Property="Background" Value="{DynamicResource {x:Static vsp:CommonControlsColors.ButtonDisabledBrushKey}}"/>
+            </MultiDataTrigger>
+          </Style.Triggers>
+        </Style>
+      </etkvs:PresetManagerColumnContainerStyleSelector.ConfigurableColumnStyle>
+      <etkvs:PresetManagerColumnContainerStyleSelector.SeparatorColumnStyle>
+        <Style TargetType="{x:Type ListViewItem}" BasedOn="{StaticResource {x:Type ListViewItem}}">
+          <Setter Property="AutomationProperties.Name" Value="{Binding (AutomationProperties.Name), Mode=OneWay}"/>
+          <Setter Property="Background" Value="Transparent"/>
+          <Setter Property="BorderBrush" Value="{x:Null}"/>
+          <Setter Property="BorderThickness" Value="0"/>
+          <Setter Property="Margin" Value="0"/>
+          <Setter Property="Padding" Value="1"/>
+          <Setter Property="VerticalContentAlignment" Value="Center"/>
+          <Setter Property="Visibility"
+                  Value="{Binding IsVisible, Converter={StaticResource BoolToVisibilityConverter}}"/>
+          <Setter Property="Template">
+            <Setter.Value>
+              <ControlTemplate TargetType="{x:Type ListViewItem}">
+                <Border BorderThickness="{TemplateBinding BorderThickness}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        Background="{TemplateBinding Background}"
+                        Padding="{TemplateBinding Padding}"
+                        SnapsToDevicePixels="True">
+                  <Border x:Name="InnerBorder" BorderThickness="1" Margin="1">
+                    <Border Height="4"
+                            Background="{Binding Converter={x:Static etkvs:PresetManagerDialog.SeparatorToColorBrushConverter}}"/>
+                  </Border>
+                </Border>
+                <ControlTemplate.Triggers>
+                  <DataTrigger Value="True" Binding="{Binding IsFrozen}">
+                    <Setter Property="Background" Value="{DynamicResource {x:Static vsp:CommonControlsColors.ButtonDisabledBrushKey}}"/>
+                  </DataTrigger>
+                  <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource {x:Static vsp:TreeViewColors.SelectedItemActiveBrushKey}}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:TreeViewColors.SelectedItemActiveTextBrushKey}}"/>
+                    <Setter TargetName="InnerBorder" Property="BorderBrush" Value="#80FFFFFF"/>
+                  </Trigger>
+                  <MultiTrigger>
+                    <MultiTrigger.Conditions>
+                      <Condition Property="IsSelected" Value="True"/>
+                      <Condition Property="Selector.IsSelectionActive" Value="False"/>
+                    </MultiTrigger.Conditions>
+                    <Setter Property="Background" Value="{DynamicResource {x:Static vsp:TreeViewColors.SelectedItemInactiveBrushKey}}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:TreeViewColors.SelectedItemInactiveTextBrushKey}}"/>
+                  </MultiTrigger>
+                  <Trigger Property="IsEnabled" Value="False">
+                    <Setter Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" Property="Control.Foreground"/>
+                  </Trigger>
+                </ControlTemplate.Triggers>
+              </ControlTemplate>
+            </Setter.Value>
+          </Setter>
+          <EventSetter Event="Loaded" Handler="OnLayoutListItemLoaded"/>
+          <EventSetter Event="Unloaded" Handler="OnLayoutListItemUnloaded"/>
+          <EventSetter Event="DragEnter" Handler="OnLayoutListItemDragEnter"/>
+          <EventSetter Event="DragOver" Handler="OnLayoutListItemDragOver"/>
+          <EventSetter Event="Drop" Handler="OnLayoutListItemDrop"/>
+        </Style>
+      </etkvs:PresetManagerColumnContainerStyleSelector.SeparatorColumnStyle>
+    </etkvs:PresetManagerColumnContainerStyleSelector>
 
     <etkvs:PresetManagerColumnDetailsTemplateSelector x:Key="DetailsTemplateSelector">
       <etkvs:PresetManagerColumnDetailsTemplateSelector.LeftFreezableAreaSeparatorColumnTemplate>
@@ -201,6 +252,7 @@
               <ComboBox x:Name="textAlignmentComboBox" Grid.Row="0" Grid.Column="1"
                         AutomationProperties.Name="Text Alignment"
                         Margin="4,2,0,2"
+                        Padding="4,2"
                         VerticalAlignment="Center"
                         SelectedItem="{Binding TextAlignment}"
                         ItemsSource="{Binding Source={StaticResource TextAlignmentValues}}"/>
@@ -220,6 +272,7 @@
               <ComboBox x:Name="customFormatComboBox" Grid.Row="2" Grid.Column="1"
                         AutomationProperties.Name="Format"
                         Margin="4,2,0,2"
+                        Padding="4,2"
                         VerticalAlignment="Center"
                         IsEditable="False"
                         DisplayMemberPath="Description"
@@ -238,87 +291,6 @@
       </etkvs:PresetManagerColumnDetailsTemplateSelector.ConfigurableColumnTemplate>
     </etkvs:PresetManagerColumnDetailsTemplateSelector>
 
-    <etkvs:PresetManagerColumnContainerStyleSelector x:Key="LayoutListColumnStyleSelector">
-      <etkvs:PresetManagerColumnContainerStyleSelector.ConfigurableColumnStyle>
-        <Style TargetType="{x:Type ListViewItem}" BasedOn="{StaticResource {x:Type ListViewItem}}">
-          <Setter Property="AutomationProperties.Name" Value="{Binding (AutomationProperties.Name), Mode=OneWay}"/>
-          <EventSetter Event="Loaded" Handler="OnLayoutListItemLoaded"/>
-          <EventSetter Event="Unloaded" Handler="OnLayoutListItemUnloaded"/>
-          <EventSetter Event="DragEnter" Handler="OnLayoutListItemDragEnter"/>
-          <EventSetter Event="DragOver" Handler="OnLayoutListItemDragOver"/>
-          <EventSetter Event="Drop" Handler="OnLayoutListItemDrop"/>
-          <Style.Triggers>
-            <!--<DataTrigger Binding="{Binding IsFrozen}" Value="True">
-              <Setter Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"/>
-              <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"/>
-            </DataTrigger>
-            <MultiDataTrigger>
-              <MultiDataTrigger.Conditions>
-                <Condition Binding="{Binding IsFrozen}" Value="True"/>
-              </MultiDataTrigger.Conditions>
-              <Setter Property="Background" Value="{DynamicResource {x:Static vsp:TreeViewColors.SelectedItemInactiveBrushKey}}"/>
-              <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:TreeViewColors.SelectedItemInactiveTextBrushKey}}"/>
-            </MultiDataTrigger>-->
-          </Style.Triggers>
-        </Style>
-      </etkvs:PresetManagerColumnContainerStyleSelector.ConfigurableColumnStyle>
-      <etkvs:PresetManagerColumnContainerStyleSelector.SeparatorColumnStyle>
-        <Style TargetType="{x:Type ListViewItem}">
-          <Setter Property="AutomationProperties.Name" Value="{Binding (AutomationProperties.Name), Mode=OneWay}"/>
-          <Setter Property="FocusVisualStyle" Value="{StaticResource ListViewItemFocusVisual}"/>
-          <Setter Property="Background" Value="Transparent"/>
-          <Setter Property="BorderBrush" Value="{x:Null}"/>
-          <Setter Property="BorderThickness" Value="0"/>
-          <Setter Property="Margin" Value="0"/>
-          <Setter Property="Padding" Value="0"/>
-          <Setter Property="VerticalContentAlignment" Value="Center"/>
-          <Setter Property="Visibility"
-                  Value="{Binding IsVisible, Converter={StaticResource BoolToVisibilityConverter}}"/>
-          <Setter Property="Template">
-            <Setter.Value>
-              <ControlTemplate TargetType="{x:Type ListViewItem}">
-                <Border BorderThickness="{TemplateBinding BorderThickness}"
-                        BorderBrush="{TemplateBinding BorderBrush}"
-                        Background="{TemplateBinding Background}"
-                        Padding="{TemplateBinding Padding}"
-                        SnapsToDevicePixels="True">
-                  <Border x:Name="InnerBorder" BorderThickness="1" Margin="1">
-                    <Border Height="4"
-                            Background="{Binding Converter={x:Static etkvs:PresetManagerDialog.SeparatorToColorBrushConverter}}"/>
-                  </Border>
-                </Border>
-                <ControlTemplate.Triggers>
-                  <DataTrigger Value="True" Binding="{Binding IsFrozen}">
-                    <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"/>
-                  </DataTrigger>
-                  <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource {x:Static vsp:TreeViewColors.SelectedItemActiveBrushKey}}"/>
-                    <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:TreeViewColors.SelectedItemActiveTextBrushKey}}"/>
-                    <Setter TargetName="InnerBorder" Property="BorderBrush" Value="#80FFFFFF"/>
-                  </Trigger>
-                  <MultiTrigger>
-                    <MultiTrigger.Conditions>
-                      <Condition Property="IsSelected" Value="True"/>
-                      <Condition Property="Selector.IsSelectionActive" Value="False"/>
-                    </MultiTrigger.Conditions>
-                    <Setter Property="Background" Value="{DynamicResource {x:Static vsp:TreeViewColors.SelectedItemInactiveBrushKey}}"/>
-                    <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:TreeViewColors.SelectedItemInactiveTextBrushKey}}"/>
-                  </MultiTrigger>
-                  <Trigger Property="IsEnabled" Value="False">
-                    <Setter Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" Property="Control.Foreground"/>
-                  </Trigger>
-                </ControlTemplate.Triggers>
-              </ControlTemplate>
-            </Setter.Value>
-          </Setter>
-          <EventSetter Event="Loaded" Handler="OnLayoutListItemLoaded"/>
-          <EventSetter Event="Unloaded" Handler="OnLayoutListItemUnloaded"/>
-          <EventSetter Event="DragEnter" Handler="OnLayoutListItemDragEnter"/>
-          <EventSetter Event="DragOver" Handler="OnLayoutListItemDragOver"/>
-          <EventSetter Event="Drop" Handler="OnLayoutListItemDrop"/>
-        </Style>
-      </etkvs:PresetManagerColumnContainerStyleSelector.SeparatorColumnStyle>
-    </etkvs:PresetManagerColumnContainerStyleSelector>
     <Style x:Key="HeaderStyle" TargetType="{x:Type Border}">
       <Setter Property="TextBlock.Foreground" Value="{DynamicResource {x:Static vsp:HeaderColors.DefaultTextBrushKey}}"/>
       <Setter Property="Background" Value="{DynamicResource {x:Static vsp:HeaderColors.DefaultBrushKey}}"/>
@@ -333,7 +305,7 @@
       <RowDefinition Height="*"/>
       <RowDefinition Height="Auto"/>
     </Grid.RowDefinitions>
-    <Grid Row="0" Background="{Binding HeaderBrush, ElementName=root, Mode=OneWay}">
+    <Grid Row="0" Background="{Binding HeaderBrush, ElementName=Root, Mode=OneWay}">
       <StackPanel Orientation="Horizontal">
         <TextBlock Margin="4,0,0,0" VerticalAlignment="Center" Text="{Binding DisplayName}"/>
         <ContentControl Margin="4,0,0,0" Focusable="False" Content="{Binding PresetDropDownMenu}"/>
@@ -343,15 +315,15 @@
     <Grid Grid.Row="1" Margin="7">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="175"
-                          MinWidth="{Binding ElementName=root, Path=MinWidth, Converter={x:Static etkvs:PresetManagerDialog.MultiplierConverter}, ConverterParameter={StaticResource Double0P125}}"
-                          MaxWidth="{Binding ElementName=root, Path=ActualWidth, Converter={x:Static etkvs:PresetManagerDialog.MultiplierConverter}, ConverterParameter={StaticResource Double0P375}}"/>
+                          MinWidth="{Binding MinWidth, ElementName=Root, Converter={x:Static etkvs:PresetManagerDialog.MultiplierConverter}, ConverterParameter={StaticResource Double0P125}}"
+                          MaxWidth="{Binding ActualWidth, ElementName=Root, Converter={x:Static etkvs:PresetManagerDialog.MultiplierConverter}, ConverterParameter={StaticResource Double0P375}}"/>
         <ColumnDefinition Width="Auto"/>
         <ColumnDefinition Width="500"
-                          MinWidth="{Binding ElementName=root, Path=MinWidth, Converter={x:Static etkvs:PresetManagerDialog.MultiplierConverter}, ConverterParameter={StaticResource Double0P25}}"
-                          MaxWidth="{Binding ElementName=root, Path=ActualWidth, Converter={x:Static etkvs:PresetManagerDialog.MultiplierConverter}, ConverterParameter={StaticResource Double0P5}}"/>
+                          MinWidth="{Binding MinWidth, ElementName=Root, Converter={x:Static etkvs:PresetManagerDialog.MultiplierConverter}, ConverterParameter={StaticResource Double0P25}}"
+                          MaxWidth="{Binding ActualWidth, ElementName=Root, Converter={x:Static etkvs:PresetManagerDialog.MultiplierConverter}, ConverterParameter={StaticResource Double0P5}}"/>
         <ColumnDefinition Width="Auto"/>
         <ColumnDefinition Width="*"
-                          MinWidth="{Binding ElementName=root, Path=MinWidth, Converter={x:Static etkvs:PresetManagerDialog.MultiplierConverter}, ConverterParameter={StaticResource Double0P125}}"/>
+                          MinWidth="{Binding MinWidth, ElementName=Root, Converter={x:Static etkvs:PresetManagerDialog.MultiplierConverter}, ConverterParameter={StaticResource Double0P125}}"/>
       </Grid.ColumnDefinitions>
 
       <Border BorderThickness="1"
@@ -398,7 +370,6 @@
         SelectedItem="{Binding SelectedColumn}"
         BorderThickness="1"
         SelectionMode="Extended"
-        Style="{StaticResource {x:Type ListView}}"
         ItemContainerStyleSelector="{StaticResource LayoutListColumnStyleSelector}">
         <etkc:MultiDragListView.View>
           <GridView>
@@ -413,7 +384,7 @@
               <GridViewColumn.CellTemplate>
                 <DataTemplate DataType="{x:Type etkvs:PresetManagerColumnViewModel}">
                   <TextBlock Text="{Binding Name}">
-                    <FrameworkElement.Style>
+                    <TextBlock.Style>
                       <Style TargetType="{x:Type TextBlock}">
                         <Style.Triggers>
                           <MultiDataTrigger>
@@ -421,11 +392,11 @@
                               <Condition Binding="{Binding IsVisible}" Value="False"/>
                               <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="False"/>
                             </MultiDataTrigger.Conditions>
-                            <Setter Property="TextBlock.Foreground" Value="{DynamicResource {x:Static vsp:CommonControlsColors.ButtonDisabledTextBrushKey}}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:CommonControlsColors.ButtonDisabledTextBrushKey}}"/>
                           </MultiDataTrigger>
                         </Style.Triggers>
                       </Style>
-                    </FrameworkElement.Style>
+                    </TextBlock.Style>
                   </TextBlock>
                 </DataTemplate>
               </GridViewColumn.CellTemplate>

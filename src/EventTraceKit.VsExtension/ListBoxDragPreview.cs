@@ -50,7 +50,7 @@
                 insertionAdorner = new InsertionAdorner(
                     listBox,
                     true,
-                    new Pen(Brushes.Black, 2),
+                    new Pen(listBox.Foreground ?? Brushes.Black, 2),
                     AdornerLayer);
             }
         }

@@ -30,7 +30,7 @@ namespace EventTraceKit.VsExtension
         {
             ProcessIds = new ObservableCollection<uint>();
             Events = new ObservableCollection<TraceEventDescriptorViewModel>();
-            ToggleSelectedEventsCommand = new AsyncDelegateCommand<object>(ToggleSelectedEvents);
+            ToggleSelectedEventsCommand = new AsyncDelegateCommand<IList>(ToggleSelectedEvents);
         }
 
         public TraceProviderDescriptorViewModel(Guid id, string name)
@@ -155,9 +155,9 @@ namespace EventTraceKit.VsExtension
             return clone;
         }
 
-        private Task ToggleSelectedEvents(object selectedObjects)
+        private Task ToggleSelectedEvents(IList selectedObjects)
         {
-            var selectedEvents = ((IList)selectedObjects).Cast<TraceEventDescriptorViewModel>().ToList();
+            var selectedEvents = selectedObjects.Cast<TraceEventDescriptorViewModel>().ToList();
             bool enabled = !selectedEvents.All(x => x.IsEnabled);
             foreach (var evt in selectedEvents)
                 evt.IsEnabled = enabled;

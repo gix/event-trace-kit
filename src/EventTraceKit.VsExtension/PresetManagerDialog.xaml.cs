@@ -333,7 +333,7 @@
         private readonly PresetManagerViewModel viewModel;
         private readonly ItemsControl availableList;
         private readonly ListBox layoutList;
-        private FrameworkElement dragSource;
+        private DependencyObject dragSource;
         private object dragData;
 
         public PresetColumnDragBehavior(
@@ -364,7 +364,7 @@
 
         private void OnDragPrepare(object source)
         {
-            dragSource = (FrameworkElement)source;
+            dragSource = (DependencyObject)source;
             var item = dragSource as ListBoxItem;
             if (item != null) {
                 var listBox = item.GetParentListBox();
@@ -411,7 +411,7 @@
 
         private void OnLayoutListDrop(IDataObject data)
         {
-            var target = viewModel.PresetColumns[viewModel.PresetColumns.Count - 1];
+            var target = viewModel.PresetColumns.LastOrDefault();
             DoDrop(data, target, true);
         }
 
@@ -431,10 +431,10 @@
         {
             e.Handled = true;
 
-            var target = viewModel.PresetColumns.Last();
+            var target = viewModel.PresetColumns.LastOrDefault();
             if (!CanDrop(e.Data, target, true)) {
                 e.Effects = DragDropEffects.None;
-                return;
+                layoutListDragPreview.HideOnly();
             }
         }
 
@@ -442,7 +442,7 @@
         {
             e.Handled = true;
 
-            var target = viewModel.PresetColumns.Last();
+            var target = viewModel.PresetColumns.LastOrDefault();
             if (!CanDrop(e.Data, target, true)) {
                 e.Effects = DragDropEffects.None;
                 layoutListDragPreview.HideOnly();

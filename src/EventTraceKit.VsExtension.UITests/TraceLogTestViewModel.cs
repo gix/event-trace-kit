@@ -7,8 +7,10 @@ namespace EventTraceKit.VsExtension.UITests
     using System.Linq;
     using System.Threading.Tasks;
     using System.Windows;
+    using System.Windows.Controls;
     using System.Windows.Input;
     using Collections;
+    using Controls;
     using EventTraceKit.VsExtension;
     using Microsoft.VisualStudio.PlatformUI;
 

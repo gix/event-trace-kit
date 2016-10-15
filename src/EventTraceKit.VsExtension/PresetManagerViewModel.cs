@@ -1,11 +1,11 @@
 ﻿namespace EventTraceKit.VsExtension
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Globalization;
     using System.Linq;
-    using System.Threading;
     using System.Windows;
     using System.Windows.Automation;
     using System.Windows.Controls;
@@ -105,9 +105,12 @@
         public static readonly DependencyProperty ConfigurablePresetColumnsProperty =
             ConfigurablePresetColumnsPropertyKey.DependencyProperty;
 
-        public static readonly DependencyProperty SelectedColumnProperty = DependencyProperty.Register(
-            nameof(SelectedColumn), typeof(PresetManagerColumnViewModel), typeof(PresetManagerViewModel),
-            new PropertyMetadata(default(PresetManagerColumnViewModel)));
+        public static readonly DependencyProperty SelectedColumnProperty =
+            DependencyProperty.Register(
+                nameof(SelectedColumn),
+                typeof(PresetManagerColumnViewModel),
+                typeof(PresetManagerViewModel),
+                new PropertyMetadata(default(PresetManagerColumnViewModel)));
 
         public int LastLeftFrozenIndex => presetColumns.IndexOf(leftFreezableAreaSeparatorColumn);
         public int FirstRightFrozenIndex => presetColumns.IndexOf(rightFreezableAreaSeparatorColumn);
@@ -408,11 +411,9 @@
         {
             if (newColumns == null)
                 throw new ArgumentNullException(nameof(newColumns));
-            if (addTarget == null)
-                throw new ArgumentNullException(nameof(addTarget));
 
-            int insertAt = presetColumns.IndexOf(addTarget);
-            if (moveAfter)
+            int insertAt = addTarget != null ? presetColumns.IndexOf(addTarget) : 0;
+            if (moveAfter && addTarget != null)
                 ++insertAt;
 
             foreach (var newColumn in newColumns) {
@@ -552,6 +553,12 @@
             }
 
             IsDialogStateDirty = false;
+        }
+
+        public AsyncDataViewModelPreset CreatePresetFromCurrentState()
+        {
+            UpdateCurrentPreset();
+            return CaptureCurrentPreset();
         }
 
         public void ResetCurrentPreset()
@@ -920,7 +927,7 @@
                 "Save As", icon, delegate {
                     PresetSaveAsDialog dialog = PresetSaveAsDialog.ShowPresetSaveAsDialog(presetManager.HdvViewModel.PresetCollection);
                     if (dialog.DialogResult == true) {
-                        SaveCurrentPresetAs(dtGti, dialog.NewPresetName);
+                        SaveCurrentPresetAs(presetManager, dialog.NewPresetName);
                     }
                 });
             Binding binding = new Binding {
@@ -928,7 +935,8 @@
                 Path = new PropertyPath(PresetManagerViewModel.IsCurrentPresetModifiedProperty),
                 Mode = BindingMode.OneWay
             };
-            BindingOperations.SetBinding(target, CanExecuteActionProperty, binding);
+            target.CanExecuteAction = true;
+            //BindingOperations.SetBinding(target, CanExecuteActionProperty, binding);
             return target;
         }
 
@@ -936,7 +944,7 @@
             PresetManagerViewModel presetManager, DataTableGraphTreeItem dtGti)
         {
             var icon = new Uri("/Microsoft.Performance.Shell;component/Resources/Preset.Save.png", UriKind.Relative);
-            var target = new PresetHeaderManagementCommand("Save", icon, () => SaveCurrentPreset(dtGti));
+            var target = new PresetHeaderManagementCommand("Save", icon, () => SaveCurrentPreset(presetManager));
 
             var binding = new Binding {
                 Source = presetManager,
@@ -960,40 +968,38 @@
             presetManager.ResetCurrentPreset();
         }
 
-        private static void SaveCurrentPreset(DataTableGraphTreeItem dtGti)
+        private static void SaveCurrentPreset(PresetManagerViewModel presetManager)
         {
-            SaveCurrentPresetAs(dtGti, dtGti.HdvViewModelPreset.Name);
+            SaveCurrentPresetAs(presetManager, presetManager.CurrentSelectedPresetName);
         }
 
-        public static void SaveCurrentPresetAs(DataTableGraphTreeItem dtGti, string newPresetName)
+        public static void SaveCurrentPresetAs(PresetManagerViewModel presetManager, string newPresetName)
         {
-            if (dtGti?.HdvViewModelPreset == null)
-                return;
-
             HdvViewModelPresetCollection presetCollection = null;
-            if (dtGti.HdvViewModel != null)
-                presetCollection = dtGti.HdvViewModel.PresetCollection;
+            if (presetManager.HdvViewModel != null)
+                presetCollection = presetManager.HdvViewModel.PresetCollection;
 
             if (presetCollection == null)
                 return;
 
-            string name = dtGti.HdvViewModelPreset.Name;
-            bool isModified = dtGti.HdvViewModelPreset.IsModified;
-            var preset = dtGti.HdvViewModelPreset.CreateModifiedPreset();
-            var oldPreset = presetCollection.UserPresets.FirstOrDefault(p => p.Name.Equals(newPresetName));
+            string name = presetManager.CurrentSelectedPresetName;
+            bool isModified = presetManager.IsCurrentPresetModified;
+            var newPreset = presetManager.CreatePresetFromCurrentState();
 
-            if (preset.Name != newPresetName) {
-                preset.Name = newPresetName;
-            }
-            preset.IsModified = false;
-            presetCollection.UserPresets.Add(preset);
-            dtGti.HdvViewModelPreset = preset;
+            if (newPreset.Name != newPresetName)
+                newPreset.Name = newPresetName;
+            newPreset.IsModified = false;
+
+            var oldPreset = presetCollection.UserPresets.FirstOrDefault(p => p.Name.Equals(newPresetName));
+            presetCollection.UserPresets.Add(newPreset);
             if (oldPreset != null)
                 presetCollection.UserPresets.Remove(oldPreset);
 
+            presetManager.HdvViewModel.Preset = newPreset;
+
             var view = PresetCollectionManagerView.Get();
             if (view != null)
-                view.SavePresetToRepository(string.Empty, preset, isModified, name);
+                view.SavePresetToRepository(string.Empty, newPreset, isModified, name);
         }
     }
 
@@ -1376,10 +1382,13 @@
         public void RefreshPositionDependentProperties()
         {
             int index = PresetManager.PresetColumns.IndexOf(this);
+            var leftFrozenIndex = PresetManager.LastLeftFrozenIndex;
+            var rightFrozenIndex = PresetManager.FirstRightFrozenIndex;
+
             IsFrozen =
                 index >= 0 &&
-                (index <= PresetManager.LastLeftFrozenIndex ||
-                 index >= PresetManager.FirstRightFrozenIndex);
+                (leftFrozenIndex != -1 && index <= leftFrozenIndex ||
+                 rightFrozenIndex != -1 && index >= rightFrozenIndex);
         }
 
         private void OnPresetPropertyChanged()
