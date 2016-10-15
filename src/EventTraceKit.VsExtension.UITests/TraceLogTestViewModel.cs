@@ -6,6 +6,7 @@ namespace EventTraceKit.VsExtension.UITests
     using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
+    using System.Windows;
     using System.Windows.Input;
     using Collections;
     using EventTraceKit.VsExtension;
@@ -23,6 +24,7 @@ namespace EventTraceKit.VsExtension.UITests
             StopCommand = new AsyncDelegateCommand(Stop, CanStop);
             ClearCommand = new AsyncDelegateCommand(Clear);
             ConfigureCommand = new DelegateCommand(Configure);
+            OpenViewEditorCommand = new DelegateCommand(OpenViewEditor);
 
             foreach (var name in App.Current.AvailableThemes)
                 Themes.Add(name);
@@ -50,6 +52,7 @@ namespace EventTraceKit.VsExtension.UITests
         public ICommand StopCommand { get; }
         public ICommand ClearCommand { get; }
         public ICommand ConfigureCommand { get; }
+        public ICommand OpenViewEditorCommand { get; }
 
         public bool IsRunning
         {
@@ -109,6 +112,13 @@ namespace EventTraceKit.VsExtension.UITests
             }
 
             sessionDescriptor = viewModel.GetDescriptor();
+        }
+
+        private void OpenViewEditor(object obj)
+        {
+            var dialog = PresetManagerDialog.CreateDialog(AdvModel);
+            dialog.Owner = Application.Current.MainWindow;
+            dialog.ShowDialog();
         }
 
         private class StubSettingsService : IEventTraceKitSettingsService

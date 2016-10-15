@@ -40,49 +40,6 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 forType, new FrameworkPropertyMetadata(panelTemplate));
         }
 
-        protected override void OnItemsSourceChanged(IEnumerable oldValue, IEnumerable newValue)
-        {
-            base.OnItemsSourceChanged(oldValue, newValue);
-
-            var oldCollection = oldValue as INotifyCollectionChanged;
-            if (oldCollection != null)
-                oldCollection.CollectionChanged -= OnItemsSourceCollectionChanged;
-
-            var newCollection = newValue as INotifyCollectionChanged;
-            if (newCollection != null)
-                newCollection.CollectionChanged += OnItemsSourceCollectionChanged;
-
-            RefreshEnabled();
-        }
-
-        private void OnItemsSourceCollectionChanged(
-            object sender, NotifyCollectionChangedEventArgs notifyCollectionChangedEventArgs)
-        {
-            RefreshEnabled();
-        }
-
-        private void RefreshEnabled()
-        {
-            IsEnabled = ItemsSource?.Any() == true;
-        }
-
-        protected override void OnContextMenuOpening(ContextMenuEventArgs e)
-        {
-            if (!e.Handled) {
-                using (ParentGrid.EnterContextMenuVisualState()) {
-                    var chooser = new ColumnChooser(ViewModel.ConfigurableColumns, ViewModel.AdvModel) {
-                        Placement = PlacementMode.MousePoint,
-                        PlacementTarget = VisualTreeHelper.GetParent(this) as UIElement
-                    };
-                    chooser.IsOpen = true;
-                }
-
-                e.Handled = true;
-            }
-
-            base.OnContextMenuOpening(e);
-        }
-
         #region public AsyncDataGridColumnsViewModel ViewModel { get; set; }
 
         /// <summary>
@@ -129,10 +86,53 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         #endregion
 
+        public Panel InternalItemsHost { get; set; }
+
         internal AsyncDataGrid ParentGrid =>
             parentGrid ?? (parentGrid = this.FindParent<AsyncDataGrid>());
 
-        public Panel InternalItemsHost { get; set; }
+        protected override void OnItemsSourceChanged(IEnumerable oldValue, IEnumerable newValue)
+        {
+            base.OnItemsSourceChanged(oldValue, newValue);
+
+            var oldCollection = oldValue as INotifyCollectionChanged;
+            if (oldCollection != null)
+                oldCollection.CollectionChanged -= OnItemsSourceCollectionChanged;
+
+            var newCollection = newValue as INotifyCollectionChanged;
+            if (newCollection != null)
+                newCollection.CollectionChanged += OnItemsSourceCollectionChanged;
+
+            RefreshEnabled();
+        }
+
+        private void OnItemsSourceCollectionChanged(
+            object sender, NotifyCollectionChangedEventArgs notifyCollectionChangedEventArgs)
+        {
+            RefreshEnabled();
+        }
+
+        private void RefreshEnabled()
+        {
+            IsEnabled = ItemsSource?.Any() == true;
+        }
+
+        protected override void OnContextMenuOpening(ContextMenuEventArgs e)
+        {
+            if (!e.Handled) {
+                using (ParentGrid.EnterContextMenuVisualState()) {
+                    var chooser = new ColumnChooser(ViewModel.ConfigurableColumns, ViewModel.AdvModel) {
+                        Placement = PlacementMode.MousePoint,
+                        PlacementTarget = VisualTreeHelper.GetParent(this) as UIElement
+                    };
+                    chooser.IsOpen = true;
+                }
+
+                e.Handled = true;
+            }
+
+            base.OnContextMenuOpening(e);
+        }
 
         protected override bool IsItemItsOwnContainerOverride(object item)
         {
@@ -157,23 +157,23 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         {
             base.PrepareContainerForItemOverride(element, item);
 
-            var viewModel = item as AsyncDataGridColumn;
-            if (viewModel == null)
+            var column = item as AsyncDataGridColumn;
+            if (column == null)
                 throw new InvalidOperationException("Invalid item type.");
 
             var header = (AsyncDataGridColumnHeader)element;
             header.SnapsToDevicePixels = SnapsToDevicePixels;
             header.UseLayoutRounding = UseLayoutRounding;
-            header.Column = viewModel;
+            header.Column = column;
 
             var widthBinding = new Binding(nameof(Width)) {
-                Source = viewModel,
+                Source = column,
                 Mode = BindingMode.TwoWay
             };
             header.SetBinding(WidthProperty, widthBinding);
 
-            var contentBinding = new Binding(nameof(viewModel.ColumnName)) {
-                Source = viewModel
+            var contentBinding = new Binding(nameof(column.ColumnName)) {
+                Source = column
             };
             header.SetBinding(ContentControl.ContentProperty, contentBinding);
         }
@@ -331,7 +331,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         {
             None,
             Preparing,
-            Dragging,
+            Dragging
         }
 
         /// <devdoc>
@@ -492,12 +492,12 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         ///                 +10         +0              +0
         /// </para>
         /// <para>
-        ///   When a header is still animating has to move back we want to
-        ///   cancel the partially completed animation and reverse it. There
-        ///   seems to be no built-in way to accomplish that. Just applying a an
-        ///   animation from the current offset to the new target offset has the
-        ///   wrong duration and wrong values due to easing. We have to find out
-        ///   how much time passed, reverse the animation and then seek forward
+        ///   When a header still animating has to move back we want to cancel
+        ///   the partially completed animation and reverse it. There seems to
+        ///   be no built-in way to accomplish that. Just applying an animation
+        ///   from the current offset to the new target offset has the wrong
+        ///   duration and wrong values due to easing. We have to find out how
+        ///   much time passed, reverse the animation and then seek forward
         ///   before continuing.
         /// </para>
         /// </devdoc>

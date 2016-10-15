@@ -303,55 +303,215 @@ namespace EventTraceKit.VsExtension
                 }.EnsureFrozen();
         }
 
+        public static AsyncDataViewModelPreset CreateDefaultPreset()
+        {
+            var providerIdPreset =
+                new ColumnViewModelPreset {
+                    Id = new Guid("9B9DAF0F-EAC6-43FE-B68F-EAF0D9A4AFB9"),
+                    Name = "Provider Id",
+                    IsVisible = false,
+                    Width = 100
+                }.EnsureFrozen();
+            var providerNamePreset =
+                new ColumnViewModelPreset {
+                    Id = new Guid("934D2438-65F3-4AE9-8FEA-94B81AA5A4A6"),
+                    Name = "Provider",
+                    IsVisible = true,
+                    Width = 150
+                }.EnsureFrozen();
+            var idPreset =
+                new ColumnViewModelPreset {
+                    Id = new Guid("0FE03A19-FBCB-4514-9441-2D0B1AB5E2E1"),
+                    Name = "Id",
+                    IsVisible = true,
+                    Width = 50
+                }.EnsureFrozen();
+            var versionPreset =
+                new ColumnViewModelPreset {
+                    Id = new Guid("215AB0D7-BEC9-4A70-96C4-028EE3404F09"),
+                    Name = "Version",
+                    IsVisible = false,
+                    Width = 80
+                }.EnsureFrozen();
+            var channelPreset =
+                new ColumnViewModelPreset {
+                    Id = new Guid("CF9373E2-5876-4F84-BB3A-F6C878D36F86"),
+                    Name = "Channel",
+                    IsVisible = false,
+                    Width = 80
+                }.EnsureFrozen();
+            var channelNamePreset =
+                new ColumnViewModelPreset {
+                    Id = new Guid("FAC4B329-DD59-41D2-8AA8-83B66DFBAECC"),
+                    Name = "Channel Name",
+                    IsVisible = false,
+                    Width = 80
+                }.EnsureFrozen();
+            var levelPreset =
+                new ColumnViewModelPreset {
+                    Id = new Guid("388591F3-43B2-4E68-B080-0B1A48D33559"),
+                    Name = "Level",
+                    IsVisible = false,
+                    Width = 80
+                }.EnsureFrozen();
+            var levelNamePreset =
+                new ColumnViewModelPreset {
+                    Id = new Guid("1B2ADB63-7C73-4330-927D-4FF37A60B249"),
+                    Name = "Level Name",
+                    IsVisible = false,
+                    Width = 80
+                }.EnsureFrozen();
+            var taskPreset =
+                new ColumnViewModelPreset {
+                    Id = new Guid("CE90F4D8-0FDE-4324-8D39-5BF74C8F4D9B"),
+                    Name = "Task",
+                    IsVisible = false,
+                    Width = 80
+                }.EnsureFrozen();
+            var taskNamePreset =
+                new ColumnViewModelPreset {
+                    Id = new Guid("730765B3-2E42-43E7-8B26-BAB7F4999E69"),
+                    Name = "Task Name",
+                    IsVisible = true,
+                    Width = 80
+                }.EnsureFrozen();
+            var opcodeOrTypePreset =
+                new ColumnViewModelPreset {
+                    Id = new Guid("F08CCD14-FE1E-4D9E-BE6C-B527EA4B25DA"),
+                    Name = "Opcode/Type",
+                    IsVisible = false,
+                    Width = 80
+                }.EnsureFrozen();
+            var opcodeNamePreset =
+                new ColumnViewModelPreset {
+                    Id = new Guid("99C0A192-174F-4DD5-AFD8-32F513506E88"),
+                    Name = "Opcode Name",
+                    IsVisible = true,
+                    Width = 80
+                }.EnsureFrozen();
+            var keywordPreset =
+                new ColumnViewModelPreset {
+                    Id = new Guid("62DC8843-C7BF-45F0-AC61-644395D53409"),
+                    Name = "Keyword",
+                    IsVisible = false,
+                    Width = 80,
+                    TextAlignment = TextAlignment.Right,
+                    CellFormat = "x"
+                }.EnsureFrozen();
+            var messagePreset =
+                new ColumnViewModelPreset {
+                    Id = new Guid("89F731F6-D4D2-40E8-9615-6EB5A5A68A75"),
+                    Name = "Message",
+                    IsVisible = true,
+                    Width = 500
+                }.EnsureFrozen();
+            var processIdPreset =
+                new ColumnViewModelPreset {
+                    Id = new Guid("7600E8FD-D7C2-4BA4-9DE4-AADE5230DC53"),
+                    Name = "PID",
+                    IsVisible = true,
+                    Width = 40,
+                    HelpText = "Process ID (0 = PID Not Found)"
+                }.EnsureFrozen();
+            var threadIdPreset =
+                new ColumnViewModelPreset {
+                    Id = new Guid("6BEB4F24-53DC-4A9D-8EEA-ED8F69990349"),
+                    Name = "TID",
+                    IsVisible = true,
+                    Width = 40,
+                    HelpText = "Thread ID"
+                }.EnsureFrozen();
+            var timeAbsoluteGeneratorPreset =
+                new ColumnViewModelPreset {
+                    Id = new Guid("FC87155E-AD2A-4294-A425-55E914FA1821"),
+                    Name = "Time",
+                    IsVisible = false,
+                    Width = 100,
+                    CellFormat = "HH:mm:ss.fffffff"
+                }.EnsureFrozen();
+            var timeRelativeGeneratorPreset =
+                new ColumnViewModelPreset {
+                    Id = new Guid("8823874B-917D-4D64-ABDF-EA29E6C87789"),
+                    Name = "Time Elapsed",
+                    IsVisible = true,
+                    Width = 100,
+                    CellFormat = "HH:mm:ss.fffffff"
+                }.EnsureFrozen();
+
+            var preset = new AsyncDataViewModelPreset();
+            preset.Name = "Default";
+            preset.ConfigurableColumns.Add(timeAbsoluteGeneratorPreset);
+            preset.ConfigurableColumns.Add(timeRelativeGeneratorPreset);
+            preset.ConfigurableColumns.Add(providerIdPreset);
+            preset.ConfigurableColumns.Add(providerNamePreset);
+            preset.ConfigurableColumns.Add(idPreset);
+            preset.ConfigurableColumns.Add(versionPreset);
+            preset.ConfigurableColumns.Add(channelPreset);
+            preset.ConfigurableColumns.Add(channelNamePreset);
+            preset.ConfigurableColumns.Add(taskPreset);
+            preset.ConfigurableColumns.Add(taskNamePreset);
+            preset.ConfigurableColumns.Add(opcodeNamePreset);
+            preset.ConfigurableColumns.Add(opcodeOrTypePreset);
+            preset.ConfigurableColumns.Add(levelPreset);
+            preset.ConfigurableColumns.Add(levelNamePreset);
+            preset.ConfigurableColumns.Add(keywordPreset);
+            preset.ConfigurableColumns.Add(processIdPreset);
+            preset.ConfigurableColumns.Add(threadIdPreset);
+            preset.ConfigurableColumns.Add(messagePreset);
+            preset.Freeze();
+
+            return preset;
+        }
+
         public Tuple<DataTable, AsyncDataViewModelPreset> CreateTable(
             IEventInfoSource eventInfoSource, EventSymbolSource symbolSource)
         {
             var table = new DataTable("Generic Events");
-            var defaultPreset = new AsyncDataViewModelPreset();
+            var templatePreset = new AsyncDataViewModelPreset();
             var formatter = new NativeTdhFormatter();
             var info = new CrimsonEventsInfo(eventInfoSource, formatter, symbolSource);
 
-            AddColumn(table, defaultPreset, timePointGeneratorPreset, DataColumn.Create(info.ProjectTimePoint));
-            AddColumn(table, defaultPreset, timeAbsoluteGeneratorPreset, DataColumn.Create(info.ProjectTimeAbsolute));
-            AddColumn(table, defaultPreset, timeRelativeGeneratorPreset, DataColumn.Create(info.ProjectTimeRelative));
-            AddColumn(table, defaultPreset, providerIdPreset, DataColumn.Create(info.ProjectProviderId));
-            AddColumn(table, defaultPreset, providerNamePreset, DataColumn.Create(info.ProjectProviderName));
-            AddColumn(table, defaultPreset, idPreset, DataColumn.Create(info.ProjectId));
-            AddColumn(table, defaultPreset, versionPreset, DataColumn.Create(info.ProjectVersion));
-            AddColumn(table, defaultPreset, symbolPreset, DataColumn.Create(info.ProjectSymbol));
-            AddColumn(table, defaultPreset, channelPreset, DataColumn.Create(info.ProjectChannel));
-            AddColumn(table, defaultPreset, channelNamePreset, DataColumn.Create(info.ProjectChannelName));
-            AddColumn(table, defaultPreset, taskPreset, DataColumn.Create(info.ProjectTask));
-            AddColumn(table, defaultPreset, taskNamePreset, DataColumn.Create(info.ProjectTaskName));
-            AddColumn(table, defaultPreset, opcodeNamePreset, DataColumn.Create(info.ProjectOpCodeName));
-            AddColumn(table, defaultPreset, opcodeOrTypePreset, DataColumn.Create(info.ProjectOpCode));
-            AddColumn(table, defaultPreset, levelPreset, DataColumn.Create(info.ProjectLevel));
-            AddColumn(table, defaultPreset, levelNamePreset, DataColumn.Create(info.ProjectLevelName));
-            AddColumn(table, defaultPreset, keywordPreset, DataColumn.Create(info.ProjectKeyword));
-            AddColumn(table, defaultPreset, processIdPreset, DataColumn.Create(info.ProjectProcessId));
-            AddColumn(table, defaultPreset, threadIdPreset, DataColumn.Create(info.ProjectThreadId));
-            AddColumn(table, defaultPreset, messagePreset, DataColumn.Create(info.ProjectMessage));
-            AddColumn(table, defaultPreset, eventNamePreset, DataColumn.Create(info.ProjectEventName));
-            AddColumn(table, defaultPreset, eventTypePreset, DataColumn.Create(info.ProjectEventType));
-            AddColumn(table, defaultPreset, cpuPreset, DataColumn.Create(info.ProjectCpu));
-            AddColumn(table, defaultPreset, userDataLengthPreset, DataColumn.Create(info.ProjectUserDataLength));
-            AddColumn(table, defaultPreset, activityIdPreset, DataColumn.Create(info.ProjectActivityId));
-            AddColumn(table, defaultPreset, relatedActivityIdPreset, DataColumn.Create(info.ProjectRelatedActivityId));
-            AddColumn(table, defaultPreset, userSecurityIdentifierPreset, DataColumn.Create(info.ProjectUserSecurityIdentifier));
-            AddColumn(table, defaultPreset, sessionIdPreset, DataColumn.Create(info.ProjectSessionId));
-            AddColumn(table, defaultPreset, eventKeyPreset, DataColumn.Create(info.ProjectEventKey));
-            AddColumn(table, defaultPreset, decodingSourcePreset, DataColumn.Create(info.ProjectDecodingSource));
-            //AddColumn(table, defaultPreset, modernProcessDataPreset, DataColumn.Create<object>());
-            //AddColumn(table, defaultPreset, processNamePreset, DataColumn.Create<string>());
-            //AddColumn(table, defaultPreset, stackTopPreset, DataColumn.Create<object>());
-            //AddColumn(table, defaultPreset, threadStartModulePreset, DataColumn.Create<string>());
-            //AddColumn(table, defaultPreset, threadStartFunctionPreset, DataColumn.Create<string>());
+            AddColumn(table, templatePreset, timePointGeneratorPreset, DataColumn.Create(info.ProjectTimePoint));
+            AddColumn(table, templatePreset, timeAbsoluteGeneratorPreset, DataColumn.Create(info.ProjectTimeAbsolute));
+            AddColumn(table, templatePreset, timeRelativeGeneratorPreset, DataColumn.Create(info.ProjectTimeRelative));
+            AddColumn(table, templatePreset, providerIdPreset, DataColumn.Create(info.ProjectProviderId));
+            AddColumn(table, templatePreset, providerNamePreset, DataColumn.Create(info.ProjectProviderName));
+            AddColumn(table, templatePreset, idPreset, DataColumn.Create(info.ProjectId));
+            AddColumn(table, templatePreset, versionPreset, DataColumn.Create(info.ProjectVersion));
+            AddColumn(table, templatePreset, symbolPreset, DataColumn.Create(info.ProjectSymbol));
+            AddColumn(table, templatePreset, channelPreset, DataColumn.Create(info.ProjectChannel));
+            AddColumn(table, templatePreset, channelNamePreset, DataColumn.Create(info.ProjectChannelName));
+            AddColumn(table, templatePreset, taskPreset, DataColumn.Create(info.ProjectTask));
+            AddColumn(table, templatePreset, taskNamePreset, DataColumn.Create(info.ProjectTaskName));
+            AddColumn(table, templatePreset, opcodeNamePreset, DataColumn.Create(info.ProjectOpCodeName));
+            AddColumn(table, templatePreset, opcodeOrTypePreset, DataColumn.Create(info.ProjectOpCode));
+            AddColumn(table, templatePreset, levelPreset, DataColumn.Create(info.ProjectLevel));
+            AddColumn(table, templatePreset, levelNamePreset, DataColumn.Create(info.ProjectLevelName));
+            AddColumn(table, templatePreset, keywordPreset, DataColumn.Create(info.ProjectKeyword));
+            AddColumn(table, templatePreset, processIdPreset, DataColumn.Create(info.ProjectProcessId));
+            AddColumn(table, templatePreset, threadIdPreset, DataColumn.Create(info.ProjectThreadId));
+            AddColumn(table, templatePreset, messagePreset, DataColumn.Create(info.ProjectMessage));
+            AddColumn(table, templatePreset, eventNamePreset, DataColumn.Create(info.ProjectEventName));
+            AddColumn(table, templatePreset, eventTypePreset, DataColumn.Create(info.ProjectEventType));
+            AddColumn(table, templatePreset, cpuPreset, DataColumn.Create(info.ProjectCpu));
+            AddColumn(table, templatePreset, userDataLengthPreset, DataColumn.Create(info.ProjectUserDataLength));
+            AddColumn(table, templatePreset, activityIdPreset, DataColumn.Create(info.ProjectActivityId));
+            AddColumn(table, templatePreset, relatedActivityIdPreset, DataColumn.Create(info.ProjectRelatedActivityId));
+            AddColumn(table, templatePreset, userSecurityIdentifierPreset, DataColumn.Create(info.ProjectUserSecurityIdentifier));
+            AddColumn(table, templatePreset, sessionIdPreset, DataColumn.Create(info.ProjectSessionId));
+            AddColumn(table, templatePreset, eventKeyPreset, DataColumn.Create(info.ProjectEventKey));
+            AddColumn(table, templatePreset, decodingSourcePreset, DataColumn.Create(info.ProjectDecodingSource));
+            //AddColumn(table, templatePreset, modernProcessDataPreset, DataColumn.Create<object>());
+            //AddColumn(table, templatePreset, processNamePreset, DataColumn.Create<string>());
+            //AddColumn(table, templatePreset, stackTopPreset, DataColumn.Create<object>());
+            //AddColumn(table, templatePreset, threadStartModulePreset, DataColumn.Create<string>());
+            //AddColumn(table, templatePreset, threadStartFunctionPreset, DataColumn.Create<string>());
 
-            return Tuple.Create(table, defaultPreset);
+            return Tuple.Create(table, templatePreset);
         }
 
         private void AddColumn(
-            DataTable table, AsyncDataViewModelPreset defaultPreset,
+            DataTable table, AsyncDataViewModelPreset templatePreset,
             ColumnViewModelPreset preset, DataColumn column)
         {
             column.Id = preset.Id;
@@ -361,7 +521,7 @@ namespace EventTraceKit.VsExtension
             column.IsResizable = true;
             column.TextAlignment = preset.TextAlignment;
             table.Add(column);
-            defaultPreset.ConfigurableColumns.Add(preset);
+            templatePreset.ConfigurableColumns.Add(preset);
         }
 
         private sealed class CrimsonEventsInfo

@@ -9,6 +9,7 @@
     using System.Text;
     using System.Windows.Markup;
     using System.Xml;
+    using Extensions;
 
     internal interface ISerializationExclusion
     {

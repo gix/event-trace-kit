@@ -433,7 +433,6 @@ namespace EventTraceKit.VsExtension.Controls
             }
 
             return value;
-
         }
 
         private CellValue GetCellValueNotCached(int rowIndex)

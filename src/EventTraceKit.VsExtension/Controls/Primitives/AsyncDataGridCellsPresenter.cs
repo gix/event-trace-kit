@@ -1444,7 +1444,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         private void EndDragging()
         {
-            if (Mouse.Captured == this)
+            if (ReferenceEquals(Mouse.Captured, this))
                 ReleaseMouseCapture();
 
             dragSelectionCtx = new DragSelectionContext();

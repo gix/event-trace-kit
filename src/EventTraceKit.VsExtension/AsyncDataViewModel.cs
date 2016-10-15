@@ -27,7 +27,9 @@ namespace EventTraceKit.VsExtension
         private readonly object asyncReadWorkQueueLock;
         private bool allowBackgroundThreads;
 
-        public AsyncDataViewModel(IDataView dataView, AsyncDataViewModelPreset templatePreset)
+        public AsyncDataViewModel(
+            IDataView dataView, AsyncDataViewModelPreset templatePreset,
+            HdvViewModelPresetCollection presetCollection)
         {
             if (dataView == null)
                 throw new ArgumentNullException(nameof(dataView));
@@ -35,6 +37,7 @@ namespace EventTraceKit.VsExtension
                 throw new ArgumentNullException(nameof(templatePreset));
 
             this.dataView = dataView;
+            PresetCollection = presetCollection;
             TemplatePreset = templatePreset.Clone().EnsureFrozen();
 
             workManager = new WorkManager(Dispatcher);
@@ -248,7 +251,6 @@ namespace EventTraceKit.VsExtension
                 HelpText = columnPreset.HelpText,
                 IsVisible = columnPreset.IsVisible,
                 Format = columnPreset.CellFormat,
-                FormatProvider = null,
             };
             return info;
         }
@@ -461,6 +463,22 @@ namespace EventTraceKit.VsExtension
 
         internal object DataValidityToken => DataView.DataValidityToken;
 
+        private static readonly DependencyPropertyKey PresetCollectionPropertyKey =
+                 DependencyProperty.RegisterReadOnly(
+                     "PresetCollection",
+                     typeof(HdvViewModelPresetCollection),
+                     typeof(AsyncDataViewModel),
+                     PropertyMetadataUtils.DefaultNull);
+
+        public static readonly DependencyProperty PresetCollectionProperty =
+            PresetCollectionPropertyKey.DependencyProperty;
+
+        public HdvViewModelPresetCollection PresetCollection
+        {
+            get { return (HdvViewModelPresetCollection)GetValue(PresetCollectionProperty); }
+            private set { SetValue(PresetCollectionPropertyKey, value); }
+        }
+
         public bool IsValidDataValidityToken(object dataValidityToken)
         {
             return DataView.IsValidDataValidityToken(dataValidityToken);
@@ -468,7 +486,7 @@ namespace EventTraceKit.VsExtension
 
         public DataColumnView GetPrototypeViewForColumnPreset(ColumnViewModelPreset columnPreset)
         {
-            DataColumnViewInfo columnViewInfo = this.GetDataColumnViewInfoFromPreset(columnPreset);
+            DataColumnViewInfo columnViewInfo = GetDataColumnViewInfoFromPreset(columnPreset);
             return dataView.CreateDataColumnViewFromInfo(columnViewInfo);
         }
     }

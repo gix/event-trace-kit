@@ -2,16 +2,10 @@
 {
     using System;
     using System.Windows;
-    using Windows;
     using Microsoft.VisualStudio.PlatformUI;
 
     public class ThemedDialogWindow : DialogWindow
     {
-        static ThemedDialogWindow()
-        {
-            //DefaultStyleKeyProperty.OverrideMetadata<ThemedDialogWindow>();
-        }
-
         public ThemedDialogWindow()
         {
             Resources.MergedDictionaries.Add(new ResourceDictionary {

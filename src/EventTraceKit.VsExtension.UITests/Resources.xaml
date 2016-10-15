@@ -5,6 +5,8 @@
   <Style x:Key="{x:Static vs:VsResourceKeys.CheckBoxStyleKey}" TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Type CheckBox}}"/>
   <Style x:Key="{x:Static vs:VsResourceKeys.ScrollBarStyleKey}" TargetType="{x:Type ScrollBar}" BasedOn="{StaticResource {x:Type ScrollBar}}"/>
   <Style x:Key="{x:Static vs:VsResourceKeys.ScrollViewerStyleKey}" TargetType="{x:Type ScrollViewer}" BasedOn="{StaticResource {x:Type ScrollViewer}}"/>
+  <Style x:Key="{x:Static vs:VsResourceKeys.TextBoxStyleKey}" TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}"/>
+  <Style x:Key="{x:Static vs:VsResourceKeys.ThemedDialogLabelStyleKey}" TargetType="{x:Type Label}" BasedOn="{StaticResource {x:Type Label}}"/>
   <Style x:Key="{x:Static vs:VsResourceKeys.ThemedDialogListBoxStyleKey}" TargetType="{x:Type ListBox}" BasedOn="{StaticResource {x:Type ListBox}}"/>
   <Style x:Key="{x:Static vs:VsResourceKeys.ThemedDialogComboBoxStyleKey}" TargetType="{x:Type ComboBox}" BasedOn="{StaticResource {x:Type ComboBox}}"/>
   <Style x:Key="{x:Static vs:VsResourceKeys.ThemedDialogRadioButtonStyleKey}" TargetType="{x:Type RadioButton}" BasedOn="{StaticResource {x:Type RadioButton}}"/>

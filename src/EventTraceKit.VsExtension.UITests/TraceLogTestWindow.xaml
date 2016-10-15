@@ -7,6 +7,7 @@
         xmlns:uit="clr-namespace:EventTraceKit.VsExtension.UITests"
         xmlns:EtkVs="clr-namespace:EventTraceKit.VsExtension;assembly=EventTraceKit.VsExtension"
         xmlns:vsp="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
+        xmlns:styles="clr-namespace:EventTraceKit.VsExtension.Styles;assembly=EventTraceKit.VsExtension"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance uit:TraceLogTestViewModel, IsDesignTimeCreatable=false}"
         UseLayoutRounding="True"
@@ -18,11 +19,12 @@
     </Grid.RowDefinitions>
     <StackPanel Orientation="Horizontal" Margin="6">
       <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding SelectedTheme}"/>
-      <Button Margin="7,0,0,0" Content="Start" Command="{Binding StartCommand}"/>
-      <Button Margin="7,0,0,0" Content="Stop" Command="{Binding StopCommand}"/>
-      <Button Margin="7,0,0,0" Content="Clear" Command="{Binding ClearCommand}"/>
-      <Button Margin="7,0,0,0" Content="Configure" Command="{Binding ConfigureCommand}"/>
-      <TextBlock Margin="7,0,0,0" Text="{Binding EventsDataView.RowCount}"/>
+      <Button Margin="7,1,1,1" Content="Start" Command="{Binding StartCommand}"/>
+      <Button Margin="7,1,1,1" Content="Stop" Command="{Binding StopCommand}"/>
+      <Button Margin="7,1,1,1" Content="Clear" Command="{Binding ClearCommand}"/>
+      <Button Margin="7,1,1,1" Content="Configure" Command="{Binding ConfigureCommand}"/>
+      <Button Margin="7,1,1,1" Content="Open View Editor" Command="{Binding OpenViewEditorCommand}"/>
+      <TextBlock Margin="7,1,1,1" Text="{Binding EventsDataView.RowCount}"/>
       <Controls:ActivityRing IsActive="{Binding IsRunning}" Margin="10,0,0,0"
                              Width="16" Height="16"/>
     </StackPanel>
@@ -32,14 +34,14 @@
       ViewModel="{Binding GridModel}"
       RowFontFamily="Consolas"
       RowFontSize="9pt"
-      Foreground="{DynamicResource {x:Static EtkVs:Colors.TraceLogForegroundKey}}"
+      Foreground="{DynamicResource {x:Static styles:Colors.TraceLogForegroundKey}}"
       Background="{DynamicResource {x:Static vsp:TreeViewColors.BackgroundBrushKey}}"
-      RowBackground="{DynamicResource {x:Static EtkVs:Colors.TraceLogBackgroundKey}}"
-      AlternatingRowBackground="{DynamicResource {x:Static EtkVs:Colors.TraceLogBackgroundAltKey}}"
-      RowSelectionForeground="{DynamicResource {x:Static EtkVs:Colors.TraceLogSelectedForegroundKey}}"
-      RowSelectionBackground="{DynamicResource {x:Static EtkVs:Colors.TraceLogSelectedBackgroundKey}}"
-      RowInactiveSelectionForeground="{DynamicResource {x:Static EtkVs:Colors.TraceLogInactiveSelectedForegroundKey}}"
-      RowInactiveSelectionBackground="{DynamicResource {x:Static EtkVs:Colors.TraceLogInactiveSelectedBackgroundKey}}"
+      RowBackground="{DynamicResource {x:Static styles:Colors.TraceLogBackgroundKey}}"
+      AlternatingRowBackground="{DynamicResource {x:Static styles:Colors.TraceLogBackgroundAltKey}}"
+      RowSelectionForeground="{DynamicResource {x:Static styles:Colors.TraceLogSelectedForegroundKey}}"
+      RowSelectionBackground="{DynamicResource {x:Static styles:Colors.TraceLogSelectedBackgroundKey}}"
+      RowInactiveSelectionForeground="{DynamicResource {x:Static styles:Colors.TraceLogInactiveSelectedForegroundKey}}"
+      RowInactiveSelectionBackground="{DynamicResource {x:Static styles:Colors.TraceLogInactiveSelectedBackgroundKey}}"
       RowFocusBorderBrush="{DynamicResource {x:Static EtkVs:CommonControlBrushes.FocusVisualForegroundKey}}"/>
   </Grid>
 </Window>

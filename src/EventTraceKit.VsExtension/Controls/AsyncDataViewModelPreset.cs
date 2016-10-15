@@ -247,28 +247,15 @@
             return new FreezableCollection<T>(collection);
         }
 
-        private void PlaceSeparatorsInList<T>(
+        public void PlaceSeparatorsInList<T>(
             IList<T> columns,
             T leftFreezableAreaSeparatorColumn,
             T rightFreezableAreaSeparatorColumn)
         {
-            var list = new List<Tuple<int, T>>();
-            AddToList<T>(list, LeftFrozenColumnCount, leftFreezableAreaSeparatorColumn);
-            AddToList<T>(list, RightFrozenColumnCount, rightFreezableAreaSeparatorColumn);
-            list.Sort((x, y) => x.Item1 - y.Item1);
-            foreach (var struct2 in list) {
-                if (struct2.Item1 == columns.Count + 1) {
-                    columns.Add(struct2.Item2);
-                } else {
-                    columns.Insert(struct2.Item1, struct2.Item2);
-                }
-            }
-        }
-
-        private static void AddToList<T>(
-            List<Tuple<int, T>> list, int presetIndex, T column)
-        {
-            list.Add(new Tuple<int, T>(presetIndex, column));
+            int leftIndex = LeftFrozenColumnCount.Clamp(0, columns.Count);
+            int rightIndex = columns.Count - RightFrozenColumnCount.Clamp(0, columns.Count - leftIndex);
+            columns.Insert(rightIndex, rightFreezableAreaSeparatorColumn);
+            columns.Insert(leftIndex, leftFreezableAreaSeparatorColumn);
         }
 
         private void ApplyCanonicalList(IList<ColumnViewModelPreset> canonicalList)
@@ -278,11 +265,13 @@
                 where !IsSentinelColumn(column)
                 select column);
 
-            LeftFrozenColumnCount = GetCountOfSentinelColumn(canonicalList, SentinelLeftFreezePreset);
-            RightFrozenColumnCount = GetCountOfSentinelColumn(canonicalList, SentinelRightFreezePreset);
+            int leftIndex = GetSentinelColumnIndex(canonicalList, SentinelLeftFreezePreset);
+            int rightIndex = GetSentinelColumnIndex(canonicalList, SentinelRightFreezePreset);
+            LeftFrozenColumnCount = leftIndex != -1 ? leftIndex : 0;
+            RightFrozenColumnCount = rightIndex != -1 ? canonicalList.Count - rightIndex - 1 : 0;
         }
 
-        private static int GetCountOfSentinelColumn(
+        private static int GetSentinelColumnIndex(
             IList<ColumnViewModelPreset> canonicalList, ColumnViewModelPreset sentinel)
         {
             return canonicalList.IndexOf(sentinel);

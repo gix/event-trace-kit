@@ -7,6 +7,7 @@
     <ResourceDictionary Source="../Styles/DataGrid.xaml"/>
     <ResourceDictionary Source="../Styles/ListView.xaml"/>
     <ResourceDictionary Source="../Styles/Menu.xaml"/>
+    <ResourceDictionary Source="../Styles/MiscControls.xaml"/>
     <ResourceDictionary Source="../Styles/AsyncDataGrid.xaml"/>
     <ResourceDictionary Source="../Styles/Primitives/AsyncDataGridColumnHeader.xaml"/>
     <ResourceDictionary Source="../Styles/Primitives/AsyncDataGridColumnHeadersPresenter.xaml"/>

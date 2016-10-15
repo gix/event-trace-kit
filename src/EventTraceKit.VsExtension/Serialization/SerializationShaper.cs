@@ -7,6 +7,7 @@
     using System.Globalization;
     using System.Linq;
     using System.Reflection;
+    using Extensions;
 
     public class SerializationShaper<TSerializedBaseType>
     {

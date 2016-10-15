@@ -131,6 +131,52 @@ namespace EventTraceKit.VsExtension.Controls
 
         #endregion
 
+        #region public int LeftFrozenColumnCount { get; set; }
+
+        /// <summary>
+        ///   Identifies the <see cref="LeftFrozenColumnCount"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty LeftFrozenColumnCountProperty =
+            DependencyProperty.Register(
+                nameof(LeftFrozenColumnCount),
+                typeof(int),
+                typeof(AsyncDataGridColumnsViewModel),
+                new PropertyMetadata(0));
+
+        /// <summary>
+        ///   Gets or sets the left frozen column count.
+        /// </summary>
+        public int LeftFrozenColumnCount
+        {
+            get { return (int)GetValue(LeftFrozenColumnCountProperty); }
+            set { SetValue(LeftFrozenColumnCountProperty, value); }
+        }
+
+        #endregion
+
+        #region public int RightFrozenColumnCount { get; set; }
+
+        /// <summary>
+        ///   Identifies the <see cref="RightFrozenColumnCount"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty RightFrozenColumnCountProperty =
+            DependencyProperty.Register(
+                nameof(RightFrozenColumnCount),
+                typeof(int),
+                typeof(AsyncDataGridColumnsViewModel),
+                new PropertyMetadata(0));
+
+        /// <summary>
+        ///   Gets or sets the right frozen column count.
+        /// </summary>
+        public int RightFrozenColumnCount
+        {
+            get { return (int)GetValue(RightFrozenColumnCountProperty); }
+            set { SetValue(RightFrozenColumnCountProperty, value); }
+        }
+
+        #endregion
+
         internal void RefreshAllObservableCollections()
         {
             visibleColumns.Clear();
@@ -161,32 +207,40 @@ namespace EventTraceKit.VsExtension.Controls
             AdvModel.Preset = preset;
         }
 
+        protected bool IsApplyingPreset { get; set; }
+
         internal void ApplyPresetAssumeGridModelInSync(AsyncDataViewModelPreset preset)
         {
             IsApplyingPreset = true;
-            AdvModel.DataView.BeginDataUpdate();
-            WritableColumns.Clear();
-            int index = 0;
-            foreach (var dataColumn in AdvModel.DataView.Columns) {
-                var column = new AsyncDataGridColumn(
-                    this, dataColumn, AdvModel, false);
-                WritableColumns.Add(column);
+            try {
+                AdvModel.DataView.BeginDataUpdate();
+                WritableColumns.Clear();
 
-                var columnPreset = preset.ConfigurableColumns[index];
-                column.Width = columnPreset.Width;
-                column.TextAlignment = columnPreset.TextAlignment;
-                column.CellFormat = columnPreset.CellFormat;
-                ++index;
+                int index = 0;
+                foreach (var dataColumn in AdvModel.DataView.Columns) {
+                    var column = new AsyncDataGridColumn(this, dataColumn, AdvModel, false);
+                    WritableColumns.Add(column);
+
+                    var columnPreset = preset.ConfigurableColumns[index];
+                    column.Width = columnPreset.Width;
+                    column.TextAlignment = columnPreset.TextAlignment;
+                    column.CellFormat = columnPreset.CellFormat;
+                    ++index;
+                }
+
+                LeftFrozenColumnCount = 0; //preset.LeftFrozenColumnCount;
+                RightFrozenColumnCount = 0; //preset.RightFrozenColumnCount;
+                                            //preset.PlaceSeparatorsInList(
+                                            //    WritableColumns,
+                                            //    LeftFreezableAreaSeparatorColumn,
+                                            //    RightFreezableAreaSeparatorColumn);
+                AdvModel.DataView.EndDataUpdate();
+                RefreshAllObservableCollections();
+            } finally {
+                IsApplyingPreset = false;
+                //UpdateFreezableColumnsWidth();
             }
-
-            //preset.PlaceSeparatorsInList<HierarchicalDataGridColumnViewModel>(base.ColumnsWriteable, base.LeftFreezableAreaSeparatorColumn, base.RightFreezableAreaSeparatorColumn, this.graphingAreaSeparatorColumn, this.keysValuesSeparatorColumn, forcedColumnLeftCount);
-            AdvModel.DataView.EndDataUpdate();
-            RefreshAllObservableCollections();
-            IsApplyingPreset = false;
-            //UpdateFreezableColumnsWidth();
         }
-
-        protected bool IsApplyingPreset { get; set; }
 
         internal void OnUIPropertyChanged(AsyncDataGridColumn column)
         {

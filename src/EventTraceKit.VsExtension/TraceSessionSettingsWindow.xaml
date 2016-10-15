@@ -10,241 +10,246 @@
   xmlns:cm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
   xmlns:system="clr-namespace:System;assembly=mscorlib"
   mc:Ignorable="d"
-  d:DataContext="{d:DesignInstance {x:Type etkv:TraceSettingsViewModel}, d:IsDesignTimeCreatable=False}"
+  d:DataContext="{d:DesignInstance {x:Type etkv:TraceSettingsDesignTimeModel}, d:IsDesignTimeCreatable=True}"
   Title="Trace Session Settings"
   Width="1000"
   Height="700">
   <i:Interaction.Behaviors>
     <etkw:DialogResult Binding="{Binding DialogResult}"/>
   </i:Interaction.Behaviors>
-  <etkv:ThemedDialogWindow.Resources>
-    <Style x:Key="UnrelatedControlsSeparator" TargetType="Separator">
-      <Setter Property="Height" Value="11"/>
-      <Setter Property="BorderThickness" Value="0"/>
-      <Setter Property="Background" Value="{x:Null}"/>
-    </Style>
+  <Grid>
+    <Grid.Resources>
+      <Style x:Key="UnrelatedControlsSeparator" TargetType="Separator">
+        <Setter Property="Height" Value="11"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Background" Value="{x:Null}"/>
+      </Style>
 
-    <Style x:Key="DataGridCheckBoxColumnStyle" TargetType="{x:Type CheckBox}"
-           BasedOn="{StaticResource {x:Type CheckBox}}">
-      <Setter Property="Margin" Value="0"/>
-    </Style>
+      <Style x:Key="DataGridCheckBoxColumnStyle" TargetType="{x:Type CheckBox}"
+             BasedOn="{StaticResource {x:Type CheckBox}}">
+        <Setter Property="Margin" Value="0"/>
+      </Style>
 
-    <Style x:Key="DataGridTextColumnEditingStyle" TargetType="{x:Type TextBox}">
-      <Setter Property="Margin" Value="-3"/>
-      <Setter Property="Padding" Value="2"/>
-    </Style>
+      <Style x:Key="DataGridTextColumnEditingStyle" TargetType="{x:Type TextBox}">
+        <Setter Property="Margin" Value="-3"/>
+        <Setter Property="Padding" Value="2"/>
+      </Style>
 
-    <Style TargetType="{x:Type Label}" BasedOn="{StaticResource {x:Type Label}}">
-      <Setter Property="VerticalAlignment" Value="Center"/>
-      <Setter Property="Margin" Value="3"/>
-      <Setter Property="Padding" Value="1"/>
-    </Style>
-    <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
-      <Setter Property="VerticalAlignment" Value="Center"/>
-      <Setter Property="Padding" Value="2"/>
-    </Style>
+      <Style TargetType="{x:Type Label}" BasedOn="{StaticResource {x:Type Label}}">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="3"/>
+        <Setter Property="Padding" Value="1"/>
+      </Style>
 
-    <DataTemplate DataType="{x:Type etkv:TraceProviderDescriptorViewModel}">
-      <DataTemplate.Resources>
-        <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
-          <Setter Property="VerticalAlignment" Value="Center"/>
-          <Setter Property="Margin" Value="3"/>
-          <Setter Property="Padding" Value="2"/>
-        </Style>
-        <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Type CheckBox}}">
-          <Setter Property="VerticalAlignment" Value="Center"/>
-          <Setter Property="Margin" Value="3"/>
-          <Setter Property="Padding" Value="1"/>
-        </Style>
-      </DataTemplate.Resources>
-      <Grid>
-        <Grid.RowDefinitions>
-          <RowDefinition Height="Auto"/>
-          <RowDefinition Height="Auto"/>
-          <RowDefinition Height="Auto"/>
-          <RowDefinition/>
-        </Grid.RowDefinitions>
+      <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+      </Style>
+
+      <DataTemplate DataType="{x:Type etkv:TraceProviderDescriptorViewModel}">
+        <DataTemplate.Resources>
+          <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="3"/>
+            <Setter Property="Padding" Value="2"/>
+          </Style>
+          <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Type CheckBox}}">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="3"/>
+            <Setter Property="Padding" Value="1"/>
+          </Style>
+        </DataTemplate.Resources>
         <Grid>
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="Auto" MinWidth="100"/>
-            <ColumnDefinition Width="11"/>
-            <ColumnDefinition Width="Auto"/>
-          </Grid.ColumnDefinitions>
           <Grid.RowDefinitions>
-            <RowDefinition/>
-            <RowDefinition/>
-            <RowDefinition/>
-            <RowDefinition/>
-            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition/>
           </Grid.RowDefinitions>
-          <Label Grid.Row="0" Grid.Column="0"
-                 Content="Provider Id" Target="{Binding ElementName=id}"/>
-          <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" x:Name="id"
-                   Text="{Binding Id, UpdateSourceTrigger=PropertyChanged}"/>
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="Auto" MinWidth="100"/>
+              <ColumnDefinition Width="11"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+              <RowDefinition/>
+              <RowDefinition/>
+              <RowDefinition/>
+              <RowDefinition/>
+              <RowDefinition/>
+              <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Label Grid.Row="0" Grid.Column="0"
+                   Content="Provider Id" Target="{Binding ElementName=id}"/>
+            <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" x:Name="id"
+                     Text="{Binding Id, UpdateSourceTrigger=PropertyChanged}"/>
 
-          <Label Grid.Row="1" Grid.Column="0"
-                 Content="Name (Display only)" Target="{Binding ElementName=name}"/>
-          <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" x:Name="name"
-                   Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
+            <Label Grid.Row="1" Grid.Column="0"
+                   Content="Name (Display only)" Target="{Binding ElementName=name}"/>
+            <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" x:Name="name"
+                     Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
 
-          <Label Grid.Row="2" Grid.Column="0"
-                 Content="Manifest" Target="{Binding ElementName=manifest}"/>
-          <TextBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" x:Name="manifest"
-                   Text="{Binding Manifest, UpdateSourceTrigger=PropertyChanged}"/>
+            <Label Grid.Row="2" Grid.Column="0"
+                   Content="Manifest" Target="{Binding ElementName=manifest}"/>
+            <TextBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" x:Name="manifest"
+                     Text="{Binding Manifest, UpdateSourceTrigger=PropertyChanged}"/>
 
-          <Label Grid.Row="3" Grid.Column="0"
-                 Content="Level" Target="{Binding ElementName=level}"/>
-          <TextBox Grid.Row="3" Grid.Column="1" x:Name="level"
-                   Text="{Binding Level, Converter={x:Static etkw:HexNumberConverter.Instance}, ConverterParameter='2'}"/>
+            <Label Grid.Row="3" Grid.Column="0"
+                   Content="Level" Target="{Binding ElementName=level}"/>
+            <TextBox Grid.Row="3" Grid.Column="1" x:Name="level"
+                     Text="{Binding Level, Converter={x:Static etkw:HexNumberConverter.Instance}, ConverterParameter='2'}"/>
 
-          <Label Grid.Row="4" Grid.Column="0"
-                 Content="Match Any Keywords" Target="{Binding ElementName=matchAnyKeywords}"/>
-          <TextBox Grid.Row="4" Grid.Column="1" x:Name="matchAnyKeywords"
-                   Text="{Binding MatchAnyKeyword, Converter={x:Static etkw:HexNumberConverter.Instance}, ConverterParameter='16'}"/>
+            <Label Grid.Row="4" Grid.Column="0"
+                   Content="Match Any Keywords" Target="{Binding ElementName=matchAnyKeywords}"/>
+            <TextBox Grid.Row="4" Grid.Column="1" x:Name="matchAnyKeywords"
+                     Text="{Binding MatchAnyKeyword, Converter={x:Static etkw:HexNumberConverter.Instance}, ConverterParameter='16'}"/>
 
-          <Label Grid.Row="5" Grid.Column="0"
-                 Content="Match All Keywords" Target="{Binding ElementName=matchAllKeyword}"/>
-          <TextBox Grid.Row="5" Grid.Column="1" x:Name="matchAllKeyword"
-                   Text="{Binding MatchAllKeyword, Converter={x:Static etkw:HexNumberConverter.Instance}, ConverterParameter='16'}"/>
+            <Label Grid.Row="5" Grid.Column="0"
+                   Content="Match All Keywords" Target="{Binding ElementName=matchAllKeyword}"/>
+            <TextBox Grid.Row="5" Grid.Column="1" x:Name="matchAllKeyword"
+                     Text="{Binding MatchAllKeyword, Converter={x:Static etkw:HexNumberConverter.Instance}, ConverterParameter='16'}"/>
 
-          <CheckBox Grid.Row="3" Grid.Column="3" IsChecked="{Binding IncludeStackTrace, UpdateSourceTrigger=PropertyChanged}">Include Stacktrace</CheckBox>
-          <CheckBox Grid.Row="4" Grid.Column="3" IsChecked="{Binding IncludeSecurityId, UpdateSourceTrigger=PropertyChanged}">Include Security Id</CheckBox>
-          <CheckBox Grid.Row="5" Grid.Column="3" IsChecked="{Binding IncludeTerminalSessionId, UpdateSourceTrigger=PropertyChanged}">Include Terminal Session Id</CheckBox>
+            <CheckBox Grid.Row="3" Grid.Column="3" IsChecked="{Binding IncludeStackTrace, UpdateSourceTrigger=PropertyChanged}">Include Stacktrace</CheckBox>
+            <CheckBox Grid.Row="4" Grid.Column="3" IsChecked="{Binding IncludeSecurityId, UpdateSourceTrigger=PropertyChanged}">Include Security Id</CheckBox>
+            <CheckBox Grid.Row="5" Grid.Column="3" IsChecked="{Binding IncludeTerminalSessionId, UpdateSourceTrigger=PropertyChanged}">Include Terminal Session Id</CheckBox>
+          </Grid>
+          <Separator Grid.Row="1" Style="{StaticResource UnrelatedControlsSeparator}"/>
+          <CheckBox Grid.Row="2" Grid.Column="0" IsChecked="{Binding FilterEvents, UpdateSourceTrigger=PropertyChanged}">Filter Events</CheckBox>
+          <DataGrid Grid.Row="3"
+                    ItemsSource="{Binding Events}"
+                    AutoGenerateColumns="False"
+                    BorderThickness="1"
+                    CanUserAddRows="True"
+                    CanUserDeleteRows="True"
+                    GridLinesVisibility="None"
+                    HeadersVisibility="Column"
+                    SelectionMode="Extended"
+                    SelectionUnit="FullRow"
+                    EnableRowVirtualization="True"
+                    EnableColumnVirtualization="True">
+            <i:Interaction.Behaviors>
+              <etkw:ToggleSelectOnSpace ToggleSelectCommand="{Binding ToggleSelectedEventsCommand}"/>
+            </i:Interaction.Behaviors>
+            <DataGrid.Columns>
+              <DataGridCheckBoxColumn Binding="{Binding IsEnabled}"
+                                      ElementStyle="{StaticResource DataGridCheckBoxColumnStyle}"
+                                      EditingElementStyle="{StaticResource DataGridCheckBoxColumnStyle}"/>
+              <DataGridTextColumn Header="Id" Binding="{Binding Id}"
+                                  EditingElementStyle="{StaticResource DataGridTextColumnEditingStyle}"/>
+              <DataGridTextColumn Header="Version" Binding="{Binding Version}"
+                                  EditingElementStyle="{StaticResource DataGridTextColumnEditingStyle}"/>
+              <DataGridTextColumn Header="Symbol" Binding="{Binding Symbol}"
+                                  EditingElementStyle="{StaticResource DataGridTextColumnEditingStyle}"
+                                  Width="*"/>
+              <DataGridTextColumn Header="Channel" Binding="{Binding Channel}" IsReadOnly="True"/>
+              <DataGridTextColumn Header="Level" Binding="{Binding Level}" IsReadOnly="True"/>
+              <DataGridTextColumn Header="Task" Binding="{Binding Task}" IsReadOnly="True"/>
+              <DataGridTextColumn Header="Opcode" Binding="{Binding Opcode}" IsReadOnly="True"/>
+              <DataGridTextColumn Header="Keywords" Binding="{Binding .Keywords}" IsReadOnly="True"/>
+            </DataGrid.Columns>
+          </DataGrid>
         </Grid>
-        <Separator Grid.Row="1" Style="{StaticResource UnrelatedControlsSeparator}"/>
-        <CheckBox Grid.Row="2" Grid.Column="0" IsChecked="{Binding FilterEvents, UpdateSourceTrigger=PropertyChanged}">Filter Events</CheckBox>
-        <DataGrid Grid.Row="3"
-                  ItemsSource="{Binding Events}"
-                  AutoGenerateColumns="False"
-                  BorderThickness="1"
-                  CanUserAddRows="True"
-                  CanUserDeleteRows="True"
-                  GridLinesVisibility="None"
-                  HeadersVisibility="Column"
-                  SelectionMode="Extended"
-                  SelectionUnit="FullRow"
-                  EnableRowVirtualization="True"
-                  EnableColumnVirtualization="True">
-          <i:Interaction.Behaviors>
-            <etkw:ToggleSelectOnSpace ToggleSelectCommand="{Binding ToggleSelectedEventsCommand}"/>
-          </i:Interaction.Behaviors>
-          <DataGrid.Columns>
-            <DataGridCheckBoxColumn Binding="{Binding IsEnabled}"
-                                    ElementStyle="{StaticResource DataGridCheckBoxColumnStyle}"
-                                    EditingElementStyle="{StaticResource DataGridCheckBoxColumnStyle}"/>
-            <DataGridTextColumn Header="Id" Binding="{Binding Id}"
-                                EditingElementStyle="{StaticResource DataGridTextColumnEditingStyle}"/>
-            <DataGridTextColumn Header="Version" Binding="{Binding Version}"
-                                EditingElementStyle="{StaticResource DataGridTextColumnEditingStyle}"/>
-            <DataGridTextColumn Header="Symbol" Binding="{Binding Symbol}"
-                                EditingElementStyle="{StaticResource DataGridTextColumnEditingStyle}"
-                                Width="*"/>
-            <DataGridTextColumn Header="Channel" Binding="{Binding Channel}" IsReadOnly="True"/>
-            <DataGridTextColumn Header="Level" Binding="{Binding Level}" IsReadOnly="True"/>
-            <DataGridTextColumn Header="Task" Binding="{Binding Task}" IsReadOnly="True"/>
-            <DataGridTextColumn Header="Opcode" Binding="{Binding Opcode}" IsReadOnly="True"/>
-            <DataGridTextColumn Header="Keywords" Binding="{Binding .Keywords}" IsReadOnly="True"/>
-          </DataGrid.Columns>
-        </DataGrid>
-      </Grid>
-    </DataTemplate>
+      </DataTemplate>
 
-    <DataTemplate DataType="{x:Type etkv:TraceSessionSettingsViewModel}">
-      <DockPanel>
-        <Expander Margin="0,0,0,7" DockPanel.Dock="Top">
-          <Expander.Header>
-            <Grid>
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" MinWidth="250"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition/>
-              </Grid.ColumnDefinitions>
-              <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
-              <Button Grid.Column="1" Margin="7,1,1,1" Content="New Provider" Command="{Binding NewProviderCommand}"/>
-              <Button Grid.Column="2" Margin="7,1,1,1" Content="Add Manifest" Command="{Binding AddManifestCommand}"/>
-            </Grid>
-          </Expander.Header>
-          <Expander.Content>
-            <StackPanel Grid.ColumnSpan="3" Margin="0,7,0,0" Orientation="Horizontal">
-              <TextBlock x:Name="LogFileLabel" Text="Log File" Margin="0,0,7,0"
-                         VerticalAlignment="Center" ToolTipService.ShowDuration="20000">
-                <TextBlock.ToolTip>
-                  <ToolTip MaxWidth="400">
-                    <TextBlock TextWrapping="Wrap">
-                      <Run>When specified also writes events to a log file</Run>
-                      <LineBreak/>
-                      <LineBreak/>
-                      <Run FontWeight="Bold">Note:</Run>
-                      <Run>
-                        Real-time sessions flush at least once per second,
-                        resulting in partially filled buffers being written to
-                        the log file. For example if you use 64k buffers and the
-                        logging rate is 1 event every second, ETW will write
-                        64k/second to the log file.
-                      </Run>
-                    </TextBlock>
-                  </ToolTip>
-                </TextBlock.ToolTip>
-              </TextBlock>
-              <TextBox Text="{Binding LogFileName, UpdateSourceTrigger=PropertyChanged}"
-                       MinWidth="250"
-                       ToolTip="{Binding ToolTip, ElementName=LogFileLabel}"
-                       ToolTipService.ShowDuration="20000"/>
-              <Button Content="…" MinWidth="0" Margin="4,1,1,1" Command="{Binding BrowseLogFileCommand}"/>
-
-              <TextBlock Text="Buffer Size" Margin="11,0,7,0" VerticalAlignment="Center"/>
-              <TextBox Text="{Binding BufferSize, UpdateSourceTrigger=PropertyChanged}" MinWidth="50"/>
-
-              <TextBlock Text="Buffer Count" Margin="11,0,7,0" VerticalAlignment="Center"/>
-              <TextBox Text="{Binding MinimumBuffers, UpdateSourceTrigger=PropertyChanged}" MinWidth="30"/>
-              <TextBlock Text="–" VerticalAlignment="Center" Margin="3,0,3,0"/>
-              <TextBox Text="{Binding MaximumBuffers, UpdateSourceTrigger=PropertyChanged}" MinWidth="30"/>
-            </StackPanel>
-          </Expander.Content>
-        </Expander>
-        <Grid>
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="150" MinWidth="50"/>
-            <ColumnDefinition Width="5" MinWidth="5"/>
-            <ColumnDefinition MinWidth="50"/>
-          </Grid.ColumnDefinitions>
-          <ListBox x:Name="Providers"
-                   ItemsSource="{Binding Providers}"
-                   BorderThickness="1"
-                   SelectionMode="Single"
-                   SelectedValue="{Binding SelectedProvider}">
-            <i:Interaction.Triggers>
-              <etkw:KeyDownEventTrigger Key="Delete" Modifiers="{x:Static ModifierKeys.None}">
-                <i:InvokeCommandAction Command="{Binding RemoveProviderCommand}"
-                                       CommandParameter="{Binding SelectedValue, ElementName=Providers}"/>
-              </etkw:KeyDownEventTrigger>
-            </i:Interaction.Triggers>
-            <ListBox.ItemTemplate>
-              <DataTemplate DataType="{x:Type etkv:TraceProviderDescriptorViewModel}">
-                <StackPanel Orientation="Horizontal">
-                  <CheckBox IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
-                  <TextBlock Text="{Binding DisplayName}" Margin="3,1,1,1" VerticalAlignment="Center"/>
+      <DataTemplate DataType="{x:Type etkv:TraceSessionSettingsViewModel}">
+        <DockPanel>
+          <Border DockPanel.Dock="Top" Background="#08000000" Padding="8,4">
+            <Expander>
+              <Expander.Header>
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" MinWidth="250"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition/>
+                  </Grid.ColumnDefinitions>
+                  <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
+                  <Button Grid.Column="1" Margin="7,1,1,1" Content="New Provider" Command="{Binding NewProviderCommand}"/>
+                  <Button Grid.Column="2" Margin="7,1,1,1" Content="Add Manifest" Command="{Binding AddManifestCommand}"/>
+                </Grid>
+              </Expander.Header>
+              <Expander.Content>
+                <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+                  <TextBlock x:Name="LogFileLabel" Text="Log File" Margin="0,0,7,0"
+                             VerticalAlignment="Center" ToolTipService.ShowDuration="20000">
+                    <TextBlock.ToolTip>
+                      <ToolTip MaxWidth="400">
+                        <TextBlock TextWrapping="Wrap">
+                          <Run>When specified also writes events to a log file</Run>
+                          <LineBreak/>
+                          <LineBreak/>
+                          <Run FontWeight="Bold">Note:</Run>
+                          <Run>
+                            Log files for real-time sessions can grow very quickly.
+                            Real-time sessions flush at least once per second,
+                            resulting in partially filled buffers being written to
+                            the log file. For example if you use 64k buffers and the
+                            logging rate is 1 event every second, ETW will write
+                            64k/second to the log file.
+                          </Run>
+                        </TextBlock>
+                      </ToolTip>
+                    </TextBlock.ToolTip>
+                  </TextBlock>
+                  <TextBox Text="{Binding LogFileName, UpdateSourceTrigger=PropertyChanged}"
+                           MinWidth="250"
+                           ToolTip="{Binding ToolTip, ElementName=LogFileLabel}"
+                           ToolTipService.ShowDuration="20000"/>
+                  <Button Content="…" MinWidth="0" Margin="4,1,1,1" Padding="10,0"
+                          Command="{Binding BrowseLogFileCommand}"/>
+            
+                  <TextBlock Text="Buffer Size" Margin="11,0,7,0" VerticalAlignment="Center"/>
+                  <TextBox Text="{Binding BufferSize, UpdateSourceTrigger=PropertyChanged}" MinWidth="50"/>
+            
+                  <TextBlock Text="Buffer Count" Margin="11,0,7,0" VerticalAlignment="Center"/>
+                  <TextBox Text="{Binding MinimumBuffers, UpdateSourceTrigger=PropertyChanged}" MinWidth="30"/>
+                  <TextBlock Text="–" VerticalAlignment="Center" Margin="3,0,3,0"/>
+                  <TextBox Text="{Binding MaximumBuffers, UpdateSourceTrigger=PropertyChanged}" MinWidth="30"/>
                 </StackPanel>
-              </DataTemplate>
-            </ListBox.ItemTemplate>
-          </ListBox>
-          <GridSplitter Grid.Column="1" Width="11"
-                        HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
-          <ContentPresenter Grid.Column="2" Content="{Binding SelectedProvider}"/>
-        </Grid>
-      </DockPanel>
-    </DataTemplate>
-  </etkv:ThemedDialogWindow.Resources>
-  <Grid Margin="8">
+              </Expander.Content>
+            </Expander>
+          </Border>
+          <Grid Margin="8">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="150" MinWidth="50"/>
+              <ColumnDefinition Width="5" MinWidth="5"/>
+              <ColumnDefinition MinWidth="50"/>
+            </Grid.ColumnDefinitions>
+            <ListBox x:Name="Providers"
+                     ItemsSource="{Binding Providers}"
+                     BorderThickness="1"
+                     SelectionMode="Single"
+                     SelectedValue="{Binding SelectedProvider}">
+              <i:Interaction.Triggers>
+                <etkw:KeyDownEventTrigger Key="Delete" Modifiers="{x:Static ModifierKeys.None}">
+                  <i:InvokeCommandAction Command="{Binding RemoveProviderCommand}"
+                                         CommandParameter="{Binding SelectedValue, ElementName=Providers}"/>
+                </etkw:KeyDownEventTrigger>
+              </i:Interaction.Triggers>
+              <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type etkv:TraceProviderDescriptorViewModel}">
+                  <StackPanel Orientation="Horizontal">
+                    <CheckBox IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding DisplayName}" Margin="3,1,1,1" VerticalAlignment="Center"/>
+                  </StackPanel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+            <GridSplitter Grid.Column="1" Width="11"
+                          HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
+            <ContentPresenter Grid.Column="2" Content="{Binding SelectedProvider}"/>
+          </Grid>
+        </DockPanel>
+      </DataTemplate>
+    </Grid.Resources>
     <Grid.RowDefinitions>
       <RowDefinition/>
       <RowDefinition Height="Auto"/>
     </Grid.RowDefinitions>
     <DockPanel>
-      <Grid Margin="0,0,0,11" DockPanel.Dock="Top">
+      <Border DockPanel.Dock="Top" Background="#11000000">
+      <Grid Margin="8">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="Auto"/>
           <ColumnDefinition Width="Auto"/>
@@ -276,11 +281,14 @@
           <Button Margin="7,1,1,1" Content="Delete" Command="{Binding DeletePresetCommand}"/>
         </StackPanel>
       </Grid>
+      </Border>
       <ContentControl Content="{Binding SelectedSessionPreset}"/>
     </DockPanel>
-    <StackPanel Grid.Row="1" Margin="1,7,1,1" Orientation="Horizontal" HorizontalAlignment="Right">
-      <Button Margin="7,1,1,1" Content="OK" IsDefault="True" Command="{Binding AcceptCommand}"/>
-      <Button Margin="7,1,1,1" Content="Cancel" IsCancel="True"/>
-    </StackPanel>
+    <Border Grid.Row="1" Background="#11000000">
+      <StackPanel Margin="7" Orientation="Horizontal" HorizontalAlignment="Right">
+        <Button Margin="7,1,1,1" Content="OK" IsDefault="True" Command="{Binding AcceptCommand}"/>
+        <Button Margin="7,1,1,1" Content="Cancel" IsCancel="True"/>
+      </StackPanel>
+    </Border>
   </Grid>
 </etkv:ThemedDialogWindow>

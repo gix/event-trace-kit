@@ -1,5 +1,6 @@
 ﻿namespace EventTraceKit.VsExtension
 {
+    using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Threading.Tasks;
@@ -99,6 +100,37 @@
         public Dictionary<EventKey, string> GetEventSymbols()
         {
             return SelectedSessionPreset?.GetEventSymbols() ?? new Dictionary<EventKey, string>();
+        }
+    }
+
+    public class TraceSettingsDesignTimeModel : TraceSettingsViewModel
+    {
+        public TraceSettingsDesignTimeModel()
+        {
+            var provider = new TraceProviderDescriptorViewModel();
+            provider.Id = new Guid("9ED16FBE-E642-4D9F-B425-E339FEDC91F8");
+            provider.Name = "Design Provider";
+            provider.IncludeStackTrace = true;
+            provider.Events.Add(new TraceEventDescriptorViewModel {
+                Id = 23,
+                Version = 0,
+                IsEnabled = false,
+                Channel = "Debug"
+            });
+            provider.Events.Add(new TraceEventDescriptorViewModel {
+                Id = 42,
+                Version = 1,
+                IsEnabled = true
+            });
+
+            var preset = new TraceSessionSettingsViewModel();
+            preset.Name = "Design Preset";
+            preset.Id = new Guid("7DB6B9B1-9ACF-42C8-B6B1-CEEB6F783689");
+            preset.Providers.Add(provider);
+            preset.SelectedProvider = provider;
+
+            SessionPresets.Add(preset);
+            SelectedSessionPreset = preset;
         }
     }
 }

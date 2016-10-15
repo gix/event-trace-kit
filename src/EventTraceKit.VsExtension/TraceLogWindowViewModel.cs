@@ -9,6 +9,7 @@ namespace EventTraceKit.VsExtension
     using System.Windows.Threading;
     using Collections;
     using Controls;
+    using Formatting;
     using Microsoft.VisualStudio.Shell;
     using Task = System.Threading.Tasks.Task;
 
@@ -44,13 +45,18 @@ namespace EventTraceKit.VsExtension
 
             var tableTuple = new GenericEventsViewModelSource().CreateTable(this, eventSymbolSource);
             var dataTable = tableTuple.Item1;
-            var preset = tableTuple.Item2;
+            var templatePreset = tableTuple.Item2;
+            var presetCollection = WpaApplication.Current.PresetCollections[Guid.Empty];
+
+            var defaultPreset = GenericEventsViewModelSource.CreateDefaultPreset();
+            presetCollection.BuiltInPresets.Add(defaultPreset);
 
             EventsDataView = new TraceEventsView(dataTable);
-            AdvModel = new AsyncDataViewModel(EventsDataView, preset);
+            AdvModel = new AsyncDataViewModel(
+                EventsDataView, templatePreset, presetCollection);
             GridModel = AdvModel.GridViewModel;
 
-            AdvModel.Preset = preset;
+            AdvModel.Preset = defaultPreset;
 
             syncCtx = new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher);
             SynchronizationContext.SetSynchronizationContext(syncCtx);
@@ -69,7 +75,7 @@ namespace EventTraceKit.VsExtension
         public class TraceEventsView : DataView
         {
             public TraceEventsView(DataTable table)
-                : base(table)
+                : base(table, new DefaultFormatProviderSource())
             {
             }
 
@@ -238,7 +244,7 @@ namespace EventTraceKit.VsExtension
 
         private void OpenViewEditor()
         {
-            PresetManagerDialog.ShowPresetManagerDialog(AdvModel, null);
+            PresetManagerDialog.ShowPresetManagerDialog(AdvModel);
         }
 
         private void UpdateStats()

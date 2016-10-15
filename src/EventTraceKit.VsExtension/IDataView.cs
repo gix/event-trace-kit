@@ -113,12 +113,18 @@
 
     public abstract class DataColumn
     {
+        protected DataColumn(Type dataType)
+        {
+            DataType = dataType;
+        }
+
         public Guid Id { get; set; }
         public string Name { get; set; }
         public double Width { get; set; }
         public bool IsVisible { get; set; }
         public bool IsResizable { get; set; }
         public TextAlignment TextAlignment { get; set; }
+        public Type DataType { get; }
 
         public DataColumnView CreateView(DataColumnViewInfo info)
         {
@@ -149,11 +155,13 @@
         private readonly Func<int, T> generator;
 
         public DataColumn(Func<int, T> generator)
+            : base(typeof(T))
         {
             this.generator = generator;
         }
 
         public DataColumn()
+            : base(typeof(T))
         {
             generator = _ => default(T);
         }

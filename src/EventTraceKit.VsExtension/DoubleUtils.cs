@@ -64,5 +64,14 @@
         {
             return Clamp(value, Math.Min(extreme1, extreme2), Math.Max(extreme1, extreme2));
         }
+
+        public static ulong ClampToUInt64(double value)
+        {
+            if (value < 0)
+                return 0;
+            if (value >= 1.8446744073709552E+19)
+                return ulong.MaxValue;
+            return (ulong)value;
+        }
     }
 }

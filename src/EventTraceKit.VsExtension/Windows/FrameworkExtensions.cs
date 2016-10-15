@@ -1,17 +1,47 @@
 namespace EventTraceKit.VsExtension.Windows
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Windows;
     using System.Windows.Controls.Primitives;
     using System.Windows.Data;
     using System.Windows.Media;
-    using Microsoft.VisualStudio.PlatformUI;
 
     public static class FrameworkExtensions
     {
-        public static T FindVisualParent<T>(this UIElement element) where T : UIElement
+        public static DependencyObject GetVisualOrLogicalParent(this DependencyObject sourceElement)
         {
-            for (UIElement it = element; it != null; it = VisualTreeHelper.GetParent(it) as UIElement) {
+            if (sourceElement == null)
+                return null;
+            if (sourceElement is Visual)
+                return VisualTreeHelper.GetParent(sourceElement) ??
+                       LogicalTreeHelper.GetParent(sourceElement);
+            return LogicalTreeHelper.GetParent(sourceElement);
+        }
+
+        public static T FindVisualChild<T>(this Visual root) where T : Visual
+        {
+            return root.FindVisualChild<T>(v => v != null);
+        }
+
+        public static T FindVisualChild<T>(this Visual root, Predicate<T> predicate)
+            where T : Visual
+        {
+            return root.FindVisualChildren(predicate).FirstOrDefault();
+        }
+
+        public static IEnumerable<T> FindVisualChildren<T>(
+            this Visual root, Predicate<T> predicate) where T : Visual
+        {
+            return from v in root.EnumerateVisualTree().OfType<T>()
+                   where predicate(v)
+                   select v;
+        }
+
+        public static T FindVisualParent<T>(this Visual element) where T : Visual
+        {
+            for (Visual it = element; it != null; it = VisualTreeHelper.GetParent(it) as Visual) {
                 var result = it as T;
                 if (result != null)
                     return result;
@@ -68,7 +98,7 @@ namespace EventTraceKit.VsExtension.Windows
         ///   <see langword="null"/> if no descendant is found.
         /// </returns>
         public static T FindDescendant<T>(this DependencyObject obj)
-            where T : class
+            where T : DependencyObject
         {
             if (obj == null)
                 return default(T);
@@ -78,7 +108,7 @@ namespace EventTraceKit.VsExtension.Windows
                 if (child == null)
                     continue;
 
-                var descendant = child as T ?? child?.FindDescendant<T>();
+                var descendant = child as T ?? child.FindDescendant<T>();
                 if (descendant != null)
                     return descendant;
             }
@@ -99,9 +129,29 @@ namespace EventTraceKit.VsExtension.Windows
         ///   if no descendant is found.
         /// </returns>
         public static T FindDescendantOrSelf<T>(this DependencyObject obj)
-            where T : class
+            where T : DependencyObject
         {
             return obj as T ?? obj.FindDescendant<T>();
+        }
+
+        public static IEnumerable<Visual> EnumerateVisualTree(this Visual root)
+        {
+            if (root == null)
+                yield break;
+
+            var queue = new Queue<DependencyObject>();
+            queue.Enqueue(root);
+
+            while (queue.Any()) {
+                var item = queue.Dequeue();
+                var visual = item as Visual;
+                if (visual != null)
+                    yield return visual;
+
+                int count = VisualTreeHelper.GetChildrenCount(item);
+                for (int idx = 0; idx < count; ++idx)
+                    queue.Enqueue(VisualTreeHelper.GetChild(item, idx));
+            }
         }
 
         public static Rect BoundsRelativeTo(

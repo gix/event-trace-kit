@@ -4,11 +4,10 @@
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
   xmlns:vsui="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
-  xmlns:vsutil="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Utilities"
-  xmlns:etk="clr-namespace:EventTraceKit;assembly=EventTraceKit.Logger"
   xmlns:vsfx="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.14.0"
   xmlns:etkvs="clr-namespace:EventTraceKit.VsExtension"
-  xmlns:Controls="clr-namespace:EventTraceKit.VsExtension.Controls"
+  xmlns:etkc="clr-namespace:EventTraceKit.VsExtension.Controls"
+  xmlns:etks="clr-namespace:EventTraceKit.VsExtension.Styles"
   x:Class="EventTraceKit.VsExtension.TraceLogWindow"
   UseLayoutRounding="True"
   Background="{DynamicResource {x:Static vsfx:VsBrushes.WindowKey}}"
@@ -32,7 +31,7 @@
                Background="{DynamicResource {x:Static vsfx:VsBrushes.CommandBarGradientKey}}"
                Foreground="{DynamicResource {x:Static vsfx:VsBrushes.CommandBarTextActiveKey}}">
       <StatusBarItem VerticalContentAlignment="Stretch">
-        <Controls:ActivityRing Width="{Binding ActualHeight, RelativeSource={RelativeSource Self}}"
+        <etkc:ActivityRing Width="{Binding ActualHeight, RelativeSource={RelativeSource Self}}"
                                VerticalAlignment="Stretch"
                                Foreground="#FF990000"
                                IsActive="{Binding IsCollecting}"/>
@@ -48,16 +47,16 @@
       </StatusBarItem>
     </StatusBar>
 
-    <Controls:AsyncDataGrid
+    <etkc:AsyncDataGrid
       ViewModel="{Binding GridModel}"
-      Foreground="{DynamicResource {x:Static etkvs:Colors.TraceLogForegroundKey}}"
+      Foreground="{DynamicResource {x:Static etks:Colors.TraceLogForegroundKey}}"
       Background="{DynamicResource {x:Static vsui:TreeViewColors.BackgroundBrushKey}}"
-      RowBackground="{DynamicResource {x:Static etkvs:Colors.TraceLogBackgroundKey}}"
-      AlternatingRowBackground="{DynamicResource {x:Static etkvs:Colors.TraceLogBackgroundAltKey}}"
-      RowSelectionForeground="{DynamicResource {x:Static etkvs:Colors.TraceLogSelectedForegroundKey}}"
-      RowSelectionBackground="{DynamicResource {x:Static etkvs:Colors.TraceLogSelectedBackgroundKey}}"
-      RowInactiveSelectionForeground="{DynamicResource {x:Static etkvs:Colors.TraceLogInactiveSelectedForegroundKey}}"
-      RowInactiveSelectionBackground="{DynamicResource {x:Static etkvs:Colors.TraceLogInactiveSelectedBackgroundKey}}"
+      RowBackground="{DynamicResource {x:Static etks:Colors.TraceLogBackgroundKey}}"
+      AlternatingRowBackground="{DynamicResource {x:Static etks:Colors.TraceLogBackgroundAltKey}}"
+      RowSelectionForeground="{DynamicResource {x:Static etks:Colors.TraceLogSelectedForegroundKey}}"
+      RowSelectionBackground="{DynamicResource {x:Static etks:Colors.TraceLogSelectedBackgroundKey}}"
+      RowInactiveSelectionForeground="{DynamicResource {x:Static etks:Colors.TraceLogInactiveSelectedForegroundKey}}"
+      RowInactiveSelectionBackground="{DynamicResource {x:Static etks:Colors.TraceLogInactiveSelectedBackgroundKey}}"
       RowFocusBorderBrush="{DynamicResource {x:Static etkvs:CommonControlBrushes.FocusVisualForegroundKey}}"/>
   </DockPanel>
 </UserControl>

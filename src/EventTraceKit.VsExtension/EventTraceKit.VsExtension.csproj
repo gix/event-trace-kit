@@ -157,10 +157,8 @@
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
@@ -174,11 +172,27 @@
     <Compile Include="CharCPtrUtils.cs" />
     <Compile Include="Collections\Extensions.cs" />
     <Compile Include="ComparisonUtils.cs" />
+    <Compile Include="Controls\DragEventSource.cs" />
+    <Compile Include="Controls\SelectorUtils.cs" />
     <Compile Include="EventTraceKitProfileManager.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Controls\InsertionAdorner.cs" />
+    <Compile Include="Extensions\VsSdkExtensions.cs" />
+    <Compile Include="Extensions.cs" />
+    <Compile Include="Extensions\TypeExtensions.cs" />
+    <Compile Include="Formatting\FormatProviders.cs" />
+    <Compile Include="HdvViewModelPresetCollection.cs" />
+    <Compile Include="ListBoxDragPreview.cs" />
+    <Compile Include="Controls\MultiDragListBox.cs" />
+    <Compile Include="Controls\MultiDragListView.cs" />
+    <Compile Include="PersistenceManager.cs" />
     <Compile Include="PresetManagerDialog.xaml.cs">
       <DependentUpon>PresetManagerDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PresetManagerViewModel.cs" />
+    <Compile Include="PresetSaveAsDialog.xaml.cs">
+      <DependentUpon>PresetSaveAsDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Serialization\ActivatorUtils.cs" />
     <Compile Include="Serialization\CustomXamlSerializer.cs" />
@@ -193,7 +207,6 @@
     <Compile Include="Serialization\SettingsSerializer.cs" />
     <Compile Include="Serialization\ShapingXamlSerializer.cs" />
     <Compile Include="Serialization\SafeXamlSchemaContext.cs" />
-    <Compile Include="Serialization\TypeExtensions.cs" />
     <Compile Include="Serialization\TypeHelper.cs" />
     <Compile Include="Serialization\XamlSerializerExtensions.cs" />
     <Compile Include="ServiceProviderExtensions.cs" />
@@ -271,7 +284,7 @@
     <Compile Include="Controls\AsyncDataGridColumnsViewModel.cs" />
     <Compile Include="Controls\AsyncDataGridColumn.cs" />
     <Compile Include="Controls\AsyncDataGridViewModel.cs" />
-    <Compile Include="ResourceKeys.cs" />
+    <Compile Include="Styles\ResourceKeys.cs" />
     <Compile Include="FontsAndColorsHelper.cs" />
     <Compile Include="Controls\ActivityRing.cs" />
     <Compile Include="Controls\ProgressRing.cs" />
@@ -327,6 +340,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="PresetSaveAsDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Styles\ActivityRing.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -352,6 +369,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Styles\Menu.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\MiscControls.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

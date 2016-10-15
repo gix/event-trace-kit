@@ -6,26 +6,92 @@
     using System.Windows.Controls;
     using System.Windows.Controls.Primitives;
     using System.Windows.Media;
+    using Windows;
 
     public class AsyncDataGridColumnHeadersPanel : StackPanel
     {
         private AsyncDataGrid parentGrid;
 
-        private ItemsControl ParentPresenter
+        static AsyncDataGridColumnHeadersPanel()
         {
-            get
-            {
-                var itemsPresenter = TemplatedParent as FrameworkElement;
-                return itemsPresenter?.TemplatedParent as ItemsControl;
-            }
+            OrientationProperty.OverrideMetadata(
+                typeof(AsyncDataGridColumnHeadersPanel),
+                new FrameworkPropertyMetadata(Orientation.Horizontal));
         }
 
-        private AsyncDataGrid ParentGrid =>
-            parentGrid ??
-            (parentGrid = (ParentPresenter as AsyncDataGridColumnHeadersPresenter)?.ParentGrid);
+        private AsyncDataGridColumnHeadersPresenter ParentPresenter =>
+            this.FindParent<AsyncDataGridColumnHeadersPresenter>();
 
-        private int LeftFrozenColumnCount => 0;
-        private int RightFrozenColumnCount => 0;
+        private AsyncDataGrid ParentGrid =>
+            parentGrid ?? (parentGrid = ParentPresenter?.ParentGrid);
+
+        #region public int LeftFrozenColumnCount { get; set; }
+
+        /// <summary>
+        ///   Identifies the <see cref="LeftFrozenColumnCount"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty LeftFrozenColumnCountProperty =
+            DependencyProperty.Register(
+                nameof(LeftFrozenColumnCount),
+                typeof(int),
+                typeof(AsyncDataGridColumnHeadersPanel),
+                new FrameworkPropertyMetadata(
+                    0,
+                    FrameworkPropertyMetadataOptions.AffectsArrange,
+                    null,
+                    (d, v) => ((AsyncDataGridColumnHeadersPanel)d).CoerceLeftFrozenColumnCount(v)));
+
+        /// <summary>
+        ///   Gets or sets the left frozen column count.
+        /// </summary>
+        public int LeftFrozenColumnCount
+        {
+            get { return (int)GetValue(LeftFrozenColumnCountProperty); }
+            set { SetValue(LeftFrozenColumnCountProperty, value); }
+        }
+
+        private object CoerceLeftFrozenColumnCount(object baseValue)
+        {
+            if ((int)baseValue < 0)
+                return Boxed.Int32Zero;
+            return baseValue;
+        }
+
+        #endregion
+
+        #region public int RightFrozenColumnCount { get; set; }
+
+        /// <summary>
+        ///   Identifies the <see cref="RightFrozenColumnCount"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty RightFrozenColumnCountProperty =
+            DependencyProperty.Register(
+                nameof(RightFrozenColumnCount),
+                typeof(int),
+                typeof(AsyncDataGridColumnHeadersPanel),
+                new FrameworkPropertyMetadata(
+                    0,
+                    FrameworkPropertyMetadataOptions.AffectsArrange,
+                    null,
+                    (d, v) => ((AsyncDataGridColumnHeadersPanel)d).CoerceRightFrozenColumnCount(v)));
+
+        /// <summary>
+        ///   Gets or sets the right frozen column count.
+        /// </summary>
+        public int RightFrozenColumnCount
+        {
+            get { return (int)GetValue(RightFrozenColumnCountProperty); }
+            set { SetValue(RightFrozenColumnCountProperty, value); }
+        }
+
+        private object CoerceRightFrozenColumnCount(object baseValue)
+        {
+            if ((int)baseValue < 0)
+                return Boxed.Int32Zero;
+            return baseValue;
+        }
+
+        #endregion
 
         protected override Visual GetVisualChild(int index)
         {
@@ -43,7 +109,7 @@
             //
             // All columns have the same Z-index and are drawn in visual order.
             // To draw the right-aligned gripper *over* the following column
-            // header we have to reverse the order of visual children. In
+            // header we have to reverse the order of the visual children. In
             // addition we have to ensure that frozen columns are drawn after
             // non-frozen columns.
             //
@@ -54,8 +120,8 @@
             Debug.Assert(InternalChildren.Count == VisualChildrenCount);
 
             int columnCount = InternalChildren.Count;
-            int leftFrozenColumnCount = Math.Min(columnCount, LeftFrozenColumnCount);
-            int rightFrozenColumnCount = Math.Min(columnCount, RightFrozenColumnCount);
+            int leftFrozenColumnCount = Math.Min(LeftFrozenColumnCount, columnCount);
+            int rightFrozenColumnCount = Math.Min(RightFrozenColumnCount, columnCount - leftFrozenColumnCount);
 
             int nonFrozenColumnCount = columnCount - leftFrozenColumnCount - rightFrozenColumnCount;
             int firstRightFrozenIndex = leftFrozenColumnCount + nonFrozenColumnCount;
@@ -75,18 +141,16 @@
         {
             base.OnIsItemsHostChanged(oldIsItemsHost, newIsItemsHost);
 
-            ItemsControl parentPresenter = ParentPresenter;
+            var headersPresenter = ParentPresenter;
             if (newIsItemsHost) {
-                var headersPresenter = parentPresenter as AsyncDataGridColumnHeadersPresenter;
-                IItemContainerGenerator generator = parentPresenter?.ItemContainerGenerator;
+                IItemContainerGenerator generator = headersPresenter?.ItemContainerGenerator;
                 if (headersPresenter != null
                     && generator != null
                     && generator == generator.GetItemContainerGeneratorForPanel(this))
                     headersPresenter.InternalItemsHost = this;
             } else {
-                var headersPresenter = parentPresenter as AsyncDataGridColumnHeadersPresenter;
                 if (headersPresenter != null
-                    && headersPresenter.InternalItemsHost == this)
+                    && ReferenceEquals(headersPresenter.InternalItemsHost, this))
                     headersPresenter.InternalItemsHost = null;
             }
         }
@@ -108,8 +172,8 @@
             var children = InternalChildren;
             double arrangeLength = Math.Max(arrangeSize.Height, 0);
 
-            int leftFrozenColumnCount = Math.Min(children.Count, LeftFrozenColumnCount);
-            int rightFrozenColumnCount = Math.Min(children.Count, RightFrozenColumnCount);
+            int leftFrozenColumnCount = Math.Min(LeftFrozenColumnCount, children.Count);
+            int rightFrozenColumnCount = Math.Min(RightFrozenColumnCount, children.Count - leftFrozenColumnCount);
 
             var childRect = new Rect();
             childRect.X = 0;
@@ -143,7 +207,7 @@
                 child.Arrange(childRect);
             }
 
-            childRect.X = firstNonFrozenX - ParentGrid.HorizontalScrollOffset;
+            childRect.X = firstNonFrozenX - (ParentGrid?.HorizontalScrollOffset ?? 0);
             childRect.Y = 0;
 
             for (int i = leftFrozenColumnCount; i < children.Count - rightFrozenColumnCount; ++i) {

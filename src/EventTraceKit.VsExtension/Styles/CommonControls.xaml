@@ -3,11 +3,11 @@
                     xmlns:vsfx="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.14.0"
                     xmlns:vsp="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
                     xmlns:etkvs="clr-namespace:EventTraceKit.VsExtension">
-  <Style x:Key="{x:Type ToggleButton}" TargetType="{x:Type ToggleButton}"
+  <!--<Style x:Key="{x:Type ToggleButton}" TargetType="{x:Type ToggleButton}"
          BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ButtonStyleKey}}"/>
 
   <Style x:Key="{x:Type RepeatButton}" TargetType="{x:Type RepeatButton}"
-         BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ButtonStyleKey}}"/>
+         BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ButtonStyleKey}}"/>-->
 
   <Style x:Key="{x:Type Button}" TargetType="{x:Type Button}"
          BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ButtonStyleKey}}">
@@ -20,9 +20,9 @@
   <Style TargetType="{x:Type CheckBox}"
          BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.CheckBoxStyleKey}}"/>
 
-  <Style TargetType="{x:Type TextBox}"
+  <Style x:Key="{x:Type TextBox}" TargetType="{x:Type TextBox}"
          BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.TextBoxStyleKey}}">
-    <Setter Property="Background" Value="Red"/>
+    <Setter Property="Padding" Value="2"/>
   </Style>
 
   <Style TargetType="{x:Type Label}"
@@ -37,8 +37,10 @@
       <Setter Property="Background" Value="{DynamicResource {x:Static vpui:CommonControlsColors.TextBoxBackgroundBrushKey}}"/>
       <Setter Property="Foreground" Value="{DynamicResource {x:Static vpui:CommonControlsColors.TextBoxTextBrushKey}}"/>
       <Setter Property="CaretBrush" Value="{Binding RelativeSource={RelativeSource Self}, Path=Foreground}"/>
-      --><!--<Setter Property="SelectionBrush" Value="{DynamicResource {x:Static tp:CommonControlsColors.TextBoxSelectionBrushKey}}"/>--><!--
-      <Setter Property="AllowDrop" Value="true"/>
+      -->
+  <!--<Setter Property="SelectionBrush" Value="{DynamicResource {x:Static tp:CommonControlsColors.TextBoxSelectionBrushKey}}"/>-->
+  <!--
+      <Setter Property="AllowDrop" Value="True"/>
       <Setter Property="Margin" Value="0"/>
       <Setter Property="BorderBrush" Value="{DynamicResource {x:Static vpui:CommonControlsColors.TextBoxBorderBrushKey}}"/>
       <Setter Property="BorderThickness" Value="1"/>
@@ -47,16 +49,16 @@
           <ControlTemplate TargetType="{x:Type TextBox}">
             <Border x:Name="border" Background="{TemplateBinding Control.Background}"
                         BorderBrush="{TemplateBinding Control.BorderBrush}"
-                        BorderThickness="{TemplateBinding Control.BorderThickness}" SnapsToDevicePixels="true">
-              <ScrollViewer x:Name="PART_ContentHost" Focusable="false" HorizontalScrollBarVisibility="Hidden"
+                        BorderThickness="{TemplateBinding Control.BorderThickness}" SnapsToDevicePixels="True">
+              <ScrollViewer x:Name="PART_ContentHost" Focusable="False" HorizontalScrollBarVisibility="Hidden"
                                 VerticalScrollBarVisibility="Hidden"/>
             </Border>
             <ControlTemplate.Triggers>
-              <Trigger Property="UIElement.IsMouseOver" Value="true">
+              <Trigger Property="UIElement.IsMouseOver" Value="True">
                 <Setter TargetName="border" Property="Border.BorderBrush"
                         Value="{DynamicResource {x:Static vpui:CommonControlsColors.TextBoxBorderFocusedBrushKey}}"/>
               </Trigger>
-              <Trigger Property="UIElement.IsKeyboardFocused" Value="true">
+              <Trigger Property="UIElement.IsKeyboardFocused" Value="True">
                 <Setter TargetName="border" Property="Border.BorderBrush"
                         Value="{DynamicResource {x:Static vpui:CommonControlsColors.TextBoxBorderFocusedBrushKey}}"/>
               </Trigger>
@@ -66,7 +68,7 @@
       </Setter>
     </Style.Setters>
     <Style.Triggers>
-      <Trigger Property="UIElement.IsEnabled" Value="false">
+      <Trigger Property="UIElement.IsEnabled" Value="False">
         <Setter Property="Control.Background" Value="{DynamicResource {x:Static vpui:CommonControlsColors.TextBoxBackgroundDisabledBrushKey}}"/>
         <Setter Property="Control.Foreground" Value="{DynamicResource {x:Static vpui:CommonControlsColors.TextBoxTextDisabledBrushKey}}"/>
         <Setter Property="Control.BorderBrush" Value="{DynamicResource {x:Static vpui:CommonControlsColors.TextBoxBorderDisabledBrushKey}}"/>
@@ -84,7 +86,6 @@
     </Setter>
   </Style>
   <Style x:Key="{x:Type GridSplitter}" TargetType="{x:Type GridSplitter}">
-    <!--<Setter Property="Background" Value="{DynamicResource {x:Static vsfx:VsBrushes.WindowKey}}"/>-->
     <Setter Property="Background" Value="Transparent"/>
     <Setter Property="PreviewStyle" Value="{StaticResource GridSplitterPreviewStyle}"/>
   </Style>
@@ -121,7 +122,7 @@
     </ControlTemplate.Triggers>
   </ControlTemplate>
 
-  <Style x:Key="ListBoxItemStyle" TargetType="{x:Type ListBoxItem}">
+  <Style TargetType="{x:Type ListBoxItem}">
     <Setter Property="Padding" Value="2"/>
     <Setter Property="Margin" Value="0"/>
     <Setter Property="Template" Value="{StaticResource ListBoxItemTemplate}"/>
@@ -129,21 +130,18 @@
             Value="{DynamicResource {x:Static vsp:EnvironmentColors.CommandBarTextActiveBrushKey}}"/>
   </Style>
 
-  <SolidColorBrush x:Key="ListBox.Disabled.Background" Color="#FFFFFFFF"/>
-  <SolidColorBrush x:Key="ListBox.Disabled.Border" Color="#FFD9D9D9"/>
   <Style TargetType="{x:Type ListBox}"
          BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogListBoxStyleKey}}">
-    <Setter Property="ItemContainerStyle" Value="{StaticResource ListBoxItemStyle}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource {x:Static vsp:ThemedDialogColors.GridLineBrushKey}}"/>
-    <!--<Setter Property="Padding" Value="0"/>-->
-    <!--<Setter Property="Template">
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="{x:Type ListBox}">
           <Border x:Name="Bd"
                   Background="{TemplateBinding Background}"
                   BorderBrush="{TemplateBinding BorderBrush}"
                   BorderThickness="{TemplateBinding BorderThickness}"
-                  SnapsToDevicePixels="true"
+                  SnapsToDevicePixels="True"
                   Padding="{TemplateBinding Padding}">
             <ScrollViewer Padding="{TemplateBinding Padding}" Focusable="False">
               <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
@@ -151,20 +149,273 @@
           </Border>
           <ControlTemplate.Triggers>
             <Trigger Property="IsEnabled" Value="False">
-              <Setter TargetName="Bd" Property="Background" Value="{StaticResource ListBox.Disabled.Background}" />
-              <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource ListBox.Disabled.Border}" />
+              <!--FIXME-->
             </Trigger>
             <MultiTrigger>
               <MultiTrigger.Conditions>
-                <Condition Property="IsGrouping" Value="true" />
-                <Condition Property="VirtualizingPanel.IsVirtualizingWhenGrouping" Value="false" />
+                <Condition Property="IsGrouping" Value="True"/>
+                <Condition Property="VirtualizingPanel.IsVirtualizingWhenGrouping" Value="False"/>
               </MultiTrigger.Conditions>
-              <Setter Property="ScrollViewer.CanContentScroll" Value="false"/>
+              <Setter Property="ScrollViewer.CanContentScroll" Value="False"/>
             </MultiTrigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
       </Setter.Value>
-    </Setter>-->
+    </Setter>
+  </Style>
+
+  <Style x:Key="ExpanderHeaderFocusVisual">
+    <Setter Property="Control.Template">
+      <Setter.Value>
+        <ControlTemplate>
+          <Border>
+            <Rectangle Margin="0"
+                       StrokeThickness="1"
+                       Stroke="{DynamicResource {x:Static vsfx:VsBrushes.WindowTextKey}}"
+                       StrokeDashArray="1 2"
+                       SnapsToDevicePixels="True"/>
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style x:Key="ExpanderDownHeaderStyle" TargetType="{x:Type ToggleButton}">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type ToggleButton}">
+          <Border Padding="{TemplateBinding Padding}">
+            <Grid Background="Transparent">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="*"/>
+              </Grid.ColumnDefinitions>
+              <Path x:Name="Glyph"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Stroke="{DynamicResource {x:Static vsfx:VsBrushes.WindowTextKey}}"
+                    StrokeThickness="1"
+                    SnapsToDevicePixels="True"
+                                Margin="0,1,0,0"
+                    Data="M 0.5 0.5 L 4.5 4.5 L 0.5 8.5 Z"/>
+              <ContentPresenter Grid.Column="1"
+                                Margin="4,0,0,0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                SnapsToDevicePixels="True"
+                                RecognizesAccessKey="True"/>
+            </Grid>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+              <Setter TargetName="Glyph" Property="Data" Value="M 5.5 0.5 L 0.5 5.5 L 5.5 5.5 Z"/>
+              <Setter TargetName="Glyph" Property="Fill" Value="{DynamicResource {x:Static vsfx:VsBrushes.WindowTextKey}}"/>
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Glyph" Property="Stroke" Value="{DynamicResource {x:Static vsfx:VsBrushes.WindowTextKey}}"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="Glyph" Property="Stroke" Value="{DynamicResource {x:Static vsfx:VsBrushes.CommandBarTextInactiveKey}}"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="ExpanderUpHeaderStyle" TargetType="{x:Type ToggleButton}">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type ToggleButton}">
+          <Border Padding="{TemplateBinding Padding}">
+            <Grid Background="Transparent">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="*"/>
+              </Grid.ColumnDefinitions>
+              <Path x:Name="Glyph"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Stroke="{DynamicResource {x:Static vsfx:VsBrushes.WindowTextKey}}"
+                    StrokeThickness="2"
+                    SnapsToDevicePixels="True"
+                    Data="M 0.5 0.5 L 4.5 4.5 L 0.5 8.5 Z"/>
+              <ContentPresenter Grid.Column="1"
+                                Margin="4,0,0,0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                SnapsToDevicePixels="True"
+                                RecognizesAccessKey="True"/>
+            </Grid>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+              <Setter TargetName="Glyph" Property="Data" Value="M 5.5 5.5 L 0.5 0.5 L 5.5 0.5 Z"/>
+              <Setter TargetName="Glyph" Property="Fill" Value="{DynamicResource {x:Static vsfx:VsBrushes.WindowTextKey}}"/>
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Glyph" Property="Stroke" Value="{DynamicResource {x:Static vsfx:VsBrushes.WindowTextKey}}"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="Glyph" Property="Stroke" Value="{DynamicResource {x:Static vsfx:VsBrushes.CommandBarTextInactiveKey}}"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="ExpanderLeftHeaderStyle" TargetType="{x:Type ToggleButton}">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type ToggleButton}">
+          <Border Padding="{TemplateBinding Padding}">
+            <Grid Background="Transparent">
+              <Grid.RowDefinitions>
+                <RowDefinition Height="16"/>
+                <RowDefinition Height="*"/>
+              </Grid.RowDefinitions>
+              <Path x:Name="Glyph"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Stroke="{DynamicResource {x:Static vsfx:VsBrushes.WindowTextKey}}"
+                    StrokeThickness="2"
+                    SnapsToDevicePixels="True"
+                    Data="M 8.5 0.5 L 4.5 4.5 L 0.5 0.5 Z"/>
+              <ContentPresenter Grid.Row="1"
+                                Margin="0,4,0,0"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Top"
+                                SnapsToDevicePixels="True"
+                                RecognizesAccessKey="True"/>
+            </Grid>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+              <Setter TargetName="Glyph" Property="Data" Value="M 0.5 5.5 L 5.5 0.5 L 5.5 5.5 Z"/>
+              <Setter TargetName="Glyph" Property="Fill" Value="{DynamicResource {x:Static vsfx:VsBrushes.WindowTextKey}}"/>
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Glyph" Property="Stroke" Value="{DynamicResource {x:Static vsfx:VsBrushes.WindowTextKey}}"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="Glyph" Property="Stroke" Value="{DynamicResource {x:Static vsfx:VsBrushes.CommandBarTextInactiveKey}}"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="ExpanderRightHeaderStyle" TargetType="{x:Type ToggleButton}">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type ToggleButton}">
+          <Border Padding="{TemplateBinding Padding}">
+            <Grid Background="Transparent" SnapsToDevicePixels="False">
+              <Grid.RowDefinitions>
+                <RowDefinition Height="16"/>
+                <RowDefinition Height="*"/>
+              </Grid.RowDefinitions>
+              <Path x:Name="Glyph"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Stroke="{DynamicResource {x:Static vsfx:VsBrushes.WindowTextKey}}"
+                    StrokeThickness="2"
+                    SnapsToDevicePixels="True"
+                    Data="M 0.5 4.5 L 4.5 0.5 L 8.5 4.5 Z"/>
+              <ContentPresenter Grid.Row="1"
+                                Margin="0,4,0,0"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Top"
+                                SnapsToDevicePixels="True"
+                                RecognizesAccessKey="True"/>
+            </Grid>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+              <Setter TargetName="Glyph" Property="Data" Value="M 5.5 0.5 L 0.5 5.5 L 0.5 0.5 Z"/>
+              <Setter TargetName="Glyph" Property="Fill" Value="{DynamicResource {x:Static vsfx:VsBrushes.WindowTextKey}}"/>
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Glyph" Property="Stroke" Value="{DynamicResource {x:Static vsfx:VsBrushes.WindowTextKey}}"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="Glyph" Property="Stroke" Value="{DynamicResource {x:Static vsfx:VsBrushes.CommandBarTextInactiveKey}}"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style x:Key="{x:Type Expander}" TargetType="{x:Type Expander}">
+    <Setter Property="Foreground" Value="{DynamicResource {x:Static vsfx:VsBrushes.WindowTextKey}}"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+    <Setter Property="BorderBrush" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type Expander}">
+          <Border BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}"
+                  Background="{TemplateBinding Background}"
+                  SnapsToDevicePixels="True">
+            <DockPanel>
+              <ToggleButton x:Name="HeaderSite"
+                            DockPanel.Dock="Top"
+                            Margin="1"
+                            MinWidth="0"
+                            MinHeight="0"
+                            Style="{StaticResource ExpanderDownHeaderStyle}"
+                            FocusVisualStyle="{StaticResource ExpanderHeaderFocusVisual}"
+                            IsChecked="{Binding Path=IsExpanded,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent}}"
+                            Content="{TemplateBinding Header}"
+                            ContentTemplate="{TemplateBinding HeaderTemplate}"
+                            ContentTemplateSelector="{TemplateBinding HeaderTemplateSelector}"
+                            Foreground="{TemplateBinding Foreground}"
+                            Padding="{TemplateBinding Padding}"
+                            FontFamily="{TemplateBinding FontFamily}"
+                            FontSize="{TemplateBinding FontSize}"
+                            FontStyle="{TemplateBinding FontStyle}"
+                            FontStretch="{TemplateBinding FontStretch}"
+                            FontWeight="{TemplateBinding FontWeight}"
+                            HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
+              <ContentPresenter x:Name="ExpandSite"
+                                DockPanel.Dock="Bottom"
+                                Visibility="Collapsed"
+                                Focusable="False"
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                Margin="{TemplateBinding Padding}"/>
+            </DockPanel>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsExpanded" Value="True">
+              <Setter TargetName="ExpandSite" Property="Visibility" Value="Visible"/>
+            </Trigger>
+            <Trigger Property="ExpandDirection" Value="Right">
+              <Setter TargetName="ExpandSite" Property="DockPanel.Dock" Value="Right"/>
+              <Setter TargetName="HeaderSite" Property="DockPanel.Dock" Value="Left"/>
+              <Setter TargetName="HeaderSite" Property="Style" Value="{StaticResource ExpanderRightHeaderStyle}"/>
+            </Trigger>
+            <Trigger Property="ExpandDirection" Value="Up">
+              <Setter TargetName="ExpandSite" Property="DockPanel.Dock" Value="Top"/>
+              <Setter TargetName="HeaderSite" Property="DockPanel.Dock" Value="Bottom"/>
+              <Setter TargetName="HeaderSite" Property="Style" Value="{StaticResource ExpanderUpHeaderStyle}"/>
+            </Trigger>
+            <Trigger Property="ExpandDirection" Value="Left">
+              <Setter TargetName="ExpandSite" Property="DockPanel.Dock" Value="Left"/>
+              <Setter TargetName="HeaderSite" Property="DockPanel.Dock" Value="Right"/>
+              <Setter TargetName="HeaderSite" Property="Style" Value="{StaticResource ExpanderLeftHeaderStyle}"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter Property="Foreground" Value="{DynamicResource {x:Static vsfx:VsBrushes.CommandBarTextInactiveKey}}"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
   </Style>
 
   <Style TargetType="{x:Type ComboBox}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogComboBoxStyleKey}}"/>

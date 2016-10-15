@@ -5,6 +5,8 @@
     using System.Windows.Media;
     using Windows;
     using Microsoft.VisualStudio.PlatformUI;
+    using Colors = Styles.Colors;
+    using Fonts = Styles.Fonts;
 
     /// <summary>Interaction logic for TraceLogWindow.</summary>
     public partial class TraceLogWindow

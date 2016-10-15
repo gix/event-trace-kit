@@ -7,19 +7,21 @@
     using System.Runtime.CompilerServices;
     using System.Threading.Tasks;
     using System.Windows;
-    using Controls;
+    using Formatting;
 
     public class DataView : DependencyObject, IDataView, INotifyPropertyChanged
     {
         private readonly DataTable table;
+        private readonly IFormatProviderSource formatProviderSource;
 
         private int deferredUpdateNestingDepth;
 
-        public DataView(DataTable table)
+        public DataView(DataTable table, IFormatProviderSource formatProviderSource)
         {
             if (table == null)
                 throw new ArgumentNullException(nameof(table));
             this.table = table;
+            this.formatProviderSource = formatProviderSource;
 
             ClearCache();
         }
@@ -86,7 +88,12 @@
                 throw new ArgumentNullException(nameof(info));
 
             DataColumn column = table.Columns[info.ColumnId];
-            return column.CreateView(info);
+
+            var columnView = column.CreateView(info);
+            if (columnView.FormatProvider == null)
+                columnView.FormatProvider = formatProviderSource.GetFormatProvider(column.DataType);
+
+            return columnView;
         }
 
         public CellValue GetCellValue(int rowIndex, int columnIndex)

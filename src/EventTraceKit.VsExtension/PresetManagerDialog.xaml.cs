@@ -1,29 +1,34 @@
 ﻿namespace EventTraceKit.VsExtension
 {
     using System;
-    using System.Collections.ObjectModel;
     using System.Globalization;
     using System.Linq;
     using System.Windows;
-    using System.Windows.Automation;
     using System.Windows.Controls;
+    using System.Windows.Controls.Primitives;
     using System.Windows.Data;
-    using System.Windows.Documents;
+    using System.Windows.Input;
     using System.Windows.Media;
-    using Collections;
     using Controls;
     using Windows;
+    using Microsoft.VisualStudio.PlatformUI;
 
     public partial class PresetManagerDialog
     {
-        public PresetManagerDialog()
+        private readonly PresetColumnDragBehavior dragBehavior;
+        private readonly PresetManagerViewModel viewModel;
+
+        private PresetManagerDialog()
         {
             InitializeComponent();
         }
 
-        private PresetManagerDialog(AsyncDataGrid associatedView)
+        private PresetManagerDialog(PresetManagerViewModel viewModel)
             : this()
         {
+            this.viewModel = viewModel;
+            DataContext = viewModel;
+            dragBehavior = new PresetColumnDragBehavior(this, viewModel, availableList, layoutList);
         }
 
         public static IValueConverter MultiplierConverter { get; } =
@@ -45,14 +50,18 @@
                     case PresetManagerColumnType.LeftFreezableAreaSeparator:
                         return Brushes.Gray;
                     case PresetManagerColumnType.RightFreezableAreaSeparator:
-                        return Brushes.Gray;
+                        return Brushes.DarkGray;
                     default:
                         return Brushes.Black;
                 }
             });
 
         public static readonly DependencyProperty HeaderBrushProperty =
-            DependencyProperty.Register(nameof(HeaderBrush), typeof(Brush), typeof(PresetManagerDialog), new PropertyMetadata());
+            DependencyProperty.Register(
+                nameof(HeaderBrush),
+                typeof(Brush),
+                typeof(PresetManagerDialog),
+                new PropertyMetadata());
 
         public Brush HeaderBrush
         {
@@ -60,548 +69,495 @@
             set { SetValue(HeaderBrushProperty, value); }
         }
 
-        private void AvailableListDropHandler(object sender, DragEventArgs e) { }
-        private void LayoutListDropHandler(object sender, DragEventArgs e) { }
         private void SaveButtonClickHandler(object sender, RoutedEventArgs e) { }
-        private void CloseButtonClickHandler(object sender, RoutedEventArgs e) { }
-        private void CancelButtonClickHandler(object sender, RoutedEventArgs e) { }
-        private void ApplyButtonClickHandler(object sender, RoutedEventArgs e) { }
 
-        public static void ShowPresetManagerDialog(
-            AsyncDataViewModel hdvViewModel, AsyncDataGrid associatedView)
+        private void CloseButtonClickHandler(object sender, RoutedEventArgs e)
         {
-            if (hdvViewModel == null)
-                throw new ArgumentNullException(nameof(hdvViewModel));
-            //if (associatedView == null)
-            //    throw new ArgumentNullException(nameof(associatedView));
+            if (viewModel.IsDialogStateDirty)
+                viewModel.ApplyChanges();
+            Close();
+        }
 
-            var model = new PresetManagerViewModel(hdvViewModel);
-            var dialog = new PresetManagerDialog(associatedView) {
-                DataContext = model,
-                //viewModel = model,
-                //HeaderBrush = associatedView.HeaderBrush,
-                //GraphTreeItemView = associatedView
-            };
-            dialog.ShowModal();
+        private void CancelButtonClickHandler(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+
+        private void ApplyButtonClickHandler(object sender, RoutedEventArgs e)
+        {
+            viewModel.ApplyChanges();
+        }
+
+        public static void ShowPresetManagerDialog(AsyncDataViewModel adv)
+        {
+            CreateDialog(adv).ShowModal();
+        }
+
+        public static PresetManagerDialog CreateDialog(AsyncDataViewModel adv)
+        {
+            if (adv == null)
+                throw new ArgumentNullException(nameof(adv));
+
+            var viewModel = new PresetManagerViewModel(adv);
+            return new PresetManagerDialog(viewModel);
+        }
+
+        private void OnAvailableListItemLoaded(object sender, RoutedEventArgs e)
+        {
+            var element = (UIElement)sender;
+            dragBehavior.AddAvailableListDraggable(element);
+        }
+
+        private void OnAvailableListItemUnloaded(object sender, RoutedEventArgs e)
+        {
+            var element = (UIElement)sender;
+            dragBehavior.RemoveAvailableListDraggable(element);
+        }
+
+        private void OnLayoutListItemLoaded(object sender, RoutedEventArgs e)
+        {
+            var element = (UIElement)sender;
+            dragBehavior.AddLayoutListDraggable(element);
+        }
+
+        private void OnLayoutListItemUnloaded(object sender, RoutedEventArgs e)
+        {
+            var element = (UIElement)sender;
+            dragBehavior.RemoveLayoutListDraggable(element);
+        }
+
+        private void OnLayoutListItemDragEnter(object sender, DragEventArgs e)
+        {
+            dragBehavior.OnLayoutListItemDragEnter(sender, e);
+        }
+
+        private void OnLayoutListItemDragOver(object sender, DragEventArgs e)
+        {
+            dragBehavior.OnLayoutListItemDragOver(sender, e);
+        }
+
+        private void OnLayoutListItemDrop(object sender, DragEventArgs e)
+        {
+            dragBehavior.OnLayoutListItemDrop(sender, e);
         }
     }
 
-    public static class CollectionUtils
+    [TemplatePart(Name = "PART_PopupContainer", Type = typeof(Control))]
+    [TemplatePart(Name = "PART_Popup", Type = typeof(Popup))]
+    public class DropDownBox : HeaderedContentControl
     {
-        public static ReadOnlyObservableCollection<T> InitializeReadOnly<T>(
-            out ObservableCollection<T> collection)
+        // Fields
+        private DelegateCommand closeDropDownCommand;
+        public static readonly DependencyProperty IsDropDownOpenProperty;
+        private DelegateCommand openDropDownCommand;
+        public const string PART_Popup = "PART_Popup";
+        public const string PART_PopupContainer = "PART_PopupContainer";
+        public static readonly DependencyProperty PopupContainerPartProperty;
+        private static readonly DependencyPropertyKey PopupContainerPartPropertyKey;
+        private DelegateCommand toggleIsDropDownOpenCommand;
+
+        static DropDownBox()
         {
-            collection = new ObservableCollection<T>();
-            return new ReadOnlyObservableCollection<T>(collection);
+            IsDropDownOpenProperty = DependencyProperty.Register("IsDropDownOpen", typeof(bool), typeof(DropDownBox), new PropertyMetadata(Boxed.False, (d, e) => ((DropDownBox)d).IsDropDownOpenPropertyChanged(e)));
+            PopupContainerPartPropertyKey = DependencyProperty.RegisterReadOnly("PopupContainerPart", typeof(Control), typeof(DropDownBox), new PropertyMetadata(null));
+            PopupContainerPartProperty = PopupContainerPartPropertyKey.DependencyProperty;
+            FrameworkElement.DefaultStyleKeyProperty.OverrideMetadata(typeof(DropDownBox), new FrameworkPropertyMetadata(typeof(DropDownBox)));
         }
-    }
-
-    public class PresetManagerViewModel : DependencyObject
-    {
-        private readonly ObservableCollection<ColumnViewModelPreset> templateColumns;
-        private readonly ObservableCollection<PresetManagerColumnViewModel> configurablePresetColumns;
-        private readonly ObservableCollection<PresetManagerColumnViewModel> presetColumns;
-        private readonly PresetManagerColumnViewModel leftFreezableAreaSeparatorColumn;
-        private readonly PresetManagerColumnViewModel rightFreezableAreaSeparatorColumn;
-        private AsyncDataViewModelPreset templatePreset;
-        private AsyncDataViewModelPreset currentPreset;
-        private bool refreshingFromPreset;
-
-        public PresetManagerViewModel(AsyncDataViewModel advModel)
-        {
-            TemplateColumns = CollectionUtils.InitializeReadOnly(out templateColumns);
-            PresetColumns = CollectionUtils.InitializeReadOnly(out presetColumns);
-            ConfigurablePresetColumns = CollectionUtils.InitializeReadOnly(out configurablePresetColumns);
-
-            leftFreezableAreaSeparatorColumn = new PresetManagerColumnViewModel(this, PresetManagerColumnType.LeftFreezableAreaSeparator);
-            rightFreezableAreaSeparatorColumn = new PresetManagerColumnViewModel(this, PresetManagerColumnType.RightFreezableAreaSeparator);
-
-            HdvViewModel = advModel;
-        }
-
-        public static readonly DependencyProperty DisplayNameProperty = DependencyProperty.Register(
-            nameof(DisplayName), typeof(string), typeof(PresetManagerViewModel), new PropertyMetadata(default(object)));
-
-        private static readonly DependencyPropertyKey HdvViewModelPropertyKey =
-            DependencyProperty.RegisterReadOnly(
-                nameof(HdvViewModel),
-                typeof(AsyncDataViewModel),
-                typeof(PresetManagerViewModel),
-                new PropertyMetadata(
-                    null,
-                    (d, e) => ((PresetManagerViewModel)d).HdvViewModelPropertyChangedHandler(e)));
-
-        public static readonly DependencyProperty HdvViewModelProperty =
-            HdvViewModelPropertyKey.DependencyProperty;
-
-        private static readonly DependencyPropertyKey TemplateColumnsPropertyKey =
-            DependencyProperty.RegisterReadOnly(nameof(TemplateColumns),
-                typeof(ReadOnlyObservableCollection<ColumnViewModelPreset>),
-                typeof(PresetManagerViewModel),
-                new PropertyMetadata(null));
-
-        public static readonly DependencyProperty TemplateColumnsProperty =
-            TemplateColumnsPropertyKey.DependencyProperty;
-
-        private static readonly DependencyPropertyKey PresetColumnsPropertyKey =
-            DependencyProperty.RegisterReadOnly("PresetColumns",
-                typeof(ReadOnlyObservableCollection<PresetManagerColumnViewModel>), typeof(PresetManagerViewModel),
-                new PropertyMetadata(null));
-
-        public static readonly DependencyProperty PresetColumnsProperty = PresetColumnsPropertyKey.DependencyProperty;
-
-        private static readonly DependencyPropertyKey ConfigurablePresetColumnsPropertyKey =
-            DependencyProperty.RegisterReadOnly("ConfigurablePresetColumns",
-                typeof(ReadOnlyObservableCollection<PresetManagerColumnViewModel>), typeof(PresetManagerViewModel),
-                new PropertyMetadata(null));
-
-        public static readonly DependencyProperty ConfigurablePresetColumnsProperty =
-            ConfigurablePresetColumnsPropertyKey.DependencyProperty;
-
-        public static readonly DependencyProperty SelectedColumnProperty = DependencyProperty.Register(
-            "SelectedColumn", typeof(PresetManagerColumnViewModel), typeof(PresetManagerViewModel),
-            new PropertyMetadata(default(PresetManagerColumnViewModel)));
-
-        public int LastLeftFrozenIndex => presetColumns.IndexOf(leftFreezableAreaSeparatorColumn);
-        public int FirstRightFrozenIndex => presetColumns.IndexOf(rightFreezableAreaSeparatorColumn);
-
-        public AsyncDataViewModel HdvViewModel
-        {
-            get { return (AsyncDataViewModel)GetValue(HdvViewModelProperty); }
-            private set { SetValue(HdvViewModelPropertyKey, value); }
-
-        }
-
-        public ReadOnlyObservableCollection<PresetManagerColumnViewModel> ConfigurablePresetColumns
+        public bool IsDropDownOpen
         {
             get
             {
-                return (ReadOnlyObservableCollection<PresetManagerColumnViewModel>)
-                    GetValue(ConfigurablePresetColumnsProperty);
+                return (bool)base.GetValue(IsDropDownOpenProperty);
             }
-            private set { SetValue(ConfigurablePresetColumnsPropertyKey, value); }
-        }
-
-        private void HdvViewModelPropertyChangedHandler(DependencyPropertyChangedEventArgs e)
-        {
-            var oldValue = (AsyncDataViewModel)e.OldValue;
-            if (oldValue != null) {
-                //oldValue.PresetCollection.AvailablePresetsChanged -= new EventHandler(this.AvailablePresetsChangedHandler);
-                oldValue.PresetChanged -= PresetChangedHandler;
-            }
-
-            var newValue = (AsyncDataViewModel)e.NewValue;
-            if (newValue != null) {
-                //newValue.PresetCollection.AvailablePresetsChanged += new EventHandler(this.AvailablePresetsChangedHandler);
-                newValue.PresetChanged += PresetChangedHandler;
-                RefreshFromHdvViewModel();
+            set
+            {
+                base.SetValue(IsDropDownOpenProperty, value);
             }
         }
-
-        private void RefreshFromHdvViewModel()
+        public ICommand OpenDropDownCommand
         {
-            templatePreset = HdvViewModel.TemplatePreset;
-            templateColumns.Clear();
-            templateColumns.AddRange(
-                templatePreset.ConfigurableColumns.OrderBy(x => x.Name));
-            RefreshFromPreset(HdvViewModel.Preset);
-        }
-
-        private void RefreshFromPreset(AsyncDataViewModelPreset preset)
-        {
-            refreshingFromPreset = true;
-            currentPreset = preset.CreateCompatiblePreset(templatePreset);
-
-            presetColumns.Clear();
-            for (int i = 0; i < currentPreset.ConfigurableColumns.Count; ++i) {
-                var columnPreset = currentPreset.ConfigurableColumns[i];
-                DataColumnView prototypeViewForColumnPreset = HdvViewModel.GetPrototypeViewForColumnPreset(columnPreset);
-                var item = new PresetManagerColumnViewModel(this, currentPreset.ConfigurableColumns[i], prototypeViewForColumnPreset);
-                presetColumns.Add(item);
+            get
+            {
+                base.VerifyAccess();
+                if (this.openDropDownCommand == null) {
+                    this.openDropDownCommand = new DelegateCommand(delegate (object _) {
+                        this.OpenDropDown();
+                    });
+                }
+                return this.openDropDownCommand;
             }
-
-            //List<Tuple<int, PresetManagerColumnViewModel>> list1 = new List<Tuple<int, PresetManagerColumnViewModel>> {
-            //    new Tuple<int, PresetManagerColumnViewModel>(this.currentPreset.LeftFrozenColumnCount, this.leftFreezableAreaSeparatorColumn),
-            //    new Tuple<int, PresetManagerColumnViewModel>(this.currentPreset.RightFrozenColumnCount, this.rightFreezableAreaSeparatorColumn),
-            //};
-            //list1.Sort((x, y) => x.Item1 - y.Item1);
-            //foreach (var struct2 in list1) {
-            //    this.presetColumns.Insert(struct2.Item1, struct2.Item2);
-            //}
-
-            foreach (var column in presetColumns)
-                column.RefreshPositionDependentProperties();
-
-            //this.CurrentSelectedPresetName = this.currentPreset.Name;
-            //this.SetDialogStateDirty(this.currentPreset.IsModified);
-            refreshingFromPreset = false;
+        }
+        public DropDownBox()
+        {
+            base.Loaded += new RoutedEventHandler(this.OnLoaded);
+            base.Unloaded += new RoutedEventHandler(this.OnUnloaded);
         }
 
-        private void PresetChangedHandler(object sender, ValueChangedEventArgs<AsyncDataViewModelPreset> e)
+
+
+        private void OnUnloaded(object sender, RoutedEventArgs e)
         {
+            this.LoadPartsFromTemplate(null);
+        }
+        public void OpenDropDown()
+        {
+            this.IsDropDownOpen = true;
+        }
+        public void CloseDropDown()
+        {
+            this.IsDropDownOpen = false;
         }
 
-        public string DisplayName
+        private bool TryGetPopupPart(out Popup p)
         {
-            get { return (string)GetValue(DisplayNameProperty); }
-            set { SetValue(DisplayNameProperty, value); }
+            p = null;
+            Control popupContainerPart = this.PopupContainerPart;
+            if (popupContainerPart == null) {
+                return false;
+            }
+            ControlTemplate template = popupContainerPart.Template;
+            if (template == null) {
+                return false;
+            }
+            p = template.FindName("PART_Popup", popupContainerPart) as Popup;
+            if (p == null) {
+                return false;
+            }
+            return true;
         }
 
-        public ReadOnlyObservableCollection<ColumnViewModelPreset> TemplateColumns
+        public void ToggleIsDropDownOpen()
         {
-            get { return (ReadOnlyObservableCollection<ColumnViewModelPreset>)GetValue(TemplateColumnsProperty); }
-            private set { SetValue(TemplateColumnsPropertyKey, value); }
+            this.IsDropDownOpen = !this.IsDropDownOpen;
         }
 
-        public PresetManagerColumnViewModel SelectedColumn
+        private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            get { return (PresetManagerColumnViewModel)GetValue(SelectedColumnProperty); }
-            set { SetValue(SelectedColumnProperty, value); }
-        }
-
-        public ReadOnlyObservableCollection<PresetManagerColumnViewModel> PresetColumns
-        {
-            get { return (ReadOnlyObservableCollection<PresetManagerColumnViewModel>)GetValue(PresetColumnsProperty); }
-            private set { SetValue(PresetColumnsPropertyKey, value); }
-        }
-    }
-
-    public class PresetManagerColumnContainerStyleSelector : StyleSelector
-    {
-        public override Style SelectStyle(object item, DependencyObject container)
-        {
-            var model = item as PresetManagerColumnViewModel;
-            if (model == null)
-                return base.SelectStyle(item, container);
-            if (model.ColumnType == PresetManagerColumnType.Configurable)
-                return ConfigurableColumnStyle;
-            return SeparatorColumnStyle;
-        }
-
-        public Style ConfigurableColumnStyle { get; set; }
-        public Style SeparatorColumnStyle { get; set; }
-    }
-
-    public class PresetManagerColumnDetailsTemplateSelector : DataTemplateSelector
-    {
-        public override DataTemplate SelectTemplate(object item, DependencyObject container)
-        {
-            PresetManagerColumnViewModel model = item as PresetManagerColumnViewModel;
-            if (model == null)
-                return base.SelectTemplate(item, container);
-
-            switch (model.ColumnType) {
-                case PresetManagerColumnType.LeftFreezableAreaSeparator:
-                    return LeftFreezableAreaSeparatorColumnTemplate;
-                case PresetManagerColumnType.RightFreezableAreaSeparator:
-                    return RightFreezableAreaSeparatorColumnTemplate;
-                case PresetManagerColumnType.Configurable:
-                    return ConfigurableColumnTemplate;
-                default:
-                    throw ExceptionUtils.InvalidEnumArgumentException(
-                        model.ColumnType, "model.ColumnType");
+            Popup popup;
+            this.LoadPartsFromTemplate(base.Template);
+            if (this.TryGetPopupPart(out popup)) {
+                popup.Opened += delegate (object s2, EventArgs e2) {
+                    UIElement searchVisual = ((Popup)s2).Child;
+                    if (searchVisual != null) {
+                        searchVisual.FindVisualChild<FrameworkElement>(fx => fx.Focusable && fx.Focus());
+                    }
+                };
+                popup.Closed += delegate (object s2, EventArgs e2) {
+                    if (this.PopupContainerPart != null) {
+                        this.PopupContainerPart.Focus();
+                    }
+                };
+                popup.Child.LostKeyboardFocus += delegate (object s2, KeyboardFocusChangedEventArgs e2) {
+                    UIElement element = (UIElement)s2;
+                    if (!element.IsKeyboardFocusWithin && popup.IsOpen) {
+                        element.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
+                    }
+                };
             }
         }
 
-        public DataTemplate ConfigurableColumnTemplate { get; set; }
-        public DataTemplate LeftFreezableAreaSeparatorColumnTemplate { get; set; }
-        public DataTemplate RightFreezableAreaSeparatorColumnTemplate { get; set; }
+        private void LoadPartsFromTemplate(ControlTemplate template)
+        {
+            if (template == null) {
+                this.PopupContainerPart = null;
+            } else {
+                this.PopupContainerPart = base.Template.FindName("PART_PopupContainer", this) as Control;
+            }
+        }
+
+
+
+        public override void OnApplyTemplate()
+        {
+            this.LoadPartsFromTemplate(base.Template);
+            base.OnApplyTemplate();
+        }
+
+
+        public ICommand ToggleIsDropDownOpenCommand
+        {
+            get
+            {
+                base.VerifyAccess();
+                if (this.toggleIsDropDownOpenCommand == null) {
+                    this.toggleIsDropDownOpenCommand = new DelegateCommand(delegate (object _) {
+                        this.ToggleIsDropDownOpen();
+                    });
+                }
+                return this.toggleIsDropDownOpenCommand;
+            }
+        }
+
+
+        public Control PopupContainerPart
+        {
+            get
+            {
+                return (Control)base.GetValue(PopupContainerPartProperty);
+            }
+            private set
+            {
+                base.SetValue(PopupContainerPartPropertyKey, value);
+            }
+        }
+
+
+        public ICommand CloseDropDownCommand
+        {
+            get
+            {
+                base.VerifyAccess();
+                if (this.closeDropDownCommand == null) {
+                    this.closeDropDownCommand = new DelegateCommand(delegate (object _) {
+                        this.CloseDropDown();
+                    });
+                }
+                return this.closeDropDownCommand;
+            }
+        }
+
+
+        private void IsDropDownOpenPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
+            base.VerifyAccess();
+        }
+
     }
 
-    public enum PresetManagerColumnType
+    public class PresetColumnDragBehavior
     {
-        Configurable,
-        LeftFreezableAreaSeparator,
-        RightFreezableAreaSeparator,
-    }
+        private readonly DragEventSource availableListDragEventSource = new DragEventSource();
+        private readonly DragEventSource layoutListDragEventSource = new DragEventSource();
+        private readonly ListBoxDragPreview layoutListDragPreview;
 
-    public class PresetManagerColumnViewModel : DependencyObject
-    {
-        private readonly ColumnViewModelPreset preset;
-        private bool refreshingFromPreset;
+        private readonly PresetManagerViewModel viewModel;
+        private readonly ItemsControl availableList;
+        private readonly ListBox layoutList;
+        private FrameworkElement dragSource;
+        private object dragData;
 
-        public PresetManagerColumnViewModel(
-            PresetManagerViewModel presetManager, PresetManagerColumnType columnType)
+        public PresetColumnDragBehavior(
+            UIElement associatedObject,
+            PresetManagerViewModel viewModel,
+            ItemsControl availableList,
+            ListBox layoutList)
         {
-            PresetManager = presetManager;
-            ColumnType = columnType;
+            AssociatedObject = associatedObject;
+            this.viewModel = viewModel;
+            this.availableList = availableList;
+            this.layoutList = layoutList;
+
+            availableListDragEventSource.DragPrepare += OnDragPrepare;
+            availableListDragEventSource.DragStart += OnAvailableListDragStart;
+
+            layoutListDragEventSource.DragPrepare += OnDragPrepare;
+            layoutListDragEventSource.DragStart += OnLayoutListDragStart;
+            layoutListDragPreview = new ListBoxDragPreview(layoutList);
+            layoutList.DragEnter += OnLayoutListDragEnter;
+            layoutList.DragOver += OnLayoutListDragOver;
+
+            availableList.Drop += OnAvailableListDrop;
+            layoutList.Drop += OnLayoutListDrop;
         }
 
-        public PresetManagerColumnViewModel(
-            PresetManagerViewModel presetManager,
-            ColumnViewModelPreset preset,
-            DataColumnView columnView)
+        public UIElement AssociatedObject { get; }
+
+        private void OnDragPrepare(object source)
         {
-            if (presetManager == null)
-                throw new ArgumentNullException(nameof(presetManager));
-            if (preset == null)
-                throw new ArgumentNullException(nameof(preset));
-            if (columnView == null)
-                throw new ArgumentNullException(nameof(columnView));
-
-            //if (preset.Name != columnView.ColumnName) {
-            //    if (preset.IsFrozen)
-            //        preset = preset.Clone();
-            //    preset.Name = columnView.ColumnName;
-            //}
-
-            PresetManager = presetManager;
-            this.preset = preset;
-            //this.defaultSupportedFormat = columnView.FormatProvider.DefaultSupportedFormat();
-            //this.supportedFormats = columnView.FormatProvider.SupportedFormats();
-            RefreshFromPreset();
-            //this.CellFormat = this.GetSupportedFormatFromFormatString(columnView.Format);
-            //this.DataType = columnView.DataType;
-            ColumnType = PresetManagerColumnType.Configurable;
+            dragSource = (FrameworkElement)source;
+            var item = dragSource as ListBoxItem;
+            if (item != null) {
+                var listBox = item.GetParentListBox();
+                dragData = listBox.GetOrderedSelectedItemsArray();
+            }
         }
 
-        private void RefreshFromPreset()
+        private void OnAvailableListDragStart()
         {
-            refreshingFromPreset = true;
-            Name = preset.Name;
-            AutomationProperties.SetName(this, preset.Name);
-            Id = preset.Id;
-            Width = preset.Width;
-            IsVisible = preset.IsVisible;
-            TextAlignment = preset.TextAlignment;
-            //HelpText = preset.HelpText;
-            refreshingFromPreset = false;
+            var columns = dragData as ColumnViewModelPreset[];
+            if (columns != null) {
+                var data = new DataObject(typeof(ColumnViewModelPreset[]), columns);
+                DragDrop.DoDragDrop(dragSource, data, DragDropEffects.Copy);
+            }
         }
 
-        public PresetManagerViewModel PresetManager { get; }
-        public PresetManagerColumnType ColumnType { get; }
-
-        #region public Guid Id { get; set; }
-
-        /// <summary>
-        ///   Identifies the <see cref="Id"/> dependency property.
-        /// </summary>
-        public static readonly DependencyProperty IdProperty =
-            DependencyProperty.Register(
-                nameof(Id),
-                typeof(Guid),
-                typeof(PresetManagerColumnViewModel),
-                new PropertyMetadata(null));
-
-        /// <summary>
-        ///   Gets or sets the id.
-        /// </summary>
-        public Guid Id
+        private void OnLayoutListDragStart()
         {
-            get { return (Guid)GetValue(IdProperty); }
-            set { SetValue(IdProperty, value); }
+            var columns = dragData as PresetManagerColumnViewModel[];
+            if (columns != null) {
+                var data = new DataObject(typeof(PresetManagerColumnViewModel[]), columns);
+                DragDrop.DoDragDrop(dragSource, data, DragDropEffects.Move);
+            }
         }
 
-        #endregion
-
-        #region public string Name { get; private set; }
-
-        private static readonly DependencyPropertyKey NamePropertyKey =
-            DependencyProperty.RegisterReadOnly(
-                nameof(Name),
-                typeof(string),
-                typeof(PresetManagerColumnViewModel),
-                new PropertyMetadata(string.Empty));
-
-        /// <summary>
-        ///   Identifies the <see cref="Name"/> dependency property.
-        /// </summary>
-        public static readonly DependencyProperty NameProperty =
-            NamePropertyKey.DependencyProperty;
-
-        /// <summary>
-        ///   Gets the name.
-        /// </summary>
-        public string Name
+        private void OnAvailableListDrop(object sender, DragEventArgs e)
         {
-            get { return (string)GetValue(NameProperty); }
-            private set { SetValue(NamePropertyKey, value); }
+            e.Handled = true;
+            OnAvailableListDrop(e.Data);
         }
 
-        #endregion
-
-        #region public int Width { get; set; }
-
-        /// <summary>
-        ///   Identifies the <see cref="Width"/> dependency property.
-        /// </summary>
-        public static readonly DependencyProperty WidthProperty =
-            DependencyProperty.Register(
-                nameof(Width),
-                typeof(int),
-                typeof(PresetManagerColumnViewModel),
-                new PropertyMetadata(
-                    0,
-                    (d, e) => ((PresetManagerColumnViewModel)d).OnPresetPropertyChanged(),
-                    (d, v) => ((PresetManagerColumnViewModel)d).CoerceWidth(v)));
-
-        /// <summary>
-        ///   Gets or sets the width.
-        /// </summary>
-        public int Width
+        private void OnAvailableListDrop(IDataObject data)
         {
-            get { return (int)GetValue(WidthProperty); }
-            set { SetValue(WidthProperty, value); }
+            PresetManagerColumnViewModel[] toRemove;
+            if (data.TryGetArray(out toRemove))
+                viewModel.Remove(toRemove);
         }
 
-        private object CoerceWidth(object baseValue)
+        private void OnLayoutListDrop(object sender, DragEventArgs e)
         {
-            return Boxed.Int32(((int)baseValue).Clamp(0, 10000));
+            e.Handled = true;
+            OnLayoutListDrop(e.Data);
         }
 
-        #endregion
-
-        #region public bool IsVisible { get; set; }
-
-        public static readonly DependencyProperty IsVisibleProperty =
-            DependencyProperty.Register(
-                nameof(IsVisible),
-                typeof(bool),
-                typeof(PresetManagerViewModel),
-                new PropertyMetadata(
-                    Boxed.True,
-                    (d, e) => ((PresetManagerColumnViewModel)d).OnPresetPropertyChanged()));
-
-        public bool IsVisible
+        private void OnLayoutListDrop(IDataObject data)
         {
-            get { return (bool)GetValue(IsVisibleProperty); }
-            set { SetValue(IsVisibleProperty, value); }
+            var target = viewModel.PresetColumns[viewModel.PresetColumns.Count - 1];
+            DoDrop(data, target, true);
         }
 
-        #endregion
-
-        #region public TextAlignment TextAlignment { get; set; }
-
-        /// <summary>
-        ///   Identifies the <see cref="TextAlignment"/> dependency property.
-        /// </summary>
-        public static readonly DependencyProperty TextAlignmentProperty =
-            DependencyProperty.Register(
-                nameof(TextAlignment),
-                typeof(TextAlignment),
-                typeof(PresetManagerColumnViewModel),
-                new PropertyMetadata(
-                    TextAlignment.Left,
-                    (d, e) => ((PresetManagerColumnViewModel)d).OnPresetPropertyChanged()));
-
-        /// <summary>
-        ///   Gets or sets the text alignment.
-        /// </summary>
-        public TextAlignment TextAlignment
+        public void OnLayoutListItemDrop(object sender, DragEventArgs e)
         {
-            get { return (TextAlignment)GetValue(TextAlignmentProperty); }
-            set { SetValue(TextAlignmentProperty, value); }
+            var relativeTo = sender as FrameworkElement;
+            if (relativeTo == null)
+                return;
+
+            e.Handled = true;
+            var target = relativeTo.DataContext as PresetManagerColumnViewModel;
+            var moveAfter = e.GetPosition(relativeTo).Y >= relativeTo.ActualHeight / 2.0;
+            DoDrop(e.Data, target, moveAfter);
         }
 
-        #endregion
-
-
-        #region public bool IsFrozen { get; set; }
-
-        /// <summary>
-        ///   Identifies the <see cref="IsFrozen"/> dependency property.
-        /// </summary>
-        public static readonly DependencyProperty IsFrozenProperty =
-            DependencyProperty.Register(
-                nameof(IsFrozen),
-                typeof(bool),
-                typeof(PresetManagerColumnViewModel),
-                new PropertyMetadata(false));
-
-        /// <summary>
-        ///   Gets or sets whether the column is frozen.
-        /// </summary>
-        public bool IsFrozen
+        public void OnLayoutListDragEnter(object sender, DragEventArgs e)
         {
-            get { return (bool)GetValue(IsFrozenProperty); }
-            set { SetValue(IsFrozenProperty, value); }
+            e.Handled = true;
+
+            var target = viewModel.PresetColumns.Last();
+            if (!CanDrop(e.Data, target, true)) {
+                e.Effects = DragDropEffects.None;
+                return;
+            }
         }
 
-        #endregion
-
-        public void RefreshPositionDependentProperties()
+        public void OnLayoutListDragOver(object sender, DragEventArgs e)
         {
-            int index = PresetManager.PresetColumns.IndexOf(this);
-            IsFrozen = index >= 0 && ((index <= PresetManager.LastLeftFrozenIndex) || (index >= PresetManager.FirstRightFrozenIndex));
+            e.Handled = true;
+
+            var target = viewModel.PresetColumns.Last();
+            if (!CanDrop(e.Data, target, true)) {
+                e.Effects = DragDropEffects.None;
+                layoutListDragPreview.HideOnly();
+            }
         }
 
-        private void OnPresetPropertyChanged()
+        public void OnLayoutListItemDragEnter(object sender, DragEventArgs e)
         {
-            //if (!refreshingFromPreset && this.UpdateColumnPreset()) {
-            //    PresetManager.SetDialogStateDirty(true);
-            //    PresetManager.CoerceAreFiltersValid();
-            //}
-        }
-    }
+            var relativeTo = sender as ListBoxItem;
+            if (relativeTo == null)
+                return;
 
-    public class BindableRichTextBox : RichTextBox
-    {
-        public static readonly DependencyProperty DocumentProperty =
-            DependencyProperty.Register(
-                nameof(Document),
-                typeof(FlowDocument),
-                typeof(BindableRichTextBox),
-                new FrameworkPropertyMetadata(null, OnDocumentChanged));
+            e.Handled = true;
 
-        private static void OnDocumentChanged(DependencyObject d, DependencyPropertyChangedEventArgs args)
-        {
-            var source = (RichTextBox)d;
-            var document = args.NewValue as FlowDocument ?? new FlowDocument();
-            source.Document = document;
+            var target = relativeTo.DataContext as PresetManagerColumnViewModel;
+            var moveAfter = e.GetPosition(relativeTo).Y >= relativeTo.ActualHeight / 2.0;
+            if (!CanDrop(e.Data, target, moveAfter)) {
+                e.Effects = DragDropEffects.None;
+                layoutListDragPreview.HideOnly();
+            } else {
+                Point position = e.GetPosition(relativeTo);
+                layoutListDragPreview.UpdateAdorner(relativeTo, position);
+            }
+
+            ItemsControl control = layoutList;
+            TryScrollIntoView(control, e.GetPosition(control));
         }
 
-        public new FlowDocument Document
+        public void OnLayoutListItemDragOver(object sender, DragEventArgs e)
         {
-            get { return (FlowDocument)GetValue(DocumentProperty); }
-            set { SetValue(DocumentProperty, value); }
-        }
-    }
+            var relativeTo = sender as ListBoxItem;
+            if (relativeTo == null)
+                return;
 
-    public class PresetManagerDesignTimeModel : PresetManagerViewModel
-    {
-        public PresetManagerDesignTimeModel()
-            : base(CreateModel())
-        {
-        }
+            e.Handled = true;
 
-        private static AsyncDataViewModel CreateModel()
-        {
-            var idPreset = new ColumnViewModelPreset {
-                Id = new Guid("A27E5F00-BCA0-4BFE-B43D-EAA4B3F20D42"),
-                Name = "Id",
-                IsVisible = true,
-                Width = 80
-            }.EnsureFrozen();
-            var namePreset = new ColumnViewModelPreset {
-                Id = new Guid("3050F05D-FDCC-43AC-AA63-72CF17E5B7FF"),
-                Name = "Name",
-                IsVisible = true,
-                Width = 200
-            }.EnsureFrozen();
+            var target = relativeTo.DataContext as PresetManagerColumnViewModel;
+            var moveAfter = e.GetPosition(relativeTo).Y >= relativeTo.ActualHeight / 2.0;
+            if (!CanDrop(e.Data, target, moveAfter)) {
+                e.Effects = DragDropEffects.None;
+                layoutListDragPreview.HideOnly();
+            } else {
+                Point position = e.GetPosition(relativeTo);
+                layoutListDragPreview.UpdateAdorner(relativeTo, position);
+            }
 
-            var template = new AsyncDataViewModelPreset();
-            var table = new DataTable("Design");
-
-            AddColumn(table, template, idPreset, DataColumn.Create(x => x));
-            AddColumn(table, template, namePreset, DataColumn.Create(x => "Name" + x));
-
-            return new AsyncDataViewModel(new DataView(table), template) {
-                Preset = template
-            };
+            ItemsControl control = layoutList;
+            TryScrollIntoView(control, e.GetPosition(control));
         }
 
-        private static void AddColumn(
-            DataTable table, AsyncDataViewModelPreset preset,
-            ColumnViewModelPreset columnPreset, DataColumn column)
+        private void TryScrollIntoView(ItemsControl control, Point point)
         {
-            column.Id = columnPreset.Id;
-            column.Name = columnPreset.Name;
-            column.Width = columnPreset.Width;
-            column.IsVisible = columnPreset.IsVisible;
-            column.IsResizable = true;
-            column.TextAlignment = columnPreset.TextAlignment;
-            preset.ConfigurableColumns.Add(columnPreset);
-            table.Add(column);
+            var viewer = control.FindVisualChild<ScrollViewer>();
+            if (viewer == null)
+                return;
+
+            const double threshold = 40.0;
+
+            double wheelScrollLines = SystemParameters.WheelScrollLines;
+            double y = point.Y;
+            double height = control.ActualHeight;
+            if (y < threshold) {
+                var deltaY = wheelScrollLines + (threshold - y);
+                viewer.ScrollToVerticalOffset(viewer.VerticalOffset - deltaY);
+            } else if (y > height - threshold) {
+                var deltaY = wheelScrollLines + (y - (height - threshold));
+                viewer.ScrollToVerticalOffset(viewer.VerticalOffset + deltaY);
+            }
+        }
+
+        private bool CanDrop(IDataObject data, PresetManagerColumnViewModel target, bool moveAfter)
+        {
+            ColumnViewModelPreset[] toAdd;
+            if (data.TryGetArray(out toAdd))
+                return true;
+
+            PresetManagerColumnViewModel[] toMove;
+            if (data.TryGetArray(out toMove))
+                return viewModel.CanMove(toMove, target, moveAfter);
+
+            return false;
+        }
+
+        private void DoDrop(IDataObject data, PresetManagerColumnViewModel target, bool moveAfter)
+        {
+            layoutListDragPreview.Hide();
+
+            PresetManagerColumnViewModel[] toMove;
+            ColumnViewModelPreset[] toAdd;
+            if (data.TryGetArray(out toMove))
+                viewModel.Move(toMove, target, moveAfter);
+            else if (data.TryGetArray(out toAdd))
+                viewModel.Add(toAdd, target, moveAfter);
+        }
+
+        public void AddAvailableListDraggable(UIElement element)
+        {
+            RemoveAvailableListDraggable(element);
+            availableListDragEventSource.Attach(element);
+        }
+
+        public void RemoveAvailableListDraggable(UIElement element)
+        {
+            availableListDragEventSource.Detach(element);
+        }
+
+        public void AddLayoutListDraggable(UIElement element)
+        {
+            RemoveLayoutListDraggable(element);
+            layoutListDragEventSource.Attach(element);
+        }
+
+        public void RemoveLayoutListDraggable(UIElement element)
+        {
+            layoutListDragEventSource.Detach(element);
         }
     }
 }

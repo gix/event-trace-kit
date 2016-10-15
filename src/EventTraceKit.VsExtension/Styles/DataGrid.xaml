@@ -139,7 +139,7 @@
   </Style>
 
   <Style TargetType="DataGridCell">
-    <Setter Property="Background" Value="{DynamicResource {x:Static vsp:TreeViewColors.BackgroundBrushKey}}"/>
+    <Setter Property="Background" Value="Transparent"/>
     <Setter Property="BorderThickness" Value="0"/>
     <Setter Property="Padding" Value="2"/>
     <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -181,8 +181,12 @@
   <Style TargetType="{x:Type DataGrid}">
     <Setter Property="Template" Value="{StaticResource DataGridControlTemplate}"/>
     <Setter Property="BorderThickness" Value="0"/>
-    <Setter Property="Background" Value="{DynamicResource {x:Static vsp:ThemedDialogColors.WindowPanelBrushKey}}"/>
+    <Setter Property="Background" Value="{DynamicResource {x:Static vsp:TreeViewColors.BackgroundBrushKey}}"/>
     <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:ThemedDialogColors.WindowPanelTextBrushKey}}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource {x:Static vsp:ThemedDialogColors.GridLineBrushKey}}"/>
+    <Setter Property="HeadersVisibility" Value="Column"/>
+    <Setter Property="GridLinesVisibility" Value="None"/>
+    <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource {x:Static vsp:ThemedDialogColors.GridLineBrushKey}}"/>
+    <Setter Property="VerticalGridLinesBrush" Value="{DynamicResource {x:Static vsp:ThemedDialogColors.GridLineBrushKey}}"/>
   </Style>
 </ResourceDictionary>

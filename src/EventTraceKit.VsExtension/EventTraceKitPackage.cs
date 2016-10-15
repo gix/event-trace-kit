@@ -8,6 +8,7 @@
     using System.Runtime.InteropServices;
     using Controls;
     using EnvDTE;
+    using Extensions;
     using Microsoft.VisualStudio;
     using Microsoft.VisualStudio.Settings;
     using Microsoft.VisualStudio.Shell;
@@ -215,15 +216,6 @@
         }
 
         public SolutionSettings SolutionSettings { get; set; }
-    }
-
-    public static partial class Extensions
-    {
-        public static WritableSettingsStore GetWritableSettingsStore(this SVsServiceProvider vsServiceProvider)
-        {
-            var shellSettingsManager = new ShellSettingsManager(vsServiceProvider);
-            return shellSettingsManager.GetWritableSettingsStore(SettingsScope.UserSettings);
-        }
     }
 
     public interface IEtkGlobalSettings
