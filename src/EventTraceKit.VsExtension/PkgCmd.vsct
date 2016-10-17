@@ -1,17 +1,23 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable"
               xmlns:xs="http://www.w3.org/2001/XMLSchema">
-  <!-- Definition of the command and menus used by this sample -->
   <Extern href="stdidcmd.h"/>
   <Extern href="vsshlids.h"/>
   <Include href="KnownImageIds.vsct"/>
 
   <!-- Commands definition for the client package -->
-  <Commands package="guidClientPkg">
+  <Commands package="guidEventTraceKitPackage">
     <Menus>
       <Menu guid="guidTraceLogCmdSet" id="idTraceLogToolbar" type="ToolWindowToolbar">
         <Strings>
           <ButtonText>Trace Log</ButtonText>
+        </Strings>
+      </Menu>
+      <Menu guid="guidTraceLogPresetMenuCmdSet" id="PresetMenuController" priority="0x1050" type="Menu">
+        <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarConfigGroup"/>
+        <CommandFlag>TextChanges</CommandFlag>
+        <Strings>
+          <ButtonText>Preset</ButtonText>
         </Strings>
       </Menu>
     </Menus>
@@ -22,6 +28,9 @@
       </Group>
       <Group guid="guidTraceLogCmdSet" id="idTraceLogToolbarConfigGroup" priority="0x2000">
         <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbar"/>
+      </Group>
+      <Group guid="guidTraceLogPresetMenuCmdSet" id="PresetMenuControllerGroup" priority="0x4000" >
+        <Parent guid="guidTraceLogPresetMenuCmdSet" id="PresetMenuController"/>
       </Group>
     </Groups>
 
@@ -35,7 +44,8 @@
       </Button>
       <Button guid="guidTraceLogCmdSet" id="cmdidCaptureLog" priority="0x1010" type="Button">
         <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarCaptureGroup"/>
-        <Icon guid="guidTraceLogToolbarImages" id="bmpCapture"/>
+        <Icon guid="ImageCatalogGuid" id="RecordDot"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <CommandFlag>IconAndText</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
         <Strings>
@@ -44,14 +54,16 @@
       </Button>
       <Button guid="guidTraceLogCmdSet" id="cmdidClearLog" priority="0x1020" type="Button">
         <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarCaptureGroup"/>
-        <Icon guid="guidTraceLogToolbarImages" id="bmpClearLog"/>
+        <Icon guid="ImageCatalogGuid" id="ClearWindowContent"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>&amp;Clear Log</ButtonText>
         </Strings>
       </Button>
       <Button guid="guidTraceLogCmdSet" id="cmdidAutoLog" priority="0x1030" type="Button">
         <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarConfigGroup"/>
-        <Icon guid="guidTraceLogToolbarImages" id="bmpAutoLog"/>
+        <Icon guid="ImageCatalogGuid" id="RunUpdate"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <CommandFlag>IconAndText</CommandFlag>
         <Strings>
           <ButtonText>&amp;Auto-Log</ButtonText>
@@ -60,19 +72,50 @@
       </Button>
       <Button guid="guidTraceLogCmdSet" id="cmdidConfigureSession" priority="0x1040" type="Button">
         <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarConfigGroup"/>
-        <Icon guid="guidTraceLogToolbarImages" id="bmpSettings"/>
+        <Icon guid="ImageCatalogGuid" id="Settings"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>C&amp;onfigure Tracing Session</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidTraceLogCmdSet" id="cmdidOpenViewEditor" priority="0x1050" type="Button">
+      <Button guid="guidTraceLogCmdSet" id="cmdidOpenViewEditor" priority="0x1055" type="Button">
         <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarConfigGroup"/>
-        <Icon guid="guidTraceLogToolbarImages" id="bmpSettings"/>
+        <Icon guid="ImageCatalogGuid" id="ColumnSettings"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Open &amp;View Editor</ButtonText>
         </Strings>
       </Button>
+
+      <Button guid="guidTraceLogPresetMenuCmdSet" id="cmdidPresetMenuDynamicStartCommand" priority="0x1000">
+        <Parent guid="guidTraceLogPresetMenuCmdSet" id="PresetMenuControllerGroup"/>
+        <CommandFlag>DynamicItemStart</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <Strings>
+          <ButtonText>Project</ButtonText>
+        </Strings>
+      </Button>
+
+      <!--<Button guid="guidTraceLogPresetMenuCmdSet" id="cmdidPresetMenuAnchorCommand" priority="0x1050" type="MenuButton">
+        <Parent guid="guidTraceLogPresetMenuCmdSet" id="PresetMenuControllerGroup"/>
+        --><!--<Icon guid="guidImages" id="bmpPicArrows"/>--><!--
+        <CommandFlag>FixMenuController</CommandFlag>
+        <Strings>
+          <ButtonText>Select View Preset</ButtonText>
+        </Strings>
+      </Button>-->
     </Buttons>
+
+    <Combos>
+      <Combo guid="guidComboBoxCmdSet" id="cmdidMyDropDownCombo" type="DropDownCombo"
+             priority="0x1050" defaultWidth="130" idCommandList="cmdidMyDropDownComboGetList">
+        <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarConfigGroup"/>
+        <Strings>
+          <ButtonText>Select View Preset</ButtonText>
+        </Strings>
+      </Combo>
+    </Combos>
 
     <!--The bitmaps section is used to define the bitmaps that are used for the commands.-->
     <Bitmaps>
@@ -87,7 +130,7 @@
   </CommandPlacements>
 
   <Symbols>
-    <GuidSymbol name="guidClientPkg" value="{7867DA46-69A8-40D7-8B8F-92B0DE8084D8}"/>
+    <GuidSymbol name="guidEventTraceKitPackage" value="{7867DA46-69A8-40D7-8B8F-92B0DE8084D8}"/>
 
     <GuidSymbol name="guidTraceLogCmdSet" value="{46A772AB-D554-45B9-8DE2-EF68FCEF6732}">
       <IDSymbol name="idTraceLogToolbar" value="0x1000"/>
@@ -99,6 +142,21 @@
       <IDSymbol name="cmdidClearLog" value="0x0400"/>
       <IDSymbol name="cmdidConfigureSession" value="0x0500"/>
       <IDSymbol name="cmdidOpenViewEditor" value="0x0600"/>
+    </GuidSymbol>
+
+    <GuidSymbol name="guidTraceLogPresetMenuCmdSet" value="{6C7C7E94-B649-4837-95D2-82850C3E441C}">
+      <IDSymbol name="PresetMenuControllerGroup" value="0x0100"/>
+      <IDSymbol name="PresetMenuController" value ="0x0101"/>
+      <IDSymbol name="cmdidPresetMenuAnchorCommand" value="0x1000"/>
+      <!-- Must be highest id. -->
+      <IDSymbol name="cmdidPresetMenuDynamicStartCommand" value="0x2000"/>
+    </GuidSymbol>
+
+    <GuidSymbol name="guidComboBoxCmdSet" value="{C7EE3D3B-D75A-4404-BE56-E8EEF4D19485}">
+      <IDSymbol name="MyToolbar" value="0x1000"/>
+      <IDSymbol name="MyToolbarGroup" value="0x1030"/>
+      <IDSymbol name="cmdidMyDropDownCombo" value="0x101"/>
+      <IDSymbol name="cmdidMyDropDownComboGetList" value="0x102"/>
     </GuidSymbol>
 
     <GuidSymbol name="guidTraceLogToolbarImages" value="{B053DA21-1C9B-42B4-AF85-4C75F075C5E6}">

@@ -5,8 +5,9 @@
   xmlns:utils="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Utilities"
   xmlns:vsui="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
   xmlns:vsi="clr-namespace:Microsoft.Internal.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
+  xmlns:vss="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.14.0"
   xmlns:etk="clr-namespace:EventTraceKit.VsExtension.Controls"
-  xmlns:Windows="clr-namespace:EventTraceKit.VsExtension.Windows">
+  xmlns:etkw="clr-namespace:EventTraceKit.VsExtension.Windows">
 
   <utils:BrushToColorConverter x:Key="BrushToColorConverter"/>
   <vsui:NotNullConverter x:Key="NotNullConverter"/>
@@ -104,8 +105,8 @@
     <Setter Property="Background" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandShelfHighlightGradientBrushKey}}"/>
     <Setter Property="imaging:ImageThemingUtilities.ImageBackgroundColor"
             Value="{Binding Background, RelativeSource={RelativeSource Self}, Converter={StaticResource BrushToColorConverter}}"/>
-    <Setter Property="FontFamily" Value="{DynamicResource VsFont.EnvironmentFontFamily}"/>
-    <Setter Property="FontSize" Value="{DynamicResource VsFont.EnvironmentFontSize}"/>
+    <Setter Property="FontFamily" Value="{DynamicResource {x:Static vss:VsFonts.EnvironmentFontFamilyKey}}"/>
+    <Setter Property="FontSize" Value="{DynamicResource {x:Static vss:VsFonts.EnvironmentFontSizeKey}}"/>
     <Setter Property="KeyboardNavigation.TabNavigation" Value="Cycle"/>
   </Style>
 
@@ -156,7 +157,7 @@
                     BorderThickness="1"/>
             <Border Background="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarMenuBackgroundGradientBeginBrushKey}}"
                     HorizontalAlignment="Left" VerticalAlignment="Top" Height="2"
-                    Margin="{Windows:MenuPopupPositionerExtension ElementName=Bg}">
+                    Margin="{etkw:MenuPopupPositionerExtension ElementName=Bg}">
             </Border>
           </Grid>
         </vsui:SystemDropShadowChrome>

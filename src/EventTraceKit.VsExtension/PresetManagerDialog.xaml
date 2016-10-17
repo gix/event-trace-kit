@@ -7,7 +7,9 @@
   xmlns:sys="clr-namespace:System;assembly=mscorlib"
   xmlns:etkc="clr-namespace:EventTraceKit.VsExtension.Controls"
   xmlns:etkvs="clr-namespace:EventTraceKit.VsExtension"
-  xmlns:vsp="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
+  xmlns:vsui="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
+  xmlns:vss="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.14.0"
+  xmlns:windows="clr-namespace:EventTraceKit.VsExtension.Windows"
   mc:Ignorable="d"
   d:DataContext="{d:DesignInstance {x:Type etkvs:PresetManagerDesignTimeModel}, IsDesignTimeCreatable=True}"
   x:Name="Root"
@@ -22,95 +24,150 @@
     <sys:Double x:Key="Double0P25">0.25</sys:Double>
     <sys:Double x:Key="Double0P375">0.375</sys:Double>
     <sys:Double x:Key="Double0P5">0.5</sys:Double>
+    <vsui:AccessKeyRemovingConverter x:Key="AccessKeyRemovingConverter"/>
     <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
 
+    <Geometry x:Key="DownArrowGeometry">M 0 0 L 3 3 L 6 0 Z</Geometry>
+
+    <Style x:Key="ToolBarMenuStyle" TargetType="{x:Type Menu}" BasedOn="{StaticResource {x:Type Menu}}">
+      <Setter Property="Foreground" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarTextActiveBrushKey}}"/>
+      <Setter Property="FontFamily" Value="{DynamicResource {x:Static vss:VsFonts.EnvironmentFontFamilyKey}}"/>
+      <Setter Property="FontSize" Value="{DynamicResource {x:Static vss:VsFonts.EnvironmentFontSizeKey}}"/>
+      <Setter Property="IsMainMenu" Value="False"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
     <DataTemplate DataType="{x:Type etkvs:HeaderDropDownMenu}">
-      <FrameworkTemplate.Resources>
-      </FrameworkTemplate.Resources>
-      <etkvs:DropDownBox x:Name="dropDownBox" VerticalAlignment="Center" ToolTip="{Binding ToolTip, Mode=OneWay}"
-                     AutomationProperties.Name="{Binding AutomationName, Mode=OneWay}"
-                     Background="Transparent">
-        <etkvs:DropDownBox.Header>
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="Auto"/>
-              <ColumnDefinition Width="Auto"/>
-              <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock x:Name="PresetNameTextBox" Grid.Column="0" Focusable="True" Margin="0,0,4,0"
-                     Background="Transparent" Text="{Binding Header, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-            <Image Grid.Column="1" Stretch="None" HorizontalAlignment="Center" VerticalAlignment="Center"
-                 Margin="0,0,4,0"
-                 Source="/Microsoft.Performance.UI;component/Resources/SplitButton.DownArrow.96.png"/>
-          </Grid>
-        </etkvs:DropDownBox.Header>
-        <ContentControl.Content>
-          <StackPanel>
-            <ItemsControl HorizontalAlignment="Stretch"
-                          Focusable="False"
-                          KeyboardNavigation.TabNavigation="Continue"
-                        KeyboardNavigation.DirectionalNavigation="Cycle"
-                          ItemsSource="{Binding Path=ManagementCommands}">
-              <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                  <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch"/>
-                </ItemsPanelTemplate>
-              </ItemsControl.ItemsPanel>
-              <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                  <Button Margin="0,0,4,0" Width="60" Command="{Binding ExecuteCommand}"
-                          AutomationProperties.Name="{Binding DisplayName}"
-                          Focusable="{Binding IsEnabled}">
-                    <StackPanel Orientation="Vertical">
-                      <Border Background="Transparent">
-                        <Image Stretch="Uniform" Height="20" Width="20" Source="{Binding IconUri}">
-                          <FrameworkElement.Style>
-                            <Style TargetType="{x:Type Image}">
-                              <Style.Triggers>
-                                <Trigger Property="UIElement.IsEnabled" Value="False">
-                                  <Setter Property="UIElement.Opacity" Value="0.25"/>
-                                </Trigger>
-                              </Style.Triggers>
-                            </Style>
-                          </FrameworkElement.Style>
-                        </Image>
-                      </Border>
-                      <Label HorizontalAlignment="Center" Content="{Binding DisplayName}"
-                             AutomationProperties.Name="{Binding DisplayName}"/>
-                    </StackPanel>
-                  </Button>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
-            <Separator BorderBrush="Black" BorderThickness="4"/>
-            <ListView HorizontalAlignment="Stretch" Focusable="False" KeyboardNavigation.DirectionalNavigation="Cycle"
-                    KeyboardNavigation.TabNavigation="Continue" ItemsSource="{Binding Path=Items}">
-              <ItemsControl.ItemContainerStyle>
-                <Style TargetType="{x:Type Control}">
-                  <Setter Property="Focusable" Value="False"/>
-                  <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                  <Setter Property="Background" Value="Transparent"/>
-                  <Setter Property="Template">
-                    <Setter.Value>
-                      <ControlTemplate TargetType="{x:Type ListViewItem}">
-                        <ContentPresenter/>
-                      </ControlTemplate>
-                    </Setter.Value>
-                  </Setter>
-                </Style>
-              </ItemsControl.ItemContainerStyle>
-              <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                  <MenuItem Background="Transparent" KeyboardNavigation.DirectionalNavigation="Continue"
-                               KeyboardNavigation.TabNavigation="Continue" Header="{Binding DisplayName}"
-                               Command="{Binding ExecuteCommand}" IsChecked="{Binding IsChecked}"
-                               AutomationProperties.Name="{Binding DisplayName}"/>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ListView>
-          </StackPanel>
-        </ContentControl.Content>
-      </etkvs:DropDownBox>
+      <Menu FocusManager.IsFocusScope="False" Style="{StaticResource ToolBarMenuStyle}"
+            AutomationProperties.Name="{Binding Header, Converter={StaticResource AccessKeyRemovingConverter}}">
+        <Menu.Template>
+          <ControlTemplate TargetType="{x:Type Menu}">
+            <ItemsPresenter VerticalAlignment="Center"/>
+          </ControlTemplate>
+        </Menu.Template>
+        <MenuItem Header="{Binding Header}" ItemsSource="{Binding Items}"
+                  ToolTipService.ShowOnDisabled="True">
+          <MenuItem.Template>
+            <ControlTemplate TargetType="{x:Type MenuItem}">
+              <Grid x:Name="HostingGrid">
+                <Border x:Name="Bg" Padding="{TemplateBinding Padding}"
+                        Margin="0,1,0,1"
+                        BorderBrush="Transparent"
+                        BorderThickness="1"
+                        Background="{TemplateBinding Background}">
+                  <Grid x:Name="ContentGrid" SnapsToDevicePixels="True"
+                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                        MinHeight="20">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="*"/>
+                      <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <ContentPresenter x:Name="ContentPresenter" HorizontalAlignment="Center"
+                                      VerticalAlignment="Center" Margin="3,0,6,0"
+                                      RecognizesAccessKey="True"
+                                      SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
+                                      Grid.Column="0"
+                                      Content="{Binding Header, RelativeSource={RelativeSource TemplatedParent}}"/>
+                    <Grid Margin="0,0,3,0" Grid.Column="1" HorizontalAlignment="Center"
+                          VerticalAlignment="Center">
+                      <Path x:Name="Arrow"
+                            Fill="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarMenuGlyphBrushKey}}"
+                            Data="{StaticResource DownArrowGeometry}"/>
+                    </Grid>
+                  </Grid>
+                </Border>
+                <Popup x:Name="PART_Popup" HorizontalOffset="0" VerticalOffset="-2"
+                       AllowsTransparency="True" Placement="Bottom"
+                       Focusable="False"
+                       PopupAnimation="{DynamicResource {x:Static SystemParameters.MenuPopupAnimationKey}}"
+                       IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}">
+                  <vsui:SystemDropShadowChrome x:Name="Shdw" vsui:Color="Transparent" SnapsToDevicePixels="True">
+                    <Grid
+                      Background="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarMenuIconBackgroundBrushKey}}">
+                      <etkc:VsMenuScrollViewer>
+                        <Grid
+                          Background="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarMenuBackgroundGradientBrushKey}}"
+                          RenderOptions.BitmapScalingMode="{x:Static vsui:DpiHelper.BitmapScalingMode}"
+                          RenderOptions.ClearTypeHint="Enabled">
+                          <Border x:Name="IconBackground" Width="28"
+                                  Background="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarMenuIconBackgroundBrushKey}}"
+                                  HorizontalAlignment="Left"/>
+                          <ItemsPresenter Margin="3" KeyboardNavigation.TabNavigation="Cycle"
+                                          KeyboardNavigation.DirectionalNavigation="Cycle"
+                                          SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}"
+                                          Grid.IsSharedSizeScope="True"/>
+                        </Grid>
+                      </etkc:VsMenuScrollViewer>
+                      <Border
+                        BorderBrush="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarMenuBorderBrushKey}}"
+                        BorderThickness="1"/>
+                      <Border
+                        Background="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarMenuBackgroundGradientBeginBrushKey}}"
+                        VerticalAlignment="Top" HorizontalAlignment="Left" Height="2"
+                        Margin="{windows:MenuPopupPositioner ElementName=Bg}"/>
+                    </Grid>
+                  </vsui:SystemDropShadowChrome>
+                </Popup>
+              </Grid>
+              <ControlTemplate.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                  <Setter Property="Foreground"
+                          Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarTextInactiveBrushKey}}"/>
+                  <Setter TargetName="Arrow" Property="Fill"
+                          Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarTextInactiveBrushKey}}"/>
+                </Trigger>
+                <Trigger Property="IsSuspendingPopupAnimation" Value="True">
+                  <Setter TargetName="PART_Popup" Property="PopupAnimation" Value="None"/>
+                </Trigger>
+                <DataTrigger
+                  Binding="{Binding AreAnimationsAllowed, Source={x:Static vsui:EnvironmentRenderCapabilities.Current}}"
+                  Value="False">
+                  <Setter TargetName="PART_Popup" Property="PopupAnimation" Value="None"/>
+                </DataTrigger>
+                <MultiDataTrigger>
+                  <MultiDataTrigger.Conditions>
+                    <Condition Binding="{Binding (Popup.HasDropShadow), ElementName=PART_Popup}" Value="True"/>
+                    <Condition
+                      Binding="{Binding AreGradientsAllowed, Source={x:Static vsui:EnvironmentRenderCapabilities.Current}}"
+                      Value="True"/>
+                  </MultiDataTrigger.Conditions>
+                  <Setter TargetName="Shdw" Property="FrameworkElement.Margin" Value="0,0,5,5"/>
+                  <Setter TargetName="Shdw" Property="vsui:SystemDropShadowChrome.Color"
+                          Value="{DynamicResource {x:Static vsui:EnvironmentColors.DropShadowBackgroundColorKey}}"/>
+                </MultiDataTrigger>
+                <Trigger Property="IsHighlighted" Value="True">
+                  <Setter Property="Foreground"
+                          Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarTextHoverBrushKey}}"/>
+                  <Setter TargetName="Bg" Property="BorderBrush"
+                          Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarBorderBrushKey}}"/>
+                  <Setter TargetName="Bg" Property="Background"
+                          Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarMouseOverBackgroundGradientBrushKey}}"/>
+                  <Setter TargetName="Arrow" Property="Fill"
+                          Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarMenuMouseOverGlyphBrushKey}}"/>
+                </Trigger>
+                <Trigger Property="IsSubmenuOpen" Value="True">
+                  <Setter Property="Foreground"
+                          Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarTextActiveBrushKey}}"/>
+                  <Setter TargetName="Bg" Property="BorderBrush"
+                          Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarMenuBorderBrushKey}}"/>
+                  <Setter TargetName="Bg" Property="Background"
+                          Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarMenuBackgroundGradientBeginBrushKey}}"/>
+                  <Setter TargetName="Arrow" Property="Fill"
+                          Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarMenuMouseDownGlyphBrushKey}}"/>
+                </Trigger>
+              </ControlTemplate.Triggers>
+            </ControlTemplate>
+          </MenuItem.Template>
+          <MenuItem.ItemContainerStyle>
+            <Style TargetType="{x:Type MenuItem}">
+              <Setter Property="Header" Value="{Binding DisplayName}"/>
+              <Setter Property="IsChecked" Value="{Binding IsChecked}"/>
+              <Setter Property="Command" Value="{Binding ExecuteCommand}"/>
+            </Style>
+          </MenuItem.ItemContainerStyle>
+        </MenuItem>
+      </Menu>
     </DataTemplate>
 
     <Style x:Key="AvailableColumnsListBoxItem" TargetType="{x:Type ListBoxItem}"
@@ -135,7 +192,7 @@
                 <Condition Binding="{Binding IsFrozen}" Value="True"/>
                 <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource Self}}" Value="False"/>
               </MultiDataTrigger.Conditions>
-              <Setter Property="Background" Value="{DynamicResource {x:Static vsp:CommonControlsColors.ButtonDisabledBrushKey}}"/>
+              <Setter Property="Background" Value="{DynamicResource {x:Static vsui:CommonControlsColors.ButtonDisabledBrushKey}}"/>
             </MultiDataTrigger>
           </Style.Triggers>
         </Style>
@@ -165,12 +222,12 @@
                   </Border>
                 </Border>
                 <ControlTemplate.Triggers>
-                  <DataTrigger Value="True" Binding="{Binding IsFrozen}">
-                    <Setter Property="Background" Value="{DynamicResource {x:Static vsp:CommonControlsColors.ButtonDisabledBrushKey}}"/>
+                  <DataTrigger Binding="{Binding IsFrozen}" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource {x:Static vsui:CommonControlsColors.ButtonDisabledBrushKey}}"/>
                   </DataTrigger>
                   <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource {x:Static vsp:TreeViewColors.SelectedItemActiveBrushKey}}"/>
-                    <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:TreeViewColors.SelectedItemActiveTextBrushKey}}"/>
+                    <Setter Property="Background" Value="{DynamicResource {x:Static vsui:TreeViewColors.SelectedItemActiveBrushKey}}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource {x:Static vsui:TreeViewColors.SelectedItemActiveTextBrushKey}}"/>
                     <Setter TargetName="InnerBorder" Property="BorderBrush" Value="#80FFFFFF"/>
                   </Trigger>
                   <MultiTrigger>
@@ -178,11 +235,11 @@
                       <Condition Property="IsSelected" Value="True"/>
                       <Condition Property="Selector.IsSelectionActive" Value="False"/>
                     </MultiTrigger.Conditions>
-                    <Setter Property="Background" Value="{DynamicResource {x:Static vsp:TreeViewColors.SelectedItemInactiveBrushKey}}"/>
-                    <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:TreeViewColors.SelectedItemInactiveTextBrushKey}}"/>
+                    <Setter Property="Background" Value="{DynamicResource {x:Static vsui:TreeViewColors.SelectedItemInactiveBrushKey}}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource {x:Static vsui:TreeViewColors.SelectedItemInactiveTextBrushKey}}"/>
                   </MultiTrigger>
                   <Trigger Property="IsEnabled" Value="False">
-                    <Setter Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" Property="Control.Foreground"/>
+                    <Setter Property="Control.Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
                   </Trigger>
                 </ControlTemplate.Triggers>
               </ControlTemplate>
@@ -252,7 +309,7 @@
               <ComboBox x:Name="textAlignmentComboBox" Grid.Row="0" Grid.Column="1"
                         AutomationProperties.Name="Text Alignment"
                         Margin="4,2,0,2"
-                        Padding="4,2"
+                        Padding="5,3"
                         VerticalAlignment="Center"
                         SelectedItem="{Binding TextAlignment}"
                         ItemsSource="{Binding Source={StaticResource TextAlignmentValues}}"/>
@@ -272,7 +329,7 @@
               <ComboBox x:Name="customFormatComboBox" Grid.Row="2" Grid.Column="1"
                         AutomationProperties.Name="Format"
                         Margin="4,2,0,2"
-                        Padding="4,2"
+                        Padding="5,3"
                         VerticalAlignment="Center"
                         IsEditable="False"
                         DisplayMemberPath="Description"
@@ -292,12 +349,191 @@
     </etkvs:PresetManagerColumnDetailsTemplateSelector>
 
     <Style x:Key="HeaderStyle" TargetType="{x:Type Border}">
-      <Setter Property="TextBlock.Foreground" Value="{DynamicResource {x:Static vsp:HeaderColors.DefaultTextBrushKey}}"/>
-      <Setter Property="Background" Value="{DynamicResource {x:Static vsp:HeaderColors.DefaultBrushKey}}"/>
-      <Setter Property="BorderBrush" Value="{DynamicResource {x:Static vsp:HeaderColors.SeparatorLineBrushKey}}"/>
+      <Setter Property="TextBlock.Foreground" Value="{DynamicResource {x:Static vsui:HeaderColors.DefaultTextBrushKey}}"/>
+      <Setter Property="Background" Value="{DynamicResource {x:Static vsui:HeaderColors.DefaultBrushKey}}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource {x:Static vsui:HeaderColors.SeparatorLineBrushKey}}"/>
       <Setter Property="BorderThickness" Value="0,0,0,1"/>
       <Setter Property="Padding" Value="4"/>
     </Style>
+
+    <Style x:Key="HorizontalToolBarThumbStyle" TargetType="{x:Type Thumb}">
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="{x:Type Thumb}">
+            <ControlTemplate.Triggers>
+              <Trigger Property="UIElement.IsMouseOver" Value="True">
+                <Setter Property="FrameworkElement.Cursor" Value="SizeAll"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+            <Border Padding="{TemplateBinding Control.Padding}" Background="Transparent" SnapsToDevicePixels="True">
+              <Rectangle Fill="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarDragHandleVerticalTextureBrushKey}}"/>
+            </Border>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <Style x:Key="VsToolBar" TargetType="{x:Type ToolBar}" BasedOn="{StaticResource {x:Type ToolBar}}">
+      <Setter Property="Background" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarGradientBrushKey}}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarToolBarBorderBrushKey}}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="FontFamily" Value="{DynamicResource {x:Static vss:VsFonts.EnvironmentFontFamilyKey}}"/>
+      <Setter Property="FontSize" Value="{DynamicResource {x:Static vss:VsFonts.EnvironmentFontSizeKey}}"/>
+      <Setter Property="Margin" Value="0"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="{x:Type ToolBar}">
+            <Grid x:Name="Grid" SnapsToDevicePixels="True">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition x:Name="ShifterColumn" Width="10"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="*"/>
+                  <RowDefinition x:Name="ShifterRow" Height="10"/>
+                </Grid.RowDefinitions>
+                <Border x:Name="MainPanelBorder"
+                        Background="{TemplateBinding Panel.Background}"
+                        BorderBrush="{TemplateBinding Border.BorderBrush}"
+                        BorderThickness="{TemplateBinding Border.BorderThickness}"
+                        Padding="{TemplateBinding Control.Padding}">
+                  <DockPanel KeyboardNavigation.TabIndex="1" KeyboardNavigation.TabNavigation="Local">
+                    <Thumb x:Name="ToolBarThumb" Style="{StaticResource HorizontalToolBarThumbStyle}" Width="8" Padding="2,3,1,3"/>
+                    <ContentPresenter x:Name="ToolBarHeader" ContentSource="Header" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="4,0,4,0" SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}"/>
+                    <ToolBarPanel x:Name="PART_ToolBarPanel" IsItemsHost="True" SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}"/>
+                  </DockPanel>
+                </Border>
+              </Grid>
+            </Grid>
+            <ControlTemplate.Triggers>
+              <Trigger Property="ToolBar.IsOverflowOpen" Value="True">
+                <Setter TargetName="ToolBarThumb" Property="IsEnabled" Value="False"/>
+              </Trigger>
+              <Trigger Property="HeaderedContentControl.Header" Value="{x:Null}">
+                <Setter TargetName="ToolBarHeader" Property="Visibility" Value="Collapsed"/>
+              </Trigger>
+              <Trigger Property="ToolBarTray.IsLocked" Value="True">
+                <Setter TargetName="ToolBarThumb" Property="Visibility" Value="Collapsed"/>
+              </Trigger>
+              <Trigger Property="ToolBar.Orientation" Value="Vertical">
+                <Setter TargetName="ToolBarThumb" Property="FrameworkElement.Height" Value="8"/>
+                <Setter TargetName="ToolBarThumb" Property="FrameworkElement.Width" Value="Auto"/>
+                <Setter TargetName="ToolBarThumb" Property="Control.Padding" Value="3,2,3,1"/>
+                <Setter TargetName="ToolBarThumb" Property="DockPanel.Dock" Value="Top"/>
+                <Setter TargetName="ToolBarHeader" Property="FrameworkElement.Margin" Value="0,0,0,4"/>
+                <Setter TargetName="ToolBarHeader" Property="DockPanel.Dock" Value="Top"/>
+                <Setter TargetName="PART_ToolBarPanel" Property="FrameworkElement.Margin" Value="1,0,2,2"/>
+                <Setter Property="Background" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarHorizontalGradientBrushKey}}"/>
+                <Setter Property="MinWidth" Value="24"/>
+                <Setter Property="MinHeight" Value="0"/>
+              </Trigger>
+              <Trigger Property="ToolBar.Orientation" Value="Horizontal">
+                <Setter Property="MinWidth" Value="0"/>
+                <Setter Property="MinHeight" Value="24"/>
+              </Trigger>
+              <Trigger Property="ToolBar.Orientation" Value="Horizontal">
+                <Setter TargetName="ShifterRow" Property="RowDefinition.Height" Value="0"/>
+              </Trigger>
+              <Trigger Property="ToolBar.Orientation" Value="Vertical">
+                <Setter TargetName="ShifterColumn" Property="ColumnDefinition.Width" Value="0"/>
+              </Trigger>
+              <DataTrigger Binding="{Binding Visibility, ElementName=OverflowButton}" Value="Collapsed">
+                <Setter TargetName="ShifterRow" Property="RowDefinition.Height" Value="0"/>
+                <Setter TargetName="ShifterColumn" Property="ColumnDefinition.Width" Value="0"/>
+              </DataTrigger>
+              <Trigger Property="UIElement.IsEnabled" Value="False">
+                <Setter Property="TextElement.Foreground" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarTextInactiveBrushKey}}"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <Style x:Key="ToolBarButtonBaseStyle" TargetType="{x:Type ButtonBase}">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarTextActiveBrushKey}}"/>
+      <Setter Property="SnapsToDevicePixels" Value="True"/>
+      <Setter Property="ToolTipService.ShowOnDisabled" Value="True"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="{x:Type ButtonBase}">
+            <Border x:Name="Border" BorderThickness="1" Background="Transparent" BorderBrush="Transparent">
+              <Grid x:Name="ContainingGrid" MinHeight="20">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <ContentPresenter x:Name="Image" Margin="2" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed" RecognizesAccessKey="True"/>
+                <AccessText x:Name="Text" Margin="7,0,7,0" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Visible" Text="{TemplateBinding Content}"/>
+              </Grid>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="UIElement.IsEnabled" Value="False">
+                <Setter TargetName="Text" Property="Foreground" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarTextInactiveBrushKey}}"/>
+              </Trigger>
+              <Trigger Property="IsKeyboardFocused" Value="True">
+                <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarBorderBrushKey}}"/>
+                <Setter TargetName="Border" Property="Background" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarMouseOverBackgroundGradientBrushKey}}"/>
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarTextHoverBrushKey}}"/>
+              </Trigger>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarBorderBrushKey}}"/>
+                <Setter TargetName="Border" Property="Background" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarMouseOverBackgroundGradientBrushKey}}"/>
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarTextHoverBrushKey}}"/>
+              </Trigger>
+              <MultiTrigger>
+                <MultiTrigger.Conditions>
+                  <Condition Property="IsEnabled" Value="True"/>
+                  <Condition Property="ToggleButton.IsChecked" Value="True"/>
+                </MultiTrigger.Conditions>
+                <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarSelectedBorderBrushKey}}"/>
+                <Setter TargetName="Border" Property="Background" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarSelectedBrushKey}}"/>
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarTextSelectedBrushKey}}"/>
+              </MultiTrigger>
+              <Trigger Property="ButtonBase.IsPressed" Value="True">
+                <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarBorderBrushKey}}"/>
+                <Setter TargetName="Border" Property="Background" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarMouseDownBackgroundGradientBrushKey}}"/>
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarTextMouseDownBrushKey}}"/>
+              </Trigger>
+              <MultiTrigger>
+                <MultiTrigger.Conditions>
+                  <Condition Property="IsMouseOver" Value="True"/>
+                  <Condition Property="IsEnabled" Value="True"/>
+                  <Condition Property="ToggleButton.IsChecked" Value="true"/>
+                </MultiTrigger.Conditions>
+                <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarHoverOverSelectedIconBorderBrushKey}}"/>
+                <Setter TargetName="Border" Property="Background" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarHoverOverSelectedIconBrushKey}}"/>
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarTextHoverOverSelectedBrushKey}}"/>
+              </MultiTrigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="VsToolBarButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource ToolBarButtonBaseStyle}">
+      <Setter Property="Panel.Background" Value="Transparent"/>
+      <Setter Property="InputMethod.IsInputMethodSuspended" Value="True"/>
+    </Style>
+    <Style x:Key="VsToolBarTrayStyle" TargetType="{x:Type ToolBarTray}" BasedOn="{StaticResource {x:Type ToolBarTray}}">
+      <Style.Resources>
+        <Style x:Key="{x:Static ToolBar.ButtonStyleKey}" TargetType="{x:Type Button}" BasedOn="{StaticResource VsToolBarButtonStyle}"/>
+        <Style TargetType="{x:Type ToolBar}" BasedOn="{StaticResource VsToolBar}">
+          <Setter Property="Padding" Value="4,2,4,2"/>
+          <Setter Property="Margin" Value="0"/>
+          <Setter Property="UseLayoutRounding" Value="True"/>
+          <Setter Property="BorderThickness" Value="0"/>
+          <Setter Property="BorderBrush" Value="{x:Null}"/>
+          <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+          <Setter Property="RenderOptions.BitmapScalingMode" Value="{x:Static vsui:DpiHelper.BitmapScalingMode}"/>
+        </Style>
+      </Style.Resources>
+      <Setter Property="IsLocked" Value="True"/>
+      <Setter Property="Margin" Value="0"/>
+      <Setter Property="Background" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarGradientBrushKey}}"/>
+    </Style>
+
   </etkvs:ThemedDialogWindow.Resources>
   <Grid>
     <Grid.RowDefinitions>
@@ -305,13 +541,16 @@
       <RowDefinition Height="*"/>
       <RowDefinition Height="Auto"/>
     </Grid.RowDefinitions>
-    <Grid Row="0" Background="{Binding HeaderBrush, ElementName=Root, Mode=OneWay}">
-      <StackPanel Orientation="Horizontal">
+    <ToolBarTray Grid.Row="0" Style="{StaticResource VsToolBarTrayStyle}">
+      <ToolBar>
         <TextBlock Margin="4,0,0,0" VerticalAlignment="Center" Text="{Binding DisplayName}"/>
         <ContentControl Margin="4,0,0,0" Focusable="False" Content="{Binding PresetDropDownMenu}"/>
-        <ContentControl Margin="4,0,0,0" Focusable="False" VerticalAlignment="Center" Content="{Binding AdvancedButton}"/>
-      </StackPanel>
-    </Grid>
+        <Button Content="Save" Command="{Binding SavePresetCommand}"/>
+        <Button Content="Save As…" Command="{Binding SavePresetAsCommand}"/>
+        <Button Content="Reset" Command="{Binding ResetPresetCommand}"/>
+        <Button Content="Delete" Command="{Binding DeletePresetCommand}"/>
+      </ToolBar>
+    </ToolBarTray>
     <Grid Grid.Row="1" Margin="7">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="175"
@@ -327,7 +566,7 @@
       </Grid.ColumnDefinitions>
 
       <Border BorderThickness="1"
-              BorderBrush="{DynamicResource {x:Static vsp:ThemedDialogColors.GridLineBrushKey}}">
+              BorderBrush="{DynamicResource {x:Static vsui:ThemedDialogColors.GridLineBrushKey}}">
         <Grid>
           <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -392,7 +631,7 @@
                               <Condition Binding="{Binding IsVisible}" Value="False"/>
                               <Condition Binding="{Binding IsSelected, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" Value="False"/>
                             </MultiDataTrigger.Conditions>
-                            <Setter Property="Foreground" Value="{DynamicResource {x:Static vsp:CommonControlsColors.ButtonDisabledTextBrushKey}}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource {x:Static vsui:CommonControlsColors.ButtonDisabledTextBrushKey}}"/>
                           </MultiDataTrigger>
                         </Style.Triggers>
                       </Style>
@@ -409,7 +648,7 @@
                     HorizontalAlignment="Left" VerticalAlignment="Stretch"/>
 
       <Border Grid.Column="4" BorderThickness="1"
-              BorderBrush="{DynamicResource {x:Static vsp:ThemedDialogColors.GridLineBrushKey}}">
+              BorderBrush="{DynamicResource {x:Static vsui:ThemedDialogColors.GridLineBrushKey}}">
         <Grid>
           <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -427,24 +666,22 @@
         </Grid>
       </Border>
     </Grid>
-    <Border Grid.Row="2" BorderBrush="LightGray" BorderThickness="0,1,0,0"
-            Background="#D8D8D8" Padding="7">
+    <Border Grid.Row="2" Padding="7"
+            Background="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarGradientBrushKey}}">
       <Grid>
         <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="Auto"/>
           <ColumnDefinition Width="*"/>
           <ColumnDefinition Width="Auto"/>
           <ColumnDefinition Width="Auto"/>
           <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
-        <Button Grid.Column="0" Click="SaveButtonClickHandler" Content="Manage…"/>
-        <TextBlock Grid.Column="1" Text="{Binding AreFiltersValid}" FontWeight="Bold" Foreground="Red"
-                   TextWrapping="WrapWithOverflow" Margin="7,0,7,0"/>
-        <Button Grid.Column="2" Content="OK" Click="CloseButtonClickHandler" IsDefault="True" Margin="1,1,7,1"/>
-        <Button Grid.Column="3" Content="Cancel" Click="CancelButtonClickHandler" IsCancel="True" Margin="1,1,7,1"/>
-        <Button Grid.Column="4" Content="Apply" Click="ApplyButtonClickHandler"
-                IsEnabled="{Binding CanApply}"/>
+        <Button Grid.Column="1" Content="OK" Click="CloseButtonClickHandler" IsDefault="True" Margin="1,1,7,1"/>
+        <Button Grid.Column="2" Content="Cancel" Click="CancelButtonClickHandler" IsCancel="True" Margin="1,1,7,1"/>
+        <Button Grid.Column="3" Content="Apply" Click="ApplyButtonClickHandler" IsEnabled="{Binding CanApply}"/>
       </Grid>
     </Border>
   </Grid>
 </etkvs:ThemedDialogWindow>
+
+
+

@@ -10,6 +10,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
     public class BindableScrollBar : ScrollBar
     {
         private readonly ScrollEventHandler scrollBarScrollHandler;
+        private readonly RoutedPropertyChangedEventHandler<double> scrollBarValueChangedHandler;
         private readonly ScrollChangedEventHandler scrollViewerScrollChangedHandler;
 
         static BindableScrollBar()
@@ -20,6 +21,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         public BindableScrollBar()
         {
             scrollBarScrollHandler = OnScrollBarScroll;
+            scrollBarValueChangedHandler = OnScrollBarValueChanged;
             scrollViewerScrollChangedHandler = OnScrollViewerScrollChanged;
         }
 
@@ -78,12 +80,17 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             ClearValue(VisibilityProperty);
 
             oldViewer.RemoveHandler(ScrollViewer.ScrollChangedEvent, scrollViewerScrollChangedHandler);
-            RemoveHandler(ScrollEvent, scrollBarScrollHandler);
+            RemoveHandler(ValueChangedEvent, scrollBarValueChangedHandler);
+            //RemoveHandler(ScrollEvent, scrollBarScrollHandler);
         }
 
         private void BindToScrollViewer(ScrollViewer newViewer)
         {
-            AddHandler(ScrollEvent, scrollBarScrollHandler);
+            // NB: Using only ScrollEvent works for every action except shift-
+            // clicking the scrollbar track. ValueChangedEvent seems to work for
+            // everything.
+            //AddHandler(ScrollEvent, scrollBarScrollHandler);
+            AddHandler(ValueChangedEvent, scrollBarValueChangedHandler);
             newViewer.AddHandler(ScrollViewer.ScrollChangedEvent, scrollViewerScrollChangedHandler);
 
             Binding maximumBinding;
@@ -182,6 +189,18 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         }
 
         private void OnScrollBarScroll(object sender, ScrollEventArgs e)
+        {
+            switch (Orientation) {
+                case Orientation.Horizontal:
+                    ScrollViewer.ScrollToHorizontalOffset(e.NewValue);
+                    break;
+                case Orientation.Vertical:
+                    ScrollViewer.ScrollToVerticalOffset(e.NewValue);
+                    break;
+            }
+        }
+
+        private void OnScrollBarValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             switch (Orientation) {
                 case Orientation.Horizontal:

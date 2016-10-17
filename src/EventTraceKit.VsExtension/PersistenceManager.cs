@@ -15,7 +15,6 @@
         private static PersistenceManager persistenceManager;
 
         public HdvPresetCollections PresetCache;
-        private Dictionary<DataTableGraphTreeItem, AsyncDataViewModel> currentHdvViewModelValues;
         private bool hasUnsavedChanges;
         private DependencyPropertyDescriptor hdvViewModelDPD;
 
@@ -23,7 +22,6 @@
         {
             this.PresetCache = new HdvPresetCollections();
             this.hdvViewModelDPD = DependencyPropertyDescriptor.FromProperty(DataTableGraphTreeItem.HdvViewModelProperty, typeof(DataTableGraphTreeItem));
-            this.currentHdvViewModelValues = new Dictionary<DataTableGraphTreeItem, AsyncDataViewModel>();
             this.hasUnsavedChanges = false;
             //WeakEventManager<WpaApplication, UISessionEventArgs>.AddHandler(WpaApplication.Current, "UISessionAdded", new EventHandler<UISessionEventArgs>(this.onUISessionAdded));
         }
@@ -150,7 +148,7 @@
 
         public void Attach(DataTableGraphTreeItem dtGti)
         {
-            this.checkHdvViewModelThenExecute(dtGti, delegate (DataTableGraphTreeItem _) {
+            this.checkHdvViewModelThenExecute(dtGti, delegate {
                 this.TryApplyModifiedPreset(dtGti);
                 //setDataTableGraphTreeItem(dtGti.HdvViewModel, dtGti);
                 WeakEventManager<AsyncDataViewModel, ValueChangedEventArgs<AsyncDataViewModelPreset>>.AddHandler(

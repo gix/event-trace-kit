@@ -240,22 +240,24 @@ namespace EventTraceKit.VsExtension.Controls
                             foreground = selectionForeground;
 
                         var value = column.GetCellValue(row, viewportSizeHint);
-                        var formatted = new FormattedText(
-                            value?.ToString() ?? string.Empty, currentCulture,
-                            flowDirection, typeface, fontSize, foreground, null,
-                            TextFormattingMode.Display);
-                        formatted.MaxTextWidth = Math.Max(cellWidth - totalPadding, 0);
-                        formatted.MaxTextHeight = rowHeight;
-                        formatted.TextAlignment = column.TextAlignment;
-                        formatted.Trimming = TextTrimming.CharacterEllipsis;
+                        if (value != null) {
+                            var formatted = new FormattedText(
+                                value.ToString(), currentCulture,
+                                flowDirection, typeface, fontSize, foreground, null,
+                                TextFormattingMode.Display);
+                            formatted.MaxTextWidth = Math.Max(cellWidth - totalPadding, 0);
+                            formatted.MaxTextHeight = rowHeight;
+                            formatted.TextAlignment = column.TextAlignment;
+                            formatted.Trimming = TextTrimming.CharacterEllipsis;
 
-                        if (totalPadding < cellWidth) {
-                            var offsetY = (rowHeight - formatted.Height) / 2;
-                            var origin = new Point(
-                                leftEdge + padding,
-                                topEdge + offsetY);
-                            origin = origin.Round(MidpointRounding.AwayFromZero);
-                            context.DrawText(formatted, origin);
+                            if (totalPadding < cellWidth) {
+                                var offsetY = (rowHeight - formatted.Height) / 2;
+                                var origin = new Point(
+                                    leftEdge + padding,
+                                    topEdge + offsetY);
+                                origin = origin.Round(MidpointRounding.AwayFromZero);
+                                context.DrawText(formatted, origin);
+                            }
                         }
                     }
                 }

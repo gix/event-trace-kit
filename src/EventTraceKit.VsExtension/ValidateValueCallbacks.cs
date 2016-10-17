@@ -1,10 +1,14 @@
 ﻿namespace EventTraceKit.VsExtension
 {
+    using System.Windows;
+
     public static class ValidateValueCallbacks
     {
-        public static bool IsFiniteDouble(object value)
+        private static bool IsFiniteDoubleImpl(object value)
         {
             return value is double && ((double)value).IsFinite();
         }
+
+        public static ValidateValueCallback IsFiniteDouble { get; } = IsFiniteDoubleImpl;
     }
 }

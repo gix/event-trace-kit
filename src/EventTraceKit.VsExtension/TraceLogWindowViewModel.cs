@@ -6,11 +6,13 @@ namespace EventTraceKit.VsExtension
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows;
+    using System.Windows.Controls;
     using System.Windows.Threading;
     using Collections;
     using Controls;
     using Formatting;
     using Microsoft.VisualStudio.Shell;
+    using Microsoft.VisualStudio.Shell.Interop;
     using Task = System.Threading.Tasks.Task;
 
     public class TraceLogWindowViewModel : ViewModel, IEventInfoSource
@@ -278,21 +280,21 @@ namespace EventTraceKit.VsExtension
 
         public void Attach(IMenuCommandService commandService)
         {
-            var id = new CommandID(Guids.TraceLogCmdSet, PkgCmdId.cmdidCaptureLog);
+            var id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidCaptureLog);
             commandService.AddCommand(
                 new OleMenuCommand(OnToggleCaptureLog, null, OnQueryToggleCaptureLog, id));
 
-            id = new CommandID(Guids.TraceLogCmdSet, PkgCmdId.cmdidClearLog);
+            id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidClearLog);
             commandService.AddCommand(new OleMenuCommand((s, e) => Clear(), id));
 
-            id = new CommandID(Guids.TraceLogCmdSet, PkgCmdId.cmdidAutoLog);
+            id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidAutoLog);
             commandService.AddCommand(
                 new OleMenuCommand(OnToggleAutoLog, null, OnQueryToggleAutoLog, id));
 
-            id = new CommandID(Guids.TraceLogCmdSet, PkgCmdId.cmdidConfigureSession);
+            id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidConfigureSession);
             commandService.AddCommand(new OleMenuCommand(OnConfigureLog, id));
 
-            id = new CommandID(Guids.TraceLogCmdSet, PkgCmdId.cmdidOpenViewEditor);
+            id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidOpenViewEditor);
             commandService.AddCommand(new OleMenuCommand((s, e) => OpenViewEditor(), id));
         }
 

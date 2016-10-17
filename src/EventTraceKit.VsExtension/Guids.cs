@@ -8,8 +8,6 @@ namespace EventTraceKit.VsExtension
     /// </summary>
     internal static class Guids
     {
-        public static readonly Guid TraceLogCmdSet = new Guid("46A772AB-D554-45B9-8DE2-EF68FCEF6732");
-
         /// <summary>
         /// This Guid is the persistence guid for the output window.
         /// It can be found by running this sample, bringing up the output window,

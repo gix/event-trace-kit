@@ -88,11 +88,6 @@
             viewModel.ApplyChanges();
         }
 
-        public static void ShowPresetManagerDialog(AsyncDataViewModel adv)
-        {
-            CreateDialog(adv).ShowModal();
-        }
-
         public static PresetManagerDialog CreateDialog(AsyncDataViewModel adv)
         {
             if (adv == null)
@@ -100,6 +95,11 @@
 
             var viewModel = new PresetManagerViewModel(adv);
             return new PresetManagerDialog(viewModel);
+        }
+
+        public static void ShowPresetManagerDialog(AsyncDataViewModel adv)
+        {
+            CreateDialog(adv).ShowModal();
         }
 
         private void OnAvailableListItemLoaded(object sender, RoutedEventArgs e)

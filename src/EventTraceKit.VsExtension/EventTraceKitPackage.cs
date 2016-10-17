@@ -1,11 +1,14 @@
 ﻿namespace EventTraceKit.VsExtension
 {
     using System;
+    using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.ComponentModel.Composition;
     using System.ComponentModel.Design;
     using System.IO;
     using System.Runtime.InteropServices;
+    using System.Windows;
+    using System.Windows.Documents;
     using Controls;
     using EnvDTE;
     using Extensions;
@@ -104,8 +107,177 @@
 
         private void AddMenuCommandHandlers()
         {
-            var id = new CommandID(Guids.TraceLogCmdSet, PkgCmdId.cmdidTraceLog);
+            var id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidTraceLog);
             DefineCommandHandler(id, ShowTraceLogWindow);
+
+            id = new CommandID(PkgCmdId.TraceLogPresetMenuCmdSet, PkgCmdId.cmdidPresetMenuDynamicStartCommand);
+            var command = new DynamicItemMenuCommand(
+                id,
+                IsValidDynamicItem,
+                OnInvokedDynamicItem,
+                OnBeforeQueryStatusDynamicItem);
+            menuService?.AddCommand(command);
+
+            id = new CommandID(PkgCmdId.ComboBoxCmdSet, PkgCmdId.cmdidMyDropDownCombo);
+            menuService?.AddCommand(new OleMenuCommand(OnMenuMyDropDownCombo, id) {
+                ParametersDescription = "$"
+            });
+
+            id = new CommandID(PkgCmdId.ComboBoxCmdSet, PkgCmdId.cmdidMyDropDownComboGetList);
+            menuService?.AddCommand(
+                new OleMenuCommand(OnMenuMyDropDownComboGetList, id));
+
+            id = new CommandID(PkgCmdId.TraceLogPresetMenuCmdSet, 0x0101);
+            menuService?.AddCommand(
+                new OleMenuCommand(null, null, (s, e) => {
+                    var cmd = (OleMenuCommand)s;
+                    cmd.Text = "foo*" + (c++);
+                }, id));
+        }
+
+        private int c;
+
+        private void OnMenuMyDropDownCombo(object sender, EventArgs args)
+        {
+            var cmdEventArgs = args as OleMenuCmdEventArgs;
+            if (cmdEventArgs == null)
+                throw new ArgumentException(nameof(args));
+
+            string newChoice = cmdEventArgs.InValue as string;
+            IntPtr outValue = cmdEventArgs.OutValue;
+            if (newChoice != null && outValue != IntPtr.Zero)
+                throw new ArgumentException("BothInOutParamsIllegal");
+
+            if (outValue != IntPtr.Zero) {
+                Marshal.GetNativeVariantForObject(currentDropDownComboChoice, outValue);
+            } else if (newChoice != null) {
+                bool validInput = false;
+                int idx;
+                for (idx = 0; idx < dropDownComboChoices.Length; ++idx) {
+                    if (string.Compare(dropDownComboChoices[idx], newChoice,
+                            StringComparison.CurrentCultureIgnoreCase) == 0) {
+                        validInput = true;
+                        break;
+                    }
+                }
+
+                if (!validInput)
+                    throw new ArgumentException("ParamNotValidStringInList");
+
+                currentDropDownComboChoice = dropDownComboChoices[idx];
+                MessageBox.Show(currentDropDownComboChoice);
+            }
+        }
+
+        private string currentDropDownComboChoice;
+        private List<string> dropDownComboChoicesList = new List<string> { "Foo", "Bar", "Baz" };
+        private string[] dropDownComboChoices = new[] { "Foo", "Bar", "Baz" };
+
+        private void OnMenuMyDropDownComboGetList(object sender, EventArgs args)
+        {
+            var cmdEventArgs = args as OleMenuCmdEventArgs;
+            if (cmdEventArgs == null)
+                return;
+
+            object inValue = cmdEventArgs.InValue;
+            IntPtr outValue = cmdEventArgs.OutValue;
+            if (inValue != null)
+                throw new ArgumentException("InParamIllegal");
+            if (outValue == IntPtr.Zero)
+                throw new ArgumentException("OutParamRequired");
+
+            dropDownComboChoicesList.Add("X" + dropDownComboChoicesList.Count);
+            dropDownComboChoices = dropDownComboChoicesList.ToArray();
+            Marshal.GetNativeVariantForObject(dropDownComboChoices, outValue);
+        }
+
+        private void OnInvokedDynamicItem(object sender, EventArgs args)
+        {
+            var command = (DynamicItemMenuCommand)sender;
+            if (command.Checked)
+                return;
+
+            bool isRootItem = command.MatchedCommandId == 0;
+            int idx = command.MatchedCommandId - PkgCmdId.cmdidPresetMenuDynamicStartCommand;
+            int indexForDisplay = isRootItem ? 0 : idx;
+            var entry = indexForDisplay < presetNames.Count ? presetNames[indexForDisplay] : Tuple.Create("OutOfBounds", "OutOfBounds");
+            MessageBox.Show(entry.Item2);
+
+            UpdateCommand(PkgCmdId.TraceLogPresetMenuCmdSet, 0x0101);
+        }
+
+        private void UpdateCommand(Guid menuGroup, int cmdId)
+        {
+            var uiShell = this.GetService<SVsUIShell, IVsUIShell>();
+            uiShell?.UpdateCommandUI(0);
+        }
+
+        private List<Tuple<string, string>> presetNames = new List<Tuple<string, string>> {
+            Tuple.Create("Foo", "23"),
+            Tuple.Create("Bar", "42"),
+            Tuple.Create("Baz", "66"),
+        };
+
+        private bool IsValidDynamicItem(int commandId)
+        {
+            // The match is valid if the command ID is >= the id of our root dynamic start item 
+            // and the command ID minus the ID of our root dynamic start item
+            // is less than or equal to the number of projects in the solution.
+            return
+                commandId >= PkgCmdId.cmdidPresetMenuDynamicStartCommand &&
+                (commandId - PkgCmdId.cmdidPresetMenuDynamicStartCommand < presetNames.Count);
+        }
+
+        private void OnBeforeQueryStatusDynamicItem(object sender, EventArgs args)
+        {
+            var command = (DynamicItemMenuCommand)sender;
+            command.Enabled = true;
+            command.Visible = true;
+
+            // Find out whether the command ID is 0, which is the ID of the root item.
+            // If it is the root item, it matches the constructed DynamicItemMenuCommand,
+            // and IsValidDynamicItem won't be called.
+            bool isRootItem = command.MatchedCommandId == 0;
+
+            // The index is set to 1 rather than 0 because the Solution.Projects collection is 1-based.
+            int idx = command.MatchedCommandId - PkgCmdId.cmdidPresetMenuDynamicStartCommand;
+            int indexForDisplay = isRootItem ? 0 : idx;
+
+            var entry = indexForDisplay < presetNames.Count ? presetNames[indexForDisplay] : Tuple.Create("OutOfBounds", "OutOfBounds");
+            command.Text = entry.Item1;
+            command.Checked = indexForDisplay == 1;
+            //command.MatchedCommandId = 0;
+        }
+
+        private class DynamicItemMenuCommand : OleMenuCommand
+        {
+            private readonly Func<int, bool> matches;
+
+            public DynamicItemMenuCommand(
+                CommandID rootId, Func<int, bool> matches, EventHandler invokeHandler,
+                EventHandler beforeQueryStatusHandler)
+                : base(invokeHandler, null /*changeHandler*/, beforeQueryStatusHandler, rootId)
+            {
+                if (matches == null)
+                    throw new ArgumentNullException(nameof(matches));
+
+                this.matches = matches;
+            }
+
+            public override bool DynamicItemMatch(int cmdId)
+            {
+                // Call the supplied predicate to test whether the given cmdId is a match.
+                // If it is, store the command id in MatchedCommandid 
+                // for use by any BeforeQueryStatus handlers, and then return that it is a match.
+                // Otherwise clear any previously stored matched cmdId and return that it is not a match.
+                if (matches(cmdId)) {
+                    MatchedCommandId = cmdId;
+                    return true;
+                }
+
+                MatchedCommandId = 0;
+                return false;
+            }
         }
 
         internal void OutputString(Guid paneId, string text)

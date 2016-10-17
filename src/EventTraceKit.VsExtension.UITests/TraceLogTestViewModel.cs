@@ -3,16 +3,11 @@ namespace EventTraceKit.VsExtension.UITests
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
-    using System.IO;
-    using System.Linq;
-    using System.Threading.Tasks;
     using System.Windows;
-    using System.Windows.Controls;
     using System.Windows.Input;
-    using Collections;
-    using Controls;
     using EventTraceKit.VsExtension;
     using Microsoft.VisualStudio.PlatformUI;
+    using Task = System.Threading.Tasks.Task;
 
     public class TraceLogTestViewModel : TraceLogWindowViewModel
     {
@@ -32,6 +27,17 @@ namespace EventTraceKit.VsExtension.UITests
                 Themes.Add(name);
 
             SelectedTheme = App.Current.ActiveTheme;
+
+            viewModel = new TraceSettingsViewModel();
+            var session = new TraceSessionSettingsViewModel();
+            session.Providers.Add(new TraceProviderDescriptorViewModel {
+                Id = new Guid("65CD4C8A-0848-4583-92A0-31C0FBAF00C0"),
+                Name = "DX",
+                IsEnabled = true
+            });
+            viewModel.SessionPresets.Add(session);
+            viewModel.SelectedSessionPreset = session;
+            sessionDescriptor = viewModel.GetDescriptor();
         }
 
         public ObservableCollection<string> Themes { get; } =

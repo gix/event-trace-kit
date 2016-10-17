@@ -2,6 +2,7 @@ namespace EventTraceKit.VsExtension
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Threading;
     using System.Windows;
@@ -366,11 +367,15 @@ namespace EventTraceKit.VsExtension
 
         internal CellValue GetCellValue(int rowIndex, int visibleColumnIndex)
         {
-            return workManager.BackgroundTaskFactory.StartNew(() => {
-                var value = dataView.GetCellValue(rowIndex, visibleColumnIndex);
-                value.PrecomputeString();
-                return value;
-            }).Result;
+            Debug.Assert(!workManager.UIThread.CheckAccess());
+            var value = dataView.GetCellValue(rowIndex, visibleColumnIndex);
+            value.PrecomputeString();
+            return value;
+            //return workManager.BackgroundTaskFactory.StartNew(() => {
+            //    var value = dataView.GetCellValue(rowIndex, visibleColumnIndex);
+            //    value.PrecomputeString();
+            //    return value;
+            //}).Result;
         }
 
         internal AsyncDataViewModelPreset CreatePresetFromModifiedUI()

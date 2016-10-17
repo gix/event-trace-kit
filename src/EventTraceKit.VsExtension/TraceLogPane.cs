@@ -20,7 +20,7 @@
             this.traceLogFactory = traceLogFactory;
 
             Caption = "Trace Log";
-            ToolBar = new CommandID(Guids.TraceLogCmdSet, PkgCmdId.TraceLogToolbar);
+            ToolBar = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.TraceLogToolbar);
         }
 
         protected override void Initialize()

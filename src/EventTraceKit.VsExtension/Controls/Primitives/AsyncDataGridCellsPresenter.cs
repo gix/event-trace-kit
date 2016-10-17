@@ -1024,8 +1024,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 new FrameworkPropertyMetadata(
                     Boxed.DoubleZero,
                     (d, e) => ((AsyncDataGridCellsPresenter)d).OnHorizontalOffsetChanged(e),
-                    (d, v) => ((AsyncDataGridCellsPresenter)d).CoerceHorizontalOffset(v)),
-                ValidateValueCallbacks.IsFiniteDouble);
+                    (d, v) => ((AsyncDataGridCellsPresenter)d).CoerceHorizontalOffset(v)));
 
         public double HorizontalOffset
         {
@@ -1059,8 +1058,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 new FrameworkPropertyMetadata(
                     Boxed.DoubleZero,
                     (d, e) => ((AsyncDataGridCellsPresenter)d).OnVerticalOffsetChanged(e),
-                    (d, v) => ((AsyncDataGridCellsPresenter)d).CoerceVerticalOffset(v)),
-                ValidateValueCallbacks.IsFiniteDouble);
+                    (d, v) => ((AsyncDataGridCellsPresenter)d).CoerceVerticalOffset(v)));
 
         public double VerticalOffset
         {
@@ -1398,13 +1396,37 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 EndDragging();
         }
 
+        protected override void OnMouseRightButtonDown(MouseButtonEventArgs e)
+        {
+            if (!e.Handled) {
+                Focus();
+
+                Point position = e.GetPosition(this);
+                int? row = GetRowFromPosition(position.Y);
+                if (row.HasValue) {
+                    int rowIndex = row.Value;
+                    EnsureVisible(rowIndex);
+
+                    var viewModel = ViewModel;
+                    if (viewModel != null) {
+                        viewModel.RowSelection.ToggleSingle(rowIndex, false);
+                        viewModel.RequestUpdate(false);
+                    }
+                }
+
+                e.Handled = true;
+            }
+
+            base.OnMouseRightButtonDown(e);
+        }
+
         protected override void OnMouseMove(MouseEventArgs e)
         {
             var viewModel = ViewModel;
             if (viewModel == null || !dragSelectionCtx.IsDragging)
                 return;
 
-            Point position = Mouse.GetPosition(this);
+            Point position = e.GetPosition(this);
             int? row = GetRowFromPosition(position.Y);
             if (row != null && row != dragSelectionCtx.LastTargetedRow) {
                 int rowIndex = row.Value;
