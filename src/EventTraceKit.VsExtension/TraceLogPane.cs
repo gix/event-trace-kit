@@ -32,7 +32,7 @@
         protected override void OnClose()
         {
             base.OnClose();
-            PresetCollectionManagerView.Get().UpdateRepoFileWithPersistedPresets();
+            PresetCollectionManagerView.Instance.UpdateRepoFileWithPersistedPresets();
         }
 
         public override IVsSearchTask CreateSearch(

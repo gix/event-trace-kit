@@ -57,20 +57,21 @@ namespace EventTraceKit.VsExtension
 
             var defaultPreset = GenericEventsViewModelSource.CreateDefaultPreset();
 
-            var presetCollectionManagerView = PresetCollectionManagerView.Get();
-            WpaApplication.Current.PresetCollections = presetCollectionManagerView.PresetRepository;
+            var presetCollectionManagerView = PresetCollectionManagerView.Instance;
+            var persistenceManager = PersistenceManager.Instance;
+
             presetCollectionManagerView.ExceptionFilter += PresetCollectionManagerViewOnExceptionFilter;
-            var presetCollection = presetCollectionManagerView.PresetRepository[Guid.Empty];
+            var presetCollection = presetCollectionManagerView.PresetRepository.PresetCollectionsNotNull;
             presetCollection.BuiltInPresets.Add(defaultPreset);
 
-            PersistenceManager.PersistenceManger.MergePersistedCollections(presetCollectionManagerView.PresetRepository);
+            persistenceManager.MergePersistedCollections(presetCollectionManagerView.PresetRepository);
 
             EventsDataView = new TraceEventsView(dataTable);
             AdvModel = new AsyncDataViewModel(
                 EventsDataView, templatePreset, presetCollection);
             AdvModel.Preset = defaultPreset;
 
-            PersistenceManager.PersistenceManger.Attach(AdvModel);
+            persistenceManager.Attach(AdvModel);
             GridModel = AdvModel.GridViewModel;
 
             AdvModel.PresetChanged += (s, e) => {
@@ -341,8 +342,8 @@ namespace EventTraceKit.VsExtension
 
             if (outValue != IntPtr.Zero) {
                 string displayName = AdvModel.Preset.Name;
-                PersistenceManager persistenceManager = PersistenceManager.PersistenceManger;
-                if (persistenceManager.HasCachedVersion(Guid.Empty, AdvModel.Preset.Name))
+                PersistenceManager persistenceManager = PersistenceManager.Instance;
+                if (persistenceManager.HasCachedVersion(AdvModel.Preset.Name))
                     displayName += "*";
 
                 Marshal.GetNativeVariantForObject(displayName, outValue);
@@ -355,7 +356,7 @@ namespace EventTraceKit.VsExtension
             if (presetName.EndsWith("*"))
                 presetName = presetName.Substring(0, presetName.Length - 1);
 
-            var preset = PersistenceManager.PersistenceManger.TryGetCachedVersion(Guid.Empty, presetName);
+            var preset = PersistenceManager.Instance.TryGetCachedVersion(presetName);
             if (preset == null)
                 preset = AdvModel.PresetCollection.TryGetPresetByName(presetName);
 
@@ -377,7 +378,7 @@ namespace EventTraceKit.VsExtension
                 throw new ArgumentException("OutParamRequired");
 
             var items = AdvModel.PresetCollection.EnumerateAllPresetsByName()
-                .Select(x => x + (PersistenceManager.PersistenceManger.HasCachedVersion(Guid.Empty, x) ? "*" : "")).ToArray();
+                .Select(x => x + (PersistenceManager.Instance.HasCachedVersion(x) ? "*" : "")).ToArray();
             Marshal.GetNativeVariantForObject(items, outValue);
         }
 

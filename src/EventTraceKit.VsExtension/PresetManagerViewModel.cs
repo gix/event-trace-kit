@@ -10,13 +10,11 @@
     using System.Windows.Automation;
     using System.Windows.Controls;
     using System.Windows.Data;
-    using System.Windows.Documents;
     using System.Windows.Input;
     using Collections;
     using Controls;
     using Formatting;
     using Microsoft.VisualStudio.PlatformUI;
-    using Serialization;
     using Windows;
 
     public class PresetManagerViewModel : DependencyObject
@@ -25,6 +23,7 @@
         private readonly ObservableCollection<PresetManagerColumnViewModel> presetColumns;
         private readonly PresetManagerColumnViewModel leftFreezableAreaSeparatorColumn;
         private readonly PresetManagerColumnViewModel rightFreezableAreaSeparatorColumn;
+        private readonly PersistenceManager persistenceManager;
 
         private AsyncDelegateCommand savePresetCommand;
         private AsyncDelegateCommand savePresetAsCommand;
@@ -37,8 +36,10 @@
         private bool refreshingFromPreset;
         private bool isApplyingChanges;
 
-        public PresetManagerViewModel(AsyncDataViewModel advModel)
+        public PresetManagerViewModel(AsyncDataViewModel advModel, PersistenceManager persistenceManager)
         {
+            this.persistenceManager = persistenceManager;
+
             TemplateColumns = CollectionUtils.InitializeReadOnly(out templateColumns);
             PresetColumns = CollectionUtils.InitializeReadOnly(out presetColumns);
 
@@ -46,10 +47,6 @@
             rightFreezableAreaSeparatorColumn = new PresetManagerColumnViewModel(this, PresetManagerColumnType.RightFreezableAreaSeparator);
 
             PresetDropDownMenu = new HeaderDropDownMenu();
-            PresetDropDownMenu.ManagementCommands.Add(PresetHeaderManagementCommand.CreatePresetSaveCommand(this));
-            PresetDropDownMenu.ManagementCommands.Add(PresetHeaderManagementCommand.CreatePresetSaveAsCommand(this));
-            PresetDropDownMenu.ManagementCommands.Add(PresetHeaderManagementCommand.CreatePresetResetCommand(this));
-
             BindingOperations.SetBinding(PresetDropDownMenu, HeaderDropDownMenu.HeaderProperty, new Binding {
                 Source = this,
                 Path = new PropertyPath(MangledPresetNameProperty),
@@ -60,6 +57,23 @@
             IsDialogStateDirty = false;
             isApplyingChanges = false;
         }
+
+        public HeaderDropDownMenu PresetDropDownMenu { get; }
+
+        public int LastLeftFrozenIndex => presetColumns.IndexOf(leftFreezableAreaSeparatorColumn);
+        public int FirstRightFrozenIndex => presetColumns.IndexOf(rightFreezableAreaSeparatorColumn);
+
+        public ICommand SavePresetCommand =>
+            savePresetCommand ?? (savePresetCommand = new AsyncDelegateCommand(SavePreset, CanSavePreset));
+
+        public ICommand SavePresetAsCommand =>
+            savePresetAsCommand ?? (savePresetAsCommand = new AsyncDelegateCommand(SavePresetAs));
+
+        public ICommand ResetPresetCommand =>
+            resetPresetCommand ?? (resetPresetCommand = new AsyncDelegateCommand(ResetPreset, CanResetPreset));
+
+        public ICommand DeletePresetCommand =>
+            deletePresetCommand ?? (deletePresetCommand = new AsyncDelegateCommand(DeletePreset, CanDeletePreset));
 
         #region public string DisplayName
 
@@ -87,7 +101,7 @@
                 typeof(PresetManagerViewModel),
                 new PropertyMetadata(
                     null,
-                    (d, e) => ((PresetManagerViewModel)d).HdvViewModelPropertyChangedHandler(e)));
+                    (d, e) => ((PresetManagerViewModel)d).OnHdvViewModelPropertyChanged(e)));
 
         public static readonly DependencyProperty HdvViewModelProperty =
             HdvViewModelPropertyKey.DependencyProperty;
@@ -238,12 +252,86 @@
 
         #endregion
 
-        public HeaderDropDownMenu PresetDropDownMenu { get; }
+        #region public bool IsDialogStateDirty
 
-        public int LastLeftFrozenIndex => presetColumns.IndexOf(leftFreezableAreaSeparatorColumn);
-        public int FirstRightFrozenIndex => presetColumns.IndexOf(rightFreezableAreaSeparatorColumn);
+        private static readonly DependencyPropertyKey IsDialogStateDirtyPropertyKey =
+            DependencyProperty.RegisterReadOnly(
+                nameof(IsDialogStateDirty),
+                typeof(bool),
+                typeof(PresetManagerViewModel),
+                new PropertyMetadata(Boxed.False, OnIsDialogStateDirtyChanged, null));
 
-        private void HdvViewModelPropertyChangedHandler(DependencyPropertyChangedEventArgs e)
+        public static readonly DependencyProperty IsDialogStateDirtyProperty =
+            IsDialogStateDirtyPropertyKey.DependencyProperty;
+
+        public bool IsDialogStateDirty
+        {
+            get { return (bool)GetValue(IsDialogStateDirtyProperty); }
+            set { SetValue(IsDialogStateDirtyPropertyKey, value); }
+        }
+
+        private static void OnIsDialogStateDirtyChanged(
+            DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            d.CoerceValue(CanApplyProperty);
+        }
+
+        #endregion
+
+        #region public bool CanApply
+
+        private static readonly DependencyPropertyKey CanApplyPropertyKey =
+            DependencyProperty.RegisterReadOnly(
+                nameof(CanApply),
+                typeof(bool),
+                typeof(PresetManagerViewModel),
+                new PropertyMetadata(Boxed.False, null, CoerceCanApply));
+
+        public static readonly DependencyProperty CanApplyProperty =
+            CanApplyPropertyKey.DependencyProperty;
+
+        public bool CanApply
+        {
+            get { return (bool)GetValue(CanApplyProperty); }
+            private set { SetValue(CanApplyPropertyKey, value); }
+        }
+
+        private static object CoerceCanApply(DependencyObject d, object newValue)
+        {
+            var source = (PresetManagerViewModel)d;
+            return Boxed.Bool(source.IsDialogStateDirty);
+        }
+
+        #endregion
+
+        #region public bool IsCurrentPresetModified
+
+        private static readonly DependencyPropertyKey IsCurrentPresetModifiedPropertyKey =
+            DependencyProperty.RegisterReadOnly(
+                nameof(IsCurrentPresetModified),
+                typeof(bool),
+                typeof(PresetManagerViewModel),
+                new PropertyMetadata(
+                    Boxed.False, OnIsCurrentPresetModifiedChanged, null));
+
+        public static readonly DependencyProperty IsCurrentPresetModifiedProperty =
+            IsCurrentPresetModifiedPropertyKey.DependencyProperty;
+
+        public bool IsCurrentPresetModified
+        {
+            get { return (bool)GetValue(IsCurrentPresetModifiedProperty); }
+            private set { SetValue(IsCurrentPresetModifiedPropertyKey, value); }
+        }
+
+        private static void OnIsCurrentPresetModifiedChanged(
+            DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            d.CoerceValue(MangledPresetNameProperty);
+        }
+
+        #endregion
+
+        private void OnHdvViewModelPropertyChanged(DependencyPropertyChangedEventArgs e)
         {
             var oldValue = (AsyncDataViewModel)e.OldValue;
             if (oldValue != null) {
@@ -266,18 +354,6 @@
                 from presetName in HdvViewModel.PresetCollection.EnumerateAllPresetsByName()
                 select new ApplyPresetHeaderCommand(this, presetName));
         }
-
-        public ICommand SavePresetCommand =>
-            savePresetCommand ?? (savePresetCommand = new AsyncDelegateCommand(SavePreset, CanSavePreset));
-
-        public ICommand SavePresetAsCommand =>
-            savePresetAsCommand ?? (savePresetAsCommand = new AsyncDelegateCommand(SavePresetAs));
-
-        public ICommand ResetPresetCommand =>
-            resetPresetCommand ?? (resetPresetCommand = new AsyncDelegateCommand(ResetPreset, CanResetPreset));
-
-        public ICommand DeletePresetCommand =>
-            deletePresetCommand ?? (deletePresetCommand = new AsyncDelegateCommand(DeletePreset, CanDeletePreset));
 
         private bool CanSavePreset()
         {
@@ -355,15 +431,14 @@
             {
                 this.presetManagerViewModel = presetManagerViewModel;
                 DisplayName = presetName;
-                Binding binding = new Binding {
+                IsCheckable = true;
+                BindingOperations.SetBinding(this, IsCheckedProperty, new Binding {
                     Source = presetManagerViewModel,
                     Path = new PropertyPath(CurrentSelectedPresetNameProperty),
                     Mode = BindingMode.OneWay,
                     Converter = isEqualConverter,
                     ConverterParameter = presetName
-                };
-                BindingOperations.SetBinding(this, IsCheckedProperty, binding);
-                IsCheckable = true;
+                });
             }
 
             public override void OnExecute()
@@ -386,9 +461,9 @@
             RefreshFromPreset(HdvViewModel.Preset);
         }
 
-        internal void RefreshFromPreset(string displayName)
+        private void RefreshFromPreset(string displayName)
         {
-            var preset = PersistenceManager.PersistenceManger.TryGetCachedVersion(Guid.Empty, displayName);
+            var preset = persistenceManager.TryGetCachedVersion(displayName);
             if (preset == null)
                 preset = HdvViewModel.PresetCollection.TryGetPresetByName(displayName);
             RefreshFromPreset(preset);
@@ -423,78 +498,11 @@
             }
         }
 
-        private void OnPresetChanged(object sender, ValueChangedEventArgs<AsyncDataViewModelPreset> e)
+        private void OnPresetChanged(
+            object sender, ValueChangedEventArgs<AsyncDataViewModelPreset> args)
         {
-            if (!isApplyingChanges) {
+            if (!isApplyingChanges)
                 RefreshFromPreset(HdvViewModel.Preset);
-            }
-        }
-
-        private static readonly DependencyPropertyKey IsDialogStateDirtyPropertyKey =
-            DependencyProperty.RegisterReadOnly(
-                nameof(IsDialogStateDirty),
-                typeof(bool),
-                typeof(PresetManagerViewModel),
-                new PropertyMetadata(Boxed.False, OnIsDialogStateDirtyChanged, null));
-
-        public static readonly DependencyProperty IsDialogStateDirtyProperty =
-            IsDialogStateDirtyPropertyKey.DependencyProperty;
-
-        private static void OnIsDialogStateDirtyChanged(
-            DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            d.CoerceValue(CanApplyProperty);
-        }
-
-        private static void OnIsCurrentPresetModifiedChanged(
-            DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            d.CoerceValue(MangledPresetNameProperty);
-        }
-
-        private static readonly DependencyPropertyKey CanApplyPropertyKey =
-            DependencyProperty.RegisterReadOnly(
-                nameof(CanApply),
-                typeof(bool),
-                typeof(PresetManagerViewModel),
-                new PropertyMetadata(Boxed.False, null, CoerceCanApply));
-
-        public static readonly DependencyProperty CanApplyProperty =
-            CanApplyPropertyKey.DependencyProperty;
-
-        public bool CanApply
-        {
-            get { return (bool)GetValue(CanApplyProperty); }
-            private set { SetValue(CanApplyPropertyKey, value); }
-        }
-
-        private static object CoerceCanApply(DependencyObject d, object newValue)
-        {
-            var source = (PresetManagerViewModel)d;
-            return Boxed.Bool(source.IsDialogStateDirty);
-        }
-
-        private static readonly DependencyPropertyKey IsCurrentPresetModifiedPropertyKey =
-            DependencyProperty.RegisterReadOnly(
-                nameof(IsCurrentPresetModified),
-                typeof(bool),
-                typeof(PresetManagerViewModel),
-                new PropertyMetadata(
-                    Boxed.False, OnIsCurrentPresetModifiedChanged, null));
-
-        public static readonly DependencyProperty IsCurrentPresetModifiedProperty =
-            IsCurrentPresetModifiedPropertyKey.DependencyProperty;
-
-        public bool IsDialogStateDirty
-        {
-            get { return (bool)GetValue(IsDialogStateDirtyProperty); }
-            set { SetValue(IsDialogStateDirtyPropertyKey, value); }
-        }
-
-        public bool IsCurrentPresetModified
-        {
-            get { return (bool)GetValue(IsCurrentPresetModifiedProperty); }
-            private set { SetValue(IsCurrentPresetModifiedPropertyKey, value); }
         }
 
         private void UpdateCurrentPreset()
@@ -678,7 +686,7 @@
         public void ResetCurrentPreset()
         {
             if (IsCurrentPresetModified) {
-                PersistenceManager.PersistenceManger.RemoveCachedVersion(Guid.Empty, currentPreset.Name);
+                PersistenceManager.Instance.RemoveCachedVersion(currentPreset.Name);
                 currentPreset = HdvViewModel.PresetCollection.EnumerateAllPresets().FirstOrDefault(p => p.Name == currentPreset.Name);
                 RefreshFromPreset(currentPreset);
             }
@@ -708,9 +716,7 @@
 
             HdvViewModel.Preset = newPreset;
 
-            var view = PresetCollectionManagerView.Get();
-            if (view != null)
-                view.SavePresetToRepository(newPreset, isModified, name);
+            PresetCollectionManagerView.Instance.SavePresetToRepository(newPreset, isModified, name);
         }
     }
 
@@ -731,18 +737,33 @@
 
     public class HeaderDropDownMenu : DependencyObject
     {
-        public static readonly DependencyProperty IsOpenProperty = DependencyProperty.Register(nameof(IsOpen), typeof(bool), typeof(HeaderDropDownMenu), new PropertyMetadata(Boxed.False));
+        public static readonly DependencyProperty IsOpenProperty =
+            DependencyProperty.Register(
+                nameof(IsOpen),
+                typeof(bool),
+                typeof(HeaderDropDownMenu),
+                new PropertyMetadata(Boxed.False));
 
-        private static readonly DependencyPropertyKey ItemsPropertyKey = DependencyProperty.RegisterReadOnly(nameof(Items), typeof(ObservableCollection<GraphTreeItemHeaderCommand>), typeof(HeaderDropDownMenu), PropertyMetadataUtils.DefaultNull);
+        private static readonly DependencyPropertyKey ItemsPropertyKey =
+            DependencyProperty.RegisterReadOnly(
+                nameof(Items),
+                typeof(ObservableCollection<GraphTreeItemHeaderCommand>),
+                typeof(HeaderDropDownMenu),
+                PropertyMetadataUtils.DefaultNull);
+
         public static readonly DependencyProperty ItemsProperty = ItemsPropertyKey.DependencyProperty;
-        public static readonly DependencyProperty HeaderProperty = DependencyProperty.Register(nameof(Header), typeof(object), typeof(HeaderDropDownMenu), new PropertyMetadata(null, (d, e) => ((HeaderDropDownMenu)d).HeaderPropertyChanged(e)));
-        private static readonly DependencyPropertyKey ManagementCommandsPropertyKey = DependencyProperty.RegisterReadOnly(nameof(ManagementCommands), typeof(ObservableCollection<GraphTreeItemHeaderManagementCommand>), typeof(HeaderDropDownMenu), PropertyMetadataUtils.DefaultNull);
-        public static readonly DependencyProperty ManagementCommandsProperty = ManagementCommandsPropertyKey.DependencyProperty;
+
+        public static readonly DependencyProperty HeaderProperty =
+            DependencyProperty.Register(
+                nameof(Header),
+                typeof(object),
+                typeof(HeaderDropDownMenu),
+                new PropertyMetadata(
+                    null, (d, e) => ((HeaderDropDownMenu)d).HeaderPropertyChanged(e)));
 
         public HeaderDropDownMenu()
         {
             Items = new ObservableCollection<GraphTreeItemHeaderCommand>();
-            ManagementCommands = new ObservableCollection<GraphTreeItemHeaderManagementCommand>();
         }
 
         private void HeaderPropertyChanged(DependencyPropertyChangedEventArgs e)
@@ -752,50 +773,20 @@
 
         public bool IsOpen
         {
-            get
-            {
-                return (bool)GetValue(IsOpenProperty);
-            }
-            set
-            {
-                SetValue(IsOpenProperty, Boxed.Bool(value));
-            }
+            get { return (bool)GetValue(IsOpenProperty); }
+            set { SetValue(IsOpenProperty, Boxed.Bool(value)); }
         }
 
         public object Header
         {
-            get
-            {
-                return GetValue(HeaderProperty);
-            }
-            set
-            {
-                SetValue(HeaderProperty, value);
-            }
+            get { return GetValue(HeaderProperty); }
+            set { SetValue(HeaderProperty, value); }
         }
 
         public ObservableCollection<GraphTreeItemHeaderCommand> Items
         {
-            get
-            {
-                return (ObservableCollection<GraphTreeItemHeaderCommand>)GetValue(ItemsProperty);
-            }
-            private set
-            {
-                SetValue(ItemsPropertyKey, value);
-            }
-        }
-
-        public ObservableCollection<GraphTreeItemHeaderManagementCommand> ManagementCommands
-        {
-            get
-            {
-                return (ObservableCollection<GraphTreeItemHeaderManagementCommand>)GetValue(ManagementCommandsProperty);
-            }
-            private set
-            {
-                SetValue(ManagementCommandsPropertyKey, value);
-            }
+            get { return (ObservableCollection<GraphTreeItemHeaderCommand>)GetValue(ItemsProperty); }
+            private set { SetValue(ItemsPropertyKey, value); }
         }
     }
 
@@ -885,210 +876,8 @@
 
     public interface DataTableGraphTreeItem
     {
-        Guid DataSourceID { get; set; }
         AsyncDataViewModel HdvViewModel { get; }
-        AsyncDataViewModelPreset HdvViewModelPreset { get; }
         event ValueChangedEventHandler<AsyncDataViewModelPreset> PresetChanged;
-    }
-
-    public class GraphTreeItemHeaderManagementCommand : DependencyObject
-    {
-        private DelegateCommand executeCommand;
-        private Action action;
-
-        public static readonly DependencyProperty CanExecuteActionProperty =
-            DependencyProperty.Register(
-                nameof(CanExecuteAction),
-                typeof(bool),
-                typeof(GraphTreeItemHeaderManagementCommand),
-                new PropertyMetadata(
-                    Boxed.Bool(false),
-                    (d, e) => ((GraphTreeItemHeaderManagementCommand)d).ExecuteCommand.RaiseCanExecuteChanged()));
-
-        public static readonly DependencyProperty DisplayNameProperty =
-            DependencyProperty.Register(
-                nameof(DisplayName),
-                typeof(string),
-                typeof(GraphTreeItemHeaderManagementCommand),
-                PropertyMetadataUtils.DefaultNull);
-
-        public static readonly DependencyProperty IconUriProperty =
-            DependencyProperty.Register(
-                nameof(IconUri),
-                typeof(Uri),
-                typeof(GraphTreeItemHeaderManagementCommand),
-                PropertyMetadataUtils.DefaultNull);
-
-        public GraphTreeItemHeaderManagementCommand()
-        {
-        }
-
-        public GraphTreeItemHeaderManagementCommand(string name, Uri iconUri, Action action)
-        {
-            DisplayName = name;
-            IconUri = iconUri;
-            Action = action;
-        }
-
-        public void Execute()
-        {
-            VerifyAccess();
-            action();
-        }
-
-        public Action Action
-        {
-            get { return action; }
-            set { action = value; }
-        }
-
-        public bool CanExecuteAction
-        {
-            get { return (bool)GetValue(CanExecuteActionProperty); }
-            set { SetValue(CanExecuteActionProperty, value); }
-        }
-
-        public string DisplayName
-        {
-            get { return (string)GetValue(DisplayNameProperty); }
-            set { SetValue(DisplayNameProperty, value); }
-        }
-
-        public DelegateCommand ExecuteCommand
-        {
-            get
-            {
-                VerifyAccess();
-                return executeCommand ??
-                    (executeCommand = new DelegateCommand(obj => Execute(), _ => CanExecuteAction));
-            }
-        }
-
-        public Uri IconUri
-        {
-            get { return (Uri)GetValue(IconUriProperty); }
-            set { SetValue(IconUriProperty, value); }
-        }
-    }
-
-    internal sealed class PresetHeaderManagementCommand : GraphTreeItemHeaderManagementCommand
-    {
-        public PresetHeaderManagementCommand(string name, Uri iconUri, Action action)
-        {
-            DisplayName = name;
-            IconUri = iconUri;
-            Action = action;
-        }
-
-        public static PresetHeaderManagementCommand CreatePresetResetCommand(
-            PresetManagerViewModel presetManager)
-        {
-            var target = new PresetHeaderManagementCommand("Reset", null, presetManager.ResetCurrentPreset);
-            Binding binding = new Binding {
-                Source = presetManager,
-                Path = new PropertyPath(PresetManagerViewModel.IsCurrentPresetModifiedProperty),
-                Mode = BindingMode.OneWay
-            };
-            BindingOperations.SetBinding(target, CanExecuteActionProperty, binding);
-            return target;
-        }
-
-        public static PresetHeaderManagementCommand CreatePresetSaveAsCommand(
-            PresetManagerViewModel presetManager)
-        {
-            var target = new PresetHeaderManagementCommand(
-                "Save As", null, () => presetManager.SavePresetAs());
-            target.CanExecuteAction = true;
-            return target;
-        }
-
-        public static PresetHeaderManagementCommand CreatePresetSaveCommand(
-            PresetManagerViewModel presetManager)
-        {
-            var target = new PresetHeaderManagementCommand("Save", null, () => {
-                presetManager.SaveCurrentPresetAs(presetManager.CurrentSelectedPresetName);
-            });
-
-            var binding = new Binding {
-                Source = presetManager,
-                Mode = BindingMode.OneWay,
-                Converter = new DelegateValueConverter<object, bool>(arg => {
-                    if (presetManager.HdvViewModel == null)
-                        return false;
-                    var presetCollection = presetManager.HdvViewModel.PresetCollection;
-                    if (presetCollection.IsBuiltInPreset(presetManager.CurrentSelectedPresetName))
-                        return false;
-
-                    return presetManager.IsCurrentPresetModified;
-                })
-            };
-            BindingOperations.SetBinding(target, CanExecuteActionProperty, binding);
-            return target;
-        }
-    }
-
-    public static class ArrayUtils
-    {
-        private static class EmptyHelper<T>
-        {
-            public static readonly T[] Instance;
-
-            static EmptyHelper()
-            {
-                Instance = new T[0];
-            }
-        }
-
-        public static T[] Empty<T>()
-        {
-            return EmptyHelper<T>.Instance;
-        }
-    }
-
-    public static class PropertyPathUtils
-    {
-        public static PropertyPath Combine(DependencyProperty first, DependencyProperty second)
-        {
-            VerifyChainedTypes(first, second);
-            return new PropertyPath(first.Name + "." + second.Name, ArrayUtils.Empty<object>());
-        }
-
-        public static PropertyPath Combine(DependencyProperty first, DependencyProperty second, DependencyProperty third)
-        {
-            VerifyChainedTypes(first, second);
-            VerifyChainedTypes(second, third);
-            string[] textArray1 = new string[] { first.Name, ".", second.Name, ".", third.Name };
-            return new PropertyPath(string.Concat(textArray1), ArrayUtils.Empty<object>());
-        }
-
-        public static PropertyPath Combine(DependencyProperty first, DependencyProperty second, DependencyProperty third, DependencyProperty fourth)
-        {
-            VerifyChainedTypes(first, second);
-            VerifyChainedTypes(second, third);
-            VerifyChainedTypes(third, fourth);
-            string[] textArray1 = new string[] { first.Name, ".", second.Name, ".", third.Name, ".", fourth.Name };
-            return new PropertyPath(string.Concat(textArray1), ArrayUtils.Empty<object>());
-        }
-
-        private static void VerifyChainedTypes(DependencyProperty a, DependencyProperty b)
-        {
-            Type propertyType = a.PropertyType;
-            Type ownerType = b.OwnerType;
-            if (((propertyType != ownerType) && !ownerType.IsAssignableFrom(propertyType)) && !propertyType.IsAssignableFrom(ownerType)) {
-                object[] args = new object[] { propertyType.Name, ownerType.Name };
-                throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "a's PropertyType is {0}, but b's OwnerType is {1}", args));
-            }
-        }
-    }
-
-    public static class CollectionUtils
-    {
-        public static ReadOnlyObservableCollection<T> InitializeReadOnly<T>(
-            out ObservableCollection<T> collection)
-        {
-            collection = new ObservableCollection<T>();
-            return new ReadOnlyObservableCollection<T>(collection);
-        }
     }
 
     public static class CollectionExtensions
@@ -1109,17 +898,6 @@
             }
 
             return -1;
-        }
-
-        public static void RemoveWhere<T>(this ICollection<T> source, Func<T, bool> predicate)
-        {
-            source.RemoveRange(source.Where(predicate).ToArray());
-        }
-
-        public static void RemoveRange<T>(this ICollection<T> collection, params T[] items)
-        {
-            foreach (T item in items)
-                collection.Remove(item);
         }
     }
 
@@ -1174,9 +952,8 @@
 
     public class PresetManagerColumnViewModel : DependencyObject
     {
-        private readonly ColumnViewModelPreset preset;
         private bool refreshingFromPreset;
-        private SupportedFormat defaultSupportedFormat;
+        private readonly SupportedFormat defaultSupportedFormat;
 
         public PresetManagerColumnViewModel(
             PresetManagerViewModel presetManager, PresetManagerColumnType columnType)
@@ -1204,7 +981,7 @@
             //}
 
             PresetManager = presetManager;
-            this.preset = preset;
+            Preset = preset;
 
             defaultSupportedFormat = columnView.FormatProvider.DefaultSupportedFormat();
             SupportedFormats = columnView.FormatProvider.SupportedFormats();
@@ -1214,24 +991,13 @@
             ColumnType = PresetManagerColumnType.Configurable;
         }
 
-        private void RefreshFromPreset()
-        {
-            refreshingFromPreset = true;
-            try {
-                Name = preset.Name;
-                AutomationProperties.SetName(this, preset.Name);
-                Id = preset.Id;
-                Width = preset.Width;
-                IsVisible = preset.IsVisible;
-                TextAlignment = preset.TextAlignment;
-                //HelpText = preset.HelpText;
-            } finally {
-                refreshingFromPreset = false;
-            }
-        }
-
         public PresetManagerViewModel PresetManager { get; }
+        public ColumnViewModelPreset Preset { get; }
         public PresetManagerColumnType ColumnType { get; }
+
+        public IEnumerable<SupportedFormat> SupportedFormats { get; }
+        public Visibility CellFormatVisibility =>
+            SupportedFormats.Any() ? Visibility.Visible : Visibility.Collapsed;
 
         #region public Guid Id { get; set; }
 
@@ -1380,9 +1146,7 @@
 
         #endregion
 
-        public ColumnViewModelPreset Preset => preset;
-
-        public IEnumerable<SupportedFormat> SupportedFormats { get; }
+        #region public SupportedFormat CellFormat
 
         public static readonly DependencyProperty CellFormatProperty =
             DependencyProperty.Register(
@@ -1399,8 +1163,23 @@
             private set { SetValue(CellFormatProperty, value); }
         }
 
-        public Visibility CellFormatVisibility =>
-            SupportedFormats.Any() ? Visibility.Visible : Visibility.Collapsed;
+        #endregion
+
+        private void RefreshFromPreset()
+        {
+            refreshingFromPreset = true;
+            try {
+                Name = Preset.Name;
+                AutomationProperties.SetName(this, Preset.Name);
+                Id = Preset.Id;
+                Width = Preset.Width;
+                IsVisible = Preset.IsVisible;
+                TextAlignment = Preset.TextAlignment;
+                //HelpText = preset.HelpText;
+            } finally {
+                refreshingFromPreset = false;
+            }
+        }
 
         public void RefreshPositionDependentProperties()
         {
@@ -1422,15 +1201,15 @@
 
         private bool UpdateColumnPreset()
         {
-            if (preset == null)
+            if (Preset == null)
                 return false;
 
             bool updated = false;
-            Update(Width, preset.Width, x => preset.Width = x, ref updated);
-            Update(IsVisible, preset.IsVisible, x => preset.IsVisible = x, ref updated);
-            Update(TextAlignment, preset.TextAlignment, x => preset.TextAlignment = x, ref updated);
-            Update(CellFormat, GetSupportedFormat(preset.CellFormat),
-                x => preset.CellFormat = x.Format, ref updated);
+            Update(Width, Preset.Width, x => Preset.Width = x, ref updated);
+            Update(IsVisible, Preset.IsVisible, x => Preset.IsVisible = x, ref updated);
+            Update(TextAlignment, Preset.TextAlignment, x => Preset.TextAlignment = x, ref updated);
+            Update(CellFormat, GetSupportedFormat(Preset.CellFormat),
+                x => Preset.CellFormat = x.Format, ref updated);
 
             return updated;
         }
@@ -1450,22 +1229,10 @@
         }
     }
 
-    public sealed class WpaApplication
-    {
-        public static WpaApplication Current => Inner.Instance;
-
-        private class Inner
-        {
-            public static readonly WpaApplication Instance = new WpaApplication();
-        }
-
-        public HdvPresetCollections PresetCollections { get; set; } = new HdvPresetCollections();
-    }
-
     public class PresetManagerDesignTimeModel : PresetManagerViewModel
     {
         public PresetManagerDesignTimeModel()
-            : base(CreateModel())
+            : base(CreateModel(), PersistenceManager.Instance)
         {
         }
 
@@ -1491,8 +1258,7 @@
             AddColumn(table, template, namePreset, DataColumn.Create(x => "Name" + x));
 
             var dataView = new DataView(table, new DefaultFormatProviderSource());
-            var pc = WpaApplication.Current.PresetCollections[Guid.Empty];
-            return new AsyncDataViewModel(dataView, template, pc) {
+            return new AsyncDataViewModel(dataView, template, new HdvViewModelPresetCollection()) {
                 Preset = template
             };
         }

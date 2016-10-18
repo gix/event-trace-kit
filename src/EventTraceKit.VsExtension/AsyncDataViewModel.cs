@@ -59,9 +59,7 @@ namespace EventTraceKit.VsExtension
 
         public AsyncDataViewModelPreset TemplatePreset { get; }
 
-        public Guid DataSourceID { get; set; }
         public AsyncDataViewModel HdvViewModel => this;
-        public AsyncDataViewModelPreset HdvViewModelPreset => Preset;
 
         public event ValueChangedEventHandler<AsyncDataViewModelPreset> PresetChanged;
 

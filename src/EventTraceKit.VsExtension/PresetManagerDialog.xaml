@@ -11,7 +11,7 @@
   xmlns:vss="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.14.0"
   xmlns:windows="clr-namespace:EventTraceKit.VsExtension.Windows"
   mc:Ignorable="d"
-  d:DataContext="{d:DesignInstance {x:Type etkvs:PresetManagerDesignTimeModel}, IsDesignTimeCreatable=True}"
+  d:DataContext="{d:DesignInstance {x:Type etkvs:PresetManagerDesignTimeModel}, IsDesignTimeCreatable=False}"
   x:Name="Root"
   MinWidth="600"
   MinHeight="450"
