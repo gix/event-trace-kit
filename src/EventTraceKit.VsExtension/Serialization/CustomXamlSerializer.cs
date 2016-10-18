@@ -214,7 +214,7 @@
 
         private static bool IsDefaultValue(PropertyInfo property, object value)
         {
-            var attribute = property.TryGetAttribute<DefaultValueAttribute>(true);
+            var attribute = property.GetCustomAttribute<DefaultValueAttribute>(true);
             if (attribute == null)
                 return false;
             return value == attribute.Value || (value != null && value.Equals(attribute.Value));
@@ -224,7 +224,7 @@
             object element, XmlWriter writer, Type type,
             ref object contentPropertyValue)
         {
-            var contentPropertyAttribute = type.TryGetAttribute<ContentPropertyAttribute>(true);
+            var contentPropertyAttribute = type.GetCustomAttribute<ContentPropertyAttribute>(true);
             var properties = new Dictionary<string, object>();
             var bindingFlags = BindingFlags.Public | BindingFlags.Instance;
 
@@ -271,7 +271,7 @@
 
         private bool IsPropertySerializable(PropertyInfo property)
         {
-            var dsvAttrib = property.TryGetAttribute<DesignerSerializationVisibilityAttribute>(true);
+            var dsvAttrib = property.GetCustomAttribute<DesignerSerializationVisibilityAttribute>(true);
             if (dsvAttrib != null && dsvAttrib.Visibility == DesignerSerializationVisibility.Hidden)
                 return false;
 
@@ -306,7 +306,7 @@
 
             return serializedTypeMap.GetOrAdd(
                 sourceType,
-                t => t.TryGetAttribute<SerializedShapeAttribute>(true)?
+                t => t.GetCustomAttribute<SerializedShapeAttribute>(true)?
                          .Shape ?? sourceType);
         }
     }

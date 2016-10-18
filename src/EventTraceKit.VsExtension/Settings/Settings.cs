@@ -41,6 +41,20 @@ namespace EventTraceKit.VsExtension.Settings
         public Collection<TraceSession> Sessions => Init.GetOrCreate(ref sessions);
     }
 
+    public class ViewPresets : SettingsElement
+    {
+        private Collection<ProfilePreset> modifiedPresets;
+        private Collection<ProfilePreset> persistedPresets;
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        public Collection<ProfilePreset> ModifiedPresets =>
+            modifiedPresets ?? (modifiedPresets = new Collection<ProfilePreset>());
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        public Collection<ProfilePreset> PersistedPresets =>
+            persistedPresets ?? (persistedPresets = new Collection<ProfilePreset>());
+    }
+
     public class TraceSession : SettingsElement
     {
         private TraceProviderProfileCollection providers;
@@ -68,8 +82,8 @@ namespace EventTraceKit.VsExtension.Settings
 
     public class TraceProvider : SettingsElement
     {
-        private ProcessIdCollection processIds;
-        private TraceEventProfileCollection events;
+        private Collection<uint> processIds;
+        private Collection<TraceEvent> events;
 
         public Guid Id { get; set; }
         [DefaultValue(null)]
@@ -94,22 +108,14 @@ namespace EventTraceKit.VsExtension.Settings
         public string Manifest { get; set; }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        public ProcessIdCollection ProcessIds =>
-            processIds ?? (processIds = new ProcessIdCollection());
+        public Collection<uint> ProcessIds =>
+            processIds ?? (processIds = new Collection<uint>());
 
         public bool FilterEvents { get; set; }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        public TraceEventProfileCollection Events =>
-            events ?? (events = new TraceEventProfileCollection());
-    }
-
-    public class ProcessIdCollection : Collection<uint>
-    {
-    }
-
-    public class TraceEventProfileCollection : Collection<TraceEvent>
-    {
+        public Collection<TraceEvent> Events =>
+            events ?? (events = new Collection<TraceEvent>());
     }
 
     public class TraceEvent : SettingsElement
@@ -136,11 +142,14 @@ namespace EventTraceKit.VsExtension.Settings
 
     public class ProfilePreset : SettingsElement
     {
+        private Collection<ProfileColumn> columns;
+
         [DefaultValue(null)]
         public string Name { get; set; }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        public Collection<ProfileColumn> Columns { get; set; }
+        public Collection<ProfileColumn> Columns =>
+            columns ?? (columns = new Collection<ProfileColumn>());
 
         [DefaultValue(0)]
         public int LeftFrozenColumnCount { get; set; }

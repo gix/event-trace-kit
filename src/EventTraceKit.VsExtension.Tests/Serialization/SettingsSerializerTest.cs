@@ -20,24 +20,8 @@
         }
 
         [Fact]
-        public void SerializeGlobalSettings()
+        public void SerializeViewPreset()
         {
-            var settings = new GlobalSettings();
-
-            var session = new TraceSessionSettingsViewModel();
-            session.Id = new Guid("12133C31-FC77-4210-91A0-1EAFCE2B3537");
-            session.Name = "Foo";
-            session.BufferSize = 64;
-            session.MinimumBuffers = 23;
-            session.MaximumBuffers = 42;
-            session.LogFileName = @"z:\path\to\logfile.etl";
-
-            var provider = new TraceProviderDescriptorViewModel(
-                new Guid("37D34B87-80A6-44CE-90BB-1C3D6EDB0784"), "Bar");
-            session.Providers.Add(provider);
-
-            settings.Sessions.Add(session);
-
             var preset = new AsyncDataViewModelPreset();
             preset.Name = "Foo Preset";
             preset.ConfigurableColumns.Add(new ColumnViewModelPreset {
@@ -55,7 +39,34 @@
                 IsVisible = true,
             });
 
-            settings.ModifiedPresets.Add(preset);
+            var collection = new HdvViewModelPresetCollection();
+            collection.UserPresets.Add(preset);
+
+            var stream = new MemoryStream();
+            new SettingsSerializer().Save(collection, stream);
+
+            var doc = XDocument.Parse(stream.ReadFullyAsString());
+            output.WriteLine(doc.ToString());
+        }
+
+        [Fact]
+        public void SerializeGlobalSettings()
+        {
+            var settings = new GlobalSettings();
+
+            var session = new TraceSessionSettingsViewModel();
+            session.Id = new Guid("12133C31-FC77-4210-91A0-1EAFCE2B3537");
+            session.Name = "Foo";
+            session.BufferSize = 64;
+            session.MinimumBuffers = 23;
+            session.MaximumBuffers = 42;
+            session.LogFileName = @"z:\path\to\logfile.etl";
+
+            var provider = new TraceProviderDescriptorViewModel(
+                new Guid("37D34B87-80A6-44CE-90BB-1C3D6EDB0784"), "Bar");
+            session.Providers.Add(provider);
+
+            settings.Sessions.Add(session);
 
             var stream = new MemoryStream();
             new SettingsSerializer().Save(settings, stream);

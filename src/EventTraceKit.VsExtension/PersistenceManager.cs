@@ -4,11 +4,22 @@
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.ComponentModel;
+    using System.IO;
     using System.Linq;
     using System.Threading;
     using System.Windows;
-    using Windows;
+    using System.Xml;
+    using Collections;
     using Controls;
+    using Microsoft.Internal.VisualStudio.Shell;
+    using Microsoft.VisualStudio;
+    using Microsoft.VisualStudio.PlatformUI;
+    using Serialization;
+    using Settings;
+    using Windows;
+    using Microsoft.VisualStudio.Shell;
+    using Microsoft.VisualStudio.Shell.Interop;
+    using Task = System.Threading.Tasks.Task;
 
     public sealed class PersistenceManager
     {
@@ -20,10 +31,25 @@
 
         private PersistenceManager()
         {
-            this.PresetCache = new HdvPresetCollections();
-            this.hdvViewModelDPD = DependencyPropertyDescriptor.FromProperty(DataTableGraphTreeItem.HdvViewModelProperty, typeof(DataTableGraphTreeItem));
-            this.hasUnsavedChanges = false;
+            PresetCache = new HdvPresetCollections();
+            //hdvViewModelDPD = DependencyPropertyDescriptor.FromProperty(DataTableGraphTreeItem.HdvViewModelProperty, typeof(DataTableGraphTreeItem));
+            hasUnsavedChanges = false;
             //WeakEventManager<WpaApplication, UISessionEventArgs>.AddHandler(WpaApplication.Current, "UISessionAdded", new EventHandler<UISessionEventArgs>(this.onUISessionAdded));
+        }
+
+        public bool HasUnsavedChages => this.hasUnsavedChanges;
+
+        public void MergePersistedCollections(HdvPresetCollections hdvPresetCollections)
+        {
+            if ((hdvPresetCollections != null) && (hdvPresetCollections.PresetCollections != null)) {
+                foreach (HdvViewModelPresetCollection presets in hdvPresetCollections.PresetCollections) {
+                    if ((presets != null) && (presets.PersistedPresets != null)) {
+                        foreach (var preset in presets.PersistedPresets) {
+                            this.CacheModifiedPreset(Guid.Empty, preset);
+                        }
+                    }
+                }
+            }
         }
 
         public static PersistenceManager PersistenceManger
@@ -39,9 +65,9 @@
 
         public AsyncDataViewModelPreset TryGetCachedVersion(Guid datasourceId, string presetName)
         {
-            HdvViewModelPresetCollection presetCollection = this.tryGetHdvViewModelPresetCollection(datasourceId);
+            HdvViewModelPresetCollection presetCollection = tryGetHdvViewModelPresetCollection(datasourceId);
             if (presetCollection != null) {
-                return this.tryGetPreset(presetCollection, presetName);
+                return tryGetPreset(presetCollection, presetName);
             }
             return null;
         }
@@ -51,8 +77,8 @@
             if (string.IsNullOrEmpty(presetName)) {
                 presetName = "default";
             }
-            HdvViewModelPresetCollection presetCollection = this.tryGetHdvViewModelPresetCollection(datasourceId);
-            return ((presetCollection != null) && (this.tryGetPreset(presetCollection, presetName) != null));
+            HdvViewModelPresetCollection presetCollection = tryGetHdvViewModelPresetCollection(datasourceId);
+            return ((presetCollection != null) && (tryGetPreset(presetCollection, presetName) != null));
         }
 
         public void CacheModifiedPreset(Guid datasourceId, AsyncDataViewModelPreset preset)
@@ -65,25 +91,25 @@
 
             HdvViewModelPresetCollection presets = tryGetHdvViewModelPresetCollection(datasourceId);
             if (presets == null)
-                presets = new HdvViewModelPresetCollection(datasourceId.ToString());
+                presets = new HdvViewModelPresetCollection();
 
-            AsyncDataViewModelPreset unmodifiedPreset = this.TryGetCachedVersion(datasourceId, preset.Name);
-            //if (((unmodifiedPreset == null) && (WpaApplication.Current.HdvPresetCollections != null)) && (WpaApplication.Current.HdvPresetCollections[datasourceId] != null)) {
-            //    unmodifiedPreset = WpaApplication.Current.HdvPresetCollections[datasourceId].TryGetPresetByName(preset.Name);
-            //}
+            AsyncDataViewModelPreset unmodifiedPreset = TryGetCachedVersion(datasourceId, preset.Name);
+            if (((unmodifiedPreset == null) && (WpaApplication.Current.PresetCollections != null)) && (WpaApplication.Current.PresetCollections[datasourceId] != null)) {
+                unmodifiedPreset = WpaApplication.Current.PresetCollections[datasourceId].TryGetPresetByName(preset.Name);
+            }
 
-            this.RemoveCachedVersion(datasourceId, preset.Name, false);
+            RemoveCachedVersion(datasourceId, preset.Name, false);
             presets.PersistedPresets.Add(preset);
-            this.PresetCache.PresetCollections.Add(presets);
+            PresetCache.PresetCollections.Add(presets);
             var view = PresetCollectionManagerView.Get();
             if (view != null) {
-                view.FindAndRefreshPersistedPreset(datasourceId.ToString(), unmodifiedPreset, preset);
+                view.FindAndRefreshPersistedPreset(null, unmodifiedPreset, preset);
             }
         }
 
         public bool RemoveCachedVersion(Guid datasourceId, string presetName)
         {
-            return this.RemoveCachedVersion(datasourceId, presetName, true);
+            return RemoveCachedVersion(datasourceId, presetName, true);
         }
 
         private AsyncDataViewModelPreset tryGetPreset(HdvViewModelPresetCollection presetCollection, string presetName)
@@ -93,9 +119,7 @@
 
         private HdvViewModelPresetCollection tryGetHdvViewModelPresetCollection(Guid datasourceId)
         {
-            return
-                this.PresetCache.PresetCollections.FirstOrDefault(
-                    pc => (new Guid(pc.Name) == datasourceId));
+            return PresetCache.PresetCollections.FirstOrDefault();
         }
 
         private bool RemoveCachedVersion(Guid datasourceId, string presetName, bool removeFromRepo)
@@ -103,15 +127,15 @@
             if (string.IsNullOrEmpty(presetName)) {
                 presetName = "default";
             }
-            HdvViewModelPresetCollection presetCollection = this.tryGetHdvViewModelPresetCollection(datasourceId);
+            HdvViewModelPresetCollection presetCollection = tryGetHdvViewModelPresetCollection(datasourceId);
             if (presetCollection != null) {
-                AsyncDataViewModelPreset preset = this.tryGetPreset(presetCollection, presetName);
+                AsyncDataViewModelPreset preset = tryGetPreset(presetCollection, presetName);
                 if (preset != null) {
                     presetCollection.PersistedPresets.Remove(preset);
                     var view = PresetCollectionManagerView.Get();
                     if ((view != null) && removeFromRepo) {
-                        HdvPresetCollections collection = view.FindCollectionForGraphAndPreset(presetCollection.Name, preset);
-                        view.RemovePersistedPresetByName(collection, presetCollection.Name, preset.Name);
+                        HdvPresetCollections collection = view.FindCollectionForGraphAndPreset(null, preset);
+                        view.RemovePersistedPresetByName(collection, null, preset.Name);
                     }
                     return true;
                 }
@@ -123,12 +147,14 @@
             DataTableGraphTreeItem dtGti, Action<DataTableGraphTreeItem> action)
         {
             if (dtGti.HdvViewModel == null) {
-                EventHandler handler = null;
+                ValueChangedEventHandler<AsyncDataViewModelPreset> handler = null;
                 handler = (sender, args) => {
-                    hdvViewModelDPD.RemoveValueChanged(dtGti, handler);
+                    dtGti.PresetChanged -= handler;
+                    //hdvViewModelDPD.RemoveValueChanged(dtGti, handler);
                     action(dtGti);
                 };
-                hdvViewModelDPD.AddValueChanged(dtGti, handler);
+                dtGti.PresetChanged += handler;
+                //hdvViewModelDPD.AddValueChanged(dtGti, handler);
             } else {
                 action(dtGti);
             }
@@ -136,9 +162,9 @@
         public bool TryApplyModifiedPreset(DataTableGraphTreeItem dtGti)
         {
             if (dtGti == null) {
-                throw new ArgumentNullException("dtGti");
+                throw new ArgumentNullException(nameof(dtGti));
             }
-            var preset = this.TryGetCachedVersion(dtGti.DataSourceID, dtGti.HdvViewModel.Preset.Name);
+            var preset = TryGetCachedVersion(dtGti.DataSourceID, dtGti.HdvViewModel.Preset.Name);
             if (preset != null) {
                 dtGti.HdvViewModel.Preset = preset;
                 return true;
@@ -148,8 +174,8 @@
 
         public void Attach(DataTableGraphTreeItem dtGti)
         {
-            this.checkHdvViewModelThenExecute(dtGti, delegate {
-                this.TryApplyModifiedPreset(dtGti);
+            checkHdvViewModelThenExecute(dtGti, delegate {
+                TryApplyModifiedPreset(dtGti);
                 //setDataTableGraphTreeItem(dtGti.HdvViewModel, dtGti);
                 WeakEventManager<AsyncDataViewModel, ValueChangedEventArgs<AsyncDataViewModelPreset>>.AddHandler(
                     dtGti.HdvViewModel,
@@ -174,19 +200,25 @@
                 oldPreset != null &&
                 newPreset != null && newPreset.IsModified &&
                 newPreset.Name == oldPreset.Name) {
-                this.CacheModifiedPreset(Guid.Empty, newPreset);
+                CacheModifiedPreset(Guid.Empty, newPreset);
             }
         }
     }
 
     public sealed class PresetCollectionManagerView
     {
+        private readonly ProfileCache cache = new ProfileCache();
         private static PresetCollectionManagerView instance;
 
         public PresetCollectionManagerView()
         {
-            this.allProfiles.Add(
-                new HdvPresetCollectionsWrapper("My Presets", new HdvPresetCollections()));
+            InitRepo();
+        }
+
+        public event EventHandler<ExceptionFilterEventArgs> ExceptionFilter
+        {
+            add { cache.ExceptionFilter += value; }
+            remove { cache.ExceptionFilter -= value; }
         }
 
         public static PresetCollectionManagerView Get()
@@ -196,28 +228,89 @@
             return instance;
         }
 
-        public void SavePresetToRepository(
-            string graphId, AsyncDataViewModelPreset preset, bool isPersistedPreset, string originalPresetName)
+        private void InitRepo()
         {
-            Guid guid;
-            HdvPresetCollections collection = this.FindCollectionForGraphAndPreset(graphId, preset);
-            this.PresetRepository[graphId].SetUserPreset(preset);
-            if (collection != this.PresetRepository) {
-                this.RemoveUserPresetByName(collection, graphId, originalPresetName);
+            ViewPresets profile = cache.Load();
+            if (profile != null) {
+                allProfiles.Add(new HdvPresetCollectionsWrapper(
+                    "My Presets",
+                    WpaProfileSerializer.DeserializePresetCollections(profile)));
+            } else {
+                allProfiles.Add(
+                    new HdvPresetCollectionsWrapper("My Presets", new HdvPresetCollections()));
+                allProfiles.Add(new HdvPresetCollectionsWrapper("My Presets", new HdvPresetCollections()));
+                SaveRepo();
             }
-            if (isPersistedPreset && Guid.TryParse(graphId, out guid)) {
-                PersistenceManager.PersistenceManger.RemoveCachedVersion(guid, originalPresetName);
+        }
+
+        public void UpdateRepo(WorkManager workManager)
+        {
+            if (WpaApplication.Current == null)
+                return;
+
+            Task.Run(delegate {
+                if (!rwLock.TryEnterReadLock(1000))
+                    return;
+
+                HdvPresetCollections newRepoGraphs = null;
+                try {
+                    ViewPresets profile = cache.Load();
+                    if (profile != null) {
+                        newRepoGraphs = WpaProfileSerializer.DeserializePresetCollections(profile);
+                        newRepoGraphs.Freeze();
+                    }
+                } catch (Exception ex) {
+                    return;
+                } finally {
+                    rwLock.ExitReadLock();
+                }
+
+                if (newRepoGraphs != null) {
+                    workManager.UIThread.Post(delegate {
+                        MergeInPresets(newRepoGraphs, this.PresetRepository, true);
+                        if ((WpaApplication.Current != null) && (WpaApplication.Current.PresetCollections != null)) {
+                            MergeInPresets(newRepoGraphs, WpaApplication.Current.PresetCollections, true);
+                        }
+                    });
+                }
+            });
+        }
+
+        private static void MergeInPresets(HdvPresetCollections source, HdvPresetCollections dest, bool includePersistedPresets)
+        {
+            MergeInPresets(source.PresetCollections, dest, includePersistedPresets);
+        }
+
+        private static void MergeInPresets(IEnumerable<HdvViewModelPresetCollection> source, HdvPresetCollections dest, bool includePersistedPresets)
+        {
+            dest.MergeInUserPresets(source);
+            if (includePersistedPresets) {
+                dest.MergeInPersistedPresets(source);
             }
-            this.SaveRepo();
+        }
+
+        public void SavePresetToRepository(
+            AsyncDataViewModelPreset preset, bool isPersistedPreset, string originalPresetName)
+        {
+            string graphId = string.Empty;
+            HdvPresetCollections collection = FindCollectionForGraphAndPreset(graphId, preset);
+            PresetRepository[graphId].SetUserPreset(preset);
+            if (collection != PresetRepository)
+                RemoveUserPresetByName(collection, graphId, originalPresetName);
+
+            if (isPersistedPreset) {
+                PersistenceManager.PersistenceManger.RemoveCachedVersion(Guid.Empty, originalPresetName);
+            }
+            SaveRepo();
         }
 
         public void RemoveUserPresetByName(HdvPresetCollections collection, string graphId, string presetName)
         {
             if ((collection != null) && (collection[graphId] != null)) {
                 collection[graphId].DeleteUserPresetByName(presetName);
-                this.CheckEmptyAndRemoveGraph(collection, graphId);
-                if (collection == this.PresetRepository) {
-                    this.SaveRepo();
+                CheckEmptyAndRemoveGraph(collection, graphId);
+                if (collection == PresetRepository) {
+                    SaveRepo();
                 }
             }
         }
@@ -228,62 +321,93 @@
             if (unmodifiedPreset == null)
                 return;
 
-            HdvPresetCollections collections = this.FindCollectionForGraphAndPreset(graphId, unmodifiedPreset);
+            HdvPresetCollections collections = FindCollectionForGraphAndPreset(graphId, unmodifiedPreset);
             if (collections == null)
                 return;
 
-            //if (((WpaApplication.Current != null) && (WpaApplication.Current.HdvPresetCollections != null)) && (WpaApplication.Current.HdvPresetCollections[graphId] != null)) {
-            //    bool flag = WpaApplication.Current.HdvPresetCollections[graphId].TryGetUserPresetByName(unmodifiedPreset.Name) > null;
-            //    bool flag2 = collections[graphId].TryGetUserPresetByName(unmodifiedPreset.Name) > null;
-            //    if (WpaApplication.Current.HdvPresetCollections[graphId].TryGetBuiltInPresetByName(unmodifiedPreset.Name) <= null) {
-            //        if (!flag) {
-            //            WpaApplication.Current.HdvPresetCollections.MergeInUserPreset(graphId, unmodifiedPreset);
-            //        }
-            //        if (!flag2) {
-            //            collections.MergeInUserPreset(graphId, unmodifiedPreset);
-            //            this.SaveRepo();
-            //        }
-            //    }
-            //}
+            if (((WpaApplication.Current != null) && (WpaApplication.Current.PresetCollections != null)) && (WpaApplication.Current.PresetCollections[graphId] != null)) {
+                bool flag = WpaApplication.Current.PresetCollections[graphId].TryGetUserPresetByName(unmodifiedPreset.Name) != null;
+                var b1 = WpaApplication.Current.PresetCollections[graphId].TryGetBuiltInPresetByName(unmodifiedPreset.Name) != null;
+                bool flag2 = collections[graphId].TryGetUserPresetByName(unmodifiedPreset.Name) != null;
+                if (!b1) {
+                    if (!flag) {
+                        WpaApplication.Current.PresetCollections.MergeInUserPreset(graphId, unmodifiedPreset);
+                    }
+                    if (!flag2) {
+                        collections.MergeInUserPreset(graphId, unmodifiedPreset);
+                        SaveRepo();
+                    }
+                }
+            }
 
-            //collections.MergeInPersistedPreset(graphId, modifiedPreset);
+            collections.MergeInPersistedPreset(graphId, modifiedPreset);
         }
 
         private void SaveRepo()
         {
-            this.SaveRepo(false);
+            SaveRepo(false);
         }
 
         private ReaderWriterLockSlim rwLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
-        private ObservableCollection<HdvPresetCollectionsWrapper> allProfiles = new ObservableCollection<HdvPresetCollectionsWrapper>();
+        private ObservableCollection<HdvPresetCollectionsWrapper> allProfiles =
+            new ObservableCollection<HdvPresetCollectionsWrapper>();
 
         private void SaveRepo(bool includePersistedPresets)
         {
-            //WpaProfile2 repositoryProfile;
+            includePersistedPresets = true;
+            ViewPresets repositoryProfile;
             //string repoPath = TryGetWpaPresetRepoPath();
             //if (repoPath != null) {
-            //    repositoryProfile = this.ExtractProfile(this.PresetRepository.PresetCollections, includePersistedPresets);
-            //    if (repositoryProfile != null) {
-            //        WpaApplication.Current.WorkManager.BackgroundThread.Post(delegate {
-            //            if (this.rwLock.TryEnterWriteLock(2000)) {
-            //                try {
-            //                    WpaProfileSerializer.SerializeProfile(repositoryProfile, repoPath, true, false);
-            //                } finally {
-            //                    this.rwLock.ExitWriteLock();
-            //                }
-            //            }
-            //        });
-            //    }
+            repositoryProfile = this.ExtractProfile(PresetRepository.PresetCollections, includePersistedPresets);
+            if (repositoryProfile != null) {
+                Task.Run(delegate {
+                    if (rwLock.TryEnterWriteLock(2000)) {
+                        try {
+                            cache.Save(repositoryProfile);
+                            //WpaProfileSerializer.SerializeProfile(repositoryProfile, repoPath, true, false);
+                        } finally {
+                            rwLock.ExitWriteLock();
+                        }
+                    }
+                });
+            }
             //}
+        }
+
+        private ViewPresets ExtractProfile(IEnumerable<HdvViewModelPresetCollection> graphs, bool includePersistedPresets)
+        {
+            return ExtractGraphsForSerialization(graphs, includePersistedPresets).FirstOrDefault();
+        }
+
+        private IEnumerable<ViewPresets> ExtractGraphsForSerialization(IEnumerable<HdvViewModelPresetCollection> graphs, bool includePersistedPresets)
+        {
+            var shaper = new SerializationShaper<SettingsElement>();
+            List<ViewPresets> list = new List<ViewPresets>();
+            using (IEnumerator<HdvViewModelPresetCollection> enumerator = (from hdvmpc in graphs
+                                                                           where hdvmpc.UserPresets.Any() || (includePersistedPresets && hdvmpc.PersistedPresets.Any())
+                                                                           select hdvmpc).GetEnumerator()) {
+                while (enumerator.MoveNext()) {
+                    ViewPresets schema;
+                    if (!shaper.TrySerialize(enumerator.Current, out schema)) {
+                        Console.Error.WriteLine("Failed to serialize Preset Collection");
+                    } else {
+                        if (!includePersistedPresets) {
+                            schema.PersistedPresets.Clear();
+                        }
+                        list.Add(schema);
+                    }
+                }
+            }
+            return list;
         }
 
         public HdvPresetCollections FindCollectionForGraphAndPreset(
             string graphId, AsyncDataViewModelPreset preset)
         {
-            if (preset == null) {
+            if (preset == null)
                 return null;
-            }
-            using (IEnumerator<HdvPresetCollectionsWrapper> enumerator = this.allProfiles.GetEnumerator()) {
+
+            using (IEnumerator<HdvPresetCollectionsWrapper> enumerator = allProfiles.GetEnumerator()) {
                 while (enumerator.MoveNext()) {
                     HdvViewModelPresetCollection presets;
                     HdvPresetCollections collections = enumerator.Current.Collections;
@@ -292,18 +416,16 @@
                     }
                 }
             }
-            return this.PresetRepository;
+
+            return PresetRepository;
         }
 
         internal HdvPresetCollections PresetRepository
         {
             get
             {
-                HdvPresetCollectionsWrapper wrapper = this.allProfiles.FirstOrDefault();
-                if (wrapper == null) {
-                    return null;
-                }
-                return wrapper.Collections;
+                HdvPresetCollectionsWrapper wrapper = allProfiles.FirstOrDefault();
+                return wrapper?.Collections;
             }
         }
 
@@ -312,9 +434,9 @@
         {
             if (collection != null && collection[graphId] != null) {
                 collection[graphId].DeletePersistedPresetByName(presetName);
-                this.CheckEmptyAndRemoveGraph(collection, graphId);
-                if (collection == this.PresetRepository) {
-                    this.SaveRepo();
+                CheckEmptyAndRemoveGraph(collection, graphId);
+                if (collection == PresetRepository) {
+                    SaveRepo();
                 }
             }
         }
@@ -324,10 +446,146 @@
             if ((collection[graphId].UserPresets.Count == 0) && (collection[graphId].PersistedPresets.Count == 0)) {
                 collection.PresetCollections.Remove(collection[graphId]);
             }
-            if ((collection != this.PresetRepository) && (collection.PresetCollections.Count == 0)) {
-                this.allProfiles.RemoveWhere(pc => pc.Collections == collection);
+            if ((collection != PresetRepository) && (collection.PresetCollections.Count == 0)) {
+                allProfiles.RemoveWhere(pc => pc.Collections == collection);
             }
         }
+
+        public void UpdateRepoFileWithPersistedPresets()
+        {
+            this.SaveRepo(true);
+        }
+    }
+
+    internal class WpaProfileSerializer
+    {
+        internal static HdvPresetCollections DeserializePresetCollections(ViewPresets serializedGraphSchema)
+        {
+            var shaper = new SerializationShaper<SettingsElement>();
+            HdvPresetCollections collections = new HdvPresetCollections();
+            if (serializedGraphSchema != null) {
+                HdvViewModelPresetCollection presets;
+                if (shaper.TryDeserialize(serializedGraphSchema, out presets) && (presets != null)) {
+                    collections.AddOrUpdate(presets);
+                }
+            }
+            return collections;
+        }
+    }
+
+    public class ProfileCache
+    {
+        public void Save(ViewPresets profile)
+        {
+            Validate.IsNotNull(profile, "profile");
+            if (EnsureLocalStorageDirectoryExists())
+                SaveProfileToLocalStorage(profile);
+        }
+
+        public ViewPresets Load()
+        {
+            return LoadProfileFromLocalStorage("ViewPresets.xml");
+        }
+
+        private string ProfileRootDirectory
+        {
+            get
+            {
+                var shell = (IVsShell)Package.GetGlobalService(typeof(SVsShell));
+                object obj2;
+                ErrorHandler.ThrowOnFailure(shell.GetProperty((int)__VSSPROPID.VSSPROPID_AppDataDir, out obj2));
+                return Path.Combine((string)obj2, "EventTraceKit");
+            }
+        }
+
+        private ViewPresets LoadProfileFromLocalStorage(string profileName)
+        {
+            try {
+                using (Stream stream = OpenProfileLocalStorage(profileName, FileAccess.Read))
+                    return LoadProfile(stream);
+            } catch (Exception ex) when (!ErrorHandler.IsCriticalException(ex)) {
+                RaiseExceptionFilter(ex, "Failed to load window configuration.");
+                return null;
+            }
+        }
+
+        private ViewPresets LoadProfile(Stream stream)
+        {
+            var serializer = new SettingsSerializer();
+            return serializer.Load<ViewPresets>(stream);
+        }
+
+        private void SaveProfileToLocalStorage(ViewPresets profile)
+        {
+            try {
+                using (Stream stream = OpenProfileLocalStorage("ViewPresets.xml", FileAccess.Write)) {
+                    var serializer = new SettingsSerializer();
+                    serializer.Save(profile, stream);
+                }
+            } catch (IOException ex) {
+                RaiseExceptionFilter(ex, "Failed to save window configuration.");
+            } catch (UnauthorizedAccessException ex) {
+                RaiseExceptionFilter(ex, "Failed to save window configuration.");
+            }
+        }
+
+        public Stream OpenProfileLocalStorage(string profileName, FileAccess fileAccess)
+        {
+            ThrowIfProfileNameInvalid(profileName);
+            FileMode mode = fileAccess == FileAccess.Read ? FileMode.Open : FileMode.Create;
+            FileShare share = fileAccess == FileAccess.Read ? FileShare.Read : FileShare.None;
+            return File.Open(GetProfileFullPath(profileName), mode, fileAccess, share);
+        }
+
+        private string GenerateProfileFileName(string profileName)
+        {
+            return Path.Combine(ProfileRootDirectory, profileName);
+        }
+
+        private string GetProfileFullPath(string profileName)
+        {
+            return GenerateProfileFileName(profileName);
+        }
+
+        private void ThrowIfProfileNameInvalid(string str)
+        {
+            str.ThrowIfNullOrEmpty("Window profile name cannot be null or empty.");
+        }
+
+        private bool EnsureLocalStorageDirectoryExists()
+        {
+            try {
+                if (!Directory.Exists(ProfileRootDirectory))
+                    Directory.CreateDirectory(ProfileRootDirectory);
+                return true;
+            } catch (IOException ex) {
+                RaiseExceptionFilter(ex, "Failed to create window configuration storage directory.");
+                return false;
+            } catch (UnauthorizedAccessException ex) {
+                RaiseExceptionFilter(ex, "Failed to create window configuration storage directory.");
+                return false;
+            }
+        }
+
+        public event EventHandler<ExceptionFilterEventArgs> ExceptionFilter;
+
+        private void RaiseExceptionFilter(Exception exception, string message)
+        {
+            ExceptionFilter?.Invoke(this, new ExceptionFilterEventArgs(exception, message));
+        }
+    }
+
+    public class ExceptionFilterEventArgs : EventArgs
+    {
+        public ExceptionFilterEventArgs(Exception exception, string message)
+        {
+            Exception = exception;
+            Message = message;
+        }
+
+        public Exception Exception { get; private set; }
+
+        public string Message { get; private set; }
     }
 
     public class HdvPresetCollectionsWrapper
@@ -335,8 +593,8 @@
         public HdvPresetCollectionsWrapper(
             string name, HdvPresetCollections collections)
         {
-            this.Name = name;
-            this.Collections = collections;
+            Name = name;
+            Collections = collections;
         }
 
 
@@ -344,7 +602,8 @@
         public string Name { get; private set; }
     }
 
-    public class HdvPresetCollections : DependencyObject
+    public class HdvPresetCollections
+        : FreezableCustomSerializerAccessBase //, IComparable<HdvPresetCollections>
     {
         public static readonly DependencyProperty PresetCollectionsProperty =
               DependencyProperty.Register(
@@ -352,6 +611,11 @@
                   typeof(FreezableCollection<HdvViewModelPresetCollection>),
                   typeof(HdvPresetCollections),
                   PropertyMetadataUtils.DefaultNull);
+
+        protected override Freezable CreateInstanceCore()
+        {
+            return new HdvPresetCollections();
+        }
 
         public HdvPresetCollections()
         {
@@ -362,19 +626,19 @@
         {
             get
             {
-                return (FreezableCollection<HdvViewModelPresetCollection>)base.GetValue(PresetCollectionsProperty);
+                return (FreezableCollection<HdvViewModelPresetCollection>)GetValue(PresetCollectionsProperty);
             }
             set
             {
-                base.SetValue(PresetCollectionsProperty, value);
+                SetValue(PresetCollectionsProperty, value);
             }
         }
         public HdvViewModelPresetCollection this[Guid guid]
         {
             get
             {
-                base.VerifyAccess();
-                return this[guid.ToString()];
+                VerifyAccess();
+                return this[guid == Guid.Empty ? null : guid.ToString()];
             }
         }
         public HdvViewModelPresetCollection this[string name]
@@ -382,27 +646,95 @@
             get
             {
                 HdvViewModelPresetCollection presets;
-                base.VerifyAccess();
-                if (!this.TryGetValue(name, out presets)) {
-                    presets = new HdvViewModelPresetCollection(name);
-                    this.PresetCollections.Add(presets);
+                VerifyAccess();
+                if (!TryGetValue(name, out presets)) {
+                    presets = new HdvViewModelPresetCollection();
+                    PresetCollections.Add(presets);
                 }
                 return presets;
             }
         }
+        public void MergeInPersistedPresets(IEnumerable<HdvViewModelPresetCollection> viewModelPresetCollection)
+        {
+            if (viewModelPresetCollection == null) {
+                throw new ArgumentNullException("viewModelPresetCollection");
+            }
+            foreach (HdvViewModelPresetCollection presets in viewModelPresetCollection) {
+                HdvViewModelPresetCollection collection1 = this[null];
+                collection1.BeginDeferChangeNotifications();
+                collection1.SetPersistedPresets(presets.PersistedPresets);
+                collection1.EndDeferChangeNotifications();
+            }
+        }
+
+        public void MergeInUserPresets(IEnumerable<HdvViewModelPresetCollection> viewModelPresetCollection)
+        {
+            if (viewModelPresetCollection == null) {
+                throw new ArgumentNullException("viewModelPresetCollection");
+            }
+            foreach (HdvViewModelPresetCollection presets in viewModelPresetCollection) {
+                HdvViewModelPresetCollection presets2 = this[null];
+                presets2.BeginDeferChangeNotifications();
+                presets2.SetUserPresets(presets.UserPresets);
+                presets2.EndDeferChangeNotifications();
+            }
+        }
+
+        public void AddOrUpdate(HdvViewModelPresetCollection collection)
+        {
+            if (collection == null) {
+                throw new ArgumentNullException("collection");
+            }
+            HdvViewModelPresetCollection result = null;
+            if (this.TryGetValue(null, out result)) {
+                result.BeginDeferChangeNotifications();
+                result.UserPresets.Clear();
+                result.BuiltInPresets.Clear();
+                result.SetUserPresets(collection.UserPresets);
+                result.BuiltInPresets.AddRange(collection.BuiltInPresets);
+                result.EndDeferChangeNotifications();
+            } else {
+                this.PresetCollections.Add(collection);
+            }
+        }
+
+        public void MergeInBuiltInPresets(IEnumerable<HdvViewModelPresetCollection> viewModelPresetCollection)
+        {
+            if (viewModelPresetCollection == null)
+                throw new ArgumentNullException(nameof(viewModelPresetCollection));
+            foreach (HdvViewModelPresetCollection presets in viewModelPresetCollection) {
+                var collection = this[null];
+                collection.BeginDeferChangeNotifications();
+                collection.BuiltInPresets.AddRange(presets.BuiltInPresets);
+                collection.EndDeferChangeNotifications();
+            }
+        }
+
+        public void MergeInUserPreset(string graphId, AsyncDataViewModelPreset preset)
+        {
+            if (preset == null)
+                throw new ArgumentNullException(nameof(preset));
+            HdvViewModelPresetCollection collection = this[graphId];
+            collection.BeginDeferChangeNotifications();
+            collection.SetUserPreset(preset);
+            collection.EndDeferChangeNotifications();
+        }
+
+        public void MergeInPersistedPreset(string graphId, AsyncDataViewModelPreset preset)
+        {
+            if (preset == null)
+                throw new ArgumentNullException(nameof(preset));
+            HdvViewModelPresetCollection collection = this[graphId];
+            collection.BeginDeferChangeNotifications();
+            collection.SetPersistedPreset(preset);
+            collection.EndDeferChangeNotifications();
+        }
 
         public bool TryGetValue(string name, out HdvViewModelPresetCollection result)
         {
-            base.VerifyAccess();
-            foreach (HdvViewModelPresetCollection presets in this.PresetCollections) {
-                string str;
-                Guid guid;
-                if (Guid.TryParse(presets.Name, out guid)) {
-                    str = guid.ToString();
-                } else {
-                    str = presets.Name;
-                }
-                if (str.Equals(name, StringComparison.InvariantCultureIgnoreCase)) {
+            VerifyAccess();
+            foreach (HdvViewModelPresetCollection presets in PresetCollections) {
+                if (string.IsNullOrEmpty(name)) {
                     result = presets;
                     return true;
                 }

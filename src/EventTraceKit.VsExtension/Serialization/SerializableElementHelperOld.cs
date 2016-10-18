@@ -246,7 +246,7 @@
         private static bool TryGetSerializedPropertyName(
             PropertyInfo info, out string serializedName, out object defaultValue)
         {
-            var attribute = info?.TryGetAttribute<SerializeAttribute>(true);
+            var attribute = info.GetCustomAttribute<SerializeAttribute>(true);
             if (attribute == null) {
                 serializedName = null;
                 defaultValue = null;

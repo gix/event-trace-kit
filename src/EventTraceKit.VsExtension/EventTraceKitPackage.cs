@@ -46,6 +46,8 @@
 
             LoadSettings();
 
+            this.GetService<SDTE, DTE>().Events.DTEEvents.OnBeginShutdown += OnShutdown;
+
             AddMenuCommandHandlers();
 
             Func<IServiceProvider, TraceLogWindow> traceLogFactory = sp => {
@@ -65,10 +67,9 @@
             traceLogPane = new Lazy<TraceLogPane>(() => new TraceLogPane(traceLogFactory));
         }
 
-        protected override void Dispose(bool disposing)
+        private void OnShutdown()
         {
             SaveSettings();
-            base.Dispose(disposing);
         }
 
         private WritableSettingsStore CreateSettingsStore()
@@ -110,12 +111,6 @@
         {
             var id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidTraceLog);
             DefineCommandHandler(id, ShowTraceLogWindow);
-        }
-
-        private void UpdateCommand(Guid menuGroup, int cmdId)
-        {
-            var uiShell = this.GetService<SVsUIShell, IVsUIShell>();
-            uiShell?.UpdateCommandUI(0);
         }
 
         internal void OutputString(Guid paneId, string text)
@@ -228,35 +223,6 @@
         public SolutionSettings SolutionSettings { get; set; }
     }
 
-    public class DynamicItemMenuCommand : OleMenuCommand
-    {
-        private readonly Func<int, bool> matches;
-
-        public DynamicItemMenuCommand(
-            CommandID rootId, Func<int, bool> matches, EventHandler invokeHandler,
-            EventHandler beforeQueryStatusHandler)
-            : base(invokeHandler, null, beforeQueryStatusHandler, rootId)
-        {
-            if (matches == null)
-                throw new ArgumentNullException(nameof(matches));
-
-            this.matches = matches;
-        }
-
-        public override bool DynamicItemMatch(int cmdId)
-        {
-            // If the given cmdId is a match, store the command id in
-            // MatchedCommandId for use by any BeforeQueryStatus handlers.
-            if (matches(cmdId)) {
-                MatchedCommandId = cmdId;
-                return true;
-            }
-
-            MatchedCommandId = 0;
-            return false;
-        }
-    }
-
     public interface IEtkGlobalSettings
     {
     }
@@ -360,12 +326,6 @@
     [SerializedShape(typeof(Settings.GlobalSettings))]
     public class GlobalSettings
     {
-        public ObservableCollection<AsyncDataViewModelPreset> ModifiedPresets { get; } =
-            new ObservableCollection<AsyncDataViewModelPreset>();
-
-        public ObservableCollection<AsyncDataViewModelPreset> PersistedPresets { get; } =
-            new ObservableCollection<AsyncDataViewModelPreset>();
-
         public Guid ActiveSession { get; set; }
 
         public ObservableCollection<TraceSessionSettingsViewModel> Sessions { get; } =
@@ -374,10 +334,6 @@
 
     public class SolutionSettings
     {
-        public Collection<ProfilePreset> ModifiedPresets { get; set; }
-
-        public Collection<ProfilePreset> PersistedPresets { get; set; }
-
         public Guid ActiveSession { get; set; }
 
         public Collection<TraceSession> Sessions { get; set; }

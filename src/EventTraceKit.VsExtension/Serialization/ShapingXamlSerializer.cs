@@ -4,6 +4,7 @@
     using System.IO;
 
     public class ShapingXamlSerializer<TSerializedBaseType> : IXamlSerializer
+        where TSerializedBaseType : class
     {
         private readonly SafeXamlSerializer serializer;
         private readonly SerializationShaper<TSerializedBaseType> shaper;
@@ -33,6 +34,10 @@
 
         private TSerializedBaseType ConvertToSerializedShape(object element)
         {
+            var serializedType = element as TSerializedBaseType;
+            if (serializedType != null)
+                return serializedType;
+
             TSerializedBaseType serialized;
             if (!shaper.TrySerialize(element, out serialized))
                 throw new InvalidOperationException("Unable to convert object to serialized shape.");
@@ -43,10 +48,13 @@
         private T ConvertFromSerializedShape<T>(TSerializedBaseType serialized)
         {
             T element;
-            if (!shaper.TryDeserialize(serialized, out element))
-                throw new InvalidOperationException("Unable to convert object from serialized shape.");
+            if (shaper.TryDeserialize(serialized, out element))
+                return element;
 
-            return element;
+            if (typeof(TSerializedBaseType).IsAssignableFrom(typeof(T)))
+                return (T)(object)serialized;
+
+            throw new InvalidOperationException("Unable to convert object from serialized shape.");
         }
     }
 }

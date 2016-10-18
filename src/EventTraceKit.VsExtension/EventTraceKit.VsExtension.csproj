@@ -180,7 +180,6 @@
     <Compile Include="Controls\InsertionAdorner.cs" />
     <Compile Include="Extensions\VsSdkExtensions.cs" />
     <Compile Include="Extensions.cs" />
-    <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="Formatting\FormatProviders.cs" />
     <Compile Include="HdvViewModelPresetCollection.cs" />
     <Compile Include="ListBoxDragPreview.cs" />
@@ -196,8 +195,10 @@
     </Compile>
     <Compile Include="Serialization\ActivatorUtils.cs" />
     <Compile Include="Serialization\CustomXamlSerializer.cs" />
+    <Compile Include="Serialization\DeserializationCallbackAttribute.cs" />
     <Compile Include="Serialization\DictionaryExtensions.cs" />
     <Compile Include="Serialization\EnumerableExtensions.cs" />
+    <Compile Include="Serialization\EnumUtils.cs" />
     <Compile Include="Serialization\IXamlSerializer.cs" />
     <Compile Include="Serialization\SafeXamlSerializer.cs" />
     <Compile Include="Serialization\SerializationShaper.cs" />

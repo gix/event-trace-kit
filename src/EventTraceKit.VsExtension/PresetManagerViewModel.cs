@@ -205,7 +205,7 @@
             var source = (PresetManagerViewModel)d;
             if (!source.IsCurrentPresetModified)
                 return source.CurrentSelectedPresetName;
-            return $"{source.CurrentSelectedPresetName} *";
+            return $"{source.CurrentSelectedPresetName}*";
         }
 
         #endregion
@@ -388,8 +388,10 @@
 
         internal void RefreshFromPreset(string displayName)
         {
-            var hdvViewModelPreset = HdvViewModel.PresetCollection.TryGetPresetByName(displayName);
-            RefreshFromPreset(hdvViewModelPreset);
+            var preset = PersistenceManager.PersistenceManger.TryGetCachedVersion(Guid.Empty, displayName);
+            if (preset == null)
+                preset = HdvViewModel.PresetCollection.TryGetPresetByName(displayName);
+            RefreshFromPreset(preset);
         }
 
         private void RefreshFromPreset(AsyncDataViewModelPreset preset)
@@ -708,7 +710,7 @@
 
             var view = PresetCollectionManagerView.Get();
             if (view != null)
-                view.SavePresetToRepository(string.Empty, newPreset, isModified, name);
+                view.SavePresetToRepository(newPreset, isModified, name);
         }
     }
 
@@ -881,83 +883,12 @@
         }
     }
 
-    public class DataTableGraphTreeItem : DependencyObject
+    public interface DataTableGraphTreeItem
     {
-        private static readonly DependencyPropertyKey HdvViewModelPropertyKey =
-            DependencyProperty.RegisterReadOnly(nameof(HdvViewModel), typeof(AsyncDataViewModel), typeof(DataTableGraphTreeItem), new PropertyMetadata((object)null, new PropertyChangedCallback((s, e) => ((DataTableGraphTreeItem)s).HdvViewModelPropertyChanged(e))));
-        public static readonly DependencyProperty HdvViewModelProperty =
-            HdvViewModelPropertyKey.DependencyProperty;
-        public static readonly DependencyProperty HdvViewModelPresetProperty = DependencyProperty.Register(
-            nameof(HdvViewModelPreset), typeof(AsyncDataViewModelPreset), typeof(DataTableGraphTreeItem));
-
-        public Guid DataSourceID { get; set; }
-
-        public DataTableGraphTreeItem(AsyncDataViewModel HdvViewModel, AsyncDataViewModelPreset HdvViewModelPreset)
-        {
-            this.HdvViewModel = HdvViewModel;
-            this.HdvViewModelPreset = HdvViewModelPreset;
-        }
-
-        public AsyncDataViewModel HdvViewModel
-        {
-            get
-            {
-                return (AsyncDataViewModel)GetValue(HdvViewModelProperty);
-            }
-            private set
-            {
-                SetValue(HdvViewModelPropertyKey, value);
-            }
-        }
-
-        [Serialize]
-        public AsyncDataViewModelPreset HdvViewModelPreset
-        {
-            get
-            {
-                return (AsyncDataViewModelPreset)GetValue(HdvViewModelPresetProperty);
-            }
-            set
-            {
-                SetValue(HdvViewModelPresetProperty, value);
-            }
-        }
-
-        private void OnHdvViewModelPresetChanged(object sender, ValueChangedEventArgs<AsyncDataViewModelPreset> e)
-        {
-            if (e.NewValue != null) {
-            }
-        }
-
-        private void HdvViewModelPropertyChanged(DependencyPropertyChangedEventArgs e)
-        {
-            var oldValue = e.OldValue as AsyncDataViewModel;
-            if (oldValue != null) {
-                //BindingOperations.ClearBinding(oldValue, HdvViewModel.SelectionProperty);
-                oldValue.PresetChanged -= OnHdvViewModelPresetChanged;
-            }
-            var newValue = e.NewValue as AsyncDataViewModel;
-            if (newValue != null) {
-                //Binding binding5 = new Binding {
-                //    Source = this,
-                //    Path = PropertyPathUtils.Combine(GraphTreeItem.GraphModelProperty, GraphModel.TimeSelectionInfoCollectionProperty, TimeSelectionInfoCollection.TotalRangeDensityProperty),
-                //    Mode = BindingMode.OneWay
-                //};
-                //BindingOperations.SetBinding(newValue, HdvViewModel.SelectionProperty, binding5);
-
-                newValue.PresetChanged += OnHdvViewModelPresetChanged;
-            }
-
-            OnAvailablePresetsChanged();
-        }
-
-        private void OnAvailablePresetsChanged()
-        {
-            //this.presetDropDownMenu.Items.Clear();
-            //if (this.HdvViewModel != null) {
-            //    this.presetDropDownMenu.Items.AddRange<GraphTreeItemHeaderCommand>((IEnumerable<GraphTreeItemHeaderCommand>)(from presetName in this.HdvViewModel.PresetCollection.EnumerateAllPresetsByName() select new ApplyPresetHeaderCommand(this, presetName)));
-            //}
-        }
+        Guid DataSourceID { get; set; }
+        AsyncDataViewModel HdvViewModel { get; }
+        AsyncDataViewModelPreset HdvViewModelPreset { get; }
+        event ValueChangedEventHandler<AsyncDataViewModelPreset> PresetChanged;
     }
 
     public class GraphTreeItemHeaderManagementCommand : DependencyObject
@@ -1528,7 +1459,7 @@
             public static readonly WpaApplication Instance = new WpaApplication();
         }
 
-        public HdvPresetCollections PresetCollections { get; } = new HdvPresetCollections();
+        public HdvPresetCollections PresetCollections { get; set; } = new HdvPresetCollections();
     }
 
     public class PresetManagerDesignTimeModel : PresetManagerViewModel

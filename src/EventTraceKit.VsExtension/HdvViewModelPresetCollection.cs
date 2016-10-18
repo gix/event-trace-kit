@@ -4,12 +4,24 @@ namespace EventTraceKit.VsExtension
     using System.Collections.Generic;
     using System.Linq;
     using System.Windows;
+    using Windows;
     using Controls;
     using Serialization;
 
-    public class HdvViewModelPresetCollection : DependencyObject
+    [SerializedShape(typeof(Settings.ViewPresets))]
+    public class HdvViewModelPresetCollection : FreezableCustomSerializerAccessBase
     {
         private int deferChangeNotificationCount;
+
+        private class PersistedPresetsSerializerCallback : IDeserializationCallback
+        {
+            public void OnDeserialized(object obj)
+            {
+                var persistedPresets = (FreezableCollection<AsyncDataViewModelPreset>)obj;
+                foreach (var preset in persistedPresets)
+                    preset.IsModified = true;
+            }
+        }
 
         private static readonly DependencyPropertyKey UserPresetsPropertyKey =
             DependencyProperty.RegisterReadOnly(
@@ -49,13 +61,8 @@ namespace EventTraceKit.VsExtension
 
         public event EventHandler AvailablePresetsChanged;
 
-        public HdvViewModelPresetCollection() : this(null)
+        public HdvViewModelPresetCollection()
         {
-        }
-
-        public HdvViewModelPresetCollection(string name)
-        {
-            Name = name;
             BuiltInPresets = new FreezableCollection<AsyncDataViewModelPreset>();
             UserPresets = new FreezableCollection<AsyncDataViewModelPreset>();
             PersistedPresets = new FreezableCollection<AsyncDataViewModelPreset>();
@@ -72,8 +79,30 @@ namespace EventTraceKit.VsExtension
             return BuiltInPresets.Any(p => p.Name == name);
         }
 
+        public void SetUserPresets(IEnumerable<AsyncDataViewModelPreset> presets)
+        {
+            base.VerifyAccess();
+            if (presets == null) {
+                throw new ArgumentNullException("presets");
+            }
+            foreach (AsyncDataViewModelPreset preset in presets) {
+                this.SetUserPreset(preset);
+            }
+        }
+
+        public void SetPersistedPresets(IEnumerable<AsyncDataViewModelPreset> presets)
+        {
+            base.VerifyAccess();
+            if (presets == null) {
+                throw new ArgumentNullException("presets");
+            }
+            foreach (var preset in presets) {
+                this.SetPersistedPreset(preset);
+            }
+        }
+
         [Serialize]
-        //[CustomDeserializer(typeof(HdvVMPCPersistedPresetsDeserializer))]
+        [DeserializationCallback(typeof(PersistedPresetsSerializerCallback))]
         public FreezableCollection<AsyncDataViewModelPreset> PersistedPresets
         {
             get { return (FreezableCollection<AsyncDataViewModelPreset>)GetValue(PersistedPresetsProperty); }
@@ -86,8 +115,6 @@ namespace EventTraceKit.VsExtension
             get { return (FreezableCollection<AsyncDataViewModelPreset>)GetValue(UserPresetsProperty); }
             private set { SetValue(UserPresetsPropertyKey, value); }
         }
-
-        public string Name { get; set; }
 
         public int Count => UserPresets.Count + BuiltInPresets.Count;
 
@@ -170,9 +197,8 @@ namespace EventTraceKit.VsExtension
 
         private void RaiseChangeNotificationIfNecessary()
         {
-            if (deferChangeNotificationCount == 0) {
+            if (deferChangeNotificationCount == 0)
                 RaiseAvailablePresetsChanged();
-            }
         }
 
         private void RaiseAvailablePresetsChanged()
@@ -187,83 +213,131 @@ namespace EventTraceKit.VsExtension
 
         private int GetPersistedPresetIndexByName(string name)
         {
-            return GetPresetIndexByName(name, this.PersistedPresets);
+            return GetPresetIndexByName(name, PersistedPresets);
         }
 
         public bool DeletePersistedPresetByName(string name)
         {
-            base.VerifyAccess();
-            int persistedPresetIndexByName = this.GetPersistedPresetIndexByName(name);
+            VerifyAccess();
+            int persistedPresetIndexByName = GetPersistedPresetIndexByName(name);
             if (persistedPresetIndexByName == -1) {
                 return false;
             }
-            this.PersistedPresets.RemoveAt(persistedPresetIndexByName);
+            PersistedPresets.RemoveAt(persistedPresetIndexByName);
             return true;
         }
 
         private int GetUserPresetIndexByName(string name)
         {
-            return GetPresetIndexByName(name, this.UserPresets);
+            return GetPresetIndexByName(name, UserPresets);
         }
 
         public bool DeleteUserPresetByName(string name)
         {
-            base.VerifyAccess();
-            int userPresetIndexByName = this.GetUserPresetIndexByName(name);
-            if (userPresetIndexByName == -1) {
+            VerifyAccess();
+            int userPresetIndexByName = GetUserPresetIndexByName(name);
+            if (userPresetIndexByName == -1)
                 return false;
-            }
-            this.UserPresets.RemoveAt(userPresetIndexByName);
+
+            UserPresets.RemoveAt(userPresetIndexByName);
             return true;
+        }
+
+        public AsyncDataViewModelPreset TryGetBuiltInPresetByName(string name)
+        {
+            return TryGetPresetByName(name, BuiltInPresets);
         }
 
         public AsyncDataViewModelPreset TryGetUserPresetByName(string name)
         {
-            return TryGetPresetByName(name, this.UserPresets);
+            return TryGetPresetByName(name, UserPresets);
         }
 
         public void SetUserPreset(AsyncDataViewModelPreset preset)
         {
-            base.VerifyAccess();
+            VerifyAccess();
             if (preset == null) {
                 throw new ArgumentNullException(nameof(preset));
             }
-            AsyncDataViewModelPreset other = this.TryGetUserPresetByName(preset.Name);
+            AsyncDataViewModelPreset other = TryGetUserPresetByName(preset.Name);
             if (other == null) {
-                this.AddUserPreset(preset);
+                AddUserPreset(preset);
             } else if (!preset.Equals(other)) {
-                this.RemoveUserPreset(other);
-                this.AddUserPreset(preset);
+                RemoveUserPreset(other);
+                AddUserPreset(preset);
             }
         }
 
         private void AddUserPreset(AsyncDataViewModelPreset preset)
         {
-            base.VerifyAccess();
-            this.UserPresets.Add(preset);
+            VerifyAccess();
+            UserPresets.Add(preset);
         }
 
         private void RemoveUserPreset(AsyncDataViewModelPreset preset)
         {
-            base.VerifyAccess();
-            this.UserPresets.Remove(preset);
+            VerifyAccess();
+            UserPresets.Remove(preset);
         }
 
         public bool ContainsPreset(AsyncDataViewModelPreset preset)
         {
-            if (preset == null) {
-                throw new ArgumentNullException("preset");
-            }
-            var other = this.TryGetPresetByName(preset.Name);
-            if (other == null) {
+            if (preset == null)
+                throw new ArgumentNullException(nameof(preset));
+
+            var other = TryGetPresetByName(preset.Name);
+            if (other == null)
                 return false;
-            }
+
             return preset.Equals(other);
         }
 
         public AsyncDataViewModelPreset TryGetPersistedPresetByName(string name)
         {
-            return TryGetPresetByName(name, this.PersistedPresets);
+            return TryGetPresetByName(name, PersistedPresets);
+        }
+
+        public void SetPersistedPreset(AsyncDataViewModelPreset preset)
+        {
+            VerifyAccess();
+            if (preset == null)
+                throw new ArgumentNullException(nameof(preset));
+
+            var other = TryGetPersistedPresetByName(preset.Name);
+            if (other == null) {
+                AddPersistedPreset(preset);
+            } else if (!preset.Equals(other)) {
+                RemovePersistedPreset(other);
+                AddPersistedPreset(preset);
+            }
+        }
+
+        private void AddPersistedPreset(AsyncDataViewModelPreset preset)
+        {
+            VerifyAccess();
+            PersistedPresets.Add(preset);
+        }
+
+        private void RemovePersistedPreset(AsyncDataViewModelPreset preset)
+        {
+            VerifyAccess();
+            PersistedPresets.Remove(preset);
+        }
+
+        public void BeginDeferChangeNotifications()
+        {
+            ++deferChangeNotificationCount;
+        }
+
+        public void EndDeferChangeNotifications()
+        {
+            --deferChangeNotificationCount;
+            RaiseChangeNotificationIfNecessary();
+        }
+
+        protected override Freezable CreateInstanceCore()
+        {
+            return new HdvViewModelPresetCollection();
         }
     }
 }

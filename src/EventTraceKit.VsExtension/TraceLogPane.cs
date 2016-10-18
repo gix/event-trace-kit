@@ -29,6 +29,12 @@
             Content = traceLogFactory(this);
         }
 
+        protected override void OnClose()
+        {
+            base.OnClose();
+            PresetCollectionManagerView.Get().UpdateRepoFileWithPersistedPresets();
+        }
+
         public override IVsSearchTask CreateSearch(
             uint dwCookie, IVsSearchQuery pSearchQuery, IVsSearchCallback pSearchCallback)
         {

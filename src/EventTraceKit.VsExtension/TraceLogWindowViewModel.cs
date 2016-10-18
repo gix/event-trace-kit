@@ -54,17 +54,25 @@ namespace EventTraceKit.VsExtension
             var tableTuple = new GenericEventsViewModelSource().CreateTable(this, eventSymbolSource);
             var dataTable = tableTuple.Item1;
             var templatePreset = tableTuple.Item2;
-            var presetCollection = WpaApplication.Current.PresetCollections[Guid.Empty];
 
             var defaultPreset = GenericEventsViewModelSource.CreateDefaultPreset();
+
+            var presetCollectionManagerView = PresetCollectionManagerView.Get();
+            WpaApplication.Current.PresetCollections = presetCollectionManagerView.PresetRepository;
+            presetCollectionManagerView.ExceptionFilter += PresetCollectionManagerViewOnExceptionFilter;
+            var presetCollection = presetCollectionManagerView.PresetRepository[Guid.Empty];
             presetCollection.BuiltInPresets.Add(defaultPreset);
+
+            PersistenceManager.PersistenceManger.MergePersistedCollections(presetCollectionManagerView.PresetRepository);
 
             EventsDataView = new TraceEventsView(dataTable);
             AdvModel = new AsyncDataViewModel(
                 EventsDataView, templatePreset, presetCollection);
+            AdvModel.Preset = defaultPreset;
+
+            PersistenceManager.PersistenceManger.Attach(AdvModel);
             GridModel = AdvModel.GridViewModel;
 
-            AdvModel.Preset = defaultPreset;
             AdvModel.PresetChanged += (s, e) => {
                 uiShell?.UpdateCommandUI(0);
             };
@@ -81,6 +89,15 @@ namespace EventTraceKit.VsExtension
             updateStatisticsTimer = new DispatcherTimer(DispatcherPriority.Background);
             updateStatisticsTimer.Interval = TimeSpan.FromSeconds(1);
             updateStatisticsTimer.Tick += (s, a) => UpdateStats();
+        }
+
+        private void PresetCollectionManagerViewOnExceptionFilter(
+            object sender, ExceptionFilterEventArgs args)
+        {
+            int result;
+            uiShell.ShowMessageBox(
+                0, Guid.Empty, "Error", args.Message, null, 0, OLEMSGBUTTON.OLEMSGBUTTON_OK,
+                OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST, OLEMSGICON.OLEMSGICON_CRITICAL, 0, out result);
         }
 
         public class TraceEventsView : DataView
@@ -323,15 +340,25 @@ namespace EventTraceKit.VsExtension
             IntPtr outValue = cmdArgs.OutValue;
 
             if (outValue != IntPtr.Zero) {
-                presetName = AdvModel.Preset.Name;
-                Marshal.GetNativeVariantForObject(presetName, outValue);
+                string displayName = AdvModel.Preset.Name;
+                PersistenceManager persistenceManager = PersistenceManager.PersistenceManger;
+                if (persistenceManager.HasCachedVersion(Guid.Empty, AdvModel.Preset.Name))
+                    displayName += "*";
+
+                Marshal.GetNativeVariantForObject(displayName, outValue);
                 return;
             }
 
             if (presetName == null)
                 return;
 
-            var preset = AdvModel.PresetCollection.TryGetPresetByName(presetName);
+            if (presetName.EndsWith("*"))
+                presetName = presetName.Substring(0, presetName.Length - 1);
+
+            var preset = PersistenceManager.PersistenceManger.TryGetCachedVersion(Guid.Empty, presetName);
+            if (preset == null)
+                preset = AdvModel.PresetCollection.TryGetPresetByName(presetName);
+
             if (preset != null)
                 AdvModel.Preset = preset;
         }
@@ -347,9 +374,10 @@ namespace EventTraceKit.VsExtension
                 throw new ArgumentException("InParamIllegal");
 
             if (outValue == IntPtr.Zero)
-                throw (new ArgumentException("OutParamRequired"));
+                throw new ArgumentException("OutParamRequired");
 
-            var items = AdvModel.PresetCollection.EnumerateAllPresetsByName().ToArray();
+            var items = AdvModel.PresetCollection.EnumerateAllPresetsByName()
+                .Select(x => x + (PersistenceManager.PersistenceManger.HasCachedVersion(Guid.Empty, x) ? "*" : "")).ToArray();
             Marshal.GetNativeVariantForObject(items, outValue);
         }
 

@@ -11,6 +11,20 @@
 
     public class SerializationShaper<TSerializedBaseType>
     {
+        public bool TrySerialize<TTarget>(object source, out TTarget target)
+            where TTarget : class, TSerializedBaseType
+        {
+            TSerializedBaseType t;
+            if (TrySerialize(source, out t)) {
+                target = t as TTarget;
+                if (target != null)
+                    return true;
+            }
+
+            target = null;
+            return false;
+        }
+
         public bool TrySerialize(object source, out TSerializedBaseType target)
         {
             object element;
@@ -49,6 +63,8 @@
                 Type sourcePropertyType = sourceProperty.PropertyType;
                 Type targetPropertyType = targetProperty.PropertyType;
 
+                var callback = targetProperty.GetCustomAttribute<DeserializationCallbackAttribute>()?.Callback;
+
                 object sourceValue = sourceProperty.GetValue(source);
                 if (sourceValue == null)
                     continue;
@@ -59,16 +75,21 @@
                     if (!TryDeserialize(sourceValue, targetPropertyType, out targetValue))
                         continue;
 
+                    callback?.OnDeserialized(targetValue);
                     targetProperty.SetValue(target, targetValue);
                     continue;
                 }
 
-                if (TryConvertBackCollection(target, targetPropertyType, sourcePropertyType, sourceValue, targetProperty))
+                if (TryConvertBackCollection(
+                        target, targetPropertyType, sourcePropertyType,
+                        sourceValue, targetProperty, callback))
                     continue;
 
                 if (TryConvertValueForDeserialization(
-                    sourcePropertyType, targetPropertyType, sourceValue, out targetValue))
+                    sourcePropertyType, targetPropertyType, sourceValue, out targetValue)) {
+                    callback?.OnDeserialized(targetValue);
                     targetProperty.SetValue(target, targetValue);
+                }
             }
 
             return true;
@@ -120,7 +141,7 @@
                     return true;
                 }
 
-                return TryParseEnum(targetType, str, out targetValue);
+                return EnumUtils.TryParse(targetType, str, out targetValue);
             }
 
             targetValue = null;
@@ -232,7 +253,8 @@
 
         private bool TryConvertBackCollection(
             object target, Type targetPropertyType, Type sourcePropertyType,
-            object sourceValue, PropertyInfo targetProperty)
+            object sourceValue, PropertyInfo targetProperty,
+            IDeserializationCallback callback)
         {
             Type sourceItemType;
             Type targetItemType;
@@ -276,6 +298,8 @@
                         targetList.Add(item);
                 }
             }
+
+            callback?.OnDeserialized(targetList);
 
             return true;
         }
@@ -398,7 +422,7 @@
         private bool TryGetSerializedPropertyName(
             PropertyInfo info, out string serializedName)
         {
-            var attribute = info?.TryGetAttribute<SerializeAttribute>(true);
+            var attribute = info.GetCustomAttribute<SerializeAttribute>(true);
             if (attribute == null) {
                 serializedName = null;
                 return false;
@@ -428,7 +452,7 @@
 
         private bool IsDefaultValue(PropertyInfo property, object value)
         {
-            var attribute = property.TryGetAttribute<DefaultValueAttribute>(true);
+            var attribute = property.GetCustomAttribute<DefaultValueAttribute>(true);
             object defaultValue;
             if (attribute != null)
                 defaultValue = attribute.Value;
@@ -436,21 +460,6 @@
                 defaultValue = GetDefaultValue(value.GetType());
 
             return value == defaultValue || (value != null && value.Equals(defaultValue));
-        }
-
-        private bool TryParseEnum(Type type, string str, out object result)
-        {
-            var parameters = new object[] { str, false, null };
-            var method = typeof(Enum).GetMethod(nameof(Enum.TryParse))
-                .MakeGenericMethod(type);
-
-            if ((bool)method.Invoke(null, parameters)) {
-                result = parameters[2];
-                return true;
-            }
-
-            result = null;
-            return false;
         }
     }
 }

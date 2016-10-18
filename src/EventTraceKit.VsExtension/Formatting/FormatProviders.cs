@@ -79,8 +79,7 @@
         public static string DefaultFormat(
             this IFormatProvider formatProvider)
         {
-            return formatProvider?.GetType()
-                .TryGetAttribute<DefaultFormatAttribute>(true)?.DefaultFormat;
+            return (formatProvider?.GetType()).GetCustomAttribute<DefaultFormatAttribute>(true)?.DefaultFormat;
         }
 
         public static SupportedFormat DefaultSupportedFormat(
