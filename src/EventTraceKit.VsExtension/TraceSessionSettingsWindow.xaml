@@ -9,9 +9,12 @@
   xmlns:etkw="clr-namespace:EventTraceKit.VsExtension.Windows"
   xmlns:cm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
   xmlns:system="clr-namespace:System;assembly=mscorlib"
+  xmlns:vsui="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
   mc:Ignorable="d"
   d:DataContext="{d:DesignInstance {x:Type etkv:TraceSettingsDesignTimeModel}, d:IsDesignTimeCreatable=True}"
   Title="Trace Session Settings"
+  MinWidth="600"
+  MinHeight="450"
   Width="1000"
   Height="700">
   <i:Interaction.Behaviors>
@@ -19,6 +22,10 @@
   </i:Interaction.Behaviors>
   <Grid>
     <Grid.Resources>
+      <!-- Resources are placed into the Grid instead of the top-level Window
+           so they can properly inherit from the Window's themed styles.
+           Normally the Application resource dictionary would be used but this
+           is not possible when hosted in Visual Studio. -->
       <Style x:Key="UnrelatedControlsSeparator" TargetType="Separator">
         <Setter Property="Height" Value="11"/>
         <Setter Property="BorderThickness" Value="0"/>
@@ -198,10 +205,10 @@
                            ToolTipService.ShowDuration="20000"/>
                   <Button Content="…" MinWidth="0" Margin="4,1,1,1" Padding="10,0"
                           Command="{Binding BrowseLogFileCommand}"/>
-            
+
                   <TextBlock Text="Buffer Size" Margin="11,0,7,0" VerticalAlignment="Center"/>
                   <TextBox Text="{Binding BufferSize, UpdateSourceTrigger=PropertyChanged}" MinWidth="50"/>
-            
+
                   <TextBlock Text="Buffer Count" Margin="11,0,7,0" VerticalAlignment="Center"/>
                   <TextBox Text="{Binding MinimumBuffers, UpdateSourceTrigger=PropertyChanged}" MinWidth="30"/>
                   <TextBlock Text="–" VerticalAlignment="Center" Margin="3,0,3,0"/>
@@ -212,8 +219,8 @@
           </Border>
           <Grid Margin="8">
             <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="150" MinWidth="50"/>
-              <ColumnDefinition Width="5" MinWidth="5"/>
+              <ColumnDefinition Width="250" MinWidth="50"/>
+              <ColumnDefinition Width="Auto"/>
               <ColumnDefinition MinWidth="50"/>
             </Grid.ColumnDefinitions>
             <ListBox x:Name="Providers"
@@ -236,7 +243,7 @@
                 </DataTemplate>
               </ListBox.ItemTemplate>
             </ListBox>
-            <GridSplitter Grid.Column="1" Width="11"
+            <GridSplitter Grid.Column="1" Width="7"
                           HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
             <ContentPresenter Grid.Column="2" Content="{Binding SelectedProvider}"/>
           </Grid>
@@ -248,16 +255,9 @@
       <RowDefinition Height="Auto"/>
     </Grid.RowDefinitions>
     <DockPanel>
-      <Border DockPanel.Dock="Top" Background="#11000000">
-      <Grid Margin="8">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="Auto"/>
-          <ColumnDefinition Width="Auto"/>
-          <ColumnDefinition/>
-          <ColumnDefinition Width="Auto"/>
-        </Grid.ColumnDefinitions>
-        <TextBlock VerticalAlignment="Center" FontWeight="Bold">Presets</TextBlock>
-        <StackPanel Grid.Column="1" Orientation="Horizontal">
+      <Border DockPanel.Dock="Top"
+              Background="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarGradientBrushKey}}">
+        <StackPanel Grid.Column="1" Margin="8" Orientation="Horizontal">
           <StackPanel.Resources>
             <CollectionViewSource x:Key="SortedSessionPresets" Source="{Binding SessionPresets}">
               <CollectionViewSource.SortDescriptions>
@@ -268,6 +268,7 @@
               </CollectionViewSource.LiveSortingProperties>
             </CollectionViewSource>
           </StackPanel.Resources>
+          <TextBlock VerticalAlignment="Center" FontWeight="Bold">Presets</TextBlock>
           <ComboBox Margin="7,1,1,1" ItemsSource="{Binding Source={StaticResource SortedSessionPresets}}"
                     SelectedValue="{Binding SelectedSessionPreset}" MinWidth="250">
             <ComboBox.ItemTemplate>
@@ -280,14 +281,13 @@
           <Button Margin="7,1,1,1" Content="Copy" Command="{Binding CopyPresetCommand}"/>
           <Button Margin="7,1,1,1" Content="Delete" Command="{Binding DeletePresetCommand}"/>
         </StackPanel>
-      </Grid>
       </Border>
       <ContentControl Content="{Binding SelectedSessionPreset}"/>
     </DockPanel>
-    <Border Grid.Row="1" Background="#11000000">
+    <Border Grid.Row="1" Background="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarGradientBrushKey}}">
       <StackPanel Margin="7" Orientation="Horizontal" HorizontalAlignment="Right">
-        <Button Margin="7,1,1,1" Content="OK" IsDefault="True" Command="{Binding AcceptCommand}"/>
-        <Button Margin="7,1,1,1" Content="Cancel" IsCancel="True"/>
+        <Button Content="OK" IsDefault="True" Command="{Binding AcceptCommand}"/>
+        <Button Content="Cancel" IsCancel="True" Margin="7,1,1,1"/>
       </StackPanel>
     </Border>
   </Grid>

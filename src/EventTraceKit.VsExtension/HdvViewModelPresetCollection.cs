@@ -55,10 +55,10 @@ namespace EventTraceKit.VsExtension
 
         public HdvViewModelPresetCollection(string name)
         {
-            this.Name = name;
-            this.BuiltInPresets = new FreezableCollection<AsyncDataViewModelPreset>();
-            this.UserPresets = new FreezableCollection<AsyncDataViewModelPreset>();
-            this.PersistedPresets = new FreezableCollection<AsyncDataViewModelPreset>();
+            Name = name;
+            BuiltInPresets = new FreezableCollection<AsyncDataViewModelPreset>();
+            UserPresets = new FreezableCollection<AsyncDataViewModelPreset>();
+            PersistedPresets = new FreezableCollection<AsyncDataViewModelPreset>();
         }
 
         public FreezableCollection<AsyncDataViewModelPreset> BuiltInPresets
@@ -88,6 +88,8 @@ namespace EventTraceKit.VsExtension
         }
 
         public string Name { get; set; }
+
+        public int Count => UserPresets.Count + BuiltInPresets.Count;
 
         public IEnumerable<AsyncDataViewModelPreset> EnumerateAllPresets()
         {

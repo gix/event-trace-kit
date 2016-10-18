@@ -38,14 +38,14 @@ namespace EventTraceKit.VsExtension.Controls
                 forType, new FrameworkPropertyMetadata(
                     (d, e) => ((AsyncDataGrid)d).OnIsEnabledChanged(e)));
 
-            var commandBinding = new CommandBinding(
-                CopyCell, OnCopyCellExecuted,
-                OnCopyCellCanExecute);
-            var gesture = new KeyGesture(Key.C, ModifierKeys.Control);
             CommandManager.RegisterClassInputBinding(
-                typeof(AsyncDataGrid), new InputBinding(CopyCell, gesture));
+                typeof(AsyncDataGrid),
+                new InputBinding(
+                    CopyCell, new KeyGesture(Key.C, ModifierKeys.Control)));
             CommandManager.RegisterClassCommandBinding(
-                typeof(AsyncDataGrid), commandBinding);
+                typeof(AsyncDataGrid),
+                new CommandBinding(
+                    CopyCell, OnCopyCellExecuted, OnCopyCellCanExecute));
         }
 
         public AsyncDataGrid()

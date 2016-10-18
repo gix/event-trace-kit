@@ -5,13 +5,10 @@
     using System.Linq;
     using System.Windows;
     using System.Windows.Controls;
-    using System.Windows.Controls.Primitives;
     using System.Windows.Data;
-    using System.Windows.Input;
     using System.Windows.Media;
     using Controls;
     using Windows;
-    using Microsoft.VisualStudio.PlatformUI;
 
     public partial class PresetManagerDialog
     {
@@ -55,21 +52,6 @@
                         return Brushes.Black;
                 }
             });
-
-        public static readonly DependencyProperty HeaderBrushProperty =
-            DependencyProperty.Register(
-                nameof(HeaderBrush),
-                typeof(Brush),
-                typeof(PresetManagerDialog),
-                new PropertyMetadata());
-
-        public Brush HeaderBrush
-        {
-            get { return (Brush)GetValue(HeaderBrushProperty); }
-            set { SetValue(HeaderBrushProperty, value); }
-        }
-
-        private void SaveButtonClickHandler(object sender, RoutedEventArgs e) { }
 
         private void CloseButtonClickHandler(object sender, RoutedEventArgs e)
         {
@@ -140,188 +122,6 @@
         {
             dragBehavior.OnLayoutListItemDrop(sender, e);
         }
-    }
-
-    [TemplatePart(Name = "PART_PopupContainer", Type = typeof(Control))]
-    [TemplatePart(Name = "PART_Popup", Type = typeof(Popup))]
-    public class DropDownBox : HeaderedContentControl
-    {
-        // Fields
-        private DelegateCommand closeDropDownCommand;
-        public static readonly DependencyProperty IsDropDownOpenProperty;
-        private DelegateCommand openDropDownCommand;
-        public const string PART_Popup = "PART_Popup";
-        public const string PART_PopupContainer = "PART_PopupContainer";
-        public static readonly DependencyProperty PopupContainerPartProperty;
-        private static readonly DependencyPropertyKey PopupContainerPartPropertyKey;
-        private DelegateCommand toggleIsDropDownOpenCommand;
-
-        static DropDownBox()
-        {
-            IsDropDownOpenProperty = DependencyProperty.Register("IsDropDownOpen", typeof(bool), typeof(DropDownBox), new PropertyMetadata(Boxed.False, (d, e) => ((DropDownBox)d).IsDropDownOpenPropertyChanged(e)));
-            PopupContainerPartPropertyKey = DependencyProperty.RegisterReadOnly("PopupContainerPart", typeof(Control), typeof(DropDownBox), new PropertyMetadata(null));
-            PopupContainerPartProperty = PopupContainerPartPropertyKey.DependencyProperty;
-            FrameworkElement.DefaultStyleKeyProperty.OverrideMetadata(typeof(DropDownBox), new FrameworkPropertyMetadata(typeof(DropDownBox)));
-        }
-        public bool IsDropDownOpen
-        {
-            get
-            {
-                return (bool)base.GetValue(IsDropDownOpenProperty);
-            }
-            set
-            {
-                base.SetValue(IsDropDownOpenProperty, value);
-            }
-        }
-        public ICommand OpenDropDownCommand
-        {
-            get
-            {
-                base.VerifyAccess();
-                if (this.openDropDownCommand == null) {
-                    this.openDropDownCommand = new DelegateCommand(delegate (object _) {
-                        this.OpenDropDown();
-                    });
-                }
-                return this.openDropDownCommand;
-            }
-        }
-        public DropDownBox()
-        {
-            base.Loaded += new RoutedEventHandler(this.OnLoaded);
-            base.Unloaded += new RoutedEventHandler(this.OnUnloaded);
-        }
-
-
-
-        private void OnUnloaded(object sender, RoutedEventArgs e)
-        {
-            this.LoadPartsFromTemplate(null);
-        }
-        public void OpenDropDown()
-        {
-            this.IsDropDownOpen = true;
-        }
-        public void CloseDropDown()
-        {
-            this.IsDropDownOpen = false;
-        }
-
-        private bool TryGetPopupPart(out Popup p)
-        {
-            p = null;
-            Control popupContainerPart = this.PopupContainerPart;
-            if (popupContainerPart == null) {
-                return false;
-            }
-            ControlTemplate template = popupContainerPart.Template;
-            if (template == null) {
-                return false;
-            }
-            p = template.FindName("PART_Popup", popupContainerPart) as Popup;
-            if (p == null) {
-                return false;
-            }
-            return true;
-        }
-
-        public void ToggleIsDropDownOpen()
-        {
-            this.IsDropDownOpen = !this.IsDropDownOpen;
-        }
-
-        private void OnLoaded(object sender, RoutedEventArgs e)
-        {
-            Popup popup;
-            this.LoadPartsFromTemplate(base.Template);
-            if (this.TryGetPopupPart(out popup)) {
-                popup.Opened += delegate (object s2, EventArgs e2) {
-                    UIElement searchVisual = ((Popup)s2).Child;
-                    if (searchVisual != null) {
-                        searchVisual.FindVisualChild<FrameworkElement>(fx => fx.Focusable && fx.Focus());
-                    }
-                };
-                popup.Closed += delegate (object s2, EventArgs e2) {
-                    if (this.PopupContainerPart != null) {
-                        this.PopupContainerPart.Focus();
-                    }
-                };
-                popup.Child.LostKeyboardFocus += delegate (object s2, KeyboardFocusChangedEventArgs e2) {
-                    UIElement element = (UIElement)s2;
-                    if (!element.IsKeyboardFocusWithin && popup.IsOpen) {
-                        element.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
-                    }
-                };
-            }
-        }
-
-        private void LoadPartsFromTemplate(ControlTemplate template)
-        {
-            if (template == null) {
-                this.PopupContainerPart = null;
-            } else {
-                this.PopupContainerPart = base.Template.FindName("PART_PopupContainer", this) as Control;
-            }
-        }
-
-
-
-        public override void OnApplyTemplate()
-        {
-            this.LoadPartsFromTemplate(base.Template);
-            base.OnApplyTemplate();
-        }
-
-
-        public ICommand ToggleIsDropDownOpenCommand
-        {
-            get
-            {
-                base.VerifyAccess();
-                if (this.toggleIsDropDownOpenCommand == null) {
-                    this.toggleIsDropDownOpenCommand = new DelegateCommand(delegate (object _) {
-                        this.ToggleIsDropDownOpen();
-                    });
-                }
-                return this.toggleIsDropDownOpenCommand;
-            }
-        }
-
-
-        public Control PopupContainerPart
-        {
-            get
-            {
-                return (Control)base.GetValue(PopupContainerPartProperty);
-            }
-            private set
-            {
-                base.SetValue(PopupContainerPartPropertyKey, value);
-            }
-        }
-
-
-        public ICommand CloseDropDownCommand
-        {
-            get
-            {
-                base.VerifyAccess();
-                if (this.closeDropDownCommand == null) {
-                    this.closeDropDownCommand = new DelegateCommand(delegate (object _) {
-                        this.CloseDropDown();
-                    });
-                }
-                return this.closeDropDownCommand;
-            }
-        }
-
-
-        private void IsDropDownOpenPropertyChanged(DependencyPropertyChangedEventArgs e)
-        {
-            base.VerifyAccess();
-        }
-
     }
 
     public class PresetColumnDragBehavior

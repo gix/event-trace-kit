@@ -533,7 +533,6 @@
       <Setter Property="Margin" Value="0"/>
       <Setter Property="Background" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarGradientBrushKey}}"/>
     </Style>
-
   </etkvs:ThemedDialogWindow.Resources>
   <Grid>
     <Grid.RowDefinitions>
@@ -675,13 +674,10 @@
           <ColumnDefinition Width="Auto"/>
           <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
-        <Button Grid.Column="1" Content="OK" Click="CloseButtonClickHandler" IsDefault="True" Margin="1,1,7,1"/>
-        <Button Grid.Column="2" Content="Cancel" Click="CancelButtonClickHandler" IsCancel="True" Margin="1,1,7,1"/>
-        <Button Grid.Column="3" Content="Apply" Click="ApplyButtonClickHandler" IsEnabled="{Binding CanApply}"/>
+        <Button Grid.Column="1" Content="OK" Click="CloseButtonClickHandler" IsDefault="True"/>
+        <Button Grid.Column="2" Content="Cancel" Click="CancelButtonClickHandler" IsCancel="True" Margin="7,1,1,1"/>
+        <Button Grid.Column="3" Content="Apply" Click="ApplyButtonClickHandler" IsEnabled="{Binding CanApply}" Margin="7,1,1,1"/>
       </Grid>
     </Border>
   </Grid>
 </etkvs:ThemedDialogWindow>
-
-
-

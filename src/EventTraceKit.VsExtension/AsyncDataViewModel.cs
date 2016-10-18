@@ -367,15 +367,17 @@ namespace EventTraceKit.VsExtension
 
         internal CellValue GetCellValue(int rowIndex, int visibleColumnIndex)
         {
-            Debug.Assert(!workManager.UIThread.CheckAccess());
-            var value = dataView.GetCellValue(rowIndex, visibleColumnIndex);
-            value.PrecomputeString();
-            return value;
-            //return workManager.BackgroundTaskFactory.StartNew(() => {
-            //    var value = dataView.GetCellValue(rowIndex, visibleColumnIndex);
-            //    value.PrecomputeString();
-            //    return value;
-            //}).Result;
+            if (workManager.UIThread.CheckAccess()) {
+                return workManager.BackgroundTaskFactory.StartNew(() => {
+                    var value = dataView.GetCellValue(rowIndex, visibleColumnIndex);
+                    value.PrecomputeString();
+                    return value;
+                }).Result;
+            } else {
+                var value = dataView.GetCellValue(rowIndex, visibleColumnIndex);
+                value.PrecomputeString();
+                return value;
+            }
         }
 
         internal AsyncDataViewModelPreset CreatePresetFromModifiedUI()

@@ -1426,7 +1426,6 @@
 
         #endregion
 
-
         #region public bool IsFrozen { get; set; }
 
         /// <summary>
@@ -1517,29 +1516,6 @@
                 updateValue(newValue);
                 updated = true;
             }
-        }
-    }
-
-    public class BindableRichTextBox : RichTextBox
-    {
-        public static readonly DependencyProperty DocumentProperty =
-            DependencyProperty.Register(
-                nameof(Document),
-                typeof(FlowDocument),
-                typeof(BindableRichTextBox),
-                new FrameworkPropertyMetadata(null, OnDocumentChanged));
-
-        private static void OnDocumentChanged(DependencyObject d, DependencyPropertyChangedEventArgs args)
-        {
-            var source = (RichTextBox)d;
-            var document = args.NewValue as FlowDocument ?? new FlowDocument();
-            source.Document = document;
-        }
-
-        public new FlowDocument Document
-        {
-            get { return (FlowDocument)GetValue(DocumentProperty); }
-            set { SetValue(DocumentProperty, value); }
         }
     }
 

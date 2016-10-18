@@ -14,12 +14,7 @@ namespace EventTraceKit.VsExtension
         public const int cmdidClearLog = 0x0400;
         public const int cmdidConfigureSession = 0x0500;
         public const int cmdidOpenViewEditor = 0x0600;
-
-        public static readonly Guid TraceLogPresetMenuCmdSet = new Guid("6C7C7E94-B649-4837-95D2-82850C3E441C");
-        public const int cmdidPresetMenuDynamicStartCommand = 0x2000;
-
-        public static readonly Guid ComboBoxCmdSet = new Guid("C7EE3D3B-D75A-4404-BE56-E8EEF4D19485");
-        public const int cmdidMyDropDownCombo = 0x101;
-        public const int cmdidMyDropDownComboGetList = 0x102;
+        public const int cmdidViewPresetCombo = 0x700;
+        public const int cmdidViewPresetComboGetList = 0x710;
     }
 }

@@ -1,8 +1,11 @@
 namespace EventTraceKit.VsExtension
 {
     using System;
+    using System.Collections.Generic;
     using System.ComponentModel.Design;
+    using System.Diagnostics;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows;
@@ -18,6 +21,7 @@ namespace EventTraceKit.VsExtension
     public class TraceLogWindowViewModel : ViewModel, IEventInfoSource
     {
         private readonly IEventTraceKitSettingsService settings;
+        private readonly IVsUIShell uiShell;
         private readonly DispatcherTimer updateStatisticsTimer;
         protected TraceSessionDescriptor sessionDescriptor = new TraceSessionDescriptor();
 
@@ -31,17 +35,19 @@ namespace EventTraceKit.VsExtension
         private TraceSession session;
 
         private DateTime lastUpdateEvent = DateTime.MinValue;
-        private TimeSpan updateThreshold = TimeSpan.FromMilliseconds(50);
+        private readonly TimeSpan updateThreshold = TimeSpan.FromMilliseconds(50);
         private DispatcherSynchronizationContext syncCtx;
         private TaskScheduler scheduler;
-        private TaskFactory taskFactory;
-        private EventSymbolSource eventSymbolSource = new EventSymbolSource();
+        private readonly TaskFactory taskFactory;
+        private readonly EventSymbolSource eventSymbolSource = new EventSymbolSource();
 
         public TraceLogWindowViewModel(
             IEventTraceKitSettingsService settings,
-            IOperationalModeProvider modeProvider)
+            IOperationalModeProvider modeProvider,
+            IVsUIShell uiShell = null)
         {
             this.settings = settings;
+            this.uiShell = uiShell;
             if (modeProvider != null)
                 modeProvider.OperationalModeChanged += OnOperationalModeChanged;
 
@@ -59,6 +65,9 @@ namespace EventTraceKit.VsExtension
             GridModel = AdvModel.GridViewModel;
 
             AdvModel.Preset = defaultPreset;
+            AdvModel.PresetChanged += (s, e) => {
+                uiShell?.UpdateCommandUI(0);
+            };
 
             syncCtx = new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher);
             SynchronizationContext.SetSynchronizationContext(syncCtx);
@@ -181,21 +190,6 @@ namespace EventTraceKit.VsExtension
         private void OnEventsChanged(UIntPtr newCount)
         {
             EventsDataView.UpdateRowCount((int)newCount.ToUInt32());
-            return;
-
-            var now = DateTime.UtcNow;
-            var elapsed = now - lastUpdateEvent;
-
-            if (elapsed < updateThreshold)
-                return;
-
-            lastUpdateEvent = now;
-            taskFactory.StartNew(() => Update((int)newCount.ToUInt32()));
-        }
-
-        private void Update(int newCount)
-        {
-            //Events.Update(newCount);
         }
 
         public void StopCapture()
@@ -204,7 +198,6 @@ namespace EventTraceKit.VsExtension
                 return;
 
             try {
-                //Events.Detach(session);
                 session.Stop();
                 session.Dispose();
                 session = null;
@@ -281,8 +274,8 @@ namespace EventTraceKit.VsExtension
         public void Attach(IMenuCommandService commandService)
         {
             var id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidCaptureLog);
-            commandService.AddCommand(
-                new OleMenuCommand(OnToggleCaptureLog, null, OnQueryToggleCaptureLog, id));
+            commandService.AddCommand(new OleMenuCommand(
+                (s, e) => ToggleCapture(), null, OnQueryToggleCaptureLog, id));
 
             id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidClearLog);
             commandService.AddCommand(new OleMenuCommand((s, e) => Clear(), id));
@@ -292,27 +285,29 @@ namespace EventTraceKit.VsExtension
                 new OleMenuCommand(OnToggleAutoLog, null, OnQueryToggleAutoLog, id));
 
             id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidConfigureSession);
-            commandService.AddCommand(new OleMenuCommand(OnConfigureLog, id));
+            commandService.AddCommand(new OleMenuCommand((s, e) => Configure(), id));
 
             id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidOpenViewEditor);
             commandService.AddCommand(new OleMenuCommand((s, e) => OpenViewEditor(), id));
+
+            id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidViewPresetCombo);
+            commandService.AddCommand(new OleMenuCommand(OnViewPresetCombo, id));
+
+            id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidViewPresetComboGetList);
+            commandService.AddCommand(new OleMenuCommand(OnViewPresetComboGetList, id));
         }
 
         private void OnQueryToggleCaptureLog(object sender, EventArgs e)
         {
-            var command = sender as OleMenuCommand;
-            if (command == null)
-                return;
-
+            var command = (OleMenuCommand)sender;
             command.Enabled = IsCollecting || CanStartCapture();
             command.Checked = IsCollecting;
         }
 
         private void OnQueryToggleAutoLog(object sender, EventArgs e)
         {
-            var command = sender as OleMenuCommand;
-            if (command != null)
-                command.Checked = AutoLog;
+            var command = (OleMenuCommand)sender;
+            command.Checked = AutoLog;
         }
 
         private void OnToggleAutoLog(object sender, EventArgs e)
@@ -320,14 +315,42 @@ namespace EventTraceKit.VsExtension
             AutoLog = !AutoLog;
         }
 
-        private void OnToggleCaptureLog(object sender, EventArgs e)
+        private void OnViewPresetCombo(object sender, EventArgs args)
         {
-            ToggleCapture();
+            var cmdArgs = (OleMenuCmdEventArgs)args;
+
+            string presetName = cmdArgs.InValue as string;
+            IntPtr outValue = cmdArgs.OutValue;
+
+            if (outValue != IntPtr.Zero) {
+                presetName = AdvModel.Preset.Name;
+                Marshal.GetNativeVariantForObject(presetName, outValue);
+                return;
+            }
+
+            if (presetName == null)
+                return;
+
+            var preset = AdvModel.PresetCollection.TryGetPresetByName(presetName);
+            if (preset != null)
+                AdvModel.Preset = preset;
         }
 
-        private void OnConfigureLog(object sender, EventArgs e)
+        private void OnViewPresetComboGetList(object sender, EventArgs args)
         {
-            Configure();
+            var cmdArgs = (OleMenuCmdEventArgs)args;
+
+            object inParam = cmdArgs.InValue;
+            IntPtr outValue = cmdArgs.OutValue;
+
+            if (inParam != null)
+                throw new ArgumentException("InParamIllegal");
+
+            if (outValue == IntPtr.Zero)
+                throw (new ArgumentException("OutParamRequired"));
+
+            var items = AdvModel.PresetCollection.EnumerateAllPresetsByName().ToArray();
+            Marshal.GetNativeVariantForObject(items, outValue);
         }
 
         private async void OnOperationalModeChanged(object sender, VsOperationalMode newMode)
