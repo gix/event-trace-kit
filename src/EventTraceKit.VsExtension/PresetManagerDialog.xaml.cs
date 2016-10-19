@@ -75,7 +75,7 @@
             if (adv == null)
                 throw new ArgumentNullException(nameof(adv));
 
-            var viewModel = new PresetManagerViewModel(adv, PersistenceManager.Instance);
+            var viewModel = new PresetManagerViewModel(adv);
             return new PresetManagerDialog(viewModel);
         }
 

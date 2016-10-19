@@ -39,7 +39,7 @@
                 IsVisible = true,
             });
 
-            var collection = new HdvViewModelPresetCollection();
+            var collection = new AdvViewModelPresetCollection();
             collection.UserPresets.Add(preset);
 
             var stream = new MemoryStream();

@@ -34,6 +34,7 @@
 
         private Lazy<TraceLogPane> traceLogPane = new Lazy<TraceLogPane>(() => null);
         private GlobalSettings globalSettings;
+        private IVsUIShell vsUiShell;
 
         public EventTraceKitPackage()
         {
@@ -46,16 +47,23 @@
 
             LoadSettings();
 
-            this.GetService<SDTE, DTE>().Events.DTEEvents.OnBeginShutdown += OnShutdown;
+            var vsShell = this.GetService<SVsShell, IVsShell>();
+            vsUiShell = this.GetService<SVsUIShell, IVsUIShell>();
+            var dte = this.GetService<SDTE, DTE>();
+
+            dte.Events.DTEEvents.OnBeginShutdown += OnShutdown;
 
             AddMenuCommandHandlers();
 
+            var vpc = new ViewPresetsService(GetAppDataDirectory());
+            var viewPresetsService = new PresetCollectionManagerView(vpc);
+            viewPresetsService.ExceptionFilter += OnExceptionFilter;
+
             Func<IServiceProvider, TraceLogWindow> traceLogFactory = sp => {
-                var dte = sp.GetService<SDTE, DTE>();
                 var operationalModeProvider = new DteOperationalModeProvider(dte, this);
 
-                var uiShell = sp.GetService<SVsUIShell, IVsUIShell>();
-                var traceLog = new TraceLogWindowViewModel(this, operationalModeProvider, uiShell);
+                var traceLog = new TraceLogWindowViewModel(
+                    this, operationalModeProvider, viewPresetsService.Presets, vsUiShell);
 
                 var mcs = sp.GetService<IMenuCommandService>();
                 if (mcs != null)
@@ -64,7 +72,28 @@
                 return new TraceLogWindow { DataContext = traceLog };
             };
 
-            traceLogPane = new Lazy<TraceLogPane>(() => new TraceLogPane(traceLogFactory));
+            Action onClose = () => {
+                viewPresetsService.SaveRepo();
+            };
+
+            traceLogPane = new Lazy<TraceLogPane>(() => new TraceLogPane(traceLogFactory, onClose));
+        }
+
+        private string GetAppDataDirectory()
+        {
+            var shell = this.GetService<SVsShell, IVsShell>();
+            object appDataDir;
+            ErrorHandler.ThrowOnFailure(shell.GetProperty((int)__VSSPROPID.VSSPROPID_AppDataDir, out appDataDir));
+            return Path.Combine((string)appDataDir, "EventTraceKit");
+        }
+
+        private void OnExceptionFilter(
+            object sender, ExceptionFilterEventArgs args)
+        {
+            int result;
+            vsUiShell?.ShowMessageBox(
+                0, Guid.Empty, "Error", args.Message, null, 0, OLEMSGBUTTON.OLEMSGBUTTON_OK,
+                OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST, OLEMSGICON.OLEMSGICON_CRITICAL, 0, out result);
         }
 
         private void OnShutdown()

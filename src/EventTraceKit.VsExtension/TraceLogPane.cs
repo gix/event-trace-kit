@@ -10,14 +10,16 @@
     public class TraceLogPane : ToolWindowPane
     {
         private readonly Func<IServiceProvider, TraceLogWindow> traceLogFactory;
+        private readonly Action onClose;
 
         /// <summary>
         ///   Initializes a new instance of the <see cref="TraceLogPane"/>
         ///   class.
         /// </summary>
-        public TraceLogPane(Func<IServiceProvider, TraceLogWindow> traceLogFactory)
+        public TraceLogPane(Func<IServiceProvider, TraceLogWindow> traceLogFactory, Action onClose)
         {
             this.traceLogFactory = traceLogFactory;
+            this.onClose = onClose;
 
             Caption = "Trace Log";
             ToolBar = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.TraceLogToolbar);
@@ -32,7 +34,7 @@
         protected override void OnClose()
         {
             base.OnClose();
-            PresetCollectionManagerView.Instance.UpdateRepoFileWithPersistedPresets();
+            onClose();
         }
 
         public override IVsSearchTask CreateSearch(

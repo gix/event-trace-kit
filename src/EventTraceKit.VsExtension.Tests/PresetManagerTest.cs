@@ -12,8 +12,8 @@
             var dataTable = new DataTable("Foo");
             var dataView = new DataView(dataTable, new DefaultFormatProviderSource());
             var templatePreset = new AsyncDataViewModelPreset();
-            var presetCollection = new HdvViewModelPresetCollection();
-            var adv = new AsyncDataViewModel(dataView, templatePreset, presetCollection);
+            var presetCollection = new AdvViewModelPresetCollection();
+            var adv = new AsyncDataViewModel(dataView, templatePreset, templatePreset, presetCollection);
             var viewModel = new PresetManagerViewModel(adv);
         }
     }

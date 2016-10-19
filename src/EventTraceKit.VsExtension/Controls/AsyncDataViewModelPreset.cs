@@ -9,7 +9,7 @@
     using Windows;
     using Serialization;
 
-    [SerializedShape(typeof(Settings.ProfilePreset))]
+    [SerializedShape(typeof(Settings.ViewPreset))]
     public sealed class AsyncDataViewModelPreset
         : FreezableCustomSerializerAccessBase
         , IComparable<AsyncDataViewModelPreset>
@@ -119,7 +119,7 @@
                 typeof(AsyncDataViewModelPreset),
                 PropertyMetadataUtils.DefaultNull);
 
-        [Serialize(serializedName: nameof(Settings.ProfilePreset.Columns))]
+        [Serialize(serializedName: nameof(Settings.ViewPreset.Columns))]
         public FreezableCollection<ColumnViewModelPreset> ConfigurableColumns
         {
             get
@@ -178,6 +178,14 @@
         protected override Freezable CreateInstanceCore()
         {
             return new AsyncDataViewModelPreset();
+        }
+
+        public string GetDisplayName()
+        {
+            string displayName = Name;
+            if (IsModified)
+                displayName += "*";
+            return displayName;
         }
 
         public bool GetColumnVisibility(int configurableColumnIndex)

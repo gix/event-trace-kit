@@ -15,7 +15,7 @@ namespace EventTraceKit.VsExtension.UITests
         private bool isRunning;
 
         public TraceLogTestViewModel()
-            : base(new StubSettingsService(), new OperationalModeProviderStub())
+            : base(new StubSettingsService(), new OperationalModeProviderStub(), new AdvViewModelPresetCollection())
         {
             StartCommand = new AsyncDelegateCommand(Start, CanStart);
             StopCommand = new AsyncDelegateCommand(Stop, CanStop);

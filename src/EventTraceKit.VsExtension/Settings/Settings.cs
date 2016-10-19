@@ -7,57 +7,49 @@ namespace EventTraceKit.VsExtension.Settings
     using System;
     using System.Collections.ObjectModel;
     using System.ComponentModel;
-    using System.Runtime.CompilerServices;
 
     public abstract class SettingsElement
     {
     }
 
-    public static class Init
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T GetOrCreate<T>(ref T field)
-            where T : class, new()
-        {
-            return field ?? (field = new T());
-        }
-    }
-
     public class GlobalSettings : SettingsElement
     {
-        private Collection<ProfilePreset> modifiedPresets;
-        private Collection<ProfilePreset> persistedPresets;
+        private Collection<ViewPreset> userPresets;
+        private Collection<ViewPreset> persistedPresets;
         private Collection<TraceSession> sessions;
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        public Collection<ProfilePreset> ModifiedPresets => Init.GetOrCreate(ref modifiedPresets);
+        public Collection<ViewPreset> UserPresets =>
+            userPresets ?? (userPresets = new Collection<ViewPreset>());
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        public Collection<ProfilePreset> PersistedPresets => Init.GetOrCreate(ref persistedPresets);
+        public Collection<ViewPreset> PersistedPresets =>
+            persistedPresets ?? (persistedPresets = new Collection<ViewPreset>());
 
         public Guid ActiveSession { get; set; }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        public Collection<TraceSession> Sessions => Init.GetOrCreate(ref sessions);
+        public Collection<TraceSession> Sessions =>
+            sessions ?? (sessions = new Collection<TraceSession>());
     }
 
     public class ViewPresets : SettingsElement
     {
-        private Collection<ProfilePreset> modifiedPresets;
-        private Collection<ProfilePreset> persistedPresets;
+        private Collection<ViewPreset> userPresets;
+        private Collection<ViewPreset> persistedPresets;
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        public Collection<ProfilePreset> ModifiedPresets =>
-            modifiedPresets ?? (modifiedPresets = new Collection<ProfilePreset>());
+        public Collection<ViewPreset> UserPresets =>
+            userPresets ?? (userPresets = new Collection<ViewPreset>());
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        public Collection<ProfilePreset> PersistedPresets =>
-            persistedPresets ?? (persistedPresets = new Collection<ProfilePreset>());
+        public Collection<ViewPreset> PersistedPresets =>
+            persistedPresets ?? (persistedPresets = new Collection<ViewPreset>());
     }
 
     public class TraceSession : SettingsElement
     {
-        private TraceProviderProfileCollection providers;
+        private Collection<TraceProvider> providers;
 
         public Guid Id { get; set; }
         [DefaultValue(null)]
@@ -72,12 +64,8 @@ namespace EventTraceKit.VsExtension.Settings
         public string LogFileName { get; set; }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        public TraceProviderProfileCollection Providers =>
-            providers ?? (providers = new TraceProviderProfileCollection());
-    }
-
-    public class TraceProviderProfileCollection : Collection<TraceProvider>
-    {
+        public Collection<TraceProvider> Providers =>
+            providers ?? (providers = new Collection<TraceProvider>());
     }
 
     public class TraceProvider : SettingsElement
@@ -140,16 +128,16 @@ namespace EventTraceKit.VsExtension.Settings
         public string Keywords { get; set; }
     }
 
-    public class ProfilePreset : SettingsElement
+    public class ViewPreset : SettingsElement
     {
-        private Collection<ProfileColumn> columns;
+        private Collection<ViewColumn> columns;
 
         [DefaultValue(null)]
         public string Name { get; set; }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        public Collection<ProfileColumn> Columns =>
-            columns ?? (columns = new Collection<ProfileColumn>());
+        public Collection<ViewColumn> Columns =>
+            columns ?? (columns = new Collection<ViewColumn>());
 
         [DefaultValue(0)]
         public int LeftFrozenColumnCount { get; set; }
@@ -157,7 +145,7 @@ namespace EventTraceKit.VsExtension.Settings
         public int RightFrozenColumnCount { get; set; }
     }
 
-    public class ProfileColumn : SettingsElement
+    public class ViewColumn : SettingsElement
     {
         public Guid Id { get; set; }
         [DefaultValue(null)]

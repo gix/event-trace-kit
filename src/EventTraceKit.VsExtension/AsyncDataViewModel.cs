@@ -2,16 +2,14 @@ namespace EventTraceKit.VsExtension
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
     using System.Threading;
     using System.Windows;
-    using Windows;
     using Collections;
     using Controls;
+    using Windows;
 
-    public class AsyncDataViewModel
-        : DependencyObject, DataTableGraphTreeItem
+    public class AsyncDataViewModel : DependencyObject
     {
         private readonly WorkManager workManager;
         private readonly IDataView dataView;
@@ -30,8 +28,10 @@ namespace EventTraceKit.VsExtension
         private bool allowBackgroundThreads;
 
         public AsyncDataViewModel(
-            IDataView dataView, AsyncDataViewModelPreset templatePreset,
-            HdvViewModelPresetCollection presetCollection)
+            IDataView dataView,
+            AsyncDataViewModelPreset templatePreset,
+            AsyncDataViewModelPreset defaultPreset,
+            AdvViewModelPresetCollection presetCollection)
         {
             if (dataView == null)
                 throw new ArgumentNullException(nameof(dataView));
@@ -49,17 +49,16 @@ namespace EventTraceKit.VsExtension
             allowBackgroundThreads = true;
 
             columnsViewModel = new AsyncDataGridColumnsViewModel(this);
-            GridViewModel = new AsyncDataGridViewModel(
-                this, columnsViewModel);
+            GridViewModel = new AsyncDataGridViewModel(this, columnsViewModel);
 
             IsReady = false;
 
             dataView.RowCountChanged += OnRowCountChanged;
+
+            Preset = defaultPreset;
         }
 
         public AsyncDataViewModelPreset TemplatePreset { get; }
-
-        public AsyncDataViewModel HdvViewModel => this;
 
         public event ValueChangedEventHandler<AsyncDataViewModelPreset> PresetChanged;
 
@@ -94,9 +93,11 @@ namespace EventTraceKit.VsExtension
 
         private void OnPresetChanged(DependencyPropertyChangedEventArgs e)
         {
-            var preset = (AsyncDataViewModelPreset)e.NewValue;
-            if (preset != null && (!isInitializedWithFirstPreset || shouldApplyPreset)) {
-                if (!preset.IsFrozen)
+            var oldPreset = (AsyncDataViewModelPreset)e.OldValue;
+            var newPreset = (AsyncDataViewModelPreset)e.NewValue;
+
+            if (newPreset != null && (!isInitializedWithFirstPreset || shouldApplyPreset)) {
+                if (!newPreset.IsFrozen)
                     throw new ArgumentException("Preset must be frozen before being applied");
 
                 if (!IsReady && !isInitializedWithFirstPreset) {
@@ -106,11 +107,11 @@ namespace EventTraceKit.VsExtension
                 if (!IsReady) {
                     var b = presetToApplyOnReady == null &&
                             presetBeingApplied != null &&
-                            !presetBeingApplied.Equals(preset);
+                            !presetBeingApplied.Equals(newPreset);
                     var b1 = presetToApplyOnReady != null &&
-                             !presetToApplyOnReady.Equals(preset);
+                             !presetToApplyOnReady.Equals(newPreset);
                     if (b || b1) {
-                        presetToApplyOnReady = preset;
+                        presetToApplyOnReady = newPreset;
                     }
                     return;
                 }
@@ -125,16 +126,20 @@ namespace EventTraceKit.VsExtension
                 //        return;
                 //    }
                 //}
-                presetBeingApplied = preset;
+                presetBeingApplied = newPreset;
                 //if (this.presenterRowSelectionToUseOnReady == null) {
                 //    this.SaveTableRowSelectionAndFocus();
                 //}
 
                 //this.DataView.BeginDataUpdate();
                 ApplyPresetToGridModel(
-                    preset,
-                    () => ContinuePresetAfterGridModelInSync(preset));
+                    newPreset,
+                    () => ContinuePresetAfterGridModelInSync(newPreset));
             }
+
+            if (oldPreset != null && newPreset != null &&
+                newPreset.IsModified && newPreset.Name == oldPreset.Name)
+                PresetCollection.CachePreset(newPreset);
 
             PresetChanged.Raise(this, e);
             //this.ResetIsPresetError();
@@ -475,17 +480,17 @@ namespace EventTraceKit.VsExtension
 
         private static readonly DependencyPropertyKey PresetCollectionPropertyKey =
                  DependencyProperty.RegisterReadOnly(
-                     "PresetCollection",
-                     typeof(HdvViewModelPresetCollection),
+                     "Presets",
+                     typeof(AdvViewModelPresetCollection),
                      typeof(AsyncDataViewModel),
                      PropertyMetadataUtils.DefaultNull);
 
         public static readonly DependencyProperty PresetCollectionProperty =
             PresetCollectionPropertyKey.DependencyProperty;
 
-        public HdvViewModelPresetCollection PresetCollection
+        public AdvViewModelPresetCollection PresetCollection
         {
-            get { return (HdvViewModelPresetCollection)GetValue(PresetCollectionProperty); }
+            get { return (AdvViewModelPresetCollection)GetValue(PresetCollectionProperty); }
             private set { SetValue(PresetCollectionPropertyKey, value); }
         }
 

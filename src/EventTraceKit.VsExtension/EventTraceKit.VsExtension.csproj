@@ -167,10 +167,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ActionThrottler.cs" />
+    <Compile Include="ArrayUtils.cs" />
     <Compile Include="AsyncDelegateCommand.cs" />
     <Compile Include="AsyncExtensions.cs" />
     <Compile Include="CharCPtrUtils.cs" />
     <Compile Include="Collections\Extensions.cs" />
+    <Compile Include="CollectionUtils.cs" />
     <Compile Include="ComparisonUtils.cs" />
     <Compile Include="Controls\DragEventSource.cs" />
     <Compile Include="Controls\SelectorUtils.cs" />
@@ -181,15 +183,25 @@
     <Compile Include="Extensions\VsSdkExtensions.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Formatting\FormatProviders.cs" />
-    <Compile Include="HdvViewModelPresetCollection.cs" />
+    <Compile Include="AdvViewModelPresetCollection.cs" />
     <Compile Include="ListBoxDragPreview.cs" />
     <Compile Include="Controls\MultiDragListBox.cs" />
     <Compile Include="Controls\MultiDragListView.cs" />
-    <Compile Include="PersistenceManager.cs" />
+    <Compile Include="PresetManager\ExceptionFilterEventArgs.cs" />
     <Compile Include="PresetManagerDialog.xaml.cs">
       <DependentUpon>PresetManagerDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PresetManagerViewModel.cs" />
+    <Compile Include="PresetManager\CollectionExtensions.cs" />
+    <Compile Include="PresetManager\GraphTreeItemHeaderCommand.cs" />
+    <Compile Include="PresetManager\HeaderDropDownMenu.cs" />
+    <Compile Include="PresetManager\IsEqual.cs" />
+    <Compile Include="PresetManager\PresetManagerColumnContainerStyleSelector.cs" />
+    <Compile Include="PresetManager\PresetManagerColumnDetailsTemplateSelector.cs" />
+    <Compile Include="PresetManager\PresetManagerColumnType.cs" />
+    <Compile Include="PresetManager\PresetManagerColumnViewModel.cs" />
+    <Compile Include="PresetManager\PresetManagerDesignTimeModel.cs" />
+    <Compile Include="PresetManager\PresetManagerViewModel.cs" />
+    <Compile Include="PresetManager\ViewPresetsService.cs" />
     <Compile Include="PresetSaveAsDialog.xaml.cs">
       <DependentUpon>PresetSaveAsDialog.xaml</DependentUpon>
     </Compile>

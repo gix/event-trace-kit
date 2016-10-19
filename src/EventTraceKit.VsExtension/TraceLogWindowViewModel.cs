@@ -1,15 +1,12 @@
 namespace EventTraceKit.VsExtension
 {
     using System;
-    using System.Collections.Generic;
     using System.ComponentModel.Design;
-    using System.Diagnostics;
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows;
-    using System.Windows.Controls;
     using System.Windows.Threading;
     using Collections;
     using Controls;
@@ -21,6 +18,7 @@ namespace EventTraceKit.VsExtension
     public class TraceLogWindowViewModel : ViewModel, IEventInfoSource
     {
         private readonly IEventTraceKitSettingsService settings;
+        private readonly AdvViewModelPresetCollection presetCollection;
         private readonly IVsUIShell uiShell;
         private readonly DispatcherTimer updateStatisticsTimer;
         protected TraceSessionDescriptor sessionDescriptor = new TraceSessionDescriptor();
@@ -44,10 +42,13 @@ namespace EventTraceKit.VsExtension
         public TraceLogWindowViewModel(
             IEventTraceKitSettingsService settings,
             IOperationalModeProvider modeProvider,
+            AdvViewModelPresetCollection presetCollection,
             IVsUIShell uiShell = null)
         {
             this.settings = settings;
+            this.presetCollection = presetCollection;
             this.uiShell = uiShell;
+
             if (modeProvider != null)
                 modeProvider.OperationalModeChanged += OnOperationalModeChanged;
 
@@ -56,22 +57,16 @@ namespace EventTraceKit.VsExtension
             var templatePreset = tableTuple.Item2;
 
             var defaultPreset = GenericEventsViewModelSource.CreateDefaultPreset();
-
-            var presetCollectionManagerView = PresetCollectionManagerView.Instance;
-            var persistenceManager = PersistenceManager.Instance;
-
-            presetCollectionManagerView.ExceptionFilter += PresetCollectionManagerViewOnExceptionFilter;
-            var presetCollection = presetCollectionManagerView.PresetRepository.PresetCollectionsNotNull;
             presetCollection.BuiltInPresets.Add(defaultPreset);
 
-            persistenceManager.MergePersistedCollections(presetCollectionManagerView.PresetRepository);
+            var preset = presetCollection.TryGetPersistedPresetByName(defaultPreset.Name);
+            if (preset == null)
+                preset = defaultPreset;
 
             EventsDataView = new TraceEventsView(dataTable);
             AdvModel = new AsyncDataViewModel(
-                EventsDataView, templatePreset, presetCollection);
-            AdvModel.Preset = defaultPreset;
+                EventsDataView, templatePreset, preset, presetCollection);
 
-            persistenceManager.Attach(AdvModel);
             GridModel = AdvModel.GridViewModel;
 
             AdvModel.PresetChanged += (s, e) => {
@@ -90,15 +85,6 @@ namespace EventTraceKit.VsExtension
             updateStatisticsTimer = new DispatcherTimer(DispatcherPriority.Background);
             updateStatisticsTimer.Interval = TimeSpan.FromSeconds(1);
             updateStatisticsTimer.Tick += (s, a) => UpdateStats();
-        }
-
-        private void PresetCollectionManagerViewOnExceptionFilter(
-            object sender, ExceptionFilterEventArgs args)
-        {
-            int result;
-            uiShell.ShowMessageBox(
-                0, Guid.Empty, "Error", args.Message, null, 0, OLEMSGBUTTON.OLEMSGBUTTON_OK,
-                OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST, OLEMSGICON.OLEMSGICON_CRITICAL, 0, out result);
         }
 
         public class TraceEventsView : DataView
@@ -341,11 +327,7 @@ namespace EventTraceKit.VsExtension
             IntPtr outValue = cmdArgs.OutValue;
 
             if (outValue != IntPtr.Zero) {
-                string displayName = AdvModel.Preset.Name;
-                PersistenceManager persistenceManager = PersistenceManager.Instance;
-                if (persistenceManager.HasCachedVersion(AdvModel.Preset.Name))
-                    displayName += "*";
-
+                string displayName = AdvModel.Preset.GetDisplayName();
                 Marshal.GetNativeVariantForObject(displayName, outValue);
                 return;
             }
@@ -356,10 +338,7 @@ namespace EventTraceKit.VsExtension
             if (presetName.EndsWith("*"))
                 presetName = presetName.Substring(0, presetName.Length - 1);
 
-            var preset = PersistenceManager.Instance.TryGetCachedVersion(presetName);
-            if (preset == null)
-                preset = AdvModel.PresetCollection.TryGetPresetByName(presetName);
-
+            var preset = AdvModel.PresetCollection.TryGetCurrentPresetByName(presetName);
             if (preset != null)
                 AdvModel.Preset = preset;
         }
@@ -367,19 +346,14 @@ namespace EventTraceKit.VsExtension
         private void OnViewPresetComboGetList(object sender, EventArgs args)
         {
             var cmdArgs = (OleMenuCmdEventArgs)args;
-
-            object inParam = cmdArgs.InValue;
-            IntPtr outValue = cmdArgs.OutValue;
-
-            if (inParam != null)
-                throw new ArgumentException("InParamIllegal");
-
-            if (outValue == IntPtr.Zero)
-                throw new ArgumentException("OutParamRequired");
+            if (cmdArgs.InValue != null)
+                throw new ArgumentException("InValue must not be provided.");
+            if (cmdArgs.OutValue == IntPtr.Zero)
+                throw new ArgumentException("OutValue is required.");
 
             var items = AdvModel.PresetCollection.EnumerateAllPresetsByName()
-                .Select(x => x + (PersistenceManager.Instance.HasCachedVersion(x) ? "*" : "")).ToArray();
-            Marshal.GetNativeVariantForObject(items, outValue);
+                .Select(x => x.Name + (AdvModel.PresetCollection.HasPersistedPreset(x.Name) ? "*" : "")).ToArray();
+            Marshal.GetNativeVariantForObject(items, cmdArgs.OutValue);
         }
 
         private async void OnOperationalModeChanged(object sender, VsOperationalMode newMode)
@@ -415,7 +389,7 @@ namespace EventTraceKit.VsExtension
     public class TraceLogWindowDesignTimeModel : TraceLogWindowViewModel
     {
         public TraceLogWindowDesignTimeModel()
-            : base(null, null)
+            : base(null, null, null)
         {
             Statistics.TotalEvents = 1429;
             Statistics.EventsLost = 30;
