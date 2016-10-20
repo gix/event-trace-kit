@@ -65,7 +65,7 @@
                   VerticalGridLinesThickness="0"
                   Foreground="{TemplateBinding Foreground}"
                   PrimaryBackground="{TemplateBinding RowBackground}"
-                  FrozenColumnBrush="{TemplateBinding FrozenColumnBackground}"
+                  FrozenColumnBackground="{TemplateBinding FrozenColumnBackground}"
                   SecondaryBackground="{TemplateBinding AlternatingRowBackground}"
                   SelectionForeground="{TemplateBinding RowSelectionForeground}"
                   SelectionBackground="{TemplateBinding RowSelectionBackground}"

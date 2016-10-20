@@ -84,7 +84,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                     double leftEdge = columnBoundaries[col] - horizontalOffset;
                     double rightEdge = columnBoundaries[col + 1] - horizontalOffset;
                     double width = rightEdge - leftEdge;
-                    if (visibleColumns[col].IsInFreezableArea()) {
+                    if (visibleColumns[col].IsFrozen()) {
                         dc.DrawRectangle(
                             frozenColumnBackground,
                             null, new Rect(leftEdge, 0, width, height));
@@ -286,7 +286,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         internal double GetColumnAutoSize(AsyncDataGridColumn column)
         {
-            if (!column.IsVisible)// && !column.IsDisconnected)
+            if (!column.IsVisible && !column.IsDisconnected)
                 throw new InvalidOperationException();
 
             double width = 5.0;

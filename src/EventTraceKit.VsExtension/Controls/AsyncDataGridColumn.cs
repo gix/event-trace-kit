@@ -29,9 +29,9 @@ namespace EventTraceKit.VsExtension.Controls
             if (isDisconnected) {
                 ModelColumnIndex = -1;
                 ModelVisibleColumnIndex = -1;
+                IsVisible = true;
                 Width = 45.0;
                 TextAlignment = TextAlignment.Right;
-                IsVisible = true;
             }
 
             ColumnName = columnModel.Name;
@@ -79,7 +79,7 @@ namespace EventTraceKit.VsExtension.Controls
 
         private object CoerceWidth(double baseValue)
         {
-            return Math.Max(baseValue, 16);
+            return Math.Max(baseValue, IsConfigurable ? 16 : 5);
         }
 
         private void OnWidthChanged()
@@ -440,9 +440,9 @@ namespace EventTraceKit.VsExtension.Controls
             return adv.GetCellValue(rowIndex, ModelVisibleColumnIndex);
         }
 
-        public bool IsInFreezableArea()
+        public bool IsFrozen()
         {
-            return columns.IsColumnFrozen(this);
+            return columns.IsFrozenColumn(this);
         }
 
         private int GetModelColumnIndex()
@@ -467,24 +467,22 @@ namespace EventTraceKit.VsExtension.Controls
             return index;
         }
 
-        internal void RefreshViewModelFromModel()
+        private void RefreshViewModelFromModel()
         {
-            //if (columnModel.DataType == typeof(KeysValuesSeparatorColumn)) {
-            //    IsSeparator = true;
-            //    IsResizable = false;
-            //    Width = 5.0;
-            //} else if (columnModel.DataType == typeof(FreezableAreaSeparatorColumn)) {
-            //    IsFreezableAreaSeparator = true;
-            //    IsResizable = false;
-            //    Width = 5.0;
-            //} else
-            if (this is ExpanderHeaderColumn) {
+            if (this is FreezableAreaSeparatorColumn) {
+                IsFreezableAreaSeparator = true;
                 IsResizable = false;
-                IsExpanderHeader = true;
+                Width = 5.0;
                 return;
-            } else {
-                IsResizable = true;
             }
+
+            if (this is ExpanderHeaderColumn) {
+                IsExpanderHeader = true;
+                IsResizable = false;
+                return;
+            }
+
+            IsResizable = true;
 
             ClearCachedRows();
             ModelColumnIndex = GetModelColumnIndex();
@@ -497,11 +495,11 @@ namespace EventTraceKit.VsExtension.Controls
             var preset = new ColumnViewModelPreset {
                 Id = columnModel.ColumnId,
                 Name = columnModel.Name,
-                HelpText = columnModel.HelpText,
-                TextAlignment = TextAlignment,
                 IsVisible = IsVisible,
-                CellFormat = CellFormat,
                 Width = (int)Width,
+                TextAlignment = TextAlignment,
+                CellFormat = CellFormat,
+                HelpText = columnModel.HelpText,
             };
             return preset;
         }

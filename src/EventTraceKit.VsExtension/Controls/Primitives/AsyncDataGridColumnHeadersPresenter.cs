@@ -86,10 +86,24 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         #endregion
 
-        public Panel InternalItemsHost { get; set; }
-
         internal AsyncDataGrid ParentGrid =>
             parentGrid ?? (parentGrid = this.FindParent<AsyncDataGrid>());
+
+        internal Panel InternalItemsHost { get; set; }
+
+        internal void NotifyHorizontalOffsetChanged()
+        {
+            InvalidateArrange();
+            InternalItemsHost?.InvalidateArrange();
+        }
+
+        public override void OnApplyTemplate()
+        {
+            if (InternalItemsHost != null && !IsAncestorOf(InternalItemsHost))
+                InternalItemsHost = null;
+
+            base.OnApplyTemplate();
+        }
 
         protected override void OnItemsSourceChanged(IEnumerable oldValue, IEnumerable newValue)
         {

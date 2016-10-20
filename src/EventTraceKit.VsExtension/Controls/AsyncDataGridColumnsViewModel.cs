@@ -25,8 +25,9 @@ namespace EventTraceKit.VsExtension.Controls
             ConfigurableColumns = new ReadOnlyObservableCollection<AsyncDataGridColumn>(configurableColumns);
 
             ExpanderHeaderColumn = new ExpanderHeaderColumn(this, advModel);
+            LeftFreezableAreaSeparatorColumn = new FreezableAreaSeparatorColumn(this, advModel);
+            RightFreezableAreaSeparatorColumn = new FreezableAreaSeparatorColumn(this, advModel);
         }
-
 
         internal AsyncDataViewModel AdvModel { get; }
         internal ObservableCollection<AsyncDataGridColumn> WritableColumns => columns;
@@ -181,15 +182,17 @@ namespace EventTraceKit.VsExtension.Controls
 
         #endregion
 
-        private void RefreshAllObservableCollections()
+        public AsyncDataGridColumn LeftFreezableAreaSeparatorColumn { get; }
+
+        public AsyncDataGridColumn RightFreezableAreaSeparatorColumn { get; }
+
+        private void RefreshColumnCollections()
         {
             visibleColumns.Clear();
             visibleColumns.AddRange(columns.Where(x => x.IsVisible));
 
-            //this.AdjustFrozenCounts();
-
             configurableColumns.Clear();
-            configurableColumns.AddRange(columns.Where(x => x.IsFreezableAreaSeparator));
+            configurableColumns.AddRange(columns.Where(x => x.IsConfigurable));
         }
 
         public void TryMoveColumn(
@@ -197,10 +200,14 @@ namespace EventTraceKit.VsExtension.Controls
         {
             int oldIndex = columns.IndexOf(srcColumn);
             int newIndex = columns.IndexOf(dstColumn);
+
+            if (IsFrozenColumnIndex(oldIndex) != IsFrozenColumnIndex(newIndex))
+                return;
+
             if (oldIndex != newIndex)
                 WritableColumns.Move(oldIndex, newIndex);
 
-            RefreshAllObservableCollections();
+            RefreshColumnCollections();
             AdvModel.Preset = AdvModel.CreatePresetFromModifiedUI();
         }
 
@@ -229,11 +236,11 @@ namespace EventTraceKit.VsExtension.Controls
                 //    WritableColumns,
                 //    LeftFreezableAreaSeparatorColumn,
                 //    RightFreezableAreaSeparatorColumn);
+
                 AdvModel.DataView.EndDataUpdate();
-                RefreshAllObservableCollections();
+                RefreshColumnCollections();
             } finally {
                 isApplyingPreset = false;
-                //UpdateFreezableColumnsWidth();
             }
         }
 
@@ -243,19 +250,19 @@ namespace EventTraceKit.VsExtension.Controls
                 AdvModel.RequestUpdate(false);
         }
 
-        public bool IsColumnFrozen(AsyncDataGridColumn column)
+        public bool IsFrozenColumn(AsyncDataGridColumn column)
         {
             int index = columns.IndexOf(column);
             if (index == -1)
                 return false;
 
-            if (index < LeftFrozenColumnCount)
-                return true;
+            return IsFrozenColumnIndex(index);
+        }
 
-            if (index > columns.Count - RightFrozenColumnCount + 1)
-                return true;
-
-            return false;
+        private bool IsFrozenColumnIndex(int index)
+        {
+            return index < LeftFrozenColumnCount ||
+                   index >= columns.Count - RightFrozenColumnCount;
         }
     }
 }

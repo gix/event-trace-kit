@@ -180,6 +180,8 @@
             int rightFrozenColumnCount = Math.Min(RightFrozenColumnCount, children.Count - leftFrozenColumnCount);
 
             var childRect = new Rect();
+
+            // Arrange left frozen columns.
             childRect.X = 0;
             childRect.Y = 0;
 
@@ -197,6 +199,7 @@
 
             double firstNonFrozenX = childRect.X;
 
+            // Arrange right frozen columns.
             childRect.X = arrangeSize.Width;
             childRect.Y = 0;
 
@@ -211,6 +214,7 @@
                 child.Arrange(childRect);
             }
 
+            // Arrange non-frozen columns.
             childRect.X = firstNonFrozenX - (ParentGrid?.HorizontalScrollOffset ?? 0);
             childRect.Y = 0;
 

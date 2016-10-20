@@ -504,14 +504,7 @@ namespace EventTraceKit.VsExtension.Controls
             DependencyPropertyChangedEventArgs e)
         {
             var source = (AsyncDataGrid)d;
-            var columnHeadersPresenter = source.ColumnHeadersPresenter;
-            if (columnHeadersPresenter != null) {
-                columnHeadersPresenter.InvalidateArrange();
-
-                var itemsHost = columnHeadersPresenter.InternalItemsHost;
-                itemsHost?.InvalidateMeasure();
-                itemsHost?.InvalidateArrange();
-            }
+            source.ColumnHeadersPresenter?.NotifyHorizontalOffsetChanged();
         }
 
         #endregion
