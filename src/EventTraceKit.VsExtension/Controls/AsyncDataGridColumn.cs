@@ -442,7 +442,7 @@ namespace EventTraceKit.VsExtension.Controls
 
         public bool IsInFreezableArea()
         {
-            return false;
+            return columns.IsColumnFrozen(this);
         }
 
         private int GetModelColumnIndex()

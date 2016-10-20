@@ -400,8 +400,10 @@
             if (result == MessageBoxResult.Yes) {
                 DeletePreset(name);
                 var newPreset = HdvViewModel.PresetCollection.EnumerateAllPresets().FirstOrDefault();
-                if (newPreset == null)
-                    newPreset = new AsyncDataViewModelPreset { Name = "New" };
+                if (newPreset == null) {
+                    newPreset = HdvViewModel.TemplatePreset;
+                    HdvViewModel.PresetCollection.SetUserPreset(newPreset);
+                }
                 RefreshFromPreset(newPreset);
             }
 

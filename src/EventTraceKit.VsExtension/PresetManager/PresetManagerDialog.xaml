@@ -311,8 +311,8 @@
                         Margin="4,2,0,2"
                         Padding="5,3"
                         VerticalAlignment="Center"
-                        SelectedItem="{Binding TextAlignment}"
-                        ItemsSource="{Binding Source={StaticResource TextAlignmentValues}}"/>
+                        ItemsSource="{Binding Source={StaticResource TextAlignmentValues}}"
+                        SelectedItem="{Binding TextAlignment, UpdateSourceTrigger=PropertyChanged}"/>
 
               <Label Grid.Row="1" Grid.Column="0" Content="Width"
                      Margin="0,2,0,2"
@@ -321,7 +321,7 @@
                        AutomationProperties.Name="Width"
                        Margin="4,2,0,2"
                        VerticalAlignment="Center"
-                       Text="{Binding Width, Converter={x:Static etkvs:PresetManagerDialog.WidthToStringConverter}}"/>
+                       Text="{Binding Width, UpdateSourceTrigger=PropertyChanged, Converter={x:Static etkvs:PresetManagerDialog.WidthToStringConverter}}"/>
 
               <Label Grid.Row="2" Grid.Column="0" Content="Format"
                      Visibility="{Binding CellFormatVisibility, Mode=OneTime}"
@@ -331,10 +331,9 @@
                         Margin="4,2,0,2"
                         Padding="5,3"
                         VerticalAlignment="Center"
-                        IsEditable="False"
+                        Visibility="{Binding CellFormatVisibility, Mode=OneTime}"
                         DisplayMemberPath="Description"
                         ItemsSource="{Binding SupportedFormats}"
-                        Visibility="{Binding CellFormatVisibility, Mode=OneTime}"
                         SelectedItem="{Binding CellFormat, UpdateSourceTrigger=PropertyChanged}">
                 <ItemsControl.ItemContainerStyle>
                   <Style TargetType="{x:Type ComboBoxItem}">

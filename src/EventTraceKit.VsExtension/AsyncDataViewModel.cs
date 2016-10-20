@@ -393,18 +393,15 @@ namespace EventTraceKit.VsExtension
             VerifyIsReady();
 
             var newPreset = new AsyncDataViewModelPreset();
-            AsyncDataViewModelPreset currentPreset = Preset;
-            string name = currentPreset.Name;
-            if (name != null)
-                newPreset.Name = name;
-
+            newPreset.Name = Preset.Name;
             newPreset.IsModified = true;
-
             newPreset.ConfigurableColumns.Clear();
             newPreset.ConfigurableColumns.AddRange(
                 from column in columnsViewModel.WritableColumns
                 where column.IsConnected
                 select column.ToPreset());
+            newPreset.LeftFrozenColumnCount = columnsViewModel.LeftFrozenColumnCount;
+            newPreset.RightFrozenColumnCount = columnsViewModel.RightFrozenColumnCount;
 
             return newPreset;
         }

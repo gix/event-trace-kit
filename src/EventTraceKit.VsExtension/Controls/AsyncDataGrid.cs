@@ -156,6 +156,29 @@ namespace EventTraceKit.VsExtension.Controls
 
         #endregion
 
+        #region public Brush FrozenColumnBackground { get; set; }
+
+        /// <summary>
+        ///   Identifies the <see cref="FrozenColumnBackground"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty FrozenColumnBackgroundProperty =
+            DependencyProperty.Register(
+                nameof(FrozenColumnBackground),
+                typeof(Brush),
+                typeof(AsyncDataGrid),
+                new PropertyMetadata(Brushes.LightGray));
+
+        /// <summary>
+        ///   Gets or sets the frozen column background.
+        /// </summary>
+        public Brush FrozenColumnBackground
+        {
+            get { return (Brush)GetValue(FrozenColumnBackgroundProperty); }
+            set { SetValue(FrozenColumnBackgroundProperty, value); }
+        }
+
+        #endregion
+
         #region public Brush RowSelectionForeground { get; set; }
 
         /// <summary>

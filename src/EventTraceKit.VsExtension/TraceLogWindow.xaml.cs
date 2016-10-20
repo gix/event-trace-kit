@@ -5,8 +5,7 @@
     using System.Windows.Media;
     using Windows;
     using Microsoft.VisualStudio.PlatformUI;
-    using Colors = Styles.Colors;
-    using Fonts = Styles.Fonts;
+    using Styles;
 
     /// <summary>Interaction logic for TraceLogWindow.</summary>
     public partial class TraceLogWindow
@@ -33,22 +32,23 @@
             var values = new ResourceDictionary();
 
             if (fch.GetTextItemInfo(outputWindow, "Plain Text", values, true)) {
-                Resources[Fonts.TraceLogEntryFontFamilyKey] = ((Typeface)values["Typeface"]).FontFamily;
-                Resources[Fonts.TraceLogEntryFontSizeKey] = values["FontRenderingSize"];
-                Resources[Colors.TraceLogForegroundKey] = values["Foreground"];
-                Resources[Colors.TraceLogBackgroundKey] = values["Background"];
-                Resources[Colors.TraceLogBackgroundAltKey] =
-                    GetAlternateBrush((SolidColorBrush)values["Background"]);
+                var background = (SolidColorBrush)values["Background"];
+                Resources[TraceLogFonts.EntryFontFamilyKey] = ((Typeface)values["Typeface"]).FontFamily;
+                Resources[TraceLogFonts.EntryFontSizeKey] = values["FontRenderingSize"];
+                Resources[TraceLogColors.ForegroundKey] = values["Foreground"];
+                Resources[TraceLogColors.BackgroundKey] = values["Background"];
+                Resources[TraceLogColors.BackgroundAltKey] = GetAlternateBrush(background);
+                Resources[TraceLogColors.FrozenColumnBackgroundKey] = GetAlternateBrush(background, 0.15);
             }
 
             if (fch.GetTextItemInfo(outputWindow, "Selected Text", values)) {
-                Resources[Colors.TraceLogSelectedForegroundKey] = Resources[Colors.TraceLogForegroundKey];
-                Resources[Colors.TraceLogSelectedBackgroundKey] = values["Background"];
+                Resources[TraceLogColors.SelectedForegroundKey] = Resources[TraceLogColors.ForegroundKey];
+                Resources[TraceLogColors.SelectedBackgroundKey] = values["Background"];
             }
 
             if (fch.GetTextItemInfo(outputWindow, "Inactive Selected Text", values)) {
-                Resources[Colors.TraceLogInactiveSelectedForegroundKey] = Resources[Colors.TraceLogForegroundKey];
-                Resources[Colors.TraceLogInactiveSelectedBackgroundKey] = values["Background"];
+                Resources[TraceLogColors.InactiveSelectedForegroundKey] = Resources[TraceLogColors.ForegroundKey];
+                Resources[TraceLogColors.InactiveSelectedBackgroundKey] = values["Background"];
             }
         }
 

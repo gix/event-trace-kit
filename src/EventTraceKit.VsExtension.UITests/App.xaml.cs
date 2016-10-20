@@ -17,8 +17,7 @@
     using Microsoft.VisualStudio.Settings;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
-    using Colors = Styles.Colors;
-    using Fonts = Styles.Fonts;
+    using Styles;
     using IServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
     /// <summary>
@@ -155,15 +154,15 @@
             var inactiveSelectedBackgroundKey = new ThemeResourceKey(
                 id, "Inactive Selected Text", ThemeResourceKeyType.BackgroundBrush);
 
-            Resources[Fonts.TraceLogEntryFontFamilyKey] = new FontFamily("Consolas");
-            Resources[Fonts.TraceLogEntryFontSizeKey] = 9;
-            Resources[Colors.TraceLogForegroundKey] = Resources[foregroundKey];
-            Resources[Colors.TraceLogBackgroundKey] = Resources[backgroundKey];
-            Resources[Colors.TraceLogBackgroundAltKey] = GetAlternateBrush((SolidColorBrush)Resources[backgroundKey]);
-            Resources[Colors.TraceLogSelectedForegroundKey] = Resources[foregroundKey];
-            Resources[Colors.TraceLogSelectedBackgroundKey] = Resources[selectedBackgroundKey];
-            Resources[Colors.TraceLogInactiveSelectedForegroundKey] = Resources[foregroundKey];
-            Resources[Colors.TraceLogInactiveSelectedBackgroundKey] = Resources[inactiveSelectedBackgroundKey];
+            Resources[TraceLogFonts.EntryFontFamilyKey] = new FontFamily("Consolas");
+            Resources[TraceLogFonts.EntryFontSizeKey] = 9;
+            Resources[TraceLogColors.ForegroundKey] = Resources[foregroundKey];
+            Resources[TraceLogColors.BackgroundKey] = Resources[backgroundKey];
+            Resources[TraceLogColors.BackgroundAltKey] = GetAlternateBrush((SolidColorBrush)Resources[backgroundKey]);
+            Resources[TraceLogColors.SelectedForegroundKey] = Resources[foregroundKey];
+            Resources[TraceLogColors.SelectedBackgroundKey] = Resources[selectedBackgroundKey];
+            Resources[TraceLogColors.InactiveSelectedForegroundKey] = Resources[foregroundKey];
+            Resources[TraceLogColors.InactiveSelectedBackgroundKey] = Resources[inactiveSelectedBackgroundKey];
         }
 
         private SolidColorBrush GetAlternateBrush(

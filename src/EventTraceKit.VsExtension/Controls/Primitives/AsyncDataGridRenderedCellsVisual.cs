@@ -1,11 +1,10 @@
-namespace EventTraceKit.VsExtension.Controls
+namespace EventTraceKit.VsExtension.Controls.Primitives
 {
     using System;
     using System.Collections.Generic;
     using System.Globalization;
     using System.Windows;
     using System.Windows.Media;
-    using Primitives;
     using Windows;
 
     public class AsyncDataGridRenderedCellsVisual : DrawingVisual
@@ -80,14 +79,14 @@ namespace EventTraceKit.VsExtension.Controls
                 double rowHeight = cellsPresenter.RowHeight;
                 double height = Math.Min((rowCount * rowHeight) - verticalOffset, actualHeight);
 
-                Brush frozenColumnBrush = cellsPresenter.FrozenColumnBrush;
+                Brush frozenColumnBackground = cellsPresenter.FrozenColumnBackground;
                 for (int col = firstVisibleColumn; col <= lastVisibleColumn; ++col) {
                     double leftEdge = columnBoundaries[col] - horizontalOffset;
                     double rightEdge = columnBoundaries[col + 1] - horizontalOffset;
                     double width = rightEdge - leftEdge;
                     if (visibleColumns[col].IsInFreezableArea()) {
                         dc.DrawRectangle(
-                            frozenColumnBrush,
+                            frozenColumnBackground,
                             null, new Rect(leftEdge, 0, width, height));
                     }
                 }

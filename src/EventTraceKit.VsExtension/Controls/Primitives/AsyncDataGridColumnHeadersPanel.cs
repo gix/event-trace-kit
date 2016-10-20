@@ -17,6 +17,9 @@
             OrientationProperty.OverrideMetadata(
                 typeof(AsyncDataGridColumnHeadersPanel),
                 new FrameworkPropertyMetadata(Orientation.Horizontal));
+            ClipToBoundsProperty.OverrideMetadata(
+                typeof(AsyncDataGridColumnHeadersPanel),
+                new FrameworkPropertyMetadata(true));
         }
 
         private AsyncDataGridColumnHeadersPresenter ParentPresenter =>
@@ -142,15 +145,16 @@
             base.OnIsItemsHostChanged(oldIsItemsHost, newIsItemsHost);
 
             var headersPresenter = ParentPresenter;
+            if (headersPresenter == null)
+                return;
+
             if (newIsItemsHost) {
-                IItemContainerGenerator generator = headersPresenter?.ItemContainerGenerator;
-                if (headersPresenter != null
-                    && generator != null
+                IItemContainerGenerator generator = headersPresenter.ItemContainerGenerator;
+                if (generator != null
                     && generator == generator.GetItemContainerGeneratorForPanel(this))
                     headersPresenter.InternalItemsHost = this;
             } else {
-                if (headersPresenter != null
-                    && ReferenceEquals(headersPresenter.InternalItemsHost, this))
+                if (ReferenceEquals(headersPresenter.InternalItemsHost, this))
                     headersPresenter.InternalItemsHost = null;
             }
         }

@@ -188,7 +188,7 @@
     <Compile Include="Controls\MultiDragListBox.cs" />
     <Compile Include="Controls\MultiDragListView.cs" />
     <Compile Include="PresetManager\ExceptionFilterEventArgs.cs" />
-    <Compile Include="PresetManagerDialog.xaml.cs">
+    <Compile Include="PresetManager\PresetManagerDialog.xaml.cs">
       <DependentUpon>PresetManagerDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="PresetManager\CollectionExtensions.cs" />
@@ -202,7 +202,7 @@
     <Compile Include="PresetManager\PresetManagerDesignTimeModel.cs" />
     <Compile Include="PresetManager\PresetManagerViewModel.cs" />
     <Compile Include="PresetManager\ViewPresetsService.cs" />
-    <Compile Include="PresetSaveAsDialog.xaml.cs">
+    <Compile Include="PresetManager\PresetSaveAsDialog.xaml.cs">
       <DependentUpon>PresetSaveAsDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Serialization\ActivatorUtils.cs" />
@@ -307,7 +307,7 @@
     <Compile Include="Guids.cs" />
     <Compile Include="ValidateValueCallbacks.cs" />
     <Compile Include="Native.cs" />
-    <Compile Include="Controls\AsyncDataGridRenderedCellsVisual.cs" />
+    <Compile Include="Controls\Primitives\AsyncDataGridRenderedCellsVisual.cs" />
     <Compile Include="Controls\Primitives\AsyncDataGridCellsPresenter.cs" />
     <Compile Include="PkgCmdId.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -349,11 +349,11 @@
     </VSCTCompile>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="PresetManagerDialog.xaml">
+    <Page Include="PresetManager\PresetManagerDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="PresetSaveAsDialog.xaml">
+    <Page Include="PresetManager\PresetSaveAsDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -38,7 +38,7 @@
                           SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
       </Border>
       <!-- Note the negative margin on the thumb, which gives the gripper a
-           bigger hit area than the actual visual appearance -->
+           bigger hit area than the actual visual appearance. -->
       <Thumb x:Name="PART_LeftHeaderGripper" HorizontalAlignment="Left" Margin="-4,0,0,0"
              Style="{StaticResource DataGridColumnHeaderGripper}"/>
       <Thumb x:Name="PART_RightHeaderGripper" HorizontalAlignment="Right" Margin="0,0,-4,0"

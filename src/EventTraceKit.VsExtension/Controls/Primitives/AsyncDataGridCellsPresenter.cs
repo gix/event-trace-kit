@@ -504,14 +504,14 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         #endregion
 
-        #region public Brush FrozenColumnBrush { get; set; }
+        #region public Brush FrozenColumnBackground { get; set; }
 
         /// <summary>
-        ///   Identifies the <see cref="FrozenColumnBrush"/> dependency property.
+        ///   Identifies the <see cref="FrozenColumnBackground"/> dependency property.
         /// </summary>
-        public static readonly DependencyProperty FrozenColumnBrushProperty =
+        public static readonly DependencyProperty FrozenColumnBackgroundProperty =
             DependencyProperty.Register(
-                nameof(FrozenColumnBrush),
+                nameof(FrozenColumnBackground),
                 typeof(Brush),
                 typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
@@ -520,12 +520,12 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                     FrameworkPropertyMetadataOptions.AffectsRender));
 
         /// <summary>
-        ///   Gets or sets the frozen column brush.
+        ///   Gets or sets the frozen column background.
         /// </summary>
-        public Brush FrozenColumnBrush
+        public Brush FrozenColumnBackground
         {
-            get { return (Brush)GetValue(FrozenColumnBrushProperty); }
-            set { SetValue(FrozenColumnBrushProperty, value); }
+            get { return (Brush)GetValue(FrozenColumnBackgroundProperty); }
+            set { SetValue(FrozenColumnBackgroundProperty, value); }
         }
 
         #endregion
