@@ -183,6 +183,52 @@ namespace EventTraceKit.VsExtension.Controls
 
         #endregion
 
+        #region public int LeftFrozenVisibleColumnCount { get; set; }
+
+        /// <summary>
+        ///   Identifies the <see cref="LeftFrozenVisibleColumnCount"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty LeftFrozenVisibleColumnCountProperty =
+            DependencyProperty.Register(
+                nameof(LeftFrozenVisibleColumnCount),
+                typeof(int),
+                typeof(AsyncDataGridColumnsViewModel),
+                new PropertyMetadata(0));
+
+        /// <summary>
+        ///   Gets or sets the left frozen visible column count.
+        /// </summary>
+        public int LeftFrozenVisibleColumnCount
+        {
+            get { return (int)GetValue(LeftFrozenVisibleColumnCountProperty); }
+            set { SetValue(LeftFrozenVisibleColumnCountProperty, value); }
+        }
+
+        #endregion
+
+        #region public int RightFrozenVisibleColumnCount { get; set; }
+
+        /// <summary>
+        ///   Identifies the <see cref="RightFrozenVisibleColumnCount"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty RightFrozenVisibleColumnCountProperty =
+            DependencyProperty.Register(
+                nameof(RightFrozenVisibleColumnCount),
+                typeof(int),
+                typeof(AsyncDataGridColumnsViewModel),
+                new PropertyMetadata(0));
+
+        /// <summary>
+        ///   Gets or sets the right frozen visible column count.
+        /// </summary>
+        public int RightFrozenVisibleColumnCount
+        {
+            get { return (int)GetValue(RightFrozenVisibleColumnCountProperty); }
+            set { SetValue(RightFrozenVisibleColumnCountProperty, value); }
+        }
+
+        #endregion
+
         public AsyncDataGridColumn LeftFreezableAreaSeparatorColumn { get; }
 
         public AsyncDataGridColumn RightFreezableAreaSeparatorColumn { get; }
@@ -204,7 +250,7 @@ namespace EventTraceKit.VsExtension.Controls
             int oldIndex = columns.IndexOf(srcColumn);
             int newIndex = columns.IndexOf(dstColumn);
 
-            if (IsFrozenColumnIndex(oldIndex) != IsFrozenColumnIndex(newIndex))
+            if (IsFrozenVisibleColumnIndex(oldIndex) != IsFrozenVisibleColumnIndex(newIndex))
                 return;
 
             if (oldIndex != newIndex)
@@ -218,40 +264,42 @@ namespace EventTraceKit.VsExtension.Controls
         {
             isApplyingPreset = true;
             try {
-                AdvModel.DataView.BeginDataUpdate();
+                var dataView = AdvModel.DataView;
+                dataView.BeginDataUpdate();
                 WritableColumns.Clear();
 
-                int index = 0;
-                foreach (var dataColumn in AdvModel.DataView.Columns) {
-                    var column = new AsyncDataGridColumn(this, dataColumn, AdvModel, false);
-                    WritableColumns.Add(column);
-
-                    var columnPreset = preset.ConfigurableColumns[index];
+                for (int i = 0; i < dataView.Columns.Count; ++i) {
+                    var columnPreset = preset.ConfigurableColumns[i];
+                    var column = new AsyncDataGridColumn(this, dataView.Columns[i], AdvModel, false);
                     column.Width = columnPreset.Width;
                     column.TextAlignment = columnPreset.TextAlignment;
                     column.CellFormat = columnPreset.CellFormat;
-                    ++index;
+                    WritableColumns.Add(column);
                 }
 
-                int leftFrozenColumnCount = 0;
-                int rightFrozenColumnCount = 0;
+                int leftFrozenVisibleColumnCount = 0;
                 for (int i = 0; i < preset.LeftFrozenColumnCount; ++i) {
                     if (WritableColumns[i].IsVisible)
-                        ++leftFrozenColumnCount;
-                }
-                for (int i = 0; i < preset.RightFrozenColumnCount; ++i) {
-                    if (WritableColumns[preset.ConfigurableColumns.Count - i - 1].IsVisible)
-                        ++rightFrozenColumnCount;
+                        ++leftFrozenVisibleColumnCount;
                 }
 
-                LeftFrozenColumnCount = leftFrozenColumnCount;
-                RightFrozenColumnCount = rightFrozenColumnCount;
+                int rightFrozenVisibleColumnCount = 0;
+                for (int i = 0; i < preset.RightFrozenColumnCount; ++i) {
+                    if (WritableColumns[preset.ConfigurableColumns.Count - i - 1].IsVisible)
+                        ++rightFrozenVisibleColumnCount;
+                }
+
+                LeftFrozenColumnCount = preset.LeftFrozenColumnCount;
+                RightFrozenColumnCount = preset.RightFrozenColumnCount;
+                LeftFrozenVisibleColumnCount = leftFrozenVisibleColumnCount;
+                RightFrozenVisibleColumnCount = rightFrozenVisibleColumnCount;
+
                 //preset.PlaceSeparatorsInList(
                 //    WritableColumns,
                 //    LeftFreezableAreaSeparatorColumn,
                 //    RightFreezableAreaSeparatorColumn);
 
-                AdvModel.DataView.EndDataUpdate();
+                dataView.EndDataUpdate();
                 RefreshColumnCollections();
             } finally {
                 isApplyingPreset = false;
@@ -271,19 +319,19 @@ namespace EventTraceKit.VsExtension.Controls
             }
         }
 
-        public bool IsFrozenColumn(AsyncDataGridColumn column)
+        public bool IsFrozenVisibleColumn(AsyncDataGridColumn column)
         {
-            int index = columns.IndexOf(column);
+            int index = visibleColumns.IndexOf(column);
             if (index == -1)
                 return false;
 
-            return IsFrozenColumnIndex(index);
+            return IsFrozenVisibleColumnIndex(index);
         }
 
-        private bool IsFrozenColumnIndex(int index)
+        private bool IsFrozenVisibleColumnIndex(int index)
         {
-            return index < LeftFrozenColumnCount ||
-                   index >= columns.Count - RightFrozenColumnCount;
+            return index < LeftFrozenVisibleColumnCount ||
+                   index >= visibleColumns.Count - RightFrozenVisibleColumnCount;
         }
     }
 }

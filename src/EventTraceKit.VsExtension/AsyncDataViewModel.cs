@@ -115,21 +115,8 @@ namespace EventTraceKit.VsExtension
                     }
                     return;
                 }
-                //this.UpdateHelpTextFromPreset(preset.HelpText);
-                //ColumnChangingContext columnChangingContext = AsyncDataViewModel.columnChangingContext;
-                //if (columnChangingContext != null) {
-                //    this.columnMetadataCollection.PresetMetadataEntries = preset.ColumnMetadataEntries;
-                //    if (this.HasAnyVisibleColumnAffectedByChange(preset, columnChangingContext.ColumnChangingPredicate)) {
-                //        this.DisableTableForAsyncOperation();
-                //        this.presetToApplyOnReady = preset;
-                //        AddChangingAdvModel(this);
-                //        return;
-                //    }
-                //}
+
                 presetBeingApplied = newPreset;
-                //if (this.presenterRowSelectionToUseOnReady == null) {
-                //    this.SaveTableRowSelectionAndFocus();
-                //}
 
                 //this.DataView.BeginDataUpdate();
                 ApplyPresetToGridModel(
@@ -142,7 +129,6 @@ namespace EventTraceKit.VsExtension
                 PresetCollection.CachePreset(newPreset);
 
             PresetChanged.Raise(this, e);
-            //this.ResetIsPresetError();
         }
 
         private object CoercePreset(object baseValue)

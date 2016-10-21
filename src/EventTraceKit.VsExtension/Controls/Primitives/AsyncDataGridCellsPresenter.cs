@@ -1374,6 +1374,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
         {
+            base.OnMouseLeftButtonDown(e);
             var viewModel = ViewModel;
             if (viewModel == null || e.Handled)
                 return;
@@ -1409,8 +1410,16 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
         {
+            base.OnMouseLeftButtonDown(e);
             if (dragSelectionCtx.IsDragging)
                 EndDragging();
+        }
+
+        protected override void OnLostMouseCapture(MouseEventArgs e)
+        {
+            base.OnLostMouseCapture(e);
+            if (dragSelectionCtx.IsDragging)
+                CancelDragging();
         }
 
         protected override void OnMouseRightButtonDown(MouseButtonEventArgs e)
@@ -1459,12 +1468,6 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             dragSelectionCtx.LastTargetedRow = row;
         }
 
-        protected override void OnLostMouseCapture(MouseEventArgs e)
-        {
-            base.OnLostMouseCapture(e);
-            CancelDragging();
-        }
-
         private struct DragSelectionContext
         {
             public bool IsDragging;
@@ -1489,10 +1492,9 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         private void EndDragging()
         {
-            if (ReferenceEquals(Mouse.Captured, this))
-                ReleaseMouseCapture();
-
             dragSelectionCtx = new DragSelectionContext();
+            if (IsMouseCaptured)
+                ReleaseMouseCapture();
         }
 
         private void CancelDragging()

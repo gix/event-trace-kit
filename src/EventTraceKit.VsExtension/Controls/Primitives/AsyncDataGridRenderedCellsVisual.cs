@@ -2,6 +2,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Globalization;
     using System.Windows;
     using System.Windows.Media;
@@ -21,7 +22,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         internal void InvalidateRowCache()
         {
-            rowVisualCacheInvalid = true;
+            rowCacheInvalid = true;
         }
 
         private AsyncDataGrid ParentGrid =>
@@ -50,18 +51,36 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             int firstVisibleRow = cellsPresenter.FirstVisibleRowIndex;
             int lastVisibleRow = cellsPresenter.LastVisibleRowIndex;
 
-            double[] columnBoundaries = ComputeColumnBoundaries(visibleColumns);
+            double[] columnEdges = ComputeColumnBoundaries(visibleColumns);
 
             int firstVisibleColumn = -1;
             int lastVisibleColumn = firstVisibleColumn - 1;
             for (int i = 0; i < visibleColumns.Count; ++i) {
-                if (columnBoundaries[i + 1] >= horizontalOffset) {
+                if (columnEdges[i + 1] >= horizontalOffset) {
                     if (firstVisibleColumn == -1)
                         firstVisibleColumn = i;
                     lastVisibleColumn = i;
-                    double rightEdge = columnBoundaries[i + 1] - horizontalOffset;
+                    double rightEdge = columnEdges[i + 1] - horizontalOffset;
                     if (rightEdge > viewport.Width)
                         break;
+                }
+            }
+
+            firstVisibleColumn = 0;
+            lastVisibleColumn = visibleColumns.Count - 1;
+
+            int firstNonFrozenColumn = firstVisibleColumn;
+            int lastNonFrozenColumn = lastVisibleColumn;
+            for (int i = 0; i < visibleColumns.Count; ++i) {
+                if (!visibleColumns[i].IsFrozen()) {
+                    firstNonFrozenColumn = i;
+                    break;
+                }
+            }
+            for (int i = visibleColumns.Count - 1; i >= 0; --i) {
+                if (!visibleColumns[i].IsFrozen()) {
+                    lastNonFrozenColumn = i;
+                    break;
                 }
             }
 
@@ -72,6 +91,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
             Offset = new Vector();
             RenderedViewport = Rect.Empty;
+            Children.Clear();
 
             using (DrawingContext dc = RenderOpen()) {
                 int rowCount = viewModel.RowCount;
@@ -86,8 +106,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
                 Brush frozenColumnBackground = cellsPresenter.FrozenColumnBackground;
                 for (int col = firstVisibleColumn; col <= lastVisibleColumn; ++col) {
-                    double leftEdge = columnBoundaries[col] - horizontalOffset;
-                    double rightEdge = columnBoundaries[col + 1] - horizontalOffset;
+                    double leftEdge = columnEdges[col] - horizontalOffset;
+                    double rightEdge = columnEdges[col + 1] - horizontalOffset;
                     double width = rightEdge - leftEdge;
                     if (visibleColumns[col].IsFrozen()) {
                         dc.DrawRectangle(
@@ -164,12 +184,31 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                     }
                 }
 
+                bool hasFrozenColumns = firstNonFrozenColumn > firstVisibleColumn ||
+                                        lastNonFrozenColumn < lastVisibleColumn;
+
+                if ((hasFrozenColumns && prevRenderedWidth != actualWidth) ||
+                    hasFrozenColumns != prevHasFrozenColumns) {
+                    frozenRowCacheInvalid = true;
+                    nonFrozenAreaClip = null;
+                }
+
+                prevHasFrozenColumns = hasFrozenColumns;
+                prevRenderedWidth = actualWidth;
+
+                PreTrimRowCache(firstVisibleRow, lastVisibleRow);
+
                 if (visibleColumns.Count > 0) {
                     RenderCells(
-                        dc, viewport, height, columnBoundaries,
+                        dc, viewport, actualWidth, height, columnEdges,
                         firstVisibleColumn, lastVisibleColumn,
-                        firstVisibleRow, lastVisibleRow);
+                        firstVisibleRow, lastVisibleRow,
+                        firstNonFrozenColumn, lastNonFrozenColumn);
                 }
+
+                PostTrimRowCache(firstVisibleRow, lastVisibleRow);
+
+                frozenRowCacheInvalid = false;
 
                 int focusIndex = viewModel.FocusIndex;
                 Pen focusBorderPen = cellsPresenter.FocusBorderPen;
@@ -182,7 +221,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                     double rowY = (focusIndex * rowHeight) - verticalOffset;
 
                     if (selectionVisual == null) {
-                        double rightEdge = columnBoundaries[columnBoundaries.Length - 1] - 1;
+                        double rightEdge = columnEdges[columnEdges.Length - 1] - 1;
                         double bottomEdge = rowHeight - 1;
                         var bounds = new Rect(0, 0, rightEdge, bottomEdge);
 
@@ -194,8 +233,6 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                     }
 
                     AddAtOffset(selectionVisual, rowX, rowY);
-                } else if (selectionVisual != null) {
-                    Children.Remove(selectionVisual);
                 }
             }
         }
@@ -213,23 +250,28 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         private struct RenderedRow
         {
-            public RenderedRow(int rowIndex, int styleHash, DrawingVisual visual)
+            public RenderedRow(
+                int rowIndex, int styleHash, DrawingVisual visual,
+                DrawingVisual frozenVisual)
             {
                 RowIndex = rowIndex;
                 StyleHash = styleHash;
                 Visual = visual;
+                FrozenVisual = frozenVisual;
             }
 
             public int RowIndex { get; }
             public DrawingVisual Visual { get; }
+            public DrawingVisual FrozenVisual { get; set; }
             public int StyleHash { get; }
         }
 
         private void RenderCells(
-            DrawingContext context, Rect viewport, double height,
-            double[] columnBoundaries,
+            DrawingContext context, Rect viewport, double width, double height,
+            double[] columnEdges,
             int firstVisibleColumn, int lastVisibleColumn,
-            int firstVisibleRow, int lastVisibleRow)
+            int firstVisibleRow, int lastVisibleRow,
+            int firstNonFrozenColumn, int lastNonFrozenColumn)
         {
             double horizontalOffset = cellsPresenter.HorizontalOffset;
             double verticalOffset = cellsPresenter.VerticalOffset;
@@ -251,15 +293,9 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             double padding = rowHeight / 10;
             double totalPadding = 2 * padding;
 
-            Children.Clear();
-            if (rowVisualCacheInvalid) {
-                renderedRowCache.Clear();
-                rowVisualCacheInvalid = false;
-            }
-
             for (int col = firstVisibleColumn; col <= lastVisibleColumn; ++col) {
-                double leftEdge = columnBoundaries[col] - horizontalOffset;
-                double rightEdge = columnBoundaries[col + 1] - horizontalOffset;
+                double leftEdge = columnEdges[col] - horizontalOffset;
+                double rightEdge = columnEdges[col + 1] - horizontalOffset;
 
                 if (verticalGridLinesPen != null) {
                     context.DrawLineSnapped(
@@ -282,6 +318,17 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 }
             }
 
+            double lastRightEdge = columnEdges[columnEdges.Length - 1];
+            if (lastRightEdge <= viewport.Right && verticalGridLinesPen != null) {
+                context.DrawLineSnapped(
+                    verticalGridLinesPen,
+                    new Point(lastRightEdge, 0),
+                    new Point(lastRightEdge, height));
+            }
+
+            bool hasFrozenColumns = firstNonFrozenColumn > firstVisibleColumn ||
+                                    lastNonFrozenColumn < lastVisibleColumn;
+
             int viewportSizeHint = lastVisibleRow - firstVisibleRow + 1;
             for (int row = firstVisibleRow; row <= lastVisibleRow; ++row) {
                 double rowX = -horizontalOffset;
@@ -297,7 +344,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 if (!TryGetCachedRow(row, styleHash, out rowVisual)) {
                     var rowContext = rowVisual.RenderOpen();
 
-                    for (int col = firstVisibleColumn; col <= lastVisibleColumn; ++col) {
+                    for (int col = firstNonFrozenColumn; col <= lastNonFrozenColumn; ++col) {
                         var column = visibleColumns[col];
                         if (column.IsSeparator || column.IsFreezableAreaSeparator)
                             continue;
@@ -305,8 +352,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                             continue;
 
                         double topEdge = 0;
-                        double leftEdge = columnBoundaries[col];
-                        double rightEdge = columnBoundaries[col + 1];
+                        double leftEdge = columnEdges[col];
+                        double rightEdge = columnEdges[col + 1];
                         double cellWidth = rightEdge - leftEdge;
 
                         var value = column.GetCellValue(row, viewportSizeHint);
@@ -335,15 +382,128 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 }
 
                 AddAtOffset(rowVisual, rowX, rowY);
+
+                if (hasFrozenColumns) {
+                    if (nonFrozenAreaClip == null) {
+                        double nonFrozenLeftEdge = columnEdges[firstNonFrozenColumn];
+                        double nonFrozenRightEdge = width - (columnEdges[lastVisibleColumn + 1] - columnEdges[lastNonFrozenColumn + 1]);
+
+                        var nonFrozenArea = new Rect(
+                            nonFrozenLeftEdge, 0,
+                            Math.Max(nonFrozenRightEdge - nonFrozenLeftEdge, 0), rowHeight);
+
+                        nonFrozenAreaClip = new RectangleGeometry(nonFrozenArea) {
+                            Transform = new TranslateTransform(horizontalOffset, 0)
+                        };
+                    }
+
+                    rowVisual.Clip = nonFrozenAreaClip;
+                    ((TranslateTransform)nonFrozenAreaClip.Transform).X = horizontalOffset;
+
+                    DrawingVisual frozenRowVisual;
+                    if (!TryGetCachedFrozenRow(row, styleHash, out frozenRowVisual)) {
+                        var rowContext = frozenRowVisual.RenderOpen();
+
+                        for (int col = firstVisibleColumn; col <= lastVisibleColumn; ++col) {
+                            var column = visibleColumns[col];
+                            if (column.IsSeparator || column.IsFreezableAreaSeparator)
+                                continue;
+                            if (!column.IsSafeToReadCellValuesFromUIThread)
+                                continue;
+                            if (col >= firstNonFrozenColumn && col <= lastNonFrozenColumn)
+                                continue;
+
+                            double topEdge = 0;
+                            double leftEdge = columnEdges[col];
+                            double rightEdge = columnEdges[col + 1];
+                            double cellWidth = rightEdge - leftEdge;
+
+                            if (col > lastNonFrozenColumn) {
+                                double distance = columnEdges[lastVisibleColumn + 1] - columnEdges[col];
+                                leftEdge = width - distance;
+                                rightEdge = leftEdge + cellWidth;
+                            }
+
+                            var value = column.GetCellValue(row, viewportSizeHint);
+                            if (value != null) {
+                                var formatted = new FormattedText(
+                                    value.ToString(), currentCulture,
+                                    flowDirection, typeface, fontSize, foreground, null,
+                                    TextFormattingMode.Display);
+                                formatted.MaxTextWidth = Math.Max(cellWidth - totalPadding, 0);
+                                formatted.MaxTextHeight = rowHeight;
+                                formatted.TextAlignment = column.TextAlignment;
+                                formatted.Trimming = TextTrimming.CharacterEllipsis;
+
+                                if (totalPadding < cellWidth) {
+                                    var offsetY = (rowHeight - formatted.Height) / 2;
+                                    var origin = new Point(
+                                        leftEdge + padding,
+                                        topEdge + offsetY);
+                                    origin = origin.Round(MidpointRounding.AwayFromZero);
+                                    rowContext.DrawText(formatted, origin);
+                                }
+                            }
+                        }
+
+                        rowContext.Close();
+                    }
+
+                    AddAtOffset(frozenRowVisual, 0, rowY);
+                }
+            }
+        }
+
+        private void PreTrimRowCache(int firstVisibleRow, int lastVisibleRow)
+        {
+            if (renderedRowCache.Count > 0) {
+                bool hasAnyRowCached =
+                    renderedRowCache[0].RowIndex <= lastVisibleRow &&
+                    renderedRowCache[renderedRowCache.Count - 1].RowIndex >= firstVisibleRow;
+                if (!hasAnyRowCached)
+                    rowCacheInvalid = true;
             }
 
-            double lastRightEdge = columnBoundaries[columnBoundaries.Length - 1];
-            if (lastRightEdge <= viewport.Right && verticalGridLinesPen != null) {
-                context.DrawLineSnapped(
-                    verticalGridLinesPen,
-                    new Point(lastRightEdge, 0),
-                    new Point(lastRightEdge, height));
+            if (rowCacheInvalid) {
+                renderedRowCache.Clear();
+                rowCacheInvalid = false;
             }
+        }
+
+        private void PostTrimRowCache(int firstVisibleRow, int lastVisibleRow)
+        {
+            int visibleRows = lastVisibleRow - firstVisibleRow + 1;
+            int overhang = Math.Min(2, visibleRows / 3);
+
+            int firstCachedRow = firstVisibleRow - overhang;
+            int lastCachedRow = lastVisibleRow + overhang;
+
+            int begin = 0;
+            int end = renderedRowCache.Count - 1;
+
+            int validBegin = begin;
+            for (int i = begin; i < renderedRowCache.Count; ++i) {
+                if (renderedRowCache[i].RowIndex >= firstCachedRow) {
+                    validBegin = i;
+                    break;
+                }
+            }
+
+            int validEnd = end;
+            for (int i = end; i >= 0; --i) {
+                if (renderedRowCache[i].RowIndex <= lastCachedRow) {
+                    validEnd = i;
+                    break;
+                }
+            }
+
+            int count = end - validEnd;
+            if (count != 0)
+                renderedRowCache.RemoveRange(validEnd, count);
+
+            count = validBegin - begin;
+            if (count != 0)
+                renderedRowCache.RemoveRange(begin, count);
         }
 
         private const int PrimeFactor = 397;
@@ -365,7 +525,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             }
         }
 
-        private bool TryGetCachedRow(int row, int styleHash, out DrawingVisual rowVisual)
+        private bool TryGetCachedRow(
+            int row, int styleHash, out DrawingVisual rowVisual)
         {
             int idx = renderedRowCache.BinarySearch(row, (x, y) => x.RowIndex.CompareTo(y));
             if (idx >= 0) {
@@ -373,13 +534,36 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 if (renderedRowCache[idx].StyleHash == styleHash)
                     return true;
 
-                renderedRowCache[idx] = new RenderedRow(row, styleHash, rowVisual);
+                renderedRowCache[idx] = new RenderedRow(row, styleHash, rowVisual, null);
                 return false;
             }
 
             rowVisual = new DrawingVisual();
             rowVisual.Transform = new TranslateTransform(0, 0);
-            renderedRowCache.Insert(~idx, new RenderedRow(row, styleHash, rowVisual));
+            renderedRowCache.Insert(~idx, new RenderedRow(row, styleHash, rowVisual, null));
+            return false;
+        }
+
+        private bool TryGetCachedFrozenRow(int row, int styleHash, out DrawingVisual rowVisual)
+        {
+            int idx = renderedRowCache.BinarySearch(row, (x, y) => x.RowIndex.CompareTo(y));
+            Debug.Assert(idx >= 0);
+
+            var entry = renderedRowCache[idx];
+            if (!frozenRowCacheInvalid && entry.StyleHash == styleHash && entry.FrozenVisual != null) {
+                rowVisual = entry.FrozenVisual;
+                return true;
+            }
+
+            if (frozenRowCacheInvalid || entry.FrozenVisual == null) {
+                rowVisual = new DrawingVisual();
+                rowVisual.Transform = new TranslateTransform(0, 0);
+                entry.FrozenVisual = rowVisual;
+                renderedRowCache[idx] = entry;
+            } else {
+                rowVisual = entry.FrozenVisual;
+            }
+
             return false;
         }
 
@@ -439,7 +623,11 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         private bool lastPrefetchCancelled;
         private bool isAsyncPrefetchInProgress;
         private object cachedDataValidityToken;
-        private bool rowVisualCacheInvalid;
+        private bool rowCacheInvalid;
+        private bool frozenRowCacheInvalid;
+        private bool prevHasFrozenColumns;
+        private double prevRenderedWidth;
+        private RectangleGeometry nonFrozenAreaClip;
 
         private bool EnsureReadyForViewport(
             AsyncDataGridCellsPresenterViewModel dataViewModel,

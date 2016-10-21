@@ -518,8 +518,8 @@ namespace EventTraceKit.VsExtension
             column.Name = preset.Name;
             column.Width = preset.Width;
             column.IsVisible = preset.IsVisible;
-            column.IsResizable = true;
             column.TextAlignment = preset.TextAlignment;
+            column.IsResizable = true;
             table.Add(column);
             templatePreset.ConfigurableColumns.Add(preset);
         }

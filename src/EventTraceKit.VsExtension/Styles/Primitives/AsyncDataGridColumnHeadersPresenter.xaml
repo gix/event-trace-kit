@@ -16,8 +16,8 @@
             <!--<ItemsPresenter x:Name="Headers"/>-->
             <Primitives:AsyncDataGridColumnHeadersPanel
               IsItemsHost="True"
-              LeftFrozenColumnCount="{Binding ViewModel.LeftFrozenColumnCount, RelativeSource={RelativeSource TemplatedParent}}"
-              RightFrozenColumnCount="{Binding ViewModel.RightFrozenColumnCount, RelativeSource={RelativeSource TemplatedParent}}"/>
+              LeftFrozenColumnCount="{Binding ViewModel.LeftFrozenVisibleColumnCount, RelativeSource={RelativeSource TemplatedParent}}"
+              RightFrozenColumnCount="{Binding ViewModel.RightFrozenVisibleColumnCount, RelativeSource={RelativeSource TemplatedParent}}"/>
             <Primitives:AsyncDataGridColumnHeader
               Panel.ZIndex="-1"
               IsEnabled="False"

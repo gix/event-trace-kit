@@ -432,7 +432,7 @@ namespace EventTraceKit.VsExtension.Controls
 
         public bool IsFrozen()
         {
-            return columns.IsFrozenColumn(this);
+            return columns.IsFrozenVisibleColumn(this);
         }
 
         private int GetModelColumnIndex()
