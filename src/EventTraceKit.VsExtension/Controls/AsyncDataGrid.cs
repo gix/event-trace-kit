@@ -27,8 +27,6 @@ namespace EventTraceKit.VsExtension.Controls
         private const string STATE_Processing = "Processing";
         private const string STATE_Ready = "Ready";
 
-        private Action<bool> updateStatesAction;
-
         static AsyncDataGrid()
         {
             Type forType = typeof(AsyncDataGrid);
@@ -360,9 +358,6 @@ namespace EventTraceKit.VsExtension.Controls
             if (newValue != null) {
                 newValue.Updated += OnViewModelUpdated;
                 newValue.ColumnsViewModel.ColumnsChanged += OnColumnsChanged;
-                var templateChild = GetTemplateChild(PART_CellsScrollViewer) as ScrollViewer;
-                if (templateChild != null)
-                    CenterScrollWidthChanged(templateChild.ActualWidth);
             }
         }
 
@@ -545,7 +540,7 @@ namespace EventTraceKit.VsExtension.Controls
                 isSelectionActive = true;
             } else {
                 var currentFocus = Keyboard.FocusedElement as DependencyObject;
-                var root = GetVisualRoot(this) as UIElement;
+                var root = this.GetRootVisual<UIElement>();
                 if (currentFocus != null && root != null && root.IsKeyboardFocusWithin) {
                     if (FocusManager.GetFocusScope(currentFocus) !=
                         FocusManager.GetFocusScope(this))
@@ -598,7 +593,6 @@ namespace EventTraceKit.VsExtension.Controls
             {
                 this.owner = owner;
                 SetIsContextMenuOpen(owner, true);
-
             }
 
             public void Dispose()
@@ -610,22 +604,6 @@ namespace EventTraceKit.VsExtension.Controls
         protected virtual void OnIsEnabledChanged(
             DependencyPropertyChangedEventArgs e)
         {
-        }
-
-        internal static Visual GetVisualRoot(DependencyObject d)
-        {
-            var visual = d as Visual;
-            if (visual != null) {
-                var source = PresentationSource.FromVisual(visual);
-                if (source != null)
-                    return source.RootVisual;
-            } else {
-                var element = d as FrameworkContentElement;
-                if (element != null)
-                    return GetVisualRoot(element.Parent);
-            }
-
-            return null;
         }
 
         private void OnCellsPresenterMouseUp(object sender, MouseButtonEventArgs e)
@@ -667,26 +645,14 @@ namespace EventTraceKit.VsExtension.Controls
             CoerceValue(ViewModelEventSourceProperty);
         }
 
-        private void CenterScrollWidthChanged(double width)
-        {
-            //if (ViewModel != null)
-            //    ViewModel.ColumnsViewModel.CenterScrollViewerWidth = width;
-        }
-
         private void OnViewModelUpdated(object sender, ItemEventArgs<bool> args)
         {
-            CellsPresenter.QueueRender(true);
+            CellsPresenter?.QueueRender(true);
         }
 
         private void OnColumnsChanged(object sender, EventArgs args)
         {
             CellsPresenter?.InvalidateRowCache();
-        }
-
-        protected override void OnGotFocus(RoutedEventArgs e)
-        {
-            base.OnGotFocus(e);
-            //CellsPresenter?.Focus();
         }
 
         private static void OnCopyCellCanExecute(object sender, CanExecuteRoutedEventArgs e)

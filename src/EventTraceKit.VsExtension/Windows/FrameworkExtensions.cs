@@ -10,6 +10,22 @@ namespace EventTraceKit.VsExtension.Windows
 
     public static class FrameworkExtensions
     {
+        public static T GetRootVisual<T>(this DependencyObject d)
+            where T : Visual
+        {
+            var visual = d as Visual;
+            if (visual != null) {
+                var source = PresentationSource.FromVisual(visual);
+                return source?.RootVisual as T;
+            }
+
+            var element = d as FrameworkContentElement;
+            if (element != null)
+                return GetRootVisual<T>(element.Parent);
+
+            return null;
+        }
+
         public static DependencyObject GetVisualOrLogicalParent(this DependencyObject sourceElement)
         {
             if (sourceElement == null)

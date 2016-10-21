@@ -383,7 +383,7 @@ namespace EventTraceKit.VsExtension
             newPreset.IsModified = true;
             newPreset.ConfigurableColumns.Clear();
             newPreset.ConfigurableColumns.AddRange(
-                from column in columnsViewModel.WritableColumns
+                from column in columnsViewModel.Columns
                 where column.IsConnected
                 select column.ToPreset());
             newPreset.LeftFrozenColumnCount = columnsViewModel.LeftFrozenColumnCount;

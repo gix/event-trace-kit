@@ -51,7 +51,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             int firstVisibleRow = cellsPresenter.FirstVisibleRowIndex;
             int lastVisibleRow = cellsPresenter.LastVisibleRowIndex;
 
-            double[] columnEdges = ComputeColumnBoundaries(visibleColumns);
+            double[] columnEdges = ComputeColumnEdges(visibleColumns);
 
             int firstVisibleColumn = -1;
             int lastVisibleColumn = firstVisibleColumn - 1;
@@ -220,19 +220,21 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                     double rowX = -horizontalOffset;
                     double rowY = (focusIndex * rowHeight) - verticalOffset;
 
-                    if (selectionVisual == null) {
+                    {
                         double rightEdge = columnEdges[columnEdges.Length - 1] - 1;
+                        if (lastNonFrozenColumn < lastVisibleColumn)
+                            rightEdge = actualWidth - 1;
                         double bottomEdge = rowHeight - 1;
                         var bounds = new Rect(0, 0, rightEdge, bottomEdge);
 
-                        selectionVisual = new DrawingVisual();
-                        selectionVisual.Transform = new TranslateTransform(0, 0);
-                        var context = selectionVisual.RenderOpen();
+                        focusVisual = new DrawingVisual();
+                        focusVisual.Transform = new TranslateTransform(0, 0);
+                        var context = focusVisual.RenderOpen();
                         context.DrawRectangleSnapped(null, focusBorderPen, bounds);
                         context.Close();
                     }
 
-                    AddAtOffset(selectionVisual, rowX, rowY);
+                    AddAtOffset(focusVisual, rowX, rowY);
                 }
             }
         }
@@ -245,7 +247,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             transform.Y = y;
         }
 
-        private DrawingVisual selectionVisual;
+        private DrawingVisual focusVisual;
         private readonly List<RenderedRow> renderedRowCache = new List<RenderedRow>();
 
         private struct RenderedRow
@@ -567,17 +569,18 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             return false;
         }
 
-        private double[] ComputeColumnBoundaries(
+        private double[] ComputeColumnEdges(
             IList<AsyncDataGridColumn> visibleColumns)
         {
-            var boundaries = new double[visibleColumns.Count + 1];
-            double cumulativeWidth = 0.0;
-            for (int i = 1; i < boundaries.Length; ++i) {
+            var edges = new double[visibleColumns.Count + 1];
+
+            double cumulativeWidth = 0;
+            for (int i = 1; i < edges.Length; ++i) {
                 cumulativeWidth += visibleColumns[i - 1].Width;
-                boundaries[i] = cumulativeWidth;
+                edges[i] = cumulativeWidth;
             }
 
-            return boundaries;
+            return edges;
         }
 
         internal double GetColumnAutoSize(AsyncDataGridColumn column)

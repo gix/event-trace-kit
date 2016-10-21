@@ -69,7 +69,7 @@
                   SecondaryBackground="{TemplateBinding AlternatingRowBackground}"
                   SelectionForeground="{TemplateBinding RowSelectionForeground}"
                   SelectionBackground="{TemplateBinding RowSelectionBackground}"
-                  SelectionBorderThickness="1"
+                  SelectionBorderThickness="0"
                   InactiveSelectionForeground="{TemplateBinding RowInactiveSelectionForeground}"
                   InactiveSelectionBackground="{TemplateBinding RowInactiveSelectionBackground}"
                   FocusBorderBrush="{TemplateBinding RowFocusBorderBrush}"

@@ -10,20 +10,17 @@ namespace EventTraceKit.VsExtension.Controls
     public class AsyncDataGridColumnsViewModel : DependencyObject
     {
         private readonly ObservableCollection<AsyncDataGridColumn> columns;
-        private readonly ObservableCollection<AsyncDataGridColumn> visibleColumns;
         private readonly ObservableCollection<AsyncDataGridColumn> configurableColumns;
+        private readonly ObservableCollection<AsyncDataGridColumn> visibleColumns;
         private bool isApplyingPreset;
 
         public AsyncDataGridColumnsViewModel(AsyncDataViewModel advModel)
         {
             AdvModel = advModel;
-            columns = new ObservableCollection<AsyncDataGridColumn>();
 
-            visibleColumns = new ObservableCollection<AsyncDataGridColumn>();
-            VisibleColumns = new ReadOnlyObservableCollection<AsyncDataGridColumn>(visibleColumns);
-
-            configurableColumns = new ObservableCollection<AsyncDataGridColumn>();
-            ConfigurableColumns = new ReadOnlyObservableCollection<AsyncDataGridColumn>(configurableColumns);
+            Columns = CollectionUtils.InitializeReadOnly(out columns);
+            ConfigurableColumns = CollectionUtils.InitializeReadOnly(out configurableColumns);
+            VisibleColumns = CollectionUtils.InitializeReadOnly(out visibleColumns);
 
             ExpanderHeaderColumn = new ExpanderHeaderColumn(this, advModel);
             LeftFreezableAreaSeparatorColumn = new FreezableAreaSeparatorColumn(this, advModel);
@@ -31,7 +28,12 @@ namespace EventTraceKit.VsExtension.Controls
         }
 
         internal AsyncDataViewModel AdvModel { get; }
-        internal ObservableCollection<AsyncDataGridColumn> WritableColumns => columns;
+
+        internal ReadOnlyObservableCollection<AsyncDataGridColumn> Columns { get; }
+
+        public AsyncDataGridColumn LeftFreezableAreaSeparatorColumn { get; }
+
+        public AsyncDataGridColumn RightFreezableAreaSeparatorColumn { get; }
 
         #region public ReadOnlyObservableCollection<AsyncDataGridColumn> VisibleColumns
 
@@ -229,10 +231,6 @@ namespace EventTraceKit.VsExtension.Controls
 
         #endregion
 
-        public AsyncDataGridColumn LeftFreezableAreaSeparatorColumn { get; }
-
-        public AsyncDataGridColumn RightFreezableAreaSeparatorColumn { get; }
-
         private void RefreshColumnCollections()
         {
             visibleColumns.Clear();
@@ -254,7 +252,7 @@ namespace EventTraceKit.VsExtension.Controls
                 return;
 
             if (oldIndex != newIndex)
-                WritableColumns.Move(oldIndex, newIndex);
+                columns.Move(oldIndex, newIndex);
 
             RefreshColumnCollections();
             AdvModel.Preset = AdvModel.CreatePresetFromModifiedUI();
@@ -266,7 +264,7 @@ namespace EventTraceKit.VsExtension.Controls
             try {
                 var dataView = AdvModel.DataView;
                 dataView.BeginDataUpdate();
-                WritableColumns.Clear();
+                columns.Clear();
 
                 for (int i = 0; i < dataView.Columns.Count; ++i) {
                     var columnPreset = preset.ConfigurableColumns[i];
@@ -274,18 +272,18 @@ namespace EventTraceKit.VsExtension.Controls
                     column.Width = columnPreset.Width;
                     column.TextAlignment = columnPreset.TextAlignment;
                     column.CellFormat = columnPreset.CellFormat;
-                    WritableColumns.Add(column);
+                    columns.Add(column);
                 }
 
                 int leftFrozenVisibleColumnCount = 0;
                 for (int i = 0; i < preset.LeftFrozenColumnCount; ++i) {
-                    if (WritableColumns[i].IsVisible)
+                    if (columns[i].IsVisible)
                         ++leftFrozenVisibleColumnCount;
                 }
 
                 int rightFrozenVisibleColumnCount = 0;
                 for (int i = 0; i < preset.RightFrozenColumnCount; ++i) {
-                    if (WritableColumns[preset.ConfigurableColumns.Count - i - 1].IsVisible)
+                    if (columns[preset.ConfigurableColumns.Count - i - 1].IsVisible)
                         ++rightFrozenVisibleColumnCount;
                 }
 

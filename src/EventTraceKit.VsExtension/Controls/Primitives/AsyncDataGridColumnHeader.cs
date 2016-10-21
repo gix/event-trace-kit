@@ -37,13 +37,6 @@
                     forType, "Split.cur"));
         }
 
-        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
-        {
-            base.OnPropertyChanged(e);
-            if (e.Property == IsEnabledProperty) {
-            }
-        }
-
         public static DelegateValueConverter<double, double> ColumnNameMaxWidthConverter { get; }
 
         public static Cursor SplitCursor => SplitCursorCache.Value;
@@ -309,30 +302,6 @@
                 RightHeaderGripperPart.DragCompleted += OnRightHeaderGripperPartDragCompleted;
                 RightHeaderGripperPart.MouseDoubleClick += OnRightHeaderGripperPartMouseDoubleClick;
             }
-        }
-
-        protected override void OnClick()
-        {
-            //if (!isDragging) {
-            base.OnClick();
-            //AsyncDataGridColumnViewModel viewModel = ViewModel;
-            //if (viewModel != null) {
-            //    Action method = null;
-            //    var grid = this.FindAncestor<AsyncDataGrid>();
-            //    viewModel.OnClick(this);
-            //    if (grid != null) {
-            //        if (method == null) {
-            //            method = delegate {
-            //                AsyncDataGridColumnHeader header = grid.TryFindColumnHeaderByOldIdentity(viewModel);
-            //                if (header != null) {
-            //                    header.Focus();
-            //                }
-            //            };
-            //        }
-            //        Dispatcher.BeginInvoke(method, DispatcherPriority.Input, new object[0]);
-            //    }
-            //}
-            //}
         }
 
         protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
