@@ -351,7 +351,7 @@ namespace EventTraceKit.VsExtension
         private static int GetPresetIndexByName(
             string name, IEnumerable<AsyncDataViewModelPreset> presets)
         {
-            return presets.IndexOf(x => x.Name.Equals(name));
+            return presets.IndexOf(name, (x, n) => x.Name.Equals(n));
         }
 
         private void BeginDeferChangeNotifications()

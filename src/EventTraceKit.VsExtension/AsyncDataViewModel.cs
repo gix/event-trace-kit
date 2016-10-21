@@ -413,9 +413,10 @@ namespace EventTraceKit.VsExtension
                     "AsyncDataViewModel needs to be ready for this operation");
         }
 
-        internal void OnUIPropertyChanged(AsyncDataGridColumn column)
+        internal void OnUIPropertyChanged(
+            AsyncDataGridColumn column, DependencyPropertyChangedEventArgs args)
         {
-            columnsViewModel?.OnUIPropertyChanged(column);
+            columnsViewModel?.OnUIPropertyChanged(column, args);
         }
 
         internal void PerformAsyncReadOperation(Action<CancellationToken> callback)

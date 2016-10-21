@@ -2,7 +2,6 @@ namespace EventTraceKit.VsExtension.Controls
 {
     using System;
     using System.Collections.Generic;
-    using System.Threading;
     using System.Windows;
     using Primitives;
 
@@ -114,7 +113,7 @@ namespace EventTraceKit.VsExtension.Controls
                             column.GetCellValue(i, viewportSizeHint);
                         }
                         column.IsSafeToReadCellValuesFromUIThread = true;
-                        cellPresenter.PostUpdateRendering();
+                        cellPresenter.QueueRender(true);
                     }
                 }
 

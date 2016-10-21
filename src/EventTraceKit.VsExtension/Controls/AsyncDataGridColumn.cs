@@ -65,7 +65,7 @@ namespace EventTraceKit.VsExtension.Controls
                 typeof(AsyncDataGridColumn),
                 new PropertyMetadata(
                     80.0,
-                    (d, e) => ((AsyncDataGridColumn)d).OnWidthChanged(),
+                    (d, e) => ((AsyncDataGridColumn)d).OnUIPropertyChanged(e),
                     (d, v) => ((AsyncDataGridColumn)d).CoerceWidth((double)v)));
 
         /// <summary>
@@ -80,15 +80,6 @@ namespace EventTraceKit.VsExtension.Controls
         private object CoerceWidth(double baseValue)
         {
             return Math.Max(baseValue, IsConfigurable ? 16 : 5);
-        }
-
-        private void OnWidthChanged()
-        {
-            if (!isResizing) {
-                //this.columnsViewModel.UpdateFreezableColumnsWidth();
-            }
-
-            OnUIPropertyChanged();
         }
 
         #endregion
@@ -195,7 +186,7 @@ namespace EventTraceKit.VsExtension.Controls
                 typeof(AsyncDataGridColumn),
                 new PropertyMetadata(
                     TextAlignmentBoxes.Left,
-                    (d, e) => ((AsyncDataGridColumn)d).OnUIPropertyChanged()));
+                    (d, e) => ((AsyncDataGridColumn)d).OnUIPropertyChanged(e)));
 
         /// <summary>
         ///   Identifies the <see cref="TextAlignment"/> dependency property.
@@ -226,7 +217,7 @@ namespace EventTraceKit.VsExtension.Controls
                 typeof(AsyncDataGridColumn),
                 new PropertyMetadata(
                     null,
-                    (d, e) => ((AsyncDataGridColumn)d).OnUIPropertyChanged()));
+                    (d, e) => ((AsyncDataGridColumn)d).OnUIPropertyChanged(e)));
 
         /// <summary>
         ///   Gets or sets the cell format.
@@ -358,9 +349,9 @@ namespace EventTraceKit.VsExtension.Controls
             //AutomationProperties.SetName(this, str);
         }
 
-        private void OnUIPropertyChanged()
+        private void OnUIPropertyChanged(DependencyPropertyChangedEventArgs args)
         {
-            adv?.OnUIPropertyChanged(this);
+            adv?.OnUIPropertyChanged(this, args);
         }
 
         public void BeginPossiblyResizing()
@@ -374,7 +365,6 @@ namespace EventTraceKit.VsExtension.Controls
             if (horizontalChange == 0)
                 return;
 
-            //this.columnsViewModel.UpdateFreezableColumnsWidth();
             if (adv.IsReady) {
                 AsyncDataViewModelPreset preset = adv.CreatePresetFromModifiedUI();
                 preset.IsUIModified = true;

@@ -352,12 +352,14 @@ namespace EventTraceKit.VsExtension.Controls
         {
             var oldValue = (AsyncDataGridViewModel)e.OldValue;
             if (oldValue != null) {
+                oldValue.ColumnsViewModel.ColumnsChanged -= OnColumnsChanged;
                 oldValue.Updated -= OnViewModelUpdated;
             }
 
             var newValue = (AsyncDataGridViewModel)e.NewValue;
             if (newValue != null) {
                 newValue.Updated += OnViewModelUpdated;
+                newValue.ColumnsViewModel.ColumnsChanged += OnColumnsChanged;
                 var templateChild = GetTemplateChild(PART_CellsScrollViewer) as ScrollViewer;
                 if (templateChild != null)
                     CenterScrollWidthChanged(templateChild.ActualWidth);
@@ -437,12 +439,14 @@ namespace EventTraceKit.VsExtension.Controls
 
         #endregion
 
-        #region public AsyncDataGridCellsPresenter CellsPresenterPartCenter { get; private set; }
+        #region public AsyncDataGridCellsPresenter CellsPresenter { get; private set; }
 
         private static readonly DependencyPropertyKey CellsPresenterPartCenterPropertyKey =
             DependencyProperty.RegisterReadOnly(
-                nameof(CellsPresenter), typeof(AsyncDataGridCellsPresenter),
-                typeof(AsyncDataGrid), PropertyMetadataUtils.DefaultNull);
+                nameof(CellsPresenter),
+                typeof(AsyncDataGridCellsPresenter),
+                typeof(AsyncDataGrid),
+                PropertyMetadataUtils.DefaultNull);
 
         /// <summary>
         ///   Identifies the <see cref="CellsPresenter"/> dependency property.
@@ -518,7 +522,7 @@ namespace EventTraceKit.VsExtension.Controls
             CancelButtonPart = GetTemplateChild(PART_CancelButton) as Button;
 
             if (CellsScrollViewer != null) {
-                CellsScrollViewer.SizeChanged += CenterScrollViewerSizeChanged;
+                CellsScrollViewer.SizeChanged += CellsScrollViewerSizeChanged;
 
                 var horizontalOffsetBinding = new Binding(nameof(CellsScrollViewer.HorizontalOffset));
                 horizontalOffsetBinding.Source = CellsScrollViewer;
@@ -645,7 +649,7 @@ namespace EventTraceKit.VsExtension.Controls
             }
         }
 
-        private void CenterScrollViewerSizeChanged(object sender, SizeChangedEventArgs e)
+        private void CellsScrollViewerSizeChanged(object sender, SizeChangedEventArgs e)
         {
         }
 
@@ -669,9 +673,14 @@ namespace EventTraceKit.VsExtension.Controls
             //    ViewModel.ColumnsViewModel.CenterScrollViewerWidth = width;
         }
 
-        private void OnViewModelUpdated(object sender, ItemEventArgs<bool> e)
+        private void OnViewModelUpdated(object sender, ItemEventArgs<bool> args)
         {
-            CellsPresenter?.PostUpdateRendering();
+            CellsPresenter.QueueRender(true);
+        }
+
+        private void OnColumnsChanged(object sender, EventArgs args)
+        {
+            CellsPresenter?.InvalidateRowCache();
         }
 
         protected override void OnGotFocus(RoutedEventArgs e)

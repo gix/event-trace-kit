@@ -19,6 +19,11 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             VisualTextHintingMode = TextHintingMode.Fixed;
         }
 
+        internal void InvalidateRowCache()
+        {
+            rowVisualCacheInvalid = true;
+        }
+
         private AsyncDataGrid ParentGrid =>
             parentGrid ?? (parentGrid = cellsPresenter.FindAncestor<AsyncDataGrid>());
 
@@ -172,14 +177,52 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                     && focusBorderPen != null
                     && focusIndex >= firstVisibleRow
                     && focusIndex <= lastVisibleRow) {
-                    double topEdge = (focusIndex * rowHeight) - verticalOffset;
-                    double leftEdge = -horizontalOffset;
-                    double rightEdge = columnBoundaries[columnBoundaries.Length - 1] - 1;
-                    double bottomEdge = rowHeight - 1;
-                    var bounds = new Rect(leftEdge, topEdge, rightEdge, bottomEdge);
-                    dc.DrawRectangleSnapped(null, focusBorderPen, bounds);
+
+                    double rowX = -horizontalOffset;
+                    double rowY = (focusIndex * rowHeight) - verticalOffset;
+
+                    if (selectionVisual == null) {
+                        double rightEdge = columnBoundaries[columnBoundaries.Length - 1] - 1;
+                        double bottomEdge = rowHeight - 1;
+                        var bounds = new Rect(0, 0, rightEdge, bottomEdge);
+
+                        selectionVisual = new DrawingVisual();
+                        selectionVisual.Transform = new TranslateTransform(0, 0);
+                        var context = selectionVisual.RenderOpen();
+                        context.DrawRectangleSnapped(null, focusBorderPen, bounds);
+                        context.Close();
+                    }
+
+                    AddAtOffset(selectionVisual, rowX, rowY);
+                } else if (selectionVisual != null) {
+                    Children.Remove(selectionVisual);
                 }
             }
+        }
+
+        private void AddAtOffset(ContainerVisual visual, double x, double y)
+        {
+            Children.Add(visual);
+            var transform = (TranslateTransform)visual.Transform;
+            transform.X = x;
+            transform.Y = y;
+        }
+
+        private DrawingVisual selectionVisual;
+        private readonly List<RenderedRow> renderedRowCache = new List<RenderedRow>();
+
+        private struct RenderedRow
+        {
+            public RenderedRow(int rowIndex, int styleHash, DrawingVisual visual)
+            {
+                RowIndex = rowIndex;
+                StyleHash = styleHash;
+                Visual = visual;
+            }
+
+            public int RowIndex { get; }
+            public DrawingVisual Visual { get; }
+            public int StyleHash { get; }
         }
 
         private void RenderCells(
@@ -208,6 +251,12 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             double padding = rowHeight / 10;
             double totalPadding = 2 * padding;
 
+            Children.Clear();
+            if (rowVisualCacheInvalid) {
+                renderedRowCache.Clear();
+                rowVisualCacheInvalid = false;
+            }
+
             for (int col = firstVisibleColumn; col <= lastVisibleColumn; ++col) {
                 double leftEdge = columnBoundaries[col] - horizontalOffset;
                 double rightEdge = columnBoundaries[col + 1] - horizontalOffset;
@@ -230,13 +279,35 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                     context.DrawRectangle(
                         freezableAreaSeparatorBrush, null,
                         new Rect(leftEdge, 0, cellWidth, height));
-                } else if (column.IsSafeToReadCellValuesFromUIThread) {
-                    int viewportSizeHint = lastVisibleRow - firstVisibleRow + 1;
-                    for (int row = firstVisibleRow; row <= lastVisibleRow; ++row) {
-                        double topEdge = (row * rowHeight) - verticalOffset;
-                        Brush foreground = cellsPresenter.Foreground;
-                        if (rowSelection.Contains(row))
-                            foreground = selectionForeground;
+                }
+            }
+
+            int viewportSizeHint = lastVisibleRow - firstVisibleRow + 1;
+            for (int row = firstVisibleRow; row <= lastVisibleRow; ++row) {
+                double rowX = -horizontalOffset;
+                double rowY = (row * rowHeight) - verticalOffset;
+
+                Brush foreground = cellsPresenter.Foreground;
+                if (rowSelection.Contains(row))
+                    foreground = selectionForeground;
+
+                int styleHash = ComputeHash(rowHeight, flowDirection, typeface, fontSize, foreground);
+
+                DrawingVisual rowVisual;
+                if (!TryGetCachedRow(row, styleHash, out rowVisual)) {
+                    var rowContext = rowVisual.RenderOpen();
+
+                    for (int col = firstVisibleColumn; col <= lastVisibleColumn; ++col) {
+                        var column = visibleColumns[col];
+                        if (column.IsSeparator || column.IsFreezableAreaSeparator)
+                            continue;
+                        if (!column.IsSafeToReadCellValuesFromUIThread)
+                            continue;
+
+                        double topEdge = 0;
+                        double leftEdge = columnBoundaries[col];
+                        double rightEdge = columnBoundaries[col + 1];
+                        double cellWidth = rightEdge - leftEdge;
 
                         var value = column.GetCellValue(row, viewportSizeHint);
                         if (value != null) {
@@ -255,11 +326,15 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                                     leftEdge + padding,
                                     topEdge + offsetY);
                                 origin = origin.Round(MidpointRounding.AwayFromZero);
-                                context.DrawText(formatted, origin);
+                                rowContext.DrawText(formatted, origin);
                             }
                         }
                     }
+
+                    rowContext.Close();
                 }
+
+                AddAtOffset(rowVisual, rowX, rowY);
             }
 
             double lastRightEdge = columnBoundaries[columnBoundaries.Length - 1];
@@ -269,6 +344,43 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                     new Point(lastRightEdge, 0),
                     new Point(lastRightEdge, height));
             }
+        }
+
+        private const int PrimeFactor = 397;
+
+        private int ComputeHash(
+            double value1,
+            FlowDirection value2,
+            Typeface value3,
+            double value4,
+            Brush value5)
+        {
+            unchecked {
+                int hash = value1.GetHashCode();
+                hash = (hash * PrimeFactor) ^ value2.GetHashCode();
+                hash = (hash * PrimeFactor) ^ (value3?.GetHashCode() ?? 0);
+                hash = (hash * PrimeFactor) ^ value4.GetHashCode();
+                hash = (hash * PrimeFactor) ^ (value5?.GetHashCode() ?? 0);
+                return hash;
+            }
+        }
+
+        private bool TryGetCachedRow(int row, int styleHash, out DrawingVisual rowVisual)
+        {
+            int idx = renderedRowCache.BinarySearch(row, (x, y) => x.RowIndex.CompareTo(y));
+            if (idx >= 0) {
+                rowVisual = renderedRowCache[idx].Visual;
+                if (renderedRowCache[idx].StyleHash == styleHash)
+                    return true;
+
+                renderedRowCache[idx] = new RenderedRow(row, styleHash, rowVisual);
+                return false;
+            }
+
+            rowVisual = new DrawingVisual();
+            rowVisual.Transform = new TranslateTransform(0, 0);
+            renderedRowCache.Insert(~idx, new RenderedRow(row, styleHash, rowVisual));
+            return false;
         }
 
         private double[] ComputeColumnBoundaries(
@@ -327,6 +439,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         private bool lastPrefetchCancelled;
         private bool isAsyncPrefetchInProgress;
         private object cachedDataValidityToken;
+        private bool rowVisualCacheInvalid;
 
         private bool EnsureReadyForViewport(
             AsyncDataGridCellsPresenterViewModel dataViewModel,
@@ -357,12 +470,14 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             Action<bool> callBackWhenFinished = wasCancelled => {
                 lastPrefetchCancelled = wasCancelled;
                 isAsyncPrefetchInProgress = false;
-                if (!wasCancelled)
-                    cellsPresenter.PostUpdateRendering();
+                if (!wasCancelled) {
+                    cellsPresenter.QueueRender(true);
+                }
             };
             Action<bool> highlightAndSelectionPrefetched = wasCancelled => {
-                if (!wasCancelled)
-                    cellsPresenter.PostUpdateRendering();
+                if (!wasCancelled) {
+                    cellsPresenter.QueueRender(true);
+                }
             };
 
             dataViewModel.PrefetchAllDataAndQueueUpdateRender(

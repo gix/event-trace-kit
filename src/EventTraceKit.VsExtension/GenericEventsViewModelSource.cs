@@ -196,7 +196,7 @@ namespace EventTraceKit.VsExtension
             userDataLengthPreset =
                 new ColumnViewModelPreset {
                     Id = new Guid("813F4638-8D41-4EAD-94DD-9A4AFFEFA701"),
-                    Name = "UserDataLength",
+                    Name = "UserData (Bytes)",
                     IsVisible = false,
                     Width = 30
                 }.EnsureFrozen();

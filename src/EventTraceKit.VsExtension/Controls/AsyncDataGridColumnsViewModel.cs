@@ -1,5 +1,6 @@
 namespace EventTraceKit.VsExtension.Controls
 {
+    using System;
     using System.Collections.ObjectModel;
     using System.Linq;
     using System.Windows;
@@ -193,6 +194,8 @@ namespace EventTraceKit.VsExtension.Controls
 
             configurableColumns.Clear();
             configurableColumns.AddRange(columns.Where(x => x.IsConfigurable));
+
+            ColumnsChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public void TryMoveColumn(
@@ -230,8 +233,19 @@ namespace EventTraceKit.VsExtension.Controls
                     ++index;
                 }
 
-                LeftFrozenColumnCount = preset.LeftFrozenColumnCount;
-                RightFrozenColumnCount = preset.RightFrozenColumnCount;
+                int leftFrozenColumnCount = 0;
+                int rightFrozenColumnCount = 0;
+                for (int i = 0; i < preset.LeftFrozenColumnCount; ++i) {
+                    if (WritableColumns[i].IsVisible)
+                        ++leftFrozenColumnCount;
+                }
+                for (int i = 0; i < preset.RightFrozenColumnCount; ++i) {
+                    if (WritableColumns[preset.ConfigurableColumns.Count - i - 1].IsVisible)
+                        ++rightFrozenColumnCount;
+                }
+
+                LeftFrozenColumnCount = leftFrozenColumnCount;
+                RightFrozenColumnCount = rightFrozenColumnCount;
                 //preset.PlaceSeparatorsInList(
                 //    WritableColumns,
                 //    LeftFreezableAreaSeparatorColumn,
@@ -244,10 +258,17 @@ namespace EventTraceKit.VsExtension.Controls
             }
         }
 
-        internal void OnUIPropertyChanged(AsyncDataGridColumn column)
+        public event EventHandler ColumnsChanged;
+
+        internal void OnUIPropertyChanged(
+            AsyncDataGridColumn column, DependencyPropertyChangedEventArgs args)
         {
             if (!isApplyingPreset)
                 AdvModel.RequestUpdate(false);
+
+            if (args.Property == AsyncDataGridColumn.WidthProperty) {
+                ColumnsChanged?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         public bool IsFrozenColumn(AsyncDataGridColumn column)

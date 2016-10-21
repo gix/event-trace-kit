@@ -2,6 +2,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 {
     using System;
     using System.Collections.ObjectModel;
+    using System.Collections.Specialized;
     using System.ComponentModel;
     using System.Linq;
     using System.Windows;
@@ -25,10 +26,12 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         private readonly QueuedDispatcherAction focusIndexUpdate;
 
-        private readonly Action<bool> updateRenderingAction;
-        private DispatcherOperation updateRenderingActionOperation;
-        private bool postedUpdate;
-        private bool postUpdateWhenVisible;
+        private readonly Action<bool> renderAction;
+        private DispatcherOperation renderOperation;
+        private bool renderNeeded;
+        private bool queuedRender;
+        private bool queueRenderWhenVisible;
+
         private Point computedOffset;
 
         public AsyncDataGridCellsPresenter()
@@ -57,22 +60,30 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
             SizeChanged += OnSizeChanged;
             IsVisibleChanged += OnIsVisibleChanged;
-            postUpdateWhenVisible = true;
-            updateRenderingAction = UpdateRendering;
+
+            queueRenderWhenVisible = true;
+            renderAction = PerformQueuedRender;
+        }
+
+        public void InvalidateRowCache()
+        {
+            renderedCellsVisual.InvalidateRowCache();
+            QueueRender(true);
         }
 
         #region public AsyncDataGridCellsPresenterViewModel ViewModel { get; set; }
 
-        public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(
-            nameof(ViewModel),
-            typeof(AsyncDataGridCellsPresenterViewModel),
-            typeof(AsyncDataGridCellsPresenter),
-            new FrameworkPropertyMetadata(
-                null,
-                FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
-                FrameworkPropertyMetadataOptions.AffectsRender,
-                (s, e) => ((AsyncDataGridCellsPresenter)s).OnViewModelChanged(e),
-                null));
+        public static readonly DependencyProperty ViewModelProperty =
+                DependencyProperty.Register(
+                    nameof(ViewModel),
+                    typeof(AsyncDataGridCellsPresenterViewModel),
+                    typeof(AsyncDataGridCellsPresenter),
+                    new FrameworkPropertyMetadata(
+                        null,
+                        FrameworkPropertyMetadataOptions.SubPropertiesDoNotAffectRender |
+                        FrameworkPropertyMetadataOptions.AffectsRender,
+                        (s, e) => ((AsyncDataGridCellsPresenter)s).OnViewModelChanged(e),
+                        null));
 
         public AsyncDataGridCellsPresenterViewModel ViewModel
         {
@@ -1043,7 +1054,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         {
             // Update immediately to synchronize scrolling with the column
             // headers. Otherwise there is a small but noticable delay.
-            UpdateRendering(true);
+            PerformRender(true);
         }
 
         #endregion
@@ -1075,7 +1086,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         private void OnVerticalOffsetChanged(DependencyPropertyChangedEventArgs e)
         {
-            PostUpdateRendering();
+            QueueRender(true);
         }
 
         #endregion
@@ -1201,9 +1212,60 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         #endregion
 
+        private int? prevFirst;
+        private int? prevLast;
+
+        public void QueueRender(bool forceUpdate = true)
+        {
+            renderNeeded = true;
+            if (queuedRender || !IsVisible)
+                return;
+
+            if (!IsVisible) {
+                queueRenderWhenVisible = false;
+                return;
+            }
+
+            queuedRender = true;
+            renderOperation?.Abort();
+            renderOperation = Dispatcher.BeginInvoke(
+                renderAction, DispatcherPriority.Render, forceUpdate);
+        }
+
+        private void PerformQueuedRender(bool forceUpdate)
+        {
+            queuedRender = false;
+            if (renderNeeded && IsVisible)
+                PerformRender(forceUpdate);
+        }
+
+        public void PerformRender(bool forceUpdate)
+        {
+            renderNeeded = false;
+            if (ViewModel != null && ViewModel.IsReady) {
+                UpdateScrollInfo();
+
+                bool updateDrawing =
+                    prevFirst == null ||
+                    prevLast == null ||
+                    (ViewModel.RowCount >= prevFirst && ViewModel.RowCount <= prevLast);
+                updateDrawing = true;
+
+                if (updateDrawing) {
+                    renderedCellsVisual.Update(
+                        new Rect(HorizontalOffset, VerticalOffset, ViewportWidth, ViewportHeight),
+                        new Size(ExtentWidth, ExtentHeight),
+                        forceUpdate);
+
+                    prevFirst = FirstVisibleRowIndex;
+                    prevLast = LastAvailableRowIndex;
+                }
+            }
+        }
+
         private void OnSizeChanged(object sender, EventArgs e)
         {
-            PostUpdateRendering();
+            QueueRender(true);
         }
 
         private void OnViewModelFocusIndexChanged(object sender, EventArgs e)
@@ -1280,62 +1342,17 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             return Math.Max(offset, 0);
         }
 
-        private int? prevFirst;
-        private int? prevLast;
-
         protected override void OnRender(DrawingContext drawingContext)
         {
             base.OnRender(drawingContext);
-            PostUpdateRendering();
-        }
-
-        internal void UpdateRendering(bool forceUpdate)
-        {
-            postedUpdate = false;
-
-            if (ViewModel != null && ViewModel.IsReady) {
-                UpdateScrollInfo();
-
-                bool updateDrawing =
-                    prevFirst == null ||
-                    prevLast == null ||
-                    (ViewModel.RowCount >= prevFirst && ViewModel.RowCount <= prevLast);
-                updateDrawing = true;
-
-                if (updateDrawing) {
-                    renderedCellsVisual.Update(
-                        new Rect(HorizontalOffset, VerticalOffset, ViewportWidth, ViewportHeight),
-                        new Size(ExtentWidth, ExtentHeight),
-                        forceUpdate);
-
-                    prevFirst = FirstVisibleRowIndex;
-                    prevLast = LastAvailableRowIndex;
-                }
-            }
-        }
-
-        internal void PostUpdateRendering(bool forceUpdate = true)
-        {
-            if (!IsVisible) {
-                postUpdateWhenVisible = true;
-                return;
-            }
-
-            postUpdateWhenVisible = false;
-            if (postedUpdate)
-                return;
-
-            postedUpdate = true;
-            updateRenderingActionOperation?.Abort();
-            updateRenderingActionOperation = Dispatcher.BeginInvoke(
-                updateRenderingAction, DispatcherPriority.Render, forceUpdate);
+            QueueRender(true);
         }
 
         private void OnIsVisibleChanged(
             object sender, DependencyPropertyChangedEventArgs e)
         {
-            if (IsVisible && postUpdateWhenVisible)
-                PostUpdateRendering();
+            if (IsVisible && queueRenderWhenVisible)
+                QueueRender(true);
         }
 
         internal double GetColumnAutoSize(AsyncDataGridColumn column)
@@ -1343,7 +1360,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             return renderedCellsVisual.GetColumnAutoSize(column);
         }
 
-        public int? GetRowFromPosition(double y)
+        private int? GetRowFromPosition(double y)
         {
             if (ViewModel == null)
                 return null;
@@ -1442,6 +1459,12 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             dragSelectionCtx.LastTargetedRow = row;
         }
 
+        protected override void OnLostMouseCapture(MouseEventArgs e)
+        {
+            base.OnLostMouseCapture(e);
+            CancelDragging();
+        }
+
         private struct DragSelectionContext
         {
             public bool IsDragging;
@@ -1470,6 +1493,12 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 ReleaseMouseCapture();
 
             dragSelectionCtx = new DragSelectionContext();
+        }
+
+        private void CancelDragging()
+        {
+            ViewModel.RowSelection.RestoreSnapshot(dragSelectionCtx.SelectionSnapshot);
+            EndDragging();
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
@@ -1777,7 +1806,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             if (ViewModel == null)
                 return;
 
-            PostUpdateRendering();
+            QueueRender(true);
         }
 
         internal void EnsureVisible(int rowIndex)
