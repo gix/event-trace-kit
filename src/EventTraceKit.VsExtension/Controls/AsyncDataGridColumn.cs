@@ -318,6 +318,29 @@ namespace EventTraceKit.VsExtension.Controls
 
         #endregion
 
+        #region public FrozenState FrozenState { get; set; }
+
+        /// <summary>
+        ///   Identifies the <see cref="FrozenState"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty FrozenStateProperty =
+            DependencyProperty.Register(
+                nameof(FrozenState),
+                typeof(AsyncDataGridColumnFrozenState),
+                typeof(AsyncDataGridColumn),
+                new PropertyMetadata(AsyncDataGridColumnFrozenState.Unfrozen));
+
+        /// <summary>
+        ///   Gets or sets the frozen state.
+        /// </summary>
+        public AsyncDataGridColumnFrozenState FrozenState
+        {
+            get { return (AsyncDataGridColumnFrozenState)GetValue(FrozenStateProperty); }
+            set { SetValue(FrozenStateProperty, value); }
+        }
+
+        #endregion
+
         internal bool IsSafeToReadCellValuesFromUIThread { get; set; } = true;
 
         public bool CanSort { get; } = false;
@@ -433,7 +456,7 @@ namespace EventTraceKit.VsExtension.Controls
 
         public bool IsFrozen()
         {
-            return columns.IsFrozenVisibleColumn(this);
+            return FrozenState != AsyncDataGridColumnFrozenState.Unfrozen;
         }
 
         private int GetModelColumnIndex()

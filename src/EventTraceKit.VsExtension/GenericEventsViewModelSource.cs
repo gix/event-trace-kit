@@ -3,11 +3,13 @@ namespace EventTraceKit.VsExtension
     using System;
     using System.Collections.Generic;
     using System.Globalization;
+    using System.Runtime.InteropServices;
     using System.Security.Principal;
     using System.Threading;
     using System.Windows;
     using Controls;
     using Windows;
+    using Microsoft.Win32.SafeHandles;
 
     public sealed class GenericEventsViewModelSource
     {
@@ -532,6 +534,31 @@ namespace EventTraceKit.VsExtension
             private readonly IEventInfoSource eventInfoSource;
             private readonly IMessageFormatter messageFormatter;
             private readonly EventSymbolSource eventSymbolSource;
+            private readonly Dictionary<int, SafeBstrHandle> winmetaOpcodeNames;
+
+            private sealed class SafeBstrHandle : SafeHandleZeroOrMinusOneIsInvalid
+            {
+                private SafeBstrHandle(IntPtr handle) : base(true)
+                {
+                    SetHandle(handle);
+                }
+
+                public static SafeBstrHandle Create(string str)
+                {
+                    return new SafeBstrHandle(Marshal.StringToBSTR(str));
+                }
+
+                public unsafe UnmanagedString Get()
+                {
+                    return new UnmanagedString((char*)handle);
+                }
+
+                protected override bool ReleaseHandle()
+                {
+                    Marshal.FreeBSTR(handle);
+                    return true;
+                }
+            }
 
             private readonly ParseTdhContext tdhContext = new ParseTdhContext();
 
@@ -542,6 +569,37 @@ namespace EventTraceKit.VsExtension
                 this.eventInfoSource = eventInfoSource;
                 this.messageFormatter = messageFormatter;
                 this.eventSymbolSource = eventSymbolSource;
+
+                // Standard Windows system opcodes taken from winmeta.xml in the
+                // Windows SDK
+                winmetaOpcodeNames = new Dictionary<int, SafeBstrHandle> {
+                    {0, SafeBstrHandle.Create("win:Info")},
+                    {1, SafeBstrHandle.Create("win:Start")},
+                    {2, SafeBstrHandle.Create("win:Stop")},
+                    {3, SafeBstrHandle.Create("win:DC_Start")},
+                    {4, SafeBstrHandle.Create("win:DC_Stop")},
+                    {5, SafeBstrHandle.Create("win:Extension")},
+                    {6, SafeBstrHandle.Create("win:Reply")},
+                    {7, SafeBstrHandle.Create("win:Resume")},
+                    {8, SafeBstrHandle.Create("win:Suspend")},
+                    {9, SafeBstrHandle.Create("win:Send")},
+                    {240, SafeBstrHandle.Create("win:Receive")},
+                    {241, SafeBstrHandle.Create("win:ReservedOpcode241")},
+                    {242, SafeBstrHandle.Create("win:ReservedOpcode242")},
+                    {243, SafeBstrHandle.Create("win:ReservedOpcode243")},
+                    {244, SafeBstrHandle.Create("win:ReservedOpcode244")},
+                    {245, SafeBstrHandle.Create("win:ReservedOpcode245")},
+                    {246, SafeBstrHandle.Create("win:ReservedOpcode246")},
+                    {247, SafeBstrHandle.Create("win:ReservedOpcode247")},
+                    {248, SafeBstrHandle.Create("win:ReservedOpcode248")},
+                    {249, SafeBstrHandle.Create("win:ReservedOpcode249")},
+                    {250, SafeBstrHandle.Create("win:ReservedOpcode250")},
+                    {251, SafeBstrHandle.Create("win:ReservedOpcode251")},
+                    {252, SafeBstrHandle.Create("win:ReservedOpcode252")},
+                    {253, SafeBstrHandle.Create("win:ReservedOpcode253")},
+                    {254, SafeBstrHandle.Create("win:ReservedOpcode254")},
+                    {255, SafeBstrHandle.Create("win:ReservedOpcode255")}
+                };
             }
 
             private EventInfo GetEventInfo(int index)
@@ -628,11 +686,14 @@ namespace EventTraceKit.VsExtension
 
             public UnmanagedString ProjectOpCodeName(int index)
             {
-                //var eventRecord = GetEventRecord(index);
-                //if (eventRecord.IsTraceLoggingEvent()) {
-                //    int opcode = eventRecord.EventHeader.EventDescriptor.Opcode;
-                //    return this.winmetaOpcodeService.GetOpcodeName(opcode);
-                //}
+                var eventRecord = GetEventRecord(index);
+                if (eventRecord.IsTraceLoggingEvent()) {
+                    int opcode = eventRecord.EventHeader.EventDescriptor.Opcode;
+                    SafeBstrHandle name;
+                    if (winmetaOpcodeNames.TryGetValue(opcode, out name))
+                        return name.Get();
+                }
+
                 return GetTraceEventInfo(index).GetOpcodeName();
             }
 
@@ -753,7 +814,7 @@ namespace EventTraceKit.VsExtension
                 return null; // FIXME
             }
 
-            public DECODING_SOURCE ProjectDecodingSource(int index)
+            public DecodingSource ProjectDecodingSource(int index)
             {
                 return GetTraceEventInfo(index).DecodingSource;
             }

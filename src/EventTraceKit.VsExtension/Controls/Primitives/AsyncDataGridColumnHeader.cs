@@ -73,10 +73,20 @@
                 IsKeySeparator = newValue.IsKeySeparator;
                 IsFreezableAreaSeparator = newValue.IsFreezableAreaSeparator;
                 IsExpanderHeader = newValue.IsExpanderHeader;
-            }
 
-            RightHeaderGripperVisibility =
-                newValue?.IsResizable == true ? Visibility.Visible : Visibility.Collapsed;
+                bool rightFrozen = newValue.FrozenState == AsyncDataGridColumnFrozenState.RightFrozen;
+                LeftHeaderGripperVisibility =
+                    newValue.IsResizable && rightFrozen ? Visibility.Visible : Visibility.Collapsed;
+                RightHeaderGripperVisibility =
+                    newValue.IsResizable && !rightFrozen ? Visibility.Visible : Visibility.Collapsed;
+            } else {
+                IsResizable = false;
+                IsKeySeparator = false;
+                IsFreezableAreaSeparator = false;
+                IsExpanderHeader = false;
+                LeftHeaderGripperVisibility = Visibility.Collapsed;
+                RightHeaderGripperVisibility = Visibility.Collapsed;
+            }
         }
 
         #endregion
@@ -121,9 +131,29 @@
 
         #endregion
 
+        #region public Visibility LeftHeaderGripperVisibility { get; private set; }
+
+        private static readonly DependencyPropertyKey LeftHeaderGripperVisibilityPropertyKey =
+            DependencyProperty.RegisterReadOnly(
+                nameof(LeftHeaderGripperVisibility),
+                typeof(Visibility),
+                typeof(AsyncDataGridColumnHeader),
+                new PropertyMetadata(Visibility.Collapsed));
+
+        public static readonly DependencyProperty LeftHeaderGripperVisibilityProperty =
+            LeftHeaderGripperVisibilityPropertyKey.DependencyProperty;
+
+        public Visibility LeftHeaderGripperVisibility
+        {
+            get { return (Visibility)GetValue(LeftHeaderGripperVisibilityProperty); }
+            private set { SetValue(LeftHeaderGripperVisibilityPropertyKey, value); }
+        }
+
+        #endregion
+
         #region public Visibility RightHeaderGripperVisibility { get; private set; }
 
-        private static readonly DependencyPropertyKey RightHeaderGripperVisibilityPropertyKey =
+        private static readonly DependencyPropertyKey FrozenStatePropertyKey =
             DependencyProperty.RegisterReadOnly(
                 nameof(RightHeaderGripperVisibility),
                 typeof(Visibility),
@@ -131,12 +161,12 @@
                 new PropertyMetadata(Visibility.Collapsed));
 
         public static readonly DependencyProperty RightHeaderGripperVisibilityProperty =
-            RightHeaderGripperVisibilityPropertyKey.DependencyProperty;
+            FrozenStatePropertyKey.DependencyProperty;
 
         public Visibility RightHeaderGripperVisibility
         {
             get { return (Visibility)GetValue(RightHeaderGripperVisibilityProperty); }
-            private set { SetValue(RightHeaderGripperVisibilityPropertyKey, value); }
+            private set { SetValue(FrozenStatePropertyKey, value); }
         }
 
         #endregion

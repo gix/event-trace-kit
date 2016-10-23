@@ -272,6 +272,7 @@ namespace EventTraceKit.VsExtension.Controls
                     column.Width = columnPreset.Width;
                     column.TextAlignment = columnPreset.TextAlignment;
                     column.CellFormat = columnPreset.CellFormat;
+                    column.FrozenState = DetermineColumnFrozenState(preset, i);
                     columns.Add(column);
                 }
 
@@ -302,6 +303,16 @@ namespace EventTraceKit.VsExtension.Controls
             } finally {
                 isApplyingPreset = false;
             }
+        }
+
+        private AsyncDataGridColumnFrozenState DetermineColumnFrozenState(
+            AsyncDataViewModelPreset preset, int index)
+        {
+            if (index < preset.LeftFrozenColumnCount)
+                return AsyncDataGridColumnFrozenState.LeftFrozen;
+            if (index >= preset.ConfigurableColumns.Count - preset.RightFrozenColumnCount)
+                return AsyncDataGridColumnFrozenState.RightFrozen;
+            return AsyncDataGridColumnFrozenState.Unfrozen;
         }
 
         public event EventHandler ColumnsChanged;

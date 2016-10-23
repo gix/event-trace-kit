@@ -3,7 +3,6 @@ namespace EventTraceKit.VsExtension.Controls
     using System;
     using System.Collections.Generic;
     using System.Windows;
-    using System.Windows.Controls;
     using Primitives;
 
     public sealed class AsyncDataGridCellsPresenterViewModel

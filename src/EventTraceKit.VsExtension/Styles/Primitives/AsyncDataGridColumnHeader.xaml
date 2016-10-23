@@ -40,9 +40,11 @@
       <!-- Note the negative margin on the thumb, which gives the gripper a
            bigger hit area than the actual visual appearance. -->
       <Thumb x:Name="PART_LeftHeaderGripper" HorizontalAlignment="Left" Margin="-4,0,0,0"
-             Style="{StaticResource DataGridColumnHeaderGripper}"/>
+             Style="{StaticResource DataGridColumnHeaderGripper}"
+             Visibility="{TemplateBinding LeftHeaderGripperVisibility}"/>
       <Thumb x:Name="PART_RightHeaderGripper" HorizontalAlignment="Right" Margin="0,0,-4,0"
-             Style="{StaticResource DataGridColumnHeaderGripper}"/>
+             Style="{StaticResource DataGridColumnHeaderGripper}"
+             Visibility="{TemplateBinding RightHeaderGripperVisibility}"/>
     </Grid>
     <ControlTemplate.Triggers>
       <Trigger Property="IsMouseOver" Value="True">
@@ -55,10 +57,10 @@
         <Setter Property="Background" Value="{DynamicResource {x:Static vsp:HeaderColors.MouseDownBrushKey}}"/>
       </Trigger>
 
-      <Trigger Property="Primitives:AsyncDataGridColumnHeader.IsKeySeparator" Value="True">
+      <Trigger Property="IsKeySeparator" Value="True">
         <Setter Property="Background" Value="Gold"/>
       </Trigger>
-      <Trigger Property="Primitives:AsyncDataGridColumnHeader.IsFreezableAreaSeparator" Value="True">
+      <Trigger Property="IsFreezableAreaSeparator" Value="True">
         <Setter Property="Background" Value="Gray"/>
       </Trigger>
     </ControlTemplate.Triggers>

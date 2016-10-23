@@ -67,7 +67,7 @@
             public Guid ProviderGuid { get; set; }
             public Guid EventGuid { get; set; }
             public EVENT_DESCRIPTOR EventDescriptor { get; set; }
-            public DECODING_SOURCE DecodingSource { get; set; }
+            public DecodingSource DecodingSource { get; set; }
 
             public string ProviderName { get; set; }
             public string LevelName { get; set; }

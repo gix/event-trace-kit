@@ -147,12 +147,11 @@
         public uint ProcessId => HasData ? pEventHeader->ProcessId : 0;
     }
 
-    public enum DECODING_SOURCE
+    public enum DecodingSource
     {
-        DecodingSourceXMLFile,
-        DecodingSourceWbem,
-        DecodingSourceWPP,
-        DecodingSourceMax
+        Manifest,
+        WBEM,
+        WPP
     }
 
     [Flags]
@@ -379,7 +378,7 @@
         public Guid ProviderGuid;
         public Guid EventGuid;
         public EVENT_DESCRIPTOR EventDescriptor;
-        public DECODING_SOURCE DecodingSource;
+        public DecodingSource DecodingSource;
         public uint ProviderNameOffset;
         public uint LevelNameOffset;
         public uint ChannelNameOffset;
@@ -488,7 +487,7 @@
         public byte OpCode => HasValue ? pTraceEventInfo->EventDescriptor.Opcode : (byte)0;
         public ulong Keyword => HasValue ? pTraceEventInfo->EventDescriptor.Keyword : 0L;
 
-        public DECODING_SOURCE DecodingSource => HasValue ? pTraceEventInfo->DecodingSource : 0L;
+        public DecodingSource DecodingSource => HasValue ? pTraceEventInfo->DecodingSource : 0L;
 
         public UnmanagedString GetChannelName()
         {

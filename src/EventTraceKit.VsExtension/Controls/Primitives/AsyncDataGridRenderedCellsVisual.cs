@@ -193,6 +193,9 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                     nonFrozenAreaClip = null;
                 }
 
+                if (rowCacheInvalid)
+                    nonFrozenAreaClip = null;
+
                 prevHasFrozenColumns = hasFrozenColumns;
                 prevRenderedWidth = actualWidth;
 
