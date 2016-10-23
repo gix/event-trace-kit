@@ -2,6 +2,7 @@
 {
     using System.ComponentModel;
     using System.Runtime.InteropServices;
+    using Extensions;
     using Microsoft.VisualStudio;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;

@@ -1,6 +1,7 @@
 namespace EventTraceKit.VsExtension
 {
     using System;
+    using System.Windows.Threading;
     using Windows;
     using Controls;
     using Formatting;
@@ -34,7 +35,9 @@ namespace EventTraceKit.VsExtension
             AddColumn(table, template, namePreset, DataColumn.Create(x => "Name" + x));
 
             var dataView = new DataView(table, new DefaultFormatProviderSource());
-            return new AsyncDataViewModel(dataView, template, template, new AdvViewModelPresetCollection());
+            return new AsyncDataViewModel(
+                new WorkManager(Dispatcher.CurrentDispatcher), 
+                dataView, template, template, new AdvViewModelPresetCollection());
         }
 
         private static void AddColumn(

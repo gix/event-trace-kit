@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension
+﻿namespace EventTraceKit.VsExtension.Extensions
 {
     using System;
     using System.Globalization;
@@ -7,6 +7,11 @@
     {
         // Smallest such that 1.0 + Epsilon != 1.0
         public const double Epsilon = 2.2204460492503131E-16;
+
+        public static bool IsFinite(this double value)
+        {
+            return value >= double.MinValue && value <= double.MaxValue;
+        }
 
         public static double Max(double value1, double value2, double value3)
         {

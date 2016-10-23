@@ -9,6 +9,7 @@ namespace EventTraceKit.VsExtension
     using System.Security.Principal;
     using System.Text;
     using Microsoft.VisualStudio.Shell.Interop;
+    using Native;
     using FILETIME = System.Runtime.InteropServices.ComTypes.FILETIME;
 
     [Flags]

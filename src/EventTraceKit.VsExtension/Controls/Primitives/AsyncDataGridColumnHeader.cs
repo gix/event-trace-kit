@@ -7,6 +7,7 @@
     using System.Windows.Input;
     using System.Windows.Media;
     using Windows;
+    using Extensions;
 
     [TemplatePart(Name = PART_LeftHeaderGripper, Type = typeof(Thumb))]
     [TemplatePart(Name = PART_RightHeaderGripper, Type = typeof(Thumb))]
@@ -399,7 +400,7 @@
             object sender, DragStartedEventArgs e)
         {
             if (!e.Handled) {
-                Column?.BeginPossiblyResizing();
+                Column?.BeginResizing();
                 e.Handled = true;
             }
         }
@@ -420,7 +421,7 @@
                 return;
 
             if (Column != null && Column.IsResizing) {
-                Column.EndPossiblyResizing(-e.HorizontalChange);
+                Column.EndResizing(-e.HorizontalChange);
                 e.Handled = true;
             }
         }
@@ -432,7 +433,7 @@
                 return;
 
             double change = ParentGrid.AutoSize(Column);
-            Column.EndPossiblyResizing(change);
+            Column.EndResizing(change);
             e.Handled = true;
         }
 
@@ -440,7 +441,7 @@
             object sender, DragStartedEventArgs e)
         {
             if (!e.Handled) {
-                Column?.BeginPossiblyResizing();
+                Column?.BeginResizing();
                 e.Handled = true;
             }
         }
@@ -461,7 +462,7 @@
                 return;
 
             if (Column != null && Column.IsResizing) {
-                Column.EndPossiblyResizing(e.HorizontalChange);
+                Column.EndResizing(e.HorizontalChange);
                 e.Handled = true;
             }
         }
@@ -473,7 +474,7 @@
                 return;
 
             double change = ParentGrid.AutoSize(Column);
-            Column.EndPossiblyResizing(change);
+            Column.EndResizing(change);
             e.Handled = true;
         }
     }

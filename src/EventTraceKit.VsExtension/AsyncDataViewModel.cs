@@ -5,7 +5,6 @@ namespace EventTraceKit.VsExtension
     using System.Linq;
     using System.Threading;
     using System.Windows;
-    using Collections;
     using Controls;
     using Windows;
 
@@ -13,7 +12,6 @@ namespace EventTraceKit.VsExtension
     {
         private readonly WorkManager workManager;
         private readonly IDataView dataView;
-        private readonly AsyncDataGridColumnsViewModel columnsViewModel;
 
         private bool isInitializedWithFirstPreset;
         private bool shouldApplyPreset;
@@ -22,17 +20,20 @@ namespace EventTraceKit.VsExtension
         private bool refreshViewModelFromModelOnReady;
         private bool refreshViewModelOnUpdateRequest;
 
-        internal CancellationTokenSource readCancellationTokenSource;
+        private CancellationTokenSource readCancellationTokenSource;
         private readonly ManualResetEvent asyncReadQueueComplete;
         private readonly object asyncReadWorkQueueLock;
         private bool allowBackgroundThreads;
 
         public AsyncDataViewModel(
+            WorkManager workManager,
             IDataView dataView,
             AsyncDataViewModelPreset templatePreset,
             AsyncDataViewModelPreset defaultPreset,
             AdvViewModelPresetCollection presetCollection)
         {
+            if (workManager == null)
+                throw new ArgumentNullException(nameof(workManager));
             if (dataView == null)
                 throw new ArgumentNullException(nameof(dataView));
             if (templatePreset == null)
@@ -40,16 +41,13 @@ namespace EventTraceKit.VsExtension
 
             this.dataView = dataView;
             PresetCollection = presetCollection;
-            TemplatePreset = templatePreset.Clone().EnsureFrozen();
-
-            workManager = new WorkManager(Dispatcher);
+            TemplatePreset = templatePreset.EnsureFrozen();
 
             asyncReadQueueComplete = new ManualResetEvent(true);
             asyncReadWorkQueueLock = new object();
             allowBackgroundThreads = true;
 
-            columnsViewModel = new AsyncDataGridColumnsViewModel(this);
-            GridViewModel = new AsyncDataGridViewModel(this, columnsViewModel);
+            GridViewModel = new AsyncDataGridViewModel(this);
 
             IsReady = false;
 
@@ -60,18 +58,27 @@ namespace EventTraceKit.VsExtension
 
         public AsyncDataViewModelPreset TemplatePreset { get; }
 
-        public event ValueChangedEventHandler<AsyncDataViewModelPreset> PresetChanged;
+        public AsyncDataGridViewModel GridViewModel { get; }
 
-        private readonly ActionThrottler rowCountChangedThrottler =
-            new ActionThrottler(TimeSpan.FromMilliseconds(100));
+        #region public AdvViewModelPresetCollection PresetCollection
 
-        private void OnRowCountChanged(object sender, EventArgs eventArgs)
+        private static readonly DependencyPropertyKey PresetCollectionPropertyKey =
+            DependencyProperty.RegisterReadOnly(
+                nameof(PresetCollection),
+                typeof(AdvViewModelPresetCollection),
+                typeof(AsyncDataViewModel),
+                PropertyMetadataUtils.DefaultNull);
+
+        public static readonly DependencyProperty PresetCollectionProperty =
+            PresetCollectionPropertyKey.DependencyProperty;
+
+        public AdvViewModelPresetCollection PresetCollection
         {
-            rowCountChangedThrottler.Run(
-                () => workManager.UIThreadTaskFactory.StartNew(() => RaiseUpdate(false)));
+            get { return (AdvViewModelPresetCollection)GetValue(PresetCollectionProperty); }
+            private set { SetValue(PresetCollectionPropertyKey, value); }
         }
 
-        public AsyncDataGridViewModel GridViewModel { get; }
+        #endregion
 
         #region public AsyncDataViewModelPreset Preset
 
@@ -89,6 +96,23 @@ namespace EventTraceKit.VsExtension
         {
             get { return (AsyncDataViewModelPreset)GetValue(PresetProperty); }
             set { SetValue(PresetProperty, value); }
+        }
+
+        public event ValueChangedEventHandler<AsyncDataViewModelPreset> PresetChanged;
+
+        private object CoercePreset(object baseValue)
+        {
+            var preset = (AsyncDataViewModelPreset)baseValue;
+            if (preset == null)
+                return null;
+
+            shouldApplyPreset = !preset.IsUIModified;
+
+            preset = preset.CreateCompatiblePreset(TemplatePreset);
+            preset.IsUIModified = false;
+            preset.Freeze();
+
+            return preset;
         }
 
         private void OnPresetChanged(DependencyPropertyChangedEventArgs e)
@@ -129,22 +153,6 @@ namespace EventTraceKit.VsExtension
                 PresetCollection.CachePreset(newPreset);
 
             PresetChanged.Raise(this, e);
-        }
-
-        private object CoercePreset(object baseValue)
-        {
-            var preset = (AsyncDataViewModelPreset)baseValue;
-            if (preset == null)
-                return null;
-
-            //bool includeDynamicColumns = this.IsUnmodifiedBuiltInPreset(preset);
-            var compatiblePreset = preset.CreateCompatiblePreset(TemplatePreset);
-
-            shouldApplyPreset = !compatiblePreset.IsUIModified;
-            compatiblePreset.IsUIModified = false;
-            compatiblePreset.Freeze();
-            //this.cachedPreset = compatiblePreset;
-            return compatiblePreset;
         }
 
         #endregion
@@ -189,13 +197,25 @@ namespace EventTraceKit.VsExtension
             return true;
         }
 
-        public event ItemEventHandler<bool> Updated;
+        internal WorkManager WorkManager => workManager;
+
+        public IDataView DataView => dataView;
+        private int countReadOperationInProgress;
+        internal object DataValidityToken => DataView.DataValidityToken;
+
+        private readonly ActionThrottler rowCountChangedThrottler =
+            new ActionThrottler(TimeSpan.FromMilliseconds(100));
+
+        private void OnRowCountChanged(object sender, EventArgs eventArgs)
+        {
+            rowCountChangedThrottler.Run(
+                () => workManager.UIThreadTaskFactory.StartNew(() => RaiseUpdate(false)));
+        }
 
         public void RaiseUpdate(bool refreshViewModelFromModel = true)
         {
             VerifyAccess();
 
-            Updated?.Invoke(this, new ItemEventArgs<bool>(refreshViewModelFromModel));
             GridViewModel?.RaiseUpdated(refreshViewModelFromModel);
         }
 
@@ -267,28 +287,18 @@ namespace EventTraceKit.VsExtension
 
         private void ContinuePresetAfterGridModelInSync(AsyncDataViewModelPreset preset)
         {
-            bool ignoreInitialSelection = false;
-            columnsViewModel.ApplyPresetAssumeGridModelInSync(preset);
-            ContinueAsyncOperation(
-                () => CompleteApplyPreset(ignoreInitialSelection), true);
+            GridViewModel.ColumnsModel.ApplyPreset(preset);
+            ContinueAsyncOperation(CompleteApplyPreset, true);
         }
 
-        private void CompleteApplyPreset(bool ignoreInitialSelection)
+        private void CompleteApplyPreset()
         {
-
             //if (!this.DataView.EndDataUpdate()) {
             //    ExceptionUtils.ThrowInternalErrorException("Expected data update nesting depth to be 0");
             //}
 
-            if (!ignoreInitialSelection) {
-                //this.ReapplyInitialSelection();
-            }
             CompleteAsyncOrSyncUpdate();
         }
-
-        internal WorkManager WorkManager => workManager;
-
-        public IDataView DataView => dataView;
 
         private void ContinueAsyncOperation(Action callback, bool refreshViewModelFromModelOnReady = true)
         {
@@ -301,13 +311,13 @@ namespace EventTraceKit.VsExtension
 
         private void CompleteAsyncOrSyncUpdate()
         {
-            WorkManager.UIThread.Send(() => CompleteAsyncUpdate());
+            WorkManager.UIThread.Send(CompleteAsyncUpdate);
         }
 
         private bool CompleteAsyncUpdate()
         {
             bool flag = false;
-            //this.IsTableRefreshing = true;
+
             EnableTableAfterAsyncOperation();
             //if (this.checkForColumnChangingOnReady) {
             //    this.checkForColumnChangingOnReady = false;
@@ -327,23 +337,6 @@ namespace EventTraceKit.VsExtension
                 flag = true;
             }
 
-            //if (!flag && (this.advModelToCopyStateOnReady != null)) {
-            //    this.TryCopyAllStateFrom(this.advModelToCopyStateOnReady);
-            //    this.advModelToCopyStateOnReady = null;
-            //    flag = true;
-            //}
-
-            //if (flag) {
-            //    if (this.selectionBookmarkToApplyOnReady != null) {
-            //        this.selectionBookmarkToApplyOnReady.ConvertRowsToRowIds();
-            //    }
-            //    if (this.focusBookmarkToApplyOnReady != null) {
-            //        this.focusBookmarkToApplyOnReady.ConvertRowsToRowIds();
-            //    }
-            //} else {
-            //    flag = this.RestoresSelectionAndFocusFromBookmarksAsync();
-            //}
-
             if (!flag) {
                 //this.UpdateDynamicHeader();
                 bool refreshViewModelFromModel = refreshViewModelFromModelOnReady && IsReady;
@@ -354,8 +347,8 @@ namespace EventTraceKit.VsExtension
                 if (refreshViewModelFromModel && !flag3) {
                     ExceptionUtils.ThrowInternalErrorException("We should have sent an update for the advmodel, but didn't");
                 }
-                //this.IsTableRefreshing = false;
             }
+
             return !flag;
         }
 
@@ -374,24 +367,6 @@ namespace EventTraceKit.VsExtension
             }
         }
 
-        internal AsyncDataViewModelPreset CreatePresetFromModifiedUI()
-        {
-            VerifyIsReady();
-
-            var newPreset = new AsyncDataViewModelPreset();
-            newPreset.Name = Preset.Name;
-            newPreset.IsModified = true;
-            newPreset.ConfigurableColumns.Clear();
-            newPreset.ConfigurableColumns.AddRange(
-                from column in columnsViewModel.Columns
-                where column.IsConnected
-                select column.ToPreset());
-            newPreset.LeftFrozenColumnCount = columnsViewModel.LeftFrozenColumnCount;
-            newPreset.RightFrozenColumnCount = columnsViewModel.RightFrozenColumnCount;
-
-            return newPreset;
-        }
-
         public void VerifyIsReady()
         {
             if (!IsReady)
@@ -402,7 +377,7 @@ namespace EventTraceKit.VsExtension
         internal void OnUIPropertyChanged(
             AsyncDataGridColumn column, DependencyPropertyChangedEventArgs args)
         {
-            columnsViewModel?.OnUIPropertyChanged(column, args);
+            GridViewModel?.ColumnsModel?.OnUIPropertyChanged(column, args);
         }
 
         internal void PerformAsyncReadOperation(Action<CancellationToken> callback)
@@ -440,8 +415,6 @@ namespace EventTraceKit.VsExtension
             return true;
         }
 
-        private int countReadOperationInProgress;
-
         private void CompleteAsyncRead()
         {
             if (WorkManager.UIThread.CheckAccess())
@@ -460,24 +433,6 @@ namespace EventTraceKit.VsExtension
             }
         }
 
-        internal object DataValidityToken => DataView.DataValidityToken;
-
-        private static readonly DependencyPropertyKey PresetCollectionPropertyKey =
-                 DependencyProperty.RegisterReadOnly(
-                     "Presets",
-                     typeof(AdvViewModelPresetCollection),
-                     typeof(AsyncDataViewModel),
-                     PropertyMetadataUtils.DefaultNull);
-
-        public static readonly DependencyProperty PresetCollectionProperty =
-            PresetCollectionPropertyKey.DependencyProperty;
-
-        public AdvViewModelPresetCollection PresetCollection
-        {
-            get { return (AdvViewModelPresetCollection)GetValue(PresetCollectionProperty); }
-            private set { SetValue(PresetCollectionPropertyKey, value); }
-        }
-
         public bool IsValidDataValidityToken(object dataValidityToken)
         {
             return DataView.IsValidDataValidityToken(dataValidityToken);
@@ -487,10 +442,6 @@ namespace EventTraceKit.VsExtension
         {
             DataColumnViewInfo columnViewInfo = GetDataColumnViewInfoFromPreset(columnPreset);
             return dataView.CreateDataColumnViewFromInfo(columnViewInfo);
-        }
-
-        public void CopyToClipboard(CopyBehavior behavior)
-        {
         }
     }
 }

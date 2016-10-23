@@ -5,6 +5,7 @@
     using System.Windows.Controls.Primitives;
     using System.Windows.Interop;
     using System.Windows.Markup;
+    using Extensions;
     using Native;
     using Microsoft.VisualStudio.PlatformUI;
 

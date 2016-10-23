@@ -9,6 +9,7 @@
     using System.Windows.Input;
     using Collections;
     using Controls;
+    using Extensions;
 
     public class PresetManagerViewModel : DependencyObject
     {

@@ -1,15 +1,11 @@
 ﻿namespace EventTraceKit.VsExtension
 {
     using System;
-    using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.ComponentModel.Composition;
     using System.ComponentModel.Design;
     using System.IO;
     using System.Runtime.InteropServices;
-    using System.Windows;
-    using System.Windows.Documents;
-    using Controls;
     using EnvDTE;
     using Extensions;
     using Microsoft.VisualStudio;

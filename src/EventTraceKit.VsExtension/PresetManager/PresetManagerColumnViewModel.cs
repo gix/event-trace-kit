@@ -5,6 +5,7 @@ namespace EventTraceKit.VsExtension
     using System.Linq;
     using System.Windows;
     using System.Windows.Automation;
+    using Extensions;
     using Formatting;
 
     public class PresetManagerColumnViewModel : DependencyObject

@@ -9,6 +9,7 @@
     using System.Windows.Media;
     using Controls;
     using Windows;
+    using Extensions;
 
     public partial class PresetManagerDialog
     {

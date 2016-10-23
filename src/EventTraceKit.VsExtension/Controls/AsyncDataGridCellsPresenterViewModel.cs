@@ -91,12 +91,6 @@ namespace EventTraceKit.VsExtension.Controls
             }
 
             advModel.PerformAsyncReadOperation(cancellationToken => {
-                //if (!cancellationToken.IsCancellationRequested) {
-                //    lock (RowSelection) {
-                //        RowSelection.RefreshDataIfNecessary(cancellationToken);
-                //    }
-                //}
-
                 selectionPrefetched(cancellationToken.IsCancellationRequested);
                 if (!cancellationToken.IsCancellationRequested) {
                     var list = new List<AsyncDataGridColumn>();

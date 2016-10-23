@@ -3,6 +3,7 @@ namespace EventTraceKit.VsExtension
     using System;
     using System.Windows;
     using Windows;
+    using Extensions;
     using Serialization;
 
     [SerializedShape(typeof(Settings.ViewColumn))]

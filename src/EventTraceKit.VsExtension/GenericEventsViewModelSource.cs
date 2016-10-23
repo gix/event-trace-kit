@@ -3,13 +3,11 @@ namespace EventTraceKit.VsExtension
     using System;
     using System.Collections.Generic;
     using System.Globalization;
-    using System.Runtime.InteropServices;
     using System.Security.Principal;
-    using System.Threading;
     using System.Windows;
     using Controls;
     using Windows;
-    using Microsoft.Win32.SafeHandles;
+    using Native;
 
     public sealed class GenericEventsViewModelSource
     {
@@ -533,38 +531,15 @@ namespace EventTraceKit.VsExtension
 
             private readonly IEventInfoSource eventInfoSource;
             private readonly IMessageFormatter messageFormatter;
-            private readonly EventSymbolSource eventSymbolSource;
+            private readonly IEventSymbolSource eventSymbolSource;
             private readonly Dictionary<int, SafeBstrHandle> winmetaOpcodeNames;
-
-            private sealed class SafeBstrHandle : SafeHandleZeroOrMinusOneIsInvalid
-            {
-                private SafeBstrHandle(IntPtr handle) : base(true)
-                {
-                    SetHandle(handle);
-                }
-
-                public static SafeBstrHandle Create(string str)
-                {
-                    return new SafeBstrHandle(Marshal.StringToBSTR(str));
-                }
-
-                public unsafe UnmanagedString Get()
-                {
-                    return new UnmanagedString((char*)handle);
-                }
-
-                protected override bool ReleaseHandle()
-                {
-                    Marshal.FreeBSTR(handle);
-                    return true;
-                }
-            }
 
             private readonly ParseTdhContext tdhContext = new ParseTdhContext();
 
             public CrimsonEventsInfo(
-                IEventInfoSource eventInfoSource, IMessageFormatter messageFormatter,
-                EventSymbolSource eventSymbolSource)
+                IEventInfoSource eventInfoSource,
+                IMessageFormatter messageFormatter,
+                IEventSymbolSource eventSymbolSource)
             {
                 this.eventInfoSource = eventInfoSource;
                 this.messageFormatter = messageFormatter;
@@ -818,99 +793,6 @@ namespace EventTraceKit.VsExtension
             {
                 return GetTraceEventInfo(index).DecodingSource;
             }
-        }
-    }
-
-    public struct EventKey : IEquatable<EventKey>
-    {
-        public EventKey(Guid providerId, ushort id, byte version)
-        {
-            ProviderId = providerId;
-            EventIdAndVersion = (uint)(id << 16) | version;
-        }
-
-        public Guid ProviderId { get; }
-        public uint EventIdAndVersion { get; }
-
-        public bool Equals(EventKey other)
-        {
-            return ProviderId.Equals(other.ProviderId) && EventIdAndVersion == other.EventIdAndVersion;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            return obj is EventKey && Equals((EventKey)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked {
-                return (ProviderId.GetHashCode() * 397) ^ (int)EventIdAndVersion;
-            }
-        }
-
-        public static bool operator ==(EventKey left, EventKey right)
-        {
-            return left.Equals(right);
-        }
-
-        public static bool operator !=(EventKey left, EventKey right)
-        {
-            return !left.Equals(right);
-        }
-    }
-
-    public class EventSymbolSource
-    {
-        private Dictionary<EventKey, string> symbols = new Dictionary<EventKey, string>();
-
-        public string TryGetSymbol(EventKey eventKey)
-        {
-            string symbol;
-            symbols.TryGetValue(eventKey, out symbol);
-            return symbol;
-        }
-
-        public void Update(Dictionary<EventKey, string> newSymbols)
-        {
-            Interlocked.Exchange(ref symbols, newSymbols);
-        }
-    }
-
-    public class ManagedTdhFormatter : IMessageFormatter
-    {
-        public unsafe string GetMessageForEvent(
-            EventInfo eventInfo,
-            ParseTdhContext parseTdhContext,
-            IFormatProvider formatProvider)
-        {
-            var eventRecord = new EventRecordCPtr(
-                (EVENT_RECORD*)eventInfo.EventRecord);
-
-            var traceEventInfo = new TraceEventInfoCPtr(
-                (TRACE_EVENT_INFO*)eventInfo.TraceEventInfo,
-                (uint)eventInfo.TraceEventInfoSize);
-
-            return TdhHelper.GetMessageForEventRecord(
-                eventRecord, traceEventInfo, parseTdhContext, formatProvider);
-        }
-    }
-
-    public class NativeTdhFormatter : IMessageFormatter
-    {
-        private readonly EtwMessageFormatter formatter = new EtwMessageFormatter();
-
-        public unsafe string GetMessageForEvent(
-            EventInfo eventInfo,
-            ParseTdhContext parseTdhContext,
-            IFormatProvider formatProvider)
-        {
-            return formatter.FormatEventMessage(
-                (void*)eventInfo.EventRecord,
-                (void*)eventInfo.TraceEventInfo,
-                (uint)eventInfo.TraceEventInfoSize,
-                (uint)parseTdhContext.NativePointerSize);
         }
     }
 }

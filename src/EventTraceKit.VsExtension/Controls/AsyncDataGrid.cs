@@ -359,14 +359,14 @@ namespace EventTraceKit.VsExtension.Controls
         {
             var oldValue = (AsyncDataGridViewModel)e.OldValue;
             if (oldValue != null) {
-                oldValue.ColumnsViewModel.ColumnsChanged -= OnColumnsChanged;
+                oldValue.ColumnsModel.ColumnsChanged -= OnColumnsChanged;
                 oldValue.Updated -= OnViewModelUpdated;
             }
 
             var newValue = (AsyncDataGridViewModel)e.NewValue;
             if (newValue != null) {
                 newValue.Updated += OnViewModelUpdated;
-                newValue.ColumnsViewModel.ColumnsChanged += OnColumnsChanged;
+                newValue.ColumnsModel.ColumnsChanged += OnColumnsChanged;
             }
         }
 

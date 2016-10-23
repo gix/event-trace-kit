@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension
+﻿namespace EventTraceKit.VsExtension.Extensions
 {
     public static class NumberUtils
     {

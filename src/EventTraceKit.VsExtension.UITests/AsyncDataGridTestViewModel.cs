@@ -9,40 +9,9 @@
     using System.Windows;
     using System.Windows.Input;
     using System.Windows.Media;
+    using System.Windows.Threading;
     using Controls;
     using Formatting;
-
-    public class BrushEntry
-    {
-        public BrushEntry(Brush brush)
-        {
-            Name = brush.ToString();
-            Brush = brush;
-        }
-
-        public BrushEntry(string name, Brush brush)
-        {
-            Name = name;
-            Brush = brush;
-        }
-
-        public static implicit operator BrushEntry(Brush brush)
-        {
-            return new BrushEntry(FindKnownBrush(brush), brush);
-        }
-
-        public static readonly Dictionary<Brush, string> KnownBrushes = new Dictionary<Brush, string>();
-
-        private static string FindKnownBrush(Brush brush)
-        {
-            string name;
-            KnownBrushes.TryGetValue(brush, out name);
-            return name ?? brush.ToString();
-        }
-
-        public string Name { get; }
-        public Brush Brush { get; }
-    }
 
     public class AsyncDataGridTestViewModel : ViewModel
     {
@@ -181,6 +150,7 @@
 
             dataView = new DataView(dataTable, new DefaultFormatProviderSource());
             return new AsyncDataViewModel(
+                new WorkManager(Dispatcher.CurrentDispatcher), 
                 dataView, templatePreset, templatePreset, presetCollection);
         }
 
@@ -273,6 +243,38 @@
             get { return rowFocusBorderBrush; }
             set { SetProperty(ref rowFocusBorderBrush, value); }
         }
+    }
+
+    public class BrushEntry
+    {
+        public BrushEntry(Brush brush)
+        {
+            Name = brush.ToString();
+            Brush = brush;
+        }
+
+        public BrushEntry(string name, Brush brush)
+        {
+            Name = name;
+            Brush = brush;
+        }
+
+        public static implicit operator BrushEntry(Brush brush)
+        {
+            return new BrushEntry(FindKnownBrush(brush), brush);
+        }
+
+        public static readonly Dictionary<Brush, string> KnownBrushes = new Dictionary<Brush, string>();
+
+        private static string FindKnownBrush(Brush brush)
+        {
+            string name;
+            KnownBrushes.TryGetValue(brush, out name);
+            return name ?? brush.ToString();
+        }
+
+        public string Name { get; }
+        public Brush Brush { get; }
     }
 
     public abstract class PropertyEditor : ViewModel

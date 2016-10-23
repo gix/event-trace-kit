@@ -1,6 +1,7 @@
-﻿namespace EventTraceKit.VsExtension
+﻿namespace EventTraceKit.VsExtension.Windows
 {
     using System.Windows;
+    using Extensions;
 
     public static class ValidateValueCallbacks
     {

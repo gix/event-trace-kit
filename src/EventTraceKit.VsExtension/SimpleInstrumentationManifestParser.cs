@@ -6,6 +6,7 @@ namespace EventTraceKit.VsExtension
     using System.Xml.Linq;
     using System.Xml.XPath;
     using Collections;
+    using Extensions;
 
     public class SimpleInstrumentationManifestParser : IDisposable
     {

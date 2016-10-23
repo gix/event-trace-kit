@@ -50,10 +50,10 @@
                 IsTabStop="False"
                 KeyboardNavigation.TabNavigation="None"
                 KeyboardNavigation.DirectionalNavigation="Contained"
-                Visibility="{Binding ViewModel.ColumnsViewModel.Visibility, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
-                ViewModel="{Binding ViewModel.ColumnsViewModel, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
-                ItemsSource="{Binding ViewModel.ColumnsViewModel.VisibleColumns, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
-                ExpanderHeader="{Binding ViewModel.ColumnsViewModel.ExpanderHeaderColumn, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"/>
+                Visibility="{Binding ViewModel.ColumnsModel.Visibility, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
+                ViewModel="{Binding ViewModel.ColumnsModel, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
+                ItemsSource="{Binding ViewModel.ColumnsModel.VisibleColumns, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
+                ExpanderHeader="{Binding ViewModel.ColumnsModel.ExpanderHeaderColumn, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"/>
               <ScrollViewer x:Name="PART_CellsScrollViewer"
                             CanContentScroll="True"
                             HorizontalScrollBarVisibility="Auto"
@@ -77,8 +77,8 @@
                   FontSize="{TemplateBinding RowFontSize}"
                   Focusable="True"
                   ToolTipService.IsEnabled="False"
-                  ViewModel="{Binding ViewModel.CellsPresenterViewModel, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
-                  VisibleColumns="{Binding ViewModel.ColumnsViewModel.VisibleColumns, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}">
+                  ViewModel="{Binding ViewModel.CellsPresenter, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
+                  VisibleColumns="{Binding ViewModel.ColumnsModel.VisibleColumns, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}">
                   <!--<Primitives:AsyncDataGridCellsPresenter.ToolTip>
                   <ToolTip>
                     <TextBlock

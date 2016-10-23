@@ -18,7 +18,7 @@
   Width="1000"
   Height="700">
   <i:Interaction.Behaviors>
-    <etkw:DialogResult Binding="{Binding DialogResult}"/>
+    <etkw:BindableDialogResult Binding="{Binding DialogResult}"/>
   </i:Interaction.Behaviors>
   <Grid>
     <Grid.Resources>

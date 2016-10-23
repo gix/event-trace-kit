@@ -5,6 +5,7 @@ namespace EventTraceKit.VsExtension.Controls
     using System.Linq;
     using System.Windows;
     using Collections;
+    using Extensions;
     using Primitives;
 
     public class AsyncDataGridColumnsViewModel : DependencyObject
@@ -14,20 +15,20 @@ namespace EventTraceKit.VsExtension.Controls
         private readonly ObservableCollection<AsyncDataGridColumn> visibleColumns;
         private bool isApplyingPreset;
 
-        public AsyncDataGridColumnsViewModel(AsyncDataViewModel advModel)
+        public AsyncDataGridColumnsViewModel(AsyncDataViewModel model)
         {
-            AdvModel = advModel;
+            Model = model;
 
             Columns = CollectionUtils.InitializeReadOnly(out columns);
             ConfigurableColumns = CollectionUtils.InitializeReadOnly(out configurableColumns);
             VisibleColumns = CollectionUtils.InitializeReadOnly(out visibleColumns);
 
-            ExpanderHeaderColumn = new ExpanderHeaderColumn(this, advModel);
-            LeftFreezableAreaSeparatorColumn = new FreezableAreaSeparatorColumn(this, advModel);
-            RightFreezableAreaSeparatorColumn = new FreezableAreaSeparatorColumn(this, advModel);
+            ExpanderHeaderColumn = new ExpanderHeaderColumn(this, model);
+            LeftFreezableAreaSeparatorColumn = new FreezableAreaSeparatorColumn(this, model);
+            RightFreezableAreaSeparatorColumn = new FreezableAreaSeparatorColumn(this, model);
         }
 
-        internal AsyncDataViewModel AdvModel { get; }
+        internal AsyncDataViewModel Model { get; }
 
         internal ReadOnlyObservableCollection<AsyncDataGridColumn> Columns { get; }
 
@@ -255,20 +256,38 @@ namespace EventTraceKit.VsExtension.Controls
                 columns.Move(oldIndex, newIndex);
 
             RefreshColumnCollections();
-            AdvModel.Preset = AdvModel.CreatePresetFromModifiedUI();
+            Model.Preset = CreatePresetFromModifiedUI();
         }
 
-        internal void ApplyPresetAssumeGridModelInSync(AsyncDataViewModelPreset preset)
+        public AsyncDataViewModelPreset CreatePresetFromModifiedUI()
+        {
+            Model.VerifyIsReady();
+
+            var newPreset = new AsyncDataViewModelPreset();
+            newPreset.Name = Model.Preset.Name;
+            newPreset.IsModified = true;
+            newPreset.ConfigurableColumns.Clear();
+            newPreset.ConfigurableColumns.AddRange(
+                from column in Columns
+                where column.IsConnected
+                select column.ToPreset());
+            newPreset.LeftFrozenColumnCount = LeftFrozenColumnCount;
+            newPreset.RightFrozenColumnCount = RightFrozenColumnCount;
+
+            return newPreset;
+        }
+
+        internal void ApplyPreset(AsyncDataViewModelPreset preset)
         {
             isApplyingPreset = true;
             try {
-                var dataView = AdvModel.DataView;
+                var dataView = Model.DataView;
                 dataView.BeginDataUpdate();
-                columns.Clear();
 
+                columns.Clear();
                 for (int i = 0; i < dataView.Columns.Count; ++i) {
                     var columnPreset = preset.ConfigurableColumns[i];
-                    var column = new AsyncDataGridColumn(this, dataView.Columns[i], AdvModel, false);
+                    var column = new AsyncDataGridColumn(this, dataView.Columns[i], Model, false);
                     column.Width = columnPreset.Width;
                     column.TextAlignment = columnPreset.TextAlignment;
                     column.CellFormat = columnPreset.CellFormat;
@@ -321,7 +340,7 @@ namespace EventTraceKit.VsExtension.Controls
             AsyncDataGridColumn column, DependencyPropertyChangedEventArgs args)
         {
             if (!isApplyingPreset)
-                AdvModel.RequestUpdate(false);
+                Model.RequestUpdate(false);
 
             if (args.Property == AsyncDataGridColumn.WidthProperty) {
                 ColumnsChanged?.Invoke(this, EventArgs.Empty);

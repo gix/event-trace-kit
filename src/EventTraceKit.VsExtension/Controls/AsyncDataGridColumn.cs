@@ -2,17 +2,16 @@ namespace EventTraceKit.VsExtension.Controls
 {
     using System;
     using System.Windows;
+    using System.Windows.Automation;
 
     public class AsyncDataGridColumn : DependencyObject
     {
-        private readonly AsyncDataGridColumnsViewModel columns;
         private readonly DataColumnView columnModel;
         private readonly AsyncDataViewModel adv;
         private readonly bool isInitializing;
 
         private CellValue[] cachedRowValues = new CellValue[0];
         private int startCacheRowValueIndex;
-        private bool isResizing;
 
         public AsyncDataGridColumn(
             AsyncDataGridColumnsViewModel columns,
@@ -20,7 +19,7 @@ namespace EventTraceKit.VsExtension.Controls
             AsyncDataViewModel adv,
             bool isDisconnected)
         {
-            this.columns = columns;
+            Columns = columns;
             this.columnModel = columnModel;
             this.adv = adv;
             IsDisconnected = isDisconnected;
@@ -42,16 +41,27 @@ namespace EventTraceKit.VsExtension.Controls
             isInitializing = false;
         }
 
-        public AsyncDataGridColumnsViewModel Columns => columns;
-        internal DataColumnView ColumnModel => columnModel;
+        public AsyncDataGridColumnsViewModel Columns { get; }
+
+        public bool IsDisconnected { get; }
+
+        public bool IsConnected => !IsDisconnected;
+
+        public bool IsConfigurable => !IsKeySeparator && !IsFreezableAreaSeparator && IsConnected;
+
+        public bool IsSeparator => IsKeySeparator || IsFreezableAreaSeparator;
+
+        public bool IsFrozen => FrozenState != AsyncDataGridColumnFrozenState.Unfrozen;
 
         public bool CanMove => IsVisible && (!IsDisconnected || IsKeySeparator || IsFreezableAreaSeparator);
 
         public int ModelColumnIndex { get; private set; }
 
-        internal bool IsResizing => isResizing;
+        public int ModelVisibleColumnIndex { get; private set; }
 
-        public int ModelVisibleColumnIndex { get; set; }
+        internal bool IsResizing { get; private set; }
+
+        internal bool IsSafeToReadCellValuesFromUIThread { get; set; } = true;
 
         #region public double Width { get; set; }
 
@@ -115,7 +125,7 @@ namespace EventTraceKit.VsExtension.Controls
         private void OnIsVisibleChanged(bool newValue)
         {
             var preset = adv.Preset;
-            if (ModelColumnIndex < 0 || adv == null || isInitializing ||
+            if (ModelColumnIndex < 0 || isInitializing ||
                 preset.GetColumnVisibility(ModelColumnIndex) == newValue)
                 return;
 
@@ -341,56 +351,19 @@ namespace EventTraceKit.VsExtension.Controls
 
         #endregion
 
-        internal bool IsSafeToReadCellValuesFromUIThread { get; set; } = true;
-
-        public bool CanSort { get; } = false;
-
-        public bool IsConfigurable => !IsKeySeparator && !IsFreezableAreaSeparator && IsConnected;
-
-        public bool IsSeparator => IsKeySeparator || IsFreezableAreaSeparator;
-
-        public bool IsDisconnected { get; }
-
-        public bool IsConnected => !IsDisconnected;
-
-        private void UpdateAutomationNameProperty()
+        public void BeginResizing()
         {
-            //string str;
-            //string columnName = ColumnName;
-            //if (!string.IsNullOrWhiteSpace(columnName)) {
-            //    str = columnName;
-            //} else {
-            //    Type dataType = this.DataType;
-            //    if (dataType == typeof(FreezableAreaSeparatorColumn)) {
-            //        str = "Freezable Area Separator";
-            //    } else if (dataType == typeof(KeysValuesSeparatorColumn)) {
-            //        str = "Keys/Values Separator";
-            //    } else {
-            //        str = "Unknown";
-            //    }
-            //}
-
-            //AutomationProperties.SetName(this, str);
+            IsResizing = true;
         }
 
-        private void OnUIPropertyChanged(DependencyPropertyChangedEventArgs args)
+        public void EndResizing(double horizontalChange)
         {
-            adv?.OnUIPropertyChanged(this, args);
-        }
-
-        public void BeginPossiblyResizing()
-        {
-            isResizing = true;
-        }
-
-        public void EndPossiblyResizing(double horizontalChange)
-        {
-            isResizing = false;
+            IsResizing = false;
             if (horizontalChange == 0)
                 return;
 
             if (adv.IsReady) {
-                AsyncDataViewModelPreset preset = adv.CreatePresetFromModifiedUI();
+                AsyncDataViewModelPreset preset = Columns.CreatePresetFromModifiedUI();
                 preset.IsUIModified = true;
                 adv.Preset = preset;
             }
@@ -454,11 +427,6 @@ namespace EventTraceKit.VsExtension.Controls
             return adv.GetCellValue(rowIndex, ModelVisibleColumnIndex);
         }
 
-        public bool IsFrozen()
-        {
-            return FrozenState != AsyncDataGridColumnFrozenState.Unfrozen;
-        }
-
         private int GetModelColumnIndex()
         {
             if (IsDisconnected)
@@ -516,6 +484,25 @@ namespace EventTraceKit.VsExtension.Controls
                 HelpText = columnModel.HelpText,
             };
             return preset;
+        }
+
+        private void UpdateAutomationNameProperty()
+        {
+            string name;
+            string columnName = ColumnName;
+            if (!string.IsNullOrWhiteSpace(columnName))
+                name = columnName;
+            else if (this is FreezableAreaSeparatorColumn)
+                name = "Freezable Area Separator";
+            else
+                name = "Unknown";
+
+            AutomationProperties.SetName(this, name);
+        }
+
+        private void OnUIPropertyChanged(DependencyPropertyChangedEventArgs args)
+        {
+            adv?.OnUIPropertyChanged(this, args);
         }
     }
 }

@@ -14,6 +14,9 @@
         private readonly DataTable table;
         private readonly IFormatProviderSource formatProviderSource;
 
+        private readonly PropertyChangedEventArgs rowCountChangedEventArgs =
+            new PropertyChangedEventArgs(nameof(RowCount));
+
         private int deferredUpdateNestingDepth;
 
         public DataView(DataTable table, IFormatProviderSource formatProviderSource)
@@ -26,16 +29,22 @@
             ClearCache();
         }
 
-        public DataViewColumnsCollection Columns =>
-            new DataViewColumnsCollection(this);
+        public event EventHandler RowCountChanged;
 
-        public DataViewColumnsCollection VisibleColumns =>
-            new DataViewColumnsCollection(this);
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public DataViewColumnsCollection Columns => new DataViewColumnsCollection(this);
+
+        public DataViewColumnsCollection VisibleColumns => new DataViewColumnsCollection(this);
+
+        public bool DeferUpdates => deferredUpdateNestingDepth > 0;
+
+        public int RowCount { get; private set; }
+
+        public int ColumnCount => DataColumnViews?.Length ?? 0;
 
         protected DataColumnViewInfo[] DataColumnViewInfos { get; set; }
         protected DataColumnView[] DataColumnViews { get; set; }
-
-        public bool DeferUpdates => deferredUpdateNestingDepth > 0;
 
         public void BeginDataUpdate()
         {
@@ -70,8 +79,6 @@
                 info.View = this;
 
             RefreshDataColumnViewFromViewInfos();
-            //this.VisibleDataColumnViewIndices = new Int32List();
-            //this.RefreshVisibleColumns();
         }
 
         private void RefreshDataColumnViewFromViewInfos()
@@ -104,8 +111,6 @@
             return DataColumnViews[columnIndex].GetCellValue(rowIndex);
         }
 
-        public event EventHandler RowCountChanged;
-
         public void UpdateRowCount(int newCount)
         {
             if (newCount == RowCount)
@@ -115,18 +120,9 @@
                 ClearCache();
 
             RowCount = newCount;
-            //Application.Current.Dispatcher.Invoke(delegate {
-            //    Updated?.Invoke(this, trueEventArgs);
-            //});
-            //RaisePropertyChanged(rowCountChangedArgs);
-            RaisePropertyChanged(rowChangedEventArgs);
+            RaisePropertyChanged(rowCountChangedEventArgs);
             RowCountChanged?.Invoke(this, EventArgs.Empty);
         }
-
-        private readonly PropertyChangedEventArgs rowChangedEventArgs = new PropertyChangedEventArgs(nameof(RowCount));
-
-        public int RowCount { get; private set; }
-        public int ColumnCount => DataColumnViews?.Length ?? 0;
 
         public DataColumnView GetDataColumnView(int columnIndex)
         {
@@ -155,8 +151,6 @@
                 return -1;
             return Array.IndexOf(DataColumnViews, column);
         }
-
-        public event PropertyChangedEventHandler PropertyChanged;
 
         private void RaisePropertyChanged(
             [CallerMemberName] string propertyName = null)

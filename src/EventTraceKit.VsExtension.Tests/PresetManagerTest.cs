@@ -1,5 +1,6 @@
 ﻿namespace EventTraceKit.VsExtension.Tests
 {
+    using System.Windows.Threading;
     using Controls;
     using Formatting;
     using Xunit;
@@ -13,7 +14,8 @@
             var dataView = new DataView(dataTable, new DefaultFormatProviderSource());
             var templatePreset = new AsyncDataViewModelPreset();
             var presetCollection = new AdvViewModelPresetCollection();
-            var adv = new AsyncDataViewModel(dataView, templatePreset, templatePreset, presetCollection);
+            var workManager = new WorkManager(Dispatcher.CurrentDispatcher);
+            var adv = new AsyncDataViewModel(workManager, dataView, templatePreset, templatePreset, presetCollection);
             var viewModel = new PresetManagerViewModel(adv);
         }
     }

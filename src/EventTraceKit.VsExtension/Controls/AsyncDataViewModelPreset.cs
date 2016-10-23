@@ -7,6 +7,7 @@
     using System.Windows;
     using Collections;
     using Windows;
+    using Extensions;
     using Serialization;
 
     [SerializedShape(typeof(Settings.ViewPreset))]
@@ -190,8 +191,8 @@
 
         public bool GetColumnVisibility(int configurableColumnIndex)
         {
-            if (configurableColumnIndex >= ConfigurableColumns.Count ||
-                configurableColumnIndex < 0)
+            if (configurableColumnIndex < 0 ||
+                configurableColumnIndex >= ConfigurableColumns.Count)
                 throw new ArgumentOutOfRangeException(
                     nameof(configurableColumnIndex), configurableColumnIndex,
                     "Value should be between 0 and " + ConfigurableColumns.Count);
@@ -200,19 +201,19 @@
         }
 
         public AsyncDataViewModelPreset SetColumnVisibility(
-            int configurableColumnIndex, bool visibility)
+            int configurableColumnIndex, bool isVisible)
         {
-            if (configurableColumnIndex >= ConfigurableColumns.Count ||
-                configurableColumnIndex < 0)
+            if (configurableColumnIndex < 0 ||
+                configurableColumnIndex >= ConfigurableColumns.Count)
                 throw new ArgumentOutOfRangeException(
                     nameof(configurableColumnIndex), configurableColumnIndex,
                     "Value should be between 0 and " + ConfigurableColumns.Count);
 
-            if (ConfigurableColumns[configurableColumnIndex].IsVisible == visibility)
+            if (ConfigurableColumns[configurableColumnIndex].IsVisible == isVisible)
                 return this;
 
             AsyncDataViewModelPreset preset = CreateModifiedPreset();
-            preset.ConfigurableColumns[configurableColumnIndex].IsVisible = visibility;
+            preset.ConfigurableColumns[configurableColumnIndex].IsVisible = isVisible;
             return preset;
         }
 

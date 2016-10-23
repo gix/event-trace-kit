@@ -3,71 +3,32 @@ namespace EventTraceKit.VsExtension.Controls
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Runtime.InteropServices;
     using System.Text;
     using System.Windows;
     using System.Windows.Controls;
-    using System.Windows.Input;
     using Microsoft.VisualStudio.Imaging;
 
     public class AsyncDataGridViewModel : DependencyObject
     {
-        public AsyncDataGridViewModel(
-            AsyncDataViewModel advModel, AsyncDataGridColumnsViewModel columnsViewModel)
+        public AsyncDataGridViewModel(AsyncDataViewModel advModel)
         {
-            CellsPresenterViewModel = new AsyncDataGridCellsPresenterViewModel(advModel);
-            ColumnsViewModel = columnsViewModel;
+            ColumnsModel = new AsyncDataGridColumnsViewModel(advModel);
+            CellsPresenter = new AsyncDataGridCellsPresenterViewModel(advModel);
         }
 
-        public AsyncDataGridCellsPresenterViewModel CellsPresenterViewModel { get; }
+        public AsyncDataGridColumnsViewModel ColumnsModel { get; }
 
-        public AsyncDataGridColumnsViewModel ColumnsViewModel { get; }
+        public AsyncDataGridCellsPresenterViewModel CellsPresenter { get; }
 
-        public AsyncDataGridRowSelection RowSelection =>
-            CellsPresenterViewModel.RowSelection;
+        public AsyncDataGridRowSelection RowSelection => CellsPresenter.RowSelection;
 
-        public int FocusIndex => CellsPresenterViewModel.FocusIndex;
+        public int FocusIndex => CellsPresenter.FocusIndex;
 
         public event ItemEventHandler<bool> Updated;
 
         internal void RaiseUpdated(bool refreshViewModelFromModel = true)
         {
             Updated?.Invoke(this, new ItemEventArgs<bool>(refreshViewModelFromModel));
-        }
-
-        public class MenuItemCommand : MenuItem, ICommand
-        {
-            public MenuItemCommand()
-            {
-                Command = this;
-            }
-
-            protected virtual bool CanExecuteCore(object parameter)
-            {
-                return true;
-            }
-
-            protected virtual void ExecuteCore(object parameter)
-            {
-            }
-
-            private event EventHandler CanExecuteChanged;
-
-            event EventHandler ICommand.CanExecuteChanged
-            {
-                add { CanExecuteChanged += value; }
-                remove { CanExecuteChanged -= value; }
-            }
-
-            bool ICommand.CanExecute(object parameter)
-            {
-                return CanExecuteCore(parameter);
-            }
-
-            void ICommand.Execute(object parameter)
-            {
-                ExecuteCore(parameter);
-            }
         }
 
         private class CopyContextMenu : MenuItemCommand
@@ -126,8 +87,8 @@ namespace EventTraceKit.VsExtension.Controls
 
         private bool CopySelection()
         {
-            var advModel = ColumnsViewModel.AdvModel;
-            var visibleColumns = ColumnsViewModel.VisibleColumns;
+            var advModel = ColumnsModel.Model;
+            var visibleColumns = ColumnsModel.VisibleColumns;
             var rowSelection = RowSelection.GetSnapshot();
 
             if (!visibleColumns.Any() || rowSelection.Count == 0)
@@ -173,28 +134,6 @@ namespace EventTraceKit.VsExtension.Controls
             //        clipboardHTML = CellValueToClipboardHtmlString(cellValue);
             //    });
             //}
-        }
-    }
-
-    public static class ClipboardUtils
-    {
-        public static bool SetText(string text)
-        {
-            var data = new DataObject();
-            if (text != null)
-                data.SetData(DataFormats.Text, text);
-
-            return TrySetDataObject(data);
-        }
-
-        public static bool TrySetDataObject(object data)
-        {
-            try {
-                Clipboard.SetDataObject(data);
-                return true;
-            } catch (ExternalException) {
-                return false;
-            }
         }
     }
 

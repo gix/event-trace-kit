@@ -7,6 +7,7 @@ namespace EventTraceKit.VsExtension
     using Windows;
     using Collections;
     using Controls;
+    using Extensions;
     using Serialization;
 
     [SerializedShape(typeof(Settings.ViewPresets))]

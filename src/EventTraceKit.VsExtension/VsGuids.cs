@@ -2,11 +2,7 @@ namespace EventTraceKit.VsExtension
 {
     using System;
 
-    /// <summary>
-    /// This class is used only to expose the list of Guids used by this package.
-    /// This list of guids must match the set of Guids used inside the VSCT file.
-    /// </summary>
-    internal static class Guids
+    internal static class VsGuids
     {
         /// <summary>
         /// This Guid is the persistence guid for the output window.
@@ -14,6 +10,6 @@ namespace EventTraceKit.VsExtension
         /// selecting it in the Persisted window and then looking in the Properties
         /// window.
         /// </summary>
-        public static readonly Guid guidOutputWindowFrame = new Guid("34E76E81-EE4A-11D0-AE2E-00A0C90FFFC3");
+        public static readonly Guid OutputWindowFrame = new Guid("34E76E81-EE4A-11D0-AE2E-00A0C90FFFC3");
     }
 }

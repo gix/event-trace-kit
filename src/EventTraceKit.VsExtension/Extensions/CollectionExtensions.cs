@@ -1,15 +1,53 @@
-﻿namespace EventTraceKit.VsExtension
+namespace EventTraceKit.VsExtension.Extensions
 {
     using System;
     using System.Collections;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using System.Windows;
-    using System.Windows.Controls;
     using Serialization;
 
-    public static class ListExtensions
+    public static class CollectionExtensions
     {
+        public static int IndexOf<TSource, TValue>(
+            this IEnumerable<TSource> source, TValue value, Func<TSource, TValue, bool> predicate)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            int index = 0;
+            foreach (var item in source) {
+                if (predicate(item, value))
+                    return index;
+                ++index;
+            }
+
+            return -1;
+        }
+
+        public static int BinarySearch<T, TValue>(
+            this List<T> list, TValue value, Func<T, TValue, int> comparer)
+        {
+            int lo = 0;
+            int hi = list.Count - 1;
+            while (lo <= hi) {
+                int mid = lo + ((hi - lo) >> 1);
+
+                int cmp = comparer(list[mid], value);
+                if (cmp == 0)
+                    return mid;
+
+                if (cmp < 0)
+                    lo = mid + 1;
+                else
+                    hi = mid - 1;
+            }
+
+            return ~lo;
+        }
+
         private static T[] ConvertToArray<T>(IList list)
         {
             return list.Cast<T>().ToArray();
@@ -18,7 +56,7 @@
         public static object[] ConvertToTypedArray(this IList list)
         {
             Type itemType = DetermineItemType(list);
-            var convertMethod = typeof(ListExtensions).GetMethod(
+            var convertMethod = typeof(CollectionExtensions).GetMethod(
                 nameof(ConvertToArray), BindingFlags.Static | BindingFlags.NonPublic);
 
             var genericMethod = convertMethod.MakeGenericMethod(itemType);
@@ -50,48 +88,6 @@
             }
 
             return typeof(object);
-        }
-    }
-
-    public static class DataObjectExtensions
-    {
-        public static bool TryGetArray<T>(this IDataObject data, out T[] payload)
-        {
-            if (data.GetDataPresent(typeof(T))) {
-                payload = new[] { (T)data.GetData(typeof(T)) };
-                return true;
-            }
-
-            if (data.GetDataPresent(typeof(T[]))) {
-                payload = (T[])data.GetData(typeof(T[]));
-                return true;
-            }
-
-            payload = null;
-            return false;
-        }
-    }
-
-    public static class VectorUtils
-    {
-        public static Vector Abs(Vector vector)
-        {
-            return new Vector(Math.Abs(vector.X), Math.Abs(vector.Y));
-        }
-    }
-
-    public static class ItemsControlExtensions
-    {
-        public static object[] GetOrderedSelectedItemsArray(
-            this ListBox listBox)
-        {
-            return listBox.SelectedItems.Cast<object>().OrderBy(x => listBox.Items.IndexOf(x)).ToList().ConvertToTypedArray();
-        }
-
-        public static ListBox GetParentListBox(
-            this ListBoxItem item)
-        {
-            return (ListBox)ItemsControl.ItemsControlFromItemContainer(item);
         }
     }
 }

@@ -4,13 +4,13 @@
     using System.Windows.Interactivity;
     using Microsoft.VisualStudio.PlatformUI;
 
-    public class DialogResult : Behavior<DialogWindow>
+    public class BindableDialogResult : Behavior<DialogWindow>
     {
         public static readonly DependencyProperty BindingProperty =
             DependencyProperty.Register(
                 nameof(Binding),
                 typeof(bool?),
-                typeof(DialogResult),
+                typeof(BindableDialogResult),
                 new PropertyMetadata(OnDialogResultChanged));
 
         public bool? Binding
@@ -22,7 +22,7 @@
         private static void OnDialogResultChanged(
             DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var source = (DialogResult)d;
+            var source = (BindableDialogResult)d;
             source.OnDialogResultChanged((bool?)e.NewValue);
         }
 

@@ -12,6 +12,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
     using System.Windows.Media;
     using System.Windows.Media.Animation;
     using Collections;
+    using Extensions;
     using Windows;
 
     public class AsyncDataGridColumnHeadersPresenter : ItemsControl
@@ -135,7 +136,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         {
             if (!e.Handled) {
                 using (ParentGrid.EnterContextMenuVisualState()) {
-                    var chooser = new ColumnChooser(ViewModel.ConfigurableColumns, ViewModel.AdvModel) {
+                    var chooser = new ColumnChooser(ViewModel.ConfigurableColumns, ViewModel.Model) {
                         Placement = PlacementMode.MousePoint,
                         PlacementTarget = VisualTreeHelper.GetParent(this) as UIElement
                     };

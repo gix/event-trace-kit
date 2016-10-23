@@ -167,14 +167,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ActionThrottler.cs" />
-    <Compile Include="ArrayUtils.cs" />
+    <Compile Include="EventSymbolSource.cs" />
+    <Compile Include="Extensions\ArrayUtils.cs" />
     <Compile Include="AsyncDelegateCommand.cs" />
-    <Compile Include="AsyncExtensions.cs" />
+    <Compile Include="Extensions\AsyncExtensions.cs" />
     <Compile Include="CharCPtrUtils.cs" />
     <Compile Include="Collections\Extensions.cs" />
-    <Compile Include="CollectionUtils.cs" />
-    <Compile Include="ComparisonUtils.cs" />
+    <Compile Include="Extensions\CollectionExtensions.cs" />
+    <Compile Include="Extensions\CollectionUtils.cs" />
+    <Compile Include="Extensions\ComparisonUtils.cs" />
     <Compile Include="Controls\AsyncDataGridColumnFrozenState.cs" />
+    <Compile Include="ClipboardUtils.cs" />
     <Compile Include="Controls\DragEventSource.cs" />
     <Compile Include="Controls\FreezableAreaSeparatorColumn.cs" />
     <Compile Include="Controls\MenuItemCommand.cs" />
@@ -183,18 +186,26 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Controls\InsertionAdorner.cs" />
+    <Compile Include="Extensions\PackageExtensions.cs" />
+    <Compile Include="Extensions\PointUtils.cs" />
+    <Compile Include="Extensions\ResourceUtils.cs" />
+    <Compile Include="Extensions\ServiceProviderExtensions.cs" />
+    <Compile Include="Extensions\SizeUtils.cs" />
     <Compile Include="Extensions\VsSdkExtensions.cs" />
-    <Compile Include="Extensions.cs" />
+    <Compile Include="Extensions\Extensions.cs" />
+    <Compile Include="Extensions\XElementExtensions.cs" />
     <Compile Include="Formatting\FormatProviders.cs" />
     <Compile Include="AdvViewModelPresetCollection.cs" />
     <Compile Include="ListBoxDragPreview.cs" />
     <Compile Include="Controls\MultiDragListBox.cs" />
     <Compile Include="Controls\MultiDragListView.cs" />
+    <Compile Include="ManagedTdhFormatter.cs" />
+    <Compile Include="NativeTdhFormatter.cs" />
+    <Compile Include="Native\RECT.cs" />
     <Compile Include="PresetManager\ExceptionFilterEventArgs.cs" />
     <Compile Include="PresetManager\PresetManagerDialog.xaml.cs">
       <DependentUpon>PresetManagerDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PresetManager\CollectionExtensions.cs" />
     <Compile Include="PresetManager\GraphTreeItemHeaderCommand.cs" />
     <Compile Include="PresetManager\HeaderDropDownMenu.cs" />
     <Compile Include="PresetManager\IsEqual.cs" />
@@ -208,6 +219,7 @@
     <Compile Include="PresetManager\PresetSaveAsDialog.xaml.cs">
       <DependentUpon>PresetSaveAsDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="SafeBstrHandle.cs" />
     <Compile Include="Serialization\ActivatorUtils.cs" />
     <Compile Include="Serialization\CustomXamlSerializer.cs" />
     <Compile Include="Serialization\DeserializationCallbackAttribute.cs" />
@@ -225,7 +237,6 @@
     <Compile Include="Serialization\SafeXamlSchemaContext.cs" />
     <Compile Include="Serialization\TypeHelper.cs" />
     <Compile Include="Serialization\XamlSerializerExtensions.cs" />
-    <Compile Include="ServiceProviderExtensions.cs" />
     <Compile Include="ValueChangedEventArgs.cs" />
     <Compile Include="ValueChangedEventHandler.cs" />
     <Compile Include="Windows\FreezableCustomSerializerAccessBase.cs" />
@@ -240,13 +251,12 @@
     <Compile Include="IOperationalModeProvider.cs" />
     <Compile Include="ItemEventHandler.cs" />
     <Compile Include="IWorkManager.cs" />
-    <Compile Include="PackageExtensions.cs" />
     <Compile Include="Settings\Settings.cs" />
     <Compile Include="TraceEventDescriptorViewModel.cs" />
     <Compile Include="TraceLogStatsModel.cs" />
     <Compile Include="TraceSettingsViewModel.cs" />
     <Compile Include="UsedImplicitlyAttribute.cs" />
-    <Compile Include="Windows\DialogResult.cs" />
+    <Compile Include="Windows\BindableDialogResult.cs" />
     <Compile Include="Windows\KeyDownEventTrigger.cs" />
     <Compile Include="SimpleInstrumentationManifestParser.cs" />
     <Compile Include="SolutionFileGatherer.cs" />
@@ -272,7 +282,7 @@
     <Compile Include="Keyword.cs" />
     <Compile Include="MultiRange.cs" />
     <Compile Include="Native\NativeMethods.cs" />
-    <Compile Include="NumberUtils.cs" />
+    <Compile Include="Extensions\NumberUtils.cs" />
     <Compile Include="QueuedDispatcherAction.cs" />
     <Compile Include="Range.cs" />
     <Compile Include="CommonControlBrushes.cs" />
@@ -281,19 +291,16 @@
     <Compile Include="Controls\Primitives\AsyncDataGridColumnHeadersPanel.cs" />
     <Compile Include="Controls\AsyncDataGridRowSelection.cs" />
     <Compile Include="CellValue.cs" />
-    <Compile Include="DoubleExtensions.cs" />
-    <Compile Include="DoubleUtils.cs" />
+    <Compile Include="Extensions\DoubleUtils.cs" />
     <Compile Include="Windows\DrawingContextExtensions.cs" />
     <Compile Include="Windows\NegativeDoubleValueConverter.cs" />
     <Compile Include="Windows\ObjectNullCheckToVisibility.cs" />
-    <Compile Include="PointUtils.cs" />
     <Compile Include="Controls\Primitives\CollectionDefaults.cs" />
     <Compile Include="Windows\DelegateValueConverter.cs" />
     <Compile Include="ValueCache.cs" />
     <Compile Include="Controls\Primitives\AsyncDataGridColumnHeader.cs" />
     <Compile Include="Windows\FrameworkExtensions.cs" />
     <Compile Include="Windows\PropertyMetadataUtils.cs" />
-    <Compile Include="SizeUtils.cs" />
     <Compile Include="Controls\AsyncDataViewModelPreset.cs" />
     <Compile Include="Controls\Primitives\AsyncDataGridColumnHeadersPresenter.cs" />
     <Compile Include="Controls\AsyncDataGridCellsPresenterViewModel.cs" />
@@ -304,17 +311,15 @@
     <Compile Include="FontsAndColorsHelper.cs" />
     <Compile Include="Controls\ActivityRing.cs" />
     <Compile Include="Controls\ProgressRing.cs" />
-    <Compile Include="CustomTypeDescriptor.cs" />
     <Compile Include="Windows\DependencyPropertyExtensions.cs" />
     <Compile Include="EventTraceKitPackage.cs" />
-    <Compile Include="Guids.cs" />
-    <Compile Include="ValidateValueCallbacks.cs" />
-    <Compile Include="Native.cs" />
+    <Compile Include="VsGuids.cs" />
+    <Compile Include="Windows\ValidateValueCallbacks.cs" />
+    <Compile Include="Native\Native.cs" />
     <Compile Include="Controls\Primitives\AsyncDataGridRenderedCellsVisual.cs" />
     <Compile Include="Controls\Primitives\AsyncDataGridCellsPresenter.cs" />
     <Compile Include="PkgCmdId.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ResourceUtils.cs" />
     <Compile Include="TdhHelper.cs" />
     <Compile Include="TimePoint.cs" />
     <Compile Include="TimePointConverter.cs" />
@@ -330,7 +335,6 @@
     <Compile Include="TraceSessionSettingsViewModel.cs" />
     <Compile Include="ViewModel.cs" />
     <Compile Include="Windows\ValueConverter.cs" />
-    <Compile Include="XElementExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="VSPackage.resx">
