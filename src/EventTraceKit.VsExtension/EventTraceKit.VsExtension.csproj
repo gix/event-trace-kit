@@ -174,8 +174,10 @@
     <Compile Include="Collections\Extensions.cs" />
     <Compile Include="CollectionUtils.cs" />
     <Compile Include="ComparisonUtils.cs" />
+    <Compile Include="Controls\AsyncDataGridColumnFrozenState.cs" />
     <Compile Include="Controls\DragEventSource.cs" />
     <Compile Include="Controls\FreezableAreaSeparatorColumn.cs" />
+    <Compile Include="Controls\MenuItemCommand.cs" />
     <Compile Include="Controls\SelectorUtils.cs" />
     <Compile Include="EventTraceKitProfileManager.cs">
       <SubType>Component</SubType>

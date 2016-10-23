@@ -35,15 +35,48 @@ namespace EventTraceKit.VsExtension.Controls
             Updated?.Invoke(this, new ItemEventArgs<bool>(refreshViewModelFromModel));
         }
 
-        private class CopyCellContextMenu : MenuItem, ICommand
+        public class MenuItemCommand : MenuItem, ICommand
+        {
+            public MenuItemCommand()
+            {
+                Command = this;
+            }
+
+            protected virtual bool CanExecuteCore(object parameter)
+            {
+                return true;
+            }
+
+            protected virtual void ExecuteCore(object parameter)
+            {
+            }
+
+            private event EventHandler CanExecuteChanged;
+
+            event EventHandler ICommand.CanExecuteChanged
+            {
+                add { CanExecuteChanged += value; }
+                remove { CanExecuteChanged -= value; }
+            }
+
+            bool ICommand.CanExecute(object parameter)
+            {
+                return CanExecuteCore(parameter);
+            }
+
+            void ICommand.Execute(object parameter)
+            {
+                ExecuteCore(parameter);
+            }
+        }
+
+        private class CopyContextMenu : MenuItemCommand
         {
             private readonly AsyncDataGridViewModel advModel;
             private readonly CopyBehavior behavior;
 
-            public CopyCellContextMenu(AsyncDataGridViewModel advModel, CopyBehavior behavior)
+            public CopyContextMenu(AsyncDataGridViewModel advModel, CopyBehavior behavior)
             {
-                Command = this;
-
                 this.advModel = advModel;
                 this.behavior = behavior;
                 switch (behavior) {
@@ -59,34 +92,18 @@ namespace EventTraceKit.VsExtension.Controls
                 }
             }
 
-            bool ICommand.CanExecute(object parameter)
-            {
-                return true;
-            }
-
-            void ICommand.Execute(object parameter)
+            protected override void ExecuteCore(object parameter)
             {
                 advModel.CopyToClipboard(behavior);
-            }
-
-            private event EventHandler CanExecuteChanged;
-
-            event EventHandler ICommand.CanExecuteChanged
-            {
-                add { CanExecuteChanged += value; }
-                remove { CanExecuteChanged -= value; }
             }
         }
 
         public ContextMenu BuildContextMenu()
         {
             var menu = new ContextMenu();
-            menu.Items.Add(new CopyCellContextMenu(this, CopyBehavior.Selection) {
-                Icon = new CrispImage {
-                    Moniker = KnownMonikers.Copy
-                }
+            menu.Items.Add(new CopyContextMenu(this, CopyBehavior.Selection) {
+                Icon = new CrispImage { Moniker = KnownMonikers.Copy }
             });
-            //menu.Items.Add(new CopyCellContextMenu(this, CopyBehavior.Cell));
 
             return menu;
         }
