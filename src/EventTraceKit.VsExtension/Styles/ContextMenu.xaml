@@ -4,6 +4,7 @@
   xmlns:imaging="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Imaging"
   xmlns:utils="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Utilities"
   xmlns:vsui="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
+  xmlns:vss="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.14.0"
   xmlns:Primitives="clr-namespace:EventTraceKit.VsExtension.Controls.Primitives"
   xmlns:Controls="clr-namespace:EventTraceKit.VsExtension.Controls">
 
@@ -11,8 +12,8 @@
 
   <Style x:Key="{x:Type ContextMenu}" TargetType="{x:Type ContextMenu}"
          BasedOn="{StaticResource {x:Type ContextMenu}}">
-    <Setter Property="FontFamily" Value="{DynamicResource VsFont.EnvironmentFontFamily}"/>
-    <Setter Property="FontSize" Value="{DynamicResource VsFont.EnvironmentFontSize}"/>
+    <Setter Property="FontFamily" Value="{DynamicResource {x:Static vss:VsFonts.EnvironmentFontFamilyKey}}"/>
+    <Setter Property="FontSize" Value="{DynamicResource {x:Static vss:VsFonts.EnvironmentFontSizeKey}}"/>
     <Setter Property="SnapsToDevicePixels" Value="True"/>
     <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
     <Setter Property="Foreground" Value="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarTextActiveBrushKey}}" />

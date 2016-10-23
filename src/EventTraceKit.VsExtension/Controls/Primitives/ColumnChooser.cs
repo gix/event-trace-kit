@@ -30,8 +30,6 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             this.columns = columns;
 
             ViewModel = viewModel;
-            //this.InitializeComponent();
-            //this.columnTemplate = FindResource("columnTemplate") as DataTemplate;
             sortedColumns = new AsyncDataGridColumn[columns.Count];
             this.columns.CopyTo(sortedColumns, 0);
             Array.Sort(sortedColumns, CompareColumnNames);
@@ -39,7 +37,6 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             for (int i = 0; i < sortedColumns.Length; ++i)
                 Items.Insert(i, CreateContainer(sortedColumns[i]));
 
-            //this.RefreshColumns();
             ((INotifyCollectionChanged)this.columns).CollectionChanged += ColumnsCollectionChangedHandler;
 
             CommandBindings.Add(

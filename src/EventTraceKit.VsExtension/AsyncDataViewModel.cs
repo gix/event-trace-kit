@@ -39,6 +39,7 @@ namespace EventTraceKit.VsExtension
             if (templatePreset == null)
                 throw new ArgumentNullException(nameof(templatePreset));
 
+            this.workManager = workManager;
             this.dataView = dataView;
             PresetCollection = presetCollection;
             TemplatePreset = templatePreset.EnsureFrozen();

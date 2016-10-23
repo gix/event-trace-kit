@@ -702,9 +702,8 @@ namespace EventTraceKit.VsExtension.Controls
                 if (d?.FindAncestorOrSelf<AsyncDataGridCellsPresenter>() != null) {
                     ContextMenu menu = ViewModel.BuildContextMenu();
                     if (menu != null) {
-                        using (EnterContextMenuVisualState())
-                            menu.IsOpen = true;
-
+                        menu.PlacementTarget = this;
+                        menu.IsOpen = true;
                         e.Handled = true;
                     }
                 }
