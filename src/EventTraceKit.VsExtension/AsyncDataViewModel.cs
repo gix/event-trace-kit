@@ -488,5 +488,9 @@ namespace EventTraceKit.VsExtension
             DataColumnViewInfo columnViewInfo = GetDataColumnViewInfoFromPreset(columnPreset);
             return dataView.CreateDataColumnViewFromInfo(columnViewInfo);
         }
+
+        public void CopyToClipboard(CopyBehavior behavior)
+        {
+        }
     }
 }

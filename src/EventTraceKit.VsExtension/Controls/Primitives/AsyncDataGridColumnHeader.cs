@@ -70,7 +70,7 @@
         {
             if (newValue != null) {
                 IsResizable = newValue.IsResizable;
-                IsSeparator = newValue.IsSeparator;
+                IsKeySeparator = newValue.IsKeySeparator;
                 IsFreezableAreaSeparator = newValue.IsFreezableAreaSeparator;
                 IsExpanderHeader = newValue.IsExpanderHeader;
             }
@@ -81,7 +81,7 @@
 
         #endregion
 
-        #region public Thumb LeftHeaderGripperPart
+        #region public Thumb LeftHeaderGripperPart { get; private set; }
 
         private static readonly DependencyPropertyKey LeftHeaderGripperPartPropertyKey =
             DependencyProperty.RegisterReadOnly(
@@ -101,7 +101,7 @@
 
         #endregion
 
-        #region public Thumb RightHeaderGripperPart
+        #region public Thumb RightHeaderGripperPart { get; private set; }
 
         private static readonly DependencyPropertyKey RightHeaderGripperPartPropertyKey =
             DependencyProperty.RegisterReadOnly(
@@ -141,7 +141,7 @@
 
         #endregion
 
-        #region public bool IsResizable
+        #region public bool IsResizable { get; private set; }
 
         private static readonly DependencyPropertyKey IsResizablePropertyKey =
             DependencyProperty.RegisterReadOnly(
@@ -161,27 +161,27 @@
 
         #endregion
 
-        #region public bool IsSeparator
+        #region public bool IsKeySeparator { get; private set; }
 
         private static readonly DependencyPropertyKey IsSeparatorPropertyKey =
             DependencyProperty.RegisterReadOnly(
-                nameof(IsSeparator),
+                nameof(IsKeySeparator),
                 typeof(bool),
                 typeof(AsyncDataGridColumnHeader),
                 new PropertyMetadata(Boxed.False));
 
-        public static readonly DependencyProperty IsSeparatorProperty =
+        public static readonly DependencyProperty IsKeySeparatorProperty =
             IsSeparatorPropertyKey.DependencyProperty;
 
-        public bool IsSeparator
+        public bool IsKeySeparator
         {
-            get { return (bool)GetValue(IsSeparatorProperty); }
+            get { return (bool)GetValue(IsKeySeparatorProperty); }
             private set { SetValue(IsSeparatorPropertyKey, Boxed.Bool(value)); }
         }
 
         #endregion
 
-        #region public bool IsFreezableAreaSeparator
+        #region public bool IsFreezableAreaSeparator { get; private set; }
 
         private static readonly DependencyPropertyKey IsFreezableAreaSeparatorPropertyKey =
             DependencyProperty.RegisterReadOnly(
@@ -201,7 +201,7 @@
 
         #endregion
 
-        #region public bool IsExpanderHeader
+        #region public bool IsExpanderHeader { get; private set; }
 
         private static readonly DependencyPropertyKey IsExpanderHeaderPropertyKey =
             DependencyProperty.RegisterReadOnly(
@@ -221,7 +221,7 @@
 
         #endregion
 
-        #region public int SortPriority
+        #region public int SortPriority { get; private set; }
 
         private static readonly DependencyPropertyKey SortPriorityPropertyKey =
             DependencyProperty.RegisterReadOnly(
@@ -241,7 +241,7 @@
 
         #endregion
 
-        #region public Brush SeparatorBrush
+        #region public Brush SeparatorBrush { get; set; }
 
         public static readonly DependencyProperty SeparatorBrushProperty =
             DependencyProperty.Register(
@@ -258,7 +258,7 @@
 
         #endregion
 
-        #region public Visibility SeparatorVisibility
+        #region public Visibility SeparatorVisibility { get; set; }
 
         public static readonly DependencyProperty SeparatorVisibilityProperty =
             DependencyProperty.Register(

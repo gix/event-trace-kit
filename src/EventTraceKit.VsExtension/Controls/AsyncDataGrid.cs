@@ -36,14 +36,23 @@ namespace EventTraceKit.VsExtension.Controls
                 forType, new FrameworkPropertyMetadata(
                     (d, e) => ((AsyncDataGrid)d).OnIsEnabledChanged(e)));
 
-            CommandManager.RegisterClassInputBinding(
-                typeof(AsyncDataGrid),
-                new InputBinding(
-                    CopyCell, new KeyGesture(Key.C, ModifierKeys.Control)));
             CommandManager.RegisterClassCommandBinding(
                 typeof(AsyncDataGrid),
                 new CommandBinding(
-                    CopyCell, OnCopyCellExecuted, OnCopyCellCanExecute));
+                    Copy, OnCopyExecuted, OnCopyCanExecute));
+
+            CommandManager.RegisterClassInputBinding(
+                typeof(AsyncDataGrid),
+                new InputBinding(
+                    Copy, new KeyGesture(Key.C, ModifierKeys.Control)) {
+                    CommandParameter = CopyBehavior.Selection
+                });
+            CommandManager.RegisterClassInputBinding(
+                typeof(AsyncDataGrid),
+                new InputBinding(
+                    Copy, new KeyGesture(Key.C, ModifierKeys.Control | ModifierKeys.Shift)) {
+                    CommandParameter = CopyBehavior.Cell
+                });
         }
 
         public AsyncDataGrid()
@@ -58,8 +67,8 @@ namespace EventTraceKit.VsExtension.Controls
         public event EventHandler<AsyncDataGridColumnReorderingEventArgs> ColumnReordering;
         public event EventHandler<AsyncDataGridColumnEventArgs> ColumnReordered;
 
-        public static readonly RoutedCommand CopyCell =
-            new RoutedCommand(nameof(CopyCell), typeof(AsyncDataGrid));
+        public static readonly RoutedCommand Copy =
+            new RoutedCommand(nameof(Copy), typeof(AsyncDataGrid));
 
         #region public FontFamily RowFontFamily { get; set; }
 
@@ -580,6 +589,24 @@ namespace EventTraceKit.VsExtension.Controls
 
         #endregion
 
+        public double AutoSize(AsyncDataGridColumn column)
+        {
+            if (column == null)
+                throw new ArgumentNullException(nameof(column));
+
+            if (!column.IsSafeToReadCellValuesFromUIThread)
+                return 0;
+
+            double newWidth = 0;
+            if (CellsPresenter != null)
+                newWidth = CellsPresenter.GetColumnAutoSize(column);
+
+            double adjustment = newWidth - column.Width;
+            column.Width = newWidth;
+
+            return adjustment;
+        }
+
         public IDisposable EnterContextMenuVisualState()
         {
             return new ContextMenuScope(this);
@@ -655,33 +682,35 @@ namespace EventTraceKit.VsExtension.Controls
             CellsPresenter?.InvalidateRowCache();
         }
 
-        private static void OnCopyCellCanExecute(object sender, CanExecuteRoutedEventArgs e)
+        private static void OnCopyCanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            var grid = (AsyncDataGrid)sender;
-            //grid.ViewModel.DoCopyToClipboard(HierarchicalDataGridViewModel.CopyBehavior.Cell);
+            var source = (AsyncDataGrid)sender;
+            e.CanExecute = source.ViewModel?.RowSelection.Count != 0;
             e.Handled = true;
         }
 
-        private static void OnCopyCellExecuted(object sender, ExecutedRoutedEventArgs e)
+        private static void OnCopyExecuted(object sender, ExecutedRoutedEventArgs e)
         {
+            var source = (AsyncDataGrid)sender;
+            source.ViewModel?.CopyToClipboard((CopyBehavior)e.Parameter);
         }
 
-        public double AutoSize(AsyncDataGridColumn column)
+        protected override void OnContextMenuOpening(ContextMenuEventArgs e)
         {
-            if (column == null)
-                throw new ArgumentNullException(nameof(column));
+            if (!e.Handled) {
+                var d = e.OriginalSource as DependencyObject;
+                if (d?.FindAncestorOrSelf<AsyncDataGridCellsPresenter>() != null) {
+                    ContextMenu menu = ViewModel.BuildContextMenu();
+                    if (menu != null) {
+                        using (EnterContextMenuVisualState())
+                            menu.IsOpen = true;
 
-            if (!column.IsSafeToReadCellValuesFromUIThread)
-                return 0;
+                        e.Handled = true;
+                    }
+                }
+            }
 
-            double newWidth = 0;
-            if (CellsPresenter != null)
-                newWidth = CellsPresenter.GetColumnAutoSize(column);
-
-            double adjustment = newWidth - column.Width;
-            column.Width = newWidth;
-
-            return adjustment;
+            base.OnContextMenuOpening(e);
         }
 
         protected internal virtual void OnColumnHeaderDragStarted(DragStartedEventArgs e)

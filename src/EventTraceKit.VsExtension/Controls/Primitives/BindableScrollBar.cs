@@ -25,6 +25,11 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             scrollViewerScrollChangedHandler = OnScrollViewerScrollChanged;
         }
 
+        protected override void OnContextMenuOpening(ContextMenuEventArgs e)
+        {
+            base.OnContextMenuOpening(e);
+        }
+
         #region public ScrollViewer ScrollViewer { get; set; }
 
         /// <summary>

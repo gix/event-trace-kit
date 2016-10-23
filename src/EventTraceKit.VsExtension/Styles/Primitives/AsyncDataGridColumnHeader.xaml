@@ -55,7 +55,7 @@
         <Setter Property="Background" Value="{DynamicResource {x:Static vsp:HeaderColors.MouseDownBrushKey}}"/>
       </Trigger>
 
-      <Trigger Property="Primitives:AsyncDataGridColumnHeader.IsSeparator" Value="True">
+      <Trigger Property="Primitives:AsyncDataGridColumnHeader.IsKeySeparator" Value="True">
         <Setter Property="Background" Value="Gold"/>
       </Trigger>
       <Trigger Property="Primitives:AsyncDataGridColumnHeader.IsFreezableAreaSeparator" Value="True">

@@ -9,6 +9,7 @@
         bool CheckAccess();
         void Post(Action action);
         void Send(Action action);
+        T Send<T>(Func<T> action);
         void VerifyAccess();
     }
 
@@ -50,6 +51,17 @@
                 action();
             else
                 dispatcher.Invoke(action, DispatcherPriority.ContextIdle);
+        }
+
+        public T Send<T>(Func<T> action)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            if (CheckAccess())
+                return action();
+
+            return dispatcher.Invoke(action, DispatcherPriority.ContextIdle);
         }
 
         public void VerifyAccess()
@@ -106,6 +118,11 @@
         public void Send(Action action)
         {
             Task.Run(action).Wait();
+        }
+
+        public T Send<T>(Func<T> action)
+        {
+            return Task.Run(action).Result;
         }
 
         public void VerifyAccess()

@@ -45,7 +45,7 @@ namespace EventTraceKit.VsExtension.Controls
         public AsyncDataGridColumnsViewModel Columns => columns;
         internal DataColumnView ColumnModel => columnModel;
 
-        public bool CanMove => IsVisible && (!IsDisconnected || IsSeparator || IsFreezableAreaSeparator);
+        public bool CanMove => IsVisible && (!IsDisconnected || IsKeySeparator || IsFreezableAreaSeparator);
 
         public int ModelColumnIndex { get; private set; }
 
@@ -124,27 +124,27 @@ namespace EventTraceKit.VsExtension.Controls
 
         #endregion
 
-        #region public bool IsSeparator { get; set; }
+        #region public bool IsKeySeparator { get; set; }
 
         private static readonly DependencyPropertyKey IsSeparatorPropertyKey =
             DependencyProperty.RegisterReadOnly(
-                nameof(IsSeparator),
+                nameof(IsKeySeparator),
                 typeof(bool),
                 typeof(AsyncDataGridColumn),
                 new PropertyMetadata(Boxed.False));
 
         /// <summary>
-        ///   Identifies the <see cref="IsSeparator"/> dependency property.
+        ///   Identifies the <see cref="IsKeySeparator"/> dependency property.
         /// </summary>
-        public static readonly DependencyProperty IsSeparatorProperty =
+        public static readonly DependencyProperty IsKeySeparatorProperty =
             IsSeparatorPropertyKey.DependencyProperty;
 
         /// <summary>
-        ///   Gets a value indicating whether the column is a separator.
+        ///   Gets a value indicating whether the column is a key separator.
         /// </summary>
-        public bool IsSeparator
+        public bool IsKeySeparator
         {
-            get { return (bool)GetValue(IsSeparatorProperty); }
+            get { return (bool)GetValue(IsKeySeparatorProperty); }
             private set { SetValue(IsSeparatorPropertyKey, value); }
         }
 
@@ -322,8 +322,9 @@ namespace EventTraceKit.VsExtension.Controls
 
         public bool CanSort { get; } = false;
 
-        public bool IsConfigurable =>
-            !IsSeparator && !IsFreezableAreaSeparator;
+        public bool IsConfigurable => !IsKeySeparator && !IsFreezableAreaSeparator && IsConnected;
+
+        public bool IsSeparator => IsKeySeparator || IsFreezableAreaSeparator;
 
         public bool IsDisconnected { get; }
 
@@ -425,7 +426,7 @@ namespace EventTraceKit.VsExtension.Controls
             return value;
         }
 
-        private CellValue GetCellValueNotCached(int rowIndex)
+        public CellValue GetCellValueNotCached(int rowIndex)
         {
             return adv.GetCellValue(rowIndex, ModelVisibleColumnIndex);
         }

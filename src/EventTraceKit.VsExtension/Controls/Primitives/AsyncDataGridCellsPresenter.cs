@@ -65,12 +65,6 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             renderAction = PerformQueuedRender;
         }
 
-        public void InvalidateRowCache()
-        {
-            renderedCellsVisual.InvalidateRowCache();
-            QueueRender(true);
-        }
-
         #region public AsyncDataGridCellsPresenterViewModel ViewModel { get; set; }
 
         public static readonly DependencyProperty ViewModelProperty =
@@ -489,14 +483,14 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         #endregion
 
-        #region public Brush SeparatorBrush { get; set; }
+        #region public Brush KeySeparatorBrush { get; set; }
 
         /// <summary>
-        ///   Identifies the <see cref="SeparatorBrush"/> dependency property.
+        ///   Identifies the <see cref="KeySeparatorBrush"/> dependency property.
         /// </summary>
-        public static readonly DependencyProperty SeparatorBrushProperty =
+        public static readonly DependencyProperty KeySeparatorBrushProperty =
             DependencyProperty.Register(
-                nameof(SeparatorBrush),
+                nameof(KeySeparatorBrush),
                 typeof(Brush),
                 typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
@@ -505,12 +499,12 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                     FrameworkPropertyMetadataOptions.AffectsRender));
 
         /// <summary>
-        ///   Gets or sets the separator brush.
+        ///   Gets or sets the key separator brush.
         /// </summary>
-        public Brush SeparatorBrush
+        public Brush KeySeparatorBrush
         {
-            get { return (Brush)GetValue(SeparatorBrushProperty); }
-            set { SetValue(SeparatorBrushProperty, value); }
+            get { return (Brush)GetValue(KeySeparatorBrushProperty); }
+            set { SetValue(KeySeparatorBrushProperty, value); }
         }
 
         #endregion
@@ -1215,6 +1209,12 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         private int? prevFirst;
         private int? prevLast;
 
+        public void InvalidateRowCache()
+        {
+            renderedCellsVisual.InvalidateRowCache();
+            QueueRender(true);
+        }
+
         public void QueueRender(bool forceUpdate = true)
         {
             renderNeeded = true;
@@ -1345,6 +1345,14 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         protected override void OnRender(DrawingContext drawingContext)
         {
             base.OnRender(drawingContext);
+
+            // Make the presenter hit-testable so any bubbling event reaching
+            // the grid has the presenter as original source. Otherwise clicking
+            // the empty space between any rows starts at the parent scroll
+            // viewer.
+            drawingContext.DrawRectangle(
+                Brushes.Transparent, null, new Rect(RenderSize));
+
             QueueRender(true);
         }
 
@@ -1427,17 +1435,20 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             if (!e.Handled) {
                 Focus();
 
+                var viewModel = ViewModel;
                 Point position = e.GetPosition(this);
                 int? row = GetRowFromPosition(position.Y);
                 if (row.HasValue) {
                     int rowIndex = row.Value;
                     EnsureVisible(rowIndex);
 
-                    var viewModel = ViewModel;
-                    if (viewModel != null) {
+                    if (!viewModel.RowSelection.Contains(rowIndex)) {
                         viewModel.RowSelection.ToggleSingle(rowIndex, false);
                         viewModel.RequestUpdate(false);
                     }
+                } else {
+                    viewModel.RowSelection.Clear();
+                    viewModel.RequestUpdate(false);
                 }
 
                 e.Handled = true;

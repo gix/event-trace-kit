@@ -79,27 +79,40 @@ namespace EventTraceKit.VsExtension.Windows
             return null;
         }
 
-        public static T FindAncestor<T>(this DependencyObject obj)
-            where T : DependencyObject
+        public static TAncestor FindAncestor<TAncestor>(this DependencyObject obj)
+            where TAncestor : DependencyObject
         {
-            return obj.FindAncestor<T>(x => true);
+            return obj.FindAncestor<TAncestor>(x => true);
         }
 
-        public static T FindAncestor<T>(
-            this DependencyObject obj, Func<T, bool> predicate)
-            where T : DependencyObject
+        public static TAncestor FindAncestor<TAncestor>(
+            this DependencyObject obj, Func<TAncestor, bool> predicate)
+            where TAncestor : DependencyObject
         {
             if (obj == null)
                 throw new ArgumentNullException(nameof(obj));
 
             for (obj = obj.GetVisualOrLogicalParent(); obj != null;
                  obj = obj.GetVisualOrLogicalParent()) {
-                T ancestor = obj as T;
+                TAncestor ancestor = obj as TAncestor;
                 if (ancestor != null && predicate(ancestor))
                     return ancestor;
             }
 
             return null;
+        }
+
+        public static TAncestor FindAncestorOrSelf<TAncestor>(
+            this DependencyObject obj) where TAncestor : DependencyObject
+        {
+            if (obj == null)
+                throw new ArgumentNullException(nameof(obj));
+
+            TAncestor ancestor = obj as TAncestor;
+            if (ancestor != null)
+                return ancestor;
+
+            return obj.FindAncestor<TAncestor>();
         }
 
         /// <summary>

@@ -26,6 +26,31 @@
         }
 
         [Fact]
+        public void Copy()
+        {
+            var range = new MultiRange();
+            range.Add(23);
+            range.Add(42);
+
+            var copy = new MultiRange(range);
+
+            Assert.Equal(2, copy.Count);
+            Assert.Equal(new[] { R(23), R(42) }, range.GetRanges());
+        }
+
+        [Fact]
+        public void Copy_Empty()
+        {
+            var range = new MultiRange();
+
+            var copy = new MultiRange(range);
+
+            Assert.Equal(0, copy.Count);
+            Assert.Equal(new Range[0], copy.GetRanges());
+            Assert.False(copy.Contains(42));
+        }
+
+        [Fact]
         public void Add()
         {
             var range = new MultiRange();

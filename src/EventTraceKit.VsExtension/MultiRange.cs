@@ -15,6 +15,7 @@ namespace EventTraceKit.VsExtension
 
         public MultiRange(MultiRange source)
         {
+            Count = source.Count;
             ranges.AddRange(source.ranges);
         }
 
@@ -71,7 +72,7 @@ namespace EventTraceKit.VsExtension
             --Count;
             Range range = ranges[idx];
             if (value == range.Begin && value + 1 == range.End)
-                // If the range only contains value, remove it.
+                // If the range only contains one value, remove it.
                 ranges.RemoveAt(idx);
             else if (value == range.Begin)
                 // Drop value from the beginning of the range.

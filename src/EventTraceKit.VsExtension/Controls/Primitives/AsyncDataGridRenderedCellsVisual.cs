@@ -285,7 +285,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             FlowDirection flowDirection = cellsPresenter.FlowDirection;
             CultureInfo currentCulture = CultureInfo.CurrentCulture;
             Pen verticalGridLinesPen = cellsPresenter.VerticalGridLinesPen;
-            Brush separatorBrush = cellsPresenter.SeparatorBrush;
+            Brush keySeparatorBrush = cellsPresenter.KeySeparatorBrush;
             Brush freezableAreaSeparatorBrush = cellsPresenter.FreezableAreaSeparatorBrush;
             Brush selectionForeground = cellsPresenter.SelectionForeground;
             if (!ParentGrid.IsSelectionActive)
@@ -309,9 +309,9 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 double cellWidth = rightEdge - leftEdge;
                 var column = visibleColumns[col];
 
-                if (column.IsSeparator) {
+                if (column.IsKeySeparator) {
                     context.DrawRectangle(
-                        separatorBrush, null,
+                        keySeparatorBrush, null,
                         new Rect(leftEdge, 0, cellWidth, height));
                 } else if (column.IsFreezableAreaSeparator) {
                     context.DrawRectangle(
@@ -348,7 +348,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
                     for (int col = firstNonFrozenColumn; col <= lastNonFrozenColumn; ++col) {
                         var column = visibleColumns[col];
-                        if (column.IsSeparator || column.IsFreezableAreaSeparator)
+                        if (column.IsKeySeparator || column.IsFreezableAreaSeparator)
                             continue;
                         if (!column.IsSafeToReadCellValuesFromUIThread)
                             continue;
@@ -408,7 +408,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
                         for (int col = firstVisibleColumn; col <= lastVisibleColumn; ++col) {
                             var column = visibleColumns[col];
-                            if (column.IsSeparator || column.IsFreezableAreaSeparator)
+                            if (column.IsKeySeparator || column.IsFreezableAreaSeparator)
                                 continue;
                             if (!column.IsSafeToReadCellValuesFromUIThread)
                                 continue;
