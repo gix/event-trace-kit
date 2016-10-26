@@ -15,7 +15,7 @@
     using Serialization;
     using Task = System.Threading.Tasks.Task;
 
-    [SerializedShape(typeof(Settings.TraceSession))]
+    [SerializedShape(typeof(Settings.Persistence.TraceSession))]
     public class TraceSessionSettingsViewModel : ViewModel
     {
         private ICommand newProviderCommand;

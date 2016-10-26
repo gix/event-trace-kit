@@ -39,7 +39,7 @@
                 IsVisible = true,
             });
 
-            var collection = new AdvViewModelPresetCollection();
+            var collection = new AdvmPresetCollection();
             collection.UserPresets.Add(preset);
 
             var stream = new MemoryStream();
@@ -50,9 +50,9 @@
         }
 
         [Fact]
-        public void SerializeGlobalSettings()
+        public void SerializeTraceSettingsViewModel()
         {
-            var settings = new GlobalSettings();
+            var settings = new TraceSettingsViewModel();
 
             var session = new TraceSessionSettingsViewModel();
             session.Id = new Guid("12133C31-FC77-4210-91A0-1EAFCE2B3537");

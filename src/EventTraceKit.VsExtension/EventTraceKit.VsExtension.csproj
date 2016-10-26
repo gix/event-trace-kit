@@ -195,7 +195,7 @@
     <Compile Include="Extensions\Extensions.cs" />
     <Compile Include="Extensions\XElementExtensions.cs" />
     <Compile Include="Formatting\FormatProviders.cs" />
-    <Compile Include="AdvViewModelPresetCollection.cs" />
+    <Compile Include="AdvmPresetCollection.cs" />
     <Compile Include="ListBoxDragPreview.cs" />
     <Compile Include="Controls\MultiDragListBox.cs" />
     <Compile Include="Controls\MultiDragListView.cs" />
@@ -215,7 +215,7 @@
     <Compile Include="PresetManager\PresetManagerColumnViewModel.cs" />
     <Compile Include="PresetManager\PresetManagerDesignTimeModel.cs" />
     <Compile Include="PresetManager\PresetManagerViewModel.cs" />
-    <Compile Include="PresetManager\ViewPresetsService.cs" />
+    <Compile Include="PresetManager\FileSettingsStorage.cs" />
     <Compile Include="PresetManager\PresetSaveAsDialog.xaml.cs">
       <DependentUpon>PresetSaveAsDialog.xaml</DependentUpon>
     </Compile>
@@ -237,6 +237,10 @@
     <Compile Include="Serialization\SafeXamlSchemaContext.cs" />
     <Compile Include="Serialization\TypeHelper.cs" />
     <Compile Include="Serialization\XamlSerializerExtensions.cs" />
+    <Compile Include="Settings\Persistence\GlobalSettings.cs" />
+    <Compile Include="Settings\Persistence\NamespaceMapping.cs" />
+    <Compile Include="Settings\Persistence\SettingsElement.cs" />
+    <Compile Include="Settings\Persistence\Tracing.cs" />
     <Compile Include="ValueChangedEventArgs.cs" />
     <Compile Include="ValueChangedEventHandler.cs" />
     <Compile Include="Windows\FreezableCustomSerializerAccessBase.cs" />
@@ -251,7 +255,7 @@
     <Compile Include="IOperationalModeProvider.cs" />
     <Compile Include="ItemEventHandler.cs" />
     <Compile Include="IWorkManager.cs" />
-    <Compile Include="Settings\Settings.cs" />
+    <Compile Include="Settings\Persistence\Views.cs" />
     <Compile Include="TraceEventDescriptorViewModel.cs" />
     <Compile Include="TraceLogStatsModel.cs" />
     <Compile Include="TraceSettingsViewModel.cs" />
@@ -454,6 +458,10 @@
     <EmbeddedResource Include="Controls\Primitives\Split.cur" />
     <Content Include="BindingPaths.pkgdef">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="$(OutDir)EventTraceKit.Logger.pdb">
+      <Link>EventTraceKit.Logger.pdb</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="Resources\Toolbar.png" />

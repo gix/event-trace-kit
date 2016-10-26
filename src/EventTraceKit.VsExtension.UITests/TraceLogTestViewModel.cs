@@ -15,7 +15,10 @@ namespace EventTraceKit.VsExtension.UITests
         private bool isRunning;
 
         public TraceLogTestViewModel()
-            : base(new StubSettingsService(), new OperationalModeProviderStub(), new AdvViewModelPresetCollection())
+            : base(new StubGlobalSettings(),
+                   new OperationalModeProviderStub(),
+                   new StubViewPresetService(),
+                   new StubTraceSettingsService())
         {
             StartCommand = new AsyncDelegateCommand(Start, CanStart);
             StopCommand = new AsyncDelegateCommand(Stop, CanStop);
@@ -35,8 +38,8 @@ namespace EventTraceKit.VsExtension.UITests
                 Name = "DX",
                 IsEnabled = true
             });
-            viewModel.SessionPresets.Add(session);
-            viewModel.SelectedSessionPreset = session;
+            viewModel.Sessions.Add(session);
+            viewModel.ActiveSession = session;
             sessionDescriptor = viewModel.GetDescriptor();
         }
 
@@ -113,9 +116,9 @@ namespace EventTraceKit.VsExtension.UITests
                 if (dialog.ShowDialog() != true)
                     return;
             } finally {
-                var selectedSession = viewModel.SelectedSessionPreset;
+                var selectedSession = viewModel.ActiveSession;
                 dialog.DataContext = null;
-                viewModel.SelectedSessionPreset = selectedSession;
+                viewModel.ActiveSession = selectedSession;
                 viewModel.DialogResult = null;
             }
 
@@ -129,18 +132,32 @@ namespace EventTraceKit.VsExtension.UITests
             dialog.ShowDialog();
         }
 
-        private class StubSettingsService : IEventTraceKitSettingsService
+        private class StubTraceSettingsService : ITraceSettingsService
         {
-            public GlobalSettings GlobalSettings { get; set; } = new GlobalSettings();
-            public SolutionSettings SolutionSettings { get; set; }
+            public IReadOnlyCollection<TraceSessionSettingsViewModel> Sessions { get; } =
+                new List<TraceSessionSettingsViewModel>();
+
+            public void Save(TraceSettingsViewModel sessions)
+            {
+            }
         }
 
-        private class StubSolutionFileGatherer : ISolutionFileGatherer
+        private class StubViewPresetService : IViewPresetService
         {
-            public IEnumerable<string> GetFiles()
+            public AdvmPresetCollection Presets { get; } =
+                new AdvmPresetCollection();
+
+            public event EventHandler<ExceptionFilterEventArgs> ExceptionFilter;
+
+            public void SaveToStorage()
             {
-                yield break;
             }
+        }
+
+        private class StubGlobalSettings : IGlobalSettings
+        {
+            public string ActiveViewPreset { get; set; }
+            public bool AutoLog { get; set; }
         }
 
         private sealed class OperationalModeProviderStub : IOperationalModeProvider

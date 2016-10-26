@@ -5,8 +5,9 @@ namespace EventTraceKit.VsExtension
     using Windows;
     using Extensions;
     using Serialization;
+    using Settings.Persistence;
 
-    [SerializedShape(typeof(Settings.ViewColumn))]
+    [SerializedShape(typeof(ViewColumn))]
     public class ColumnViewModelPreset :
         FreezableCustomSerializerAccessBase
         , IComparable<ColumnViewModelPreset>

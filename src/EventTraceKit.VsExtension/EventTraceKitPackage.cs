@@ -1,7 +1,6 @@
 ﻿namespace EventTraceKit.VsExtension
 {
     using System;
-    using System.Collections.ObjectModel;
     using System.ComponentModel.Composition;
     using System.ComponentModel.Design;
     using System.IO;
@@ -14,7 +13,6 @@
     using Microsoft.VisualStudio.Shell.Interop;
     using Microsoft.VisualStudio.Shell.Settings;
     using Serialization;
-    using Settings;
 
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [InstalledProductRegistration("#110", "#112", productId: "1.0", IconResourceID = 400)]
@@ -22,15 +20,17 @@
     [ProvideToolWindow(typeof(TraceLogPane))]
     [ProvideProfile(typeof(EventTraceKitProfileManager), "EventTraceKit", "General", 1001, 1002, false, DescriptionResourceID = 1003)]
     [Guid(PackageGuidString)]
-    public class EventTraceKitPackage : Package, IEventTraceKitSettingsService
+    public class EventTraceKitPackage : Package
     {
         public const string PackageGuidString = "7867DA46-69A8-40D7-8B8F-92B0DE8084D8";
 
         private IMenuCommandService menuService;
 
         private Lazy<TraceLogPane> traceLogPane = new Lazy<TraceLogPane>(() => null);
-        private GlobalSettings globalSettings;
+        private IGlobalSettings globalSettings;
         private IVsUIShell vsUiShell;
+        private ViewPresetService viewPresetService;
+        private TraceSettingsService traceSettingsService;
 
         public EventTraceKitPackage()
         {
@@ -40,39 +40,50 @@
         protected override void Initialize()
         {
             base.Initialize();
-
-            LoadSettings();
-
-            var vsShell = this.GetService<SVsShell, IVsShell>();
             vsUiShell = this.GetService<SVsUIShell, IVsUIShell>();
-            var dte = this.GetService<SDTE, DTE>();
-
-            dte.Events.DTEEvents.OnBeginShutdown += OnShutdown;
 
             AddMenuCommandHandlers();
 
-            var vpc = new ViewPresetsService(GetAppDataDirectory());
-            var viewPresetsService = new PresetCollectionManagerView(vpc);
-            viewPresetsService.ExceptionFilter += OnExceptionFilter;
+            //var componentModel = this.GetService<SComponentModel, IComponentModel>();
+            //var exportProvider = componentModel.DefaultExportProvider;
+            //globalSettings = exportProvider.GetExportedValue<IGlobalSettings>();
+            globalSettings = new GlobalSettings(CreateSettingsStore());
 
-            Func<IServiceProvider, TraceLogWindow> traceLogFactory = sp => {
-                var operationalModeProvider = new DteOperationalModeProvider(dte, this);
+            string appDataDirectory = GetAppDataDirectory();
+            var storage = new FileSettingsStorage(appDataDirectory);
+            viewPresetService = new ViewPresetService(storage);
+            viewPresetService.LoadFromStorage();
+            viewPresetService.ExceptionFilter += OnExceptionFilter;
 
-                var traceLog = new TraceLogWindowViewModel(
-                    this, operationalModeProvider, viewPresetsService.Presets, vsUiShell);
+            traceSettingsService = new TraceSettingsService(appDataDirectory);
+            traceSettingsService.Load();
 
-                var mcs = sp.GetService<IMenuCommandService>();
-                if (mcs != null)
-                    traceLog.Attach(mcs);
+            traceLogPane = new Lazy<TraceLogPane>(
+                () => new TraceLogPane(TraceLogWindowFactory, TraceLogWindowClose));
+        }
 
-                return new TraceLogWindow { DataContext = traceLog };
-            };
+        private TraceLogWindow TraceLogWindowFactory(IServiceProvider sp)
+        {
+            var dte = sp.GetService<SDTE, DTE>();
+            var operationalModeProvider = new DteOperationalModeProvider(dte, this);
 
-            Action onClose = () => {
-                viewPresetsService.SaveRepo();
-            };
+            var traceLog = new TraceLogWindowViewModel(
+                globalSettings,
+                operationalModeProvider,
+                viewPresetService,
+                traceSettingsService,
+                vsUiShell);
 
-            traceLogPane = new Lazy<TraceLogPane>(() => new TraceLogPane(traceLogFactory, onClose));
+            var commandService = sp.GetService<IMenuCommandService>();
+            if (commandService != null)
+                traceLog.AddCommandHandler(commandService);
+
+            return new TraceLogWindow { DataContext = traceLog };
+        }
+
+        private void TraceLogWindowClose()
+        {
+            viewPresetService.SaveToStorage();
         }
 
         private string GetAppDataDirectory()
@@ -92,44 +103,10 @@
                 OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST, OLEMSGICON.OLEMSGICON_CRITICAL, 0, out result);
         }
 
-        private void OnShutdown()
-        {
-            SaveSettings();
-        }
-
         private WritableSettingsStore CreateSettingsStore()
         {
             var mgr = new ShellSettingsManager(this);
             return mgr.GetWritableSettingsStore(SettingsScope.UserSettings);
-        }
-
-        private void LoadSettings()
-        {
-            var store = CreateSettingsStore();
-            if (!store.PropertyExists("EventTraceKit", "GlobalSettings")) {
-                GlobalSettings = new GlobalSettings();
-                return;
-            }
-
-            var serializer = new SettingsSerializer();
-            using (var stream = store.GetMemoryStream("EventTraceKit", "GlobalSettings"))
-                GlobalSettings = serializer.Load<GlobalSettings>(stream);
-        }
-
-        private void SaveSettings()
-        {
-            if (GlobalSettings == null)
-                return;
-
-            var settingsStore = CreateSettingsStore();
-            if (!settingsStore.CollectionExists("EventTraceKit"))
-                settingsStore.CreateCollection("EventTraceKit");
-
-            var serializer = new SettingsSerializer();
-            using (var stream = new MemoryStream()) {
-                serializer.Save(GlobalSettings, stream);
-                settingsStore.SetMemoryStream("EventTraceKit", "GlobalSettings", stream);
-            }
         }
 
         private void AddMenuCommandHandlers()
@@ -237,42 +214,50 @@
             }
         }
 
-        private const string EventTraceKitOptionKey = "ETK_D438FC6445E7BF9BDEA29EA3B07";
-
-        public GlobalSettings GlobalSettings
-        {
-            get { return globalSettings ?? (globalSettings = new GlobalSettings()); }
-            set { globalSettings = value; }
-        }
-
-        public SolutionSettings SolutionSettings { get; set; }
+        // {2C602C2D-4BA7-4C64-A5E1-DCE75CBBD530}
+        // as Base64: LSxgLKdLZEyl4dznXLvVMA==
+        private const string EventTraceKitOptionKey = "ETK_LSxgLKdLZEyl4dznXLvVMA==";
     }
 
-    public interface IEtkGlobalSettings
+    public interface IGlobalSettings
     {
+        string ActiveViewPreset { get; set; }
+        bool AutoLog { get; set; }
     }
 
-    [Export(typeof(IEtkGlobalSettings))]
-    internal sealed class EtkGlobalSettings : IEtkGlobalSettings
+    [Export(typeof(IGlobalSettings))]
+    internal sealed class GlobalSettings : IGlobalSettings
     {
-        private const string CollectionPath = "EventTraceKit";
-        private const string GlobalSettingsName = "GlobalSettings";
         private const string ErrorGetFormat = "Cannot get setting {0}";
         private const string ErrorSetFormat = "Cannot set setting {0}";
 
+        private const string CollectionPath = "EventTraceKit";
+        private const string ActiveViewPresetName = "ActiveViewPreset";
+        private const string AutoLogName = "AutoLog";
+
         private readonly WritableSettingsStore settingsStore;
-        private GlobalSettings globalSettings;
 
         [ImportingConstructor]
-        internal EtkGlobalSettings(
-            SVsServiceProvider vsServiceProvider)
+        internal GlobalSettings(SVsServiceProvider vsServiceProvider)
             : this(vsServiceProvider.GetWritableSettingsStore())
         {
         }
 
-        internal EtkGlobalSettings(WritableSettingsStore settingsStore)
+        internal GlobalSettings(WritableSettingsStore settingsStore)
         {
             this.settingsStore = settingsStore;
+        }
+
+        public string ActiveViewPreset
+        {
+            get { return GetString(ActiveViewPresetName, null); }
+            set { SetString(ActiveViewPresetName, value, null); }
+        }
+
+        public bool AutoLog
+        {
+            get { return GetBool(AutoLogName, false); }
+            set { SetBool(AutoLogName, value, false); }
         }
 
         private void Report(string format, Exception exception)
@@ -284,6 +269,32 @@
         {
             if (!settingsStore.CollectionExists(CollectionPath))
                 settingsStore.CreateCollection(CollectionPath);
+        }
+
+        private bool GetBool(string propertyName, bool defaultValue)
+        {
+            EnsureCollectionExists();
+            try {
+                if (!settingsStore.PropertyExists(CollectionPath, propertyName))
+                    return defaultValue;
+                return settingsStore.GetBoolean(CollectionPath, propertyName);
+            } catch (Exception ex) {
+                Report(string.Format(ErrorGetFormat, propertyName), ex);
+                return defaultValue;
+            }
+        }
+
+        private void SetBool(string propertyName, bool value, bool defaultValue)
+        {
+            EnsureCollectionExists();
+            try {
+                if (value == defaultValue)
+                    settingsStore.DeleteProperty(CollectionPath, propertyName);
+                else
+                    settingsStore.SetBoolean(CollectionPath, propertyName, value);
+            } catch (Exception ex) {
+                Report(string.Format(ErrorSetFormat, propertyName), ex);
+            }
         }
 
         private string GetString(string propertyName, string defaultValue)
@@ -299,11 +310,14 @@
             }
         }
 
-        private void SetString(string propertyName, string value)
+        private void SetString(string propertyName, string value, string defaultValue)
         {
             EnsureCollectionExists();
             try {
-                settingsStore.SetString(CollectionPath, propertyName, value);
+                if (value == defaultValue)
+                    settingsStore.DeleteProperty(CollectionPath, propertyName);
+                else
+                    settingsStore.SetString(CollectionPath, propertyName, value);
             } catch (Exception ex) {
                 Report(string.Format(ErrorSetFormat, propertyName), ex);
             }
@@ -336,37 +350,5 @@
                 Report(string.Format(ErrorSetFormat, propertyName), ex);
             }
         }
-
-        public GlobalSettings GlobalSettings
-        {
-            get { return globalSettings ?? (GlobalSettings = GetObject(GlobalSettingsName, () => new GlobalSettings())); }
-            set
-            {
-                globalSettings = value;
-                SetObject(GlobalSettingsName, value);
-            }
-        }
-    }
-
-    [SerializedShape(typeof(Settings.GlobalSettings))]
-    public class GlobalSettings
-    {
-        public Guid ActiveSession { get; set; }
-
-        public ObservableCollection<TraceSessionSettingsViewModel> Sessions { get; } =
-            new ObservableCollection<TraceSessionSettingsViewModel>();
-    }
-
-    public class SolutionSettings
-    {
-        public Guid ActiveSession { get; set; }
-
-        public Collection<TraceSession> Sessions { get; set; }
-    }
-
-    public interface IEventTraceKitSettingsService
-    {
-        GlobalSettings GlobalSettings { get; }
-        SolutionSettings SolutionSettings { get; }
     }
 }

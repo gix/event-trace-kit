@@ -3,7 +3,7 @@
     using System;
     using Serialization;
 
-    [SerializedShape(typeof(Settings.TraceEvent))]
+    [SerializedShape(typeof(Settings.Persistence.TraceEvent))]
     public class TraceEventDescriptorViewModel : ViewModel
     {
         private bool isEnabled;

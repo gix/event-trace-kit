@@ -68,12 +68,12 @@
 
         private void SwitchMode(VsOperationalMode newMode)
         {
-            package.OutputString(
-                VSConstants.OutputWindowPaneGuid.DebugPane_guid,
-                $"DteOperationalModeProvider.SwitchMode: {CurrentMode} -> {newMode}");
-
             if (CurrentMode == newMode)
                 return;
+
+            //package.OutputString(
+            //    VSConstants.OutputWindowPaneGuid.DebugPane_guid,
+            //    $"DteOperationalModeProvider.SwitchMode: {CurrentMode} -> {newMode}\n");
 
             CurrentMode = newMode;
             OperationalModeChanged?.Invoke(this, newMode);

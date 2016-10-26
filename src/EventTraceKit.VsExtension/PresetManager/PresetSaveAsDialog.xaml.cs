@@ -42,7 +42,7 @@ namespace EventTraceKit.VsExtension
                 x => x.Trim().Equals(trimmedName, StringComparison.OrdinalIgnoreCase));
         }
 
-        private PresetSaveAsDialog(AdvViewModelPresetCollection presetCollection)
+        private PresetSaveAsDialog(AdvmPresetCollection presetCollection)
         {
             if (presetCollection == null)
                 throw new ArgumentNullException(nameof(presetCollection));
@@ -53,7 +53,7 @@ namespace EventTraceKit.VsExtension
         }
 
         public static PresetSaveAsDialog ShowPresetSaveAsDialog(
-            AdvViewModelPresetCollection presetCollection)
+            AdvmPresetCollection presetCollection)
         {
             var dialog = new PresetSaveAsDialog(presetCollection);
             dialog.ShowDialog();

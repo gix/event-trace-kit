@@ -5,11 +5,13 @@
     using System.Collections.ObjectModel;
     using System.Threading.Tasks;
     using System.Windows.Input;
+    using Serialization;
 
+    [SerializedShape(typeof(Settings.Persistence.TraceSettings))]
     public class TraceSettingsViewModel : ViewModel
     {
         private bool? dialogResult;
-        private TraceSessionSettingsViewModel selectedSessionPreset;
+        private TraceSessionSettingsViewModel activeSession;
         private ICommand newPresetCommand;
         private ICommand copyPresetCommand;
         private ICommand deletePresetCommand;
@@ -36,36 +38,36 @@
         public ICommand DeletePresetCommand =>
             deletePresetCommand ?? (deletePresetCommand = new AsyncDelegateCommand(DeletePreset, CanDeletePreset));
 
-        public TraceSessionSettingsViewModel SelectedSessionPreset
+        public TraceSessionSettingsViewModel ActiveSession
         {
-            get { return selectedSessionPreset; }
-            set { SetProperty(ref selectedSessionPreset, value); }
+            get { return activeSession; }
+            set { SetProperty(ref activeSession, value); }
         }
 
-        public ObservableCollection<TraceSessionSettingsViewModel> SessionPresets { get; }
+        public ObservableCollection<TraceSessionSettingsViewModel> Sessions { get; }
             = new ObservableCollection<TraceSessionSettingsViewModel>();
 
         private Task NewPreset()
         {
             var newPreset = new TraceSessionSettingsViewModel();
             newPreset.Name = "Unnamed";
-            SessionPresets.Add(newPreset);
-            SelectedSessionPreset = newPreset;
+            Sessions.Add(newPreset);
+            ActiveSession = newPreset;
             return Task.CompletedTask;
         }
 
         private bool CanCopyPreset()
         {
-            return SelectedSessionPreset != null;
+            return ActiveSession != null;
         }
 
         private Task CopyPreset()
         {
-            if (SelectedSessionPreset != null) {
-                var newPreset = SelectedSessionPreset.DeepClone();
-                newPreset.Name = "Copy of " + SelectedSessionPreset.Name;
-                SessionPresets.Add(newPreset);
-                SelectedSessionPreset = newPreset;
+            if (ActiveSession != null) {
+                var newPreset = ActiveSession.DeepClone();
+                newPreset.Name = "Copy of " + ActiveSession.Name;
+                Sessions.Add(newPreset);
+                ActiveSession = newPreset;
             }
 
             return Task.CompletedTask;
@@ -73,14 +75,14 @@
 
         private bool CanDeletePreset()
         {
-            return SelectedSessionPreset != null;
+            return ActiveSession != null;
         }
 
         private Task DeletePreset()
         {
-            if (SelectedSessionPreset != null) {
-                SessionPresets.Remove(SelectedSessionPreset);
-                SelectedSessionPreset = null;
+            if (ActiveSession != null) {
+                Sessions.Remove(ActiveSession);
+                ActiveSession = null;
             }
 
             return Task.CompletedTask;
@@ -94,12 +96,12 @@
 
         public TraceSessionDescriptor GetDescriptor()
         {
-            return SelectedSessionPreset?.GetDescriptor();
+            return ActiveSession?.GetDescriptor();
         }
 
         public Dictionary<EventKey, string> GetEventSymbols()
         {
-            return SelectedSessionPreset?.GetEventSymbols() ?? new Dictionary<EventKey, string>();
+            return ActiveSession?.GetEventSymbols() ?? new Dictionary<EventKey, string>();
         }
     }
 
@@ -129,8 +131,8 @@
             preset.Providers.Add(provider);
             preset.SelectedProvider = provider;
 
-            SessionPresets.Add(preset);
-            SelectedSessionPreset = preset;
+            Sessions.Add(preset);
+            ActiveSession = preset;
         }
     }
 }

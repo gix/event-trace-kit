@@ -17,7 +17,9 @@
   MinHeight="450"
   Width="900"
   Height="600"
-  WindowStartupLocation="CenterOwner" ResizeMode="CanResize" ShowInTaskbar="False"
+  WindowStartupLocation="CenterOwner"
+  ResizeMode="CanResize"
+  ShowInTaskbar="False"
   Title="{Binding DisplayName, StringFormat='{}{0} View Editor'}">
   <etkvs:ThemedDialogWindow.Resources>
     <sys:Double x:Key="Double0P125">0.125</sys:Double>
@@ -335,11 +337,11 @@
                         DisplayMemberPath="Description"
                         ItemsSource="{Binding SupportedFormats}"
                         SelectedItem="{Binding CellFormat, UpdateSourceTrigger=PropertyChanged}">
-                <ItemsControl.ItemContainerStyle>
-                  <Style TargetType="{x:Type ComboBoxItem}">
+                <!--<ItemsControl.ItemContainerStyle>
+                  <Style TargetType="{x:Type ComboBoxItem}" BasedOn="{StaticResource {x:Type ComboBoxItem}}">
                     <Setter Property="AutomationProperties.Name" Value="{Binding Description, Mode=OneTime}"/>
                   </Style>
-                </ItemsControl.ItemContainerStyle>
+                </ItemsControl.ItemContainerStyle>-->
               </ComboBox>
             </Grid>
           </StackPanel>

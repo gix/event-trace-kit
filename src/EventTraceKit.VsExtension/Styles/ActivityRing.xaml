@@ -34,7 +34,7 @@
                     <DoubleAnimation
                         Storyboard.TargetName="Rotation"
                         Storyboard.TargetProperty="Angle"
-                        From="0" To="360" Duration="0:0:2"
+                        From="0" To="360" Duration="0:0:4"
                         RepeatBehavior="Forever"/>
                   </Storyboard>
                 </VisualState>

@@ -26,10 +26,10 @@
               <Button Command="ApplicationCommands.SelectAll" Focusable="False"
                       Style="{DynamicResource {ComponentResourceKey ResourceId=DataGridSelectAllButtonStyle, TypeInTargetAssembly={x:Type DataGrid}}}"
                       Width="{Binding CellsPanelHorizontalOffset, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type DataGrid}}}"
-                      Visibility="{Binding HeadersVisibility, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type DataGrid}}, ConverterParameter={x:Static DataGridHeadersVisibility.All}}">
+                      Visibility="{Binding HeadersVisibility, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type DataGrid}}, Converter={x:Static DataGrid.HeadersVisibilityConverter}, ConverterParameter={x:Static DataGridHeadersVisibility.All}}">
               </Button>
               <DataGridColumnHeadersPresenter x:Name="PART_ColumnHeadersPresenter" Grid.Column="1"
-                                              Visibility="{Binding HeadersVisibility, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type DataGrid}}, ConverterParameter={x:Static DataGridHeadersVisibility.Column}}"/>
+                                              Visibility="{Binding HeadersVisibility, RelativeSource={RelativeSource FindAncestor, AncestorLevel=1, AncestorType={x:Type DataGrid}}, Converter={x:Static DataGrid.HeadersVisibilityConverter}, ConverterParameter={x:Static DataGridHeadersVisibility.Column}}"/>
               <ScrollContentPresenter x:Name="PART_ScrollContentPresenter"
                                       CanContentScroll="{TemplateBinding CanContentScroll}"
                                       CanHorizontallyScroll="False"

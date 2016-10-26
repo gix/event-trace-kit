@@ -679,14 +679,14 @@
         {
             if (IsCurrentPresetModified) {
                 HdvViewModel.PresetCollection.DeletePersistedPresetByName(currentPreset.Name);
-                currentPreset = HdvViewModel.PresetCollection.TryGetPresetByName(currentPreset.Name);
+                currentPreset = HdvViewModel.PresetCollection.TryGetUnmodifiedPresetByName(currentPreset.Name);
                 RefreshFromPreset(currentPreset);
             }
         }
 
         public void SaveCurrentPresetAs(string newPresetName)
         {
-            AdvViewModelPresetCollection presetCollection = HdvViewModel?.PresetCollection;
+            AdvmPresetCollection presetCollection = HdvViewModel?.PresetCollection;
             if (presetCollection == null)
                 return;
 

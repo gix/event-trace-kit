@@ -9,7 +9,7 @@ namespace EventTraceKit.VsExtension
     using Collections;
     using Serialization;
 
-    [SerializedShape(typeof(Settings.TraceProvider))]
+    [SerializedShape(typeof(Settings.Persistence.TraceProvider))]
     public class TraceProviderDescriptorViewModel : ViewModel
     {
         private Guid id;

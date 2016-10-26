@@ -33,15 +33,15 @@
             if (package == null)
                 return;
 
-            string xml;
-            if (reader.ReadSettingXmlAsString("GlobalSettings", out xml) != VSConstants.S_OK)
-                return;
+            //string xml;
+            //if (reader.ReadSettingXmlAsString("GlobalSettings", out xml) != VSConstants.S_OK)
+            //    return;
 
-            var serializer = new SettingsSerializer();
-            try {
-                package.GlobalSettings = serializer.LoadFromString<GlobalSettings>(xml);
-            } catch {
-            }
+            //var serializer = new SettingsSerializer();
+            //try {
+            //    package.GlobalSettings = serializer.LoadFromString<GlobalSettings>(xml);
+            //} catch {
+            //}
         }
 
         public void ResetSettings()
@@ -54,13 +54,13 @@
 
         public void SaveSettingsToXml(IVsSettingsWriter writer)
         {
-            var settings = package?.GlobalSettings;
-            if (settings == null)
-                return;
+            //var settings = package?.GlobalSettings;
+            //if (settings == null)
+            //    return;
 
-            var serializer = new SettingsSerializer();
-            var xml = serializer.SaveToString(settings);
-            writer.WriteSettingXmlFromString(xml);
+            //var serializer = new SettingsSerializer();
+            //var xml = serializer.SaveToString(settings);
+            //writer.WriteSettingXmlFromString(xml);
         }
     }
 }

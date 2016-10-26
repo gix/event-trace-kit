@@ -10,8 +10,8 @@ namespace EventTraceKit.VsExtension
     using Extensions;
     using Serialization;
 
-    [SerializedShape(typeof(Settings.ViewPresets))]
-    public class AdvViewModelPresetCollection : FreezableCustomSerializerAccessBase
+    [SerializedShape(typeof(Settings.Persistence.ViewPresets))]
+    public class AdvmPresetCollection : FreezableCustomSerializerAccessBase
     {
         private int deferChangeNotificationCount;
 
@@ -19,10 +19,10 @@ namespace EventTraceKit.VsExtension
             DependencyProperty.RegisterReadOnly(
                 nameof(UserPresets),
                 typeof(FreezableCollection<AsyncDataViewModelPreset>),
-                typeof(AdvViewModelPresetCollection),
+                typeof(AdvmPresetCollection),
                 new PropertyMetadata(
                     null,
-                    (s, e) => ((AdvViewModelPresetCollection)s).UserPresetsPropertyChanged(e)));
+                    (s, e) => ((AdvmPresetCollection)s).UserPresetsPropertyChanged(e)));
 
         public static readonly DependencyProperty UserPresetsProperty =
             UserPresetsPropertyKey.DependencyProperty;
@@ -31,10 +31,10 @@ namespace EventTraceKit.VsExtension
             DependencyProperty.RegisterReadOnly(
                 nameof(PersistedPresets),
                 typeof(FreezableCollection<AsyncDataViewModelPreset>),
-                typeof(AdvViewModelPresetCollection),
+                typeof(AdvmPresetCollection),
                 new PropertyMetadata(
                     null,
-                    (s, e) => ((AdvViewModelPresetCollection)s).PersistedPresetsPropertyChanged(e)));
+                    (s, e) => ((AdvmPresetCollection)s).PersistedPresetsPropertyChanged(e)));
 
         public static readonly DependencyProperty PersistedPresetsProperty =
             PersistedPresetsPropertyKey.DependencyProperty;
@@ -43,15 +43,15 @@ namespace EventTraceKit.VsExtension
             DependencyProperty.RegisterReadOnly(
                 nameof(BuiltInPresets),
                 typeof(FreezableCollection<AsyncDataViewModelPreset>),
-                typeof(AdvViewModelPresetCollection),
+                typeof(AdvmPresetCollection),
                 new PropertyMetadata(
                     null,
-                    (s, e) => ((AdvViewModelPresetCollection)s).BuiltInPresetsPropertyChanged(e)));
+                    (s, e) => ((AdvmPresetCollection)s).BuiltInPresetsPropertyChanged(e)));
 
         public static readonly DependencyProperty BuiltInPresetsProperty =
             BuiltInPresetsPropertyKey.DependencyProperty;
 
-        public AdvViewModelPresetCollection()
+        public AdvmPresetCollection()
         {
             BuiltInPresets = new FreezableCollection<AsyncDataViewModelPreset>();
             UserPresets = new FreezableCollection<AsyncDataViewModelPreset>();
@@ -85,13 +85,13 @@ namespace EventTraceKit.VsExtension
 
         protected override Freezable CreateInstanceCore()
         {
-            return new AdvViewModelPresetCollection();
+            return new AdvmPresetCollection();
         }
 
         protected override void CloneCore(Freezable sourceFreezable)
         {
             base.CloneCore(sourceFreezable);
-            var source = (AdvViewModelPresetCollection)sourceFreezable;
+            var source = (AdvmPresetCollection)sourceFreezable;
             using (DeferChangeNotifications()) {
                 BuiltInPresets.AddRange(source.BuiltInPresets);
                 UserPresets.AddRange(source.UserPresets);
@@ -141,9 +141,9 @@ namespace EventTraceKit.VsExtension
                 SetPersistedPreset(preset);
         }
 
-        public AsyncDataViewModelPreset TryGetPresetByName(string name)
+        public AsyncDataViewModelPreset TryGetUnmodifiedPresetByName(string name)
         {
-            return TryGetPresetByName(name, EnumerateAllPresets());
+            return TryGetUnmodifiedPresetByName(name, EnumerateAllPresets());
         }
 
         public bool DeletePersistedPresetByName(string name)
@@ -163,7 +163,7 @@ namespace EventTraceKit.VsExtension
             if (preset == null)
                 throw new ArgumentNullException(nameof(preset));
 
-            var other = TryGetPresetByName(preset.Name);
+            var other = TryGetUnmodifiedPresetByName(preset.Name);
             if (other == null)
                 return false;
 
@@ -184,12 +184,12 @@ namespace EventTraceKit.VsExtension
 
         public AsyncDataViewModelPreset TryGetBuiltInPresetByName(string name)
         {
-            return TryGetPresetByName(name, BuiltInPresets);
+            return TryGetUnmodifiedPresetByName(name, BuiltInPresets);
         }
 
         public AsyncDataViewModelPreset TryGetUserPresetByName(string name)
         {
-            return TryGetPresetByName(name, UserPresets);
+            return TryGetUnmodifiedPresetByName(name, UserPresets);
         }
 
         public void SetUserPreset(AsyncDataViewModelPreset preset)
@@ -209,7 +209,7 @@ namespace EventTraceKit.VsExtension
 
         public AsyncDataViewModelPreset TryGetPersistedPresetByName(string name)
         {
-            return TryGetPresetByName(name, PersistedPresets);
+            return TryGetUnmodifiedPresetByName(name, PersistedPresets);
         }
 
         public void SetPersistedPreset(AsyncDataViewModelPreset preset)
@@ -231,7 +231,7 @@ namespace EventTraceKit.VsExtension
         {
             return
                 TryGetPersistedPresetByName(presetName) ??
-                TryGetPresetByName(presetName);
+                TryGetUnmodifiedPresetByName(presetName);
         }
 
         public void SavePreset(
@@ -268,7 +268,7 @@ namespace EventTraceKit.VsExtension
             return new DeferChangeNotificationsScope(this);
         }
 
-        private static AsyncDataViewModelPreset TryGetPresetByName(
+        private static AsyncDataViewModelPreset TryGetUnmodifiedPresetByName(
             string name, IEnumerable<AsyncDataViewModelPreset> presets)
         {
             return presets.FirstOrDefault(p => p.Name == name);
@@ -368,9 +368,9 @@ namespace EventTraceKit.VsExtension
 
         private sealed class DeferChangeNotificationsScope : IDisposable
         {
-            private readonly AdvViewModelPresetCollection collection;
+            private readonly AdvmPresetCollection collection;
 
-            public DeferChangeNotificationsScope(AdvViewModelPresetCollection collection)
+            public DeferChangeNotificationsScope(AdvmPresetCollection collection)
             {
                 this.collection = collection;
                 this.collection.BeginDeferChangeNotifications();
@@ -396,7 +396,7 @@ namespace EventTraceKit.VsExtension
     public static class AdvViewModelPresetCollectionExtensions
     {
         public static void MergeInBuiltInPresets(
-            this AdvViewModelPresetCollection target, AdvViewModelPresetCollection source)
+            this AdvmPresetCollection target, AdvmPresetCollection source)
         {
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
@@ -406,7 +406,7 @@ namespace EventTraceKit.VsExtension
         }
 
         public static void MergeInUserPresets(
-            this AdvViewModelPresetCollection target, AdvViewModelPresetCollection source)
+            this AdvmPresetCollection target, AdvmPresetCollection source)
         {
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
@@ -416,7 +416,7 @@ namespace EventTraceKit.VsExtension
         }
 
         public static void MergeInPersistedPresets(
-            this AdvViewModelPresetCollection target, AdvViewModelPresetCollection source)
+            this AdvmPresetCollection target, AdvmPresetCollection source)
         {
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
@@ -426,7 +426,7 @@ namespace EventTraceKit.VsExtension
         }
 
         public static void MergeInUserPreset(
-            this AdvViewModelPresetCollection target, AsyncDataViewModelPreset preset)
+            this AdvmPresetCollection target, AsyncDataViewModelPreset preset)
         {
             if (preset == null)
                 throw new ArgumentNullException(nameof(preset));
@@ -436,7 +436,7 @@ namespace EventTraceKit.VsExtension
         }
 
         public static void MergeInPersistedPreset(
-            this AdvViewModelPresetCollection target, AsyncDataViewModelPreset preset)
+            this AdvmPresetCollection target, AsyncDataViewModelPreset preset)
         {
             if (preset == null)
                 throw new ArgumentNullException(nameof(preset));

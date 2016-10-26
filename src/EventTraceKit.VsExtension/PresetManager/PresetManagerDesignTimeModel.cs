@@ -37,7 +37,7 @@ namespace EventTraceKit.VsExtension
             var dataView = new DataView(table, new DefaultFormatProviderSource());
             return new AsyncDataViewModel(
                 new WorkManager(Dispatcher.CurrentDispatcher), 
-                dataView, template, template, new AdvViewModelPresetCollection());
+                dataView, template, template, new AdvmPresetCollection());
         }
 
         private static void AddColumn(

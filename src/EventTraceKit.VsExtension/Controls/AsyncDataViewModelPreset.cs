@@ -9,8 +9,9 @@
     using Windows;
     using Extensions;
     using Serialization;
+    using Settings.Persistence;
 
-    [SerializedShape(typeof(Settings.ViewPreset))]
+    [SerializedShape(typeof(ViewPreset))]
     public sealed class AsyncDataViewModelPreset
         : FreezableCustomSerializerAccessBase
         , IComparable<AsyncDataViewModelPreset>
@@ -120,7 +121,7 @@
                 typeof(AsyncDataViewModelPreset),
                 PropertyMetadataUtils.DefaultNull);
 
-        [Serialize(serializedName: nameof(Settings.ViewPreset.Columns))]
+        [Serialize(serializedName: nameof(ViewPreset.Columns))]
         public FreezableCollection<ColumnViewModelPreset> ConfigurableColumns
         {
             get

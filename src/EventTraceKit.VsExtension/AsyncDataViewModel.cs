@@ -30,7 +30,7 @@ namespace EventTraceKit.VsExtension
             IDataView dataView,
             AsyncDataViewModelPreset templatePreset,
             AsyncDataViewModelPreset defaultPreset,
-            AdvViewModelPresetCollection presetCollection)
+            AdvmPresetCollection presetCollection)
         {
             if (workManager == null)
                 throw new ArgumentNullException(nameof(workManager));
@@ -66,16 +66,16 @@ namespace EventTraceKit.VsExtension
         private static readonly DependencyPropertyKey PresetCollectionPropertyKey =
             DependencyProperty.RegisterReadOnly(
                 nameof(PresetCollection),
-                typeof(AdvViewModelPresetCollection),
+                typeof(AdvmPresetCollection),
                 typeof(AsyncDataViewModel),
                 PropertyMetadataUtils.DefaultNull);
 
         public static readonly DependencyProperty PresetCollectionProperty =
             PresetCollectionPropertyKey.DependencyProperty;
 
-        public AdvViewModelPresetCollection PresetCollection
+        public AdvmPresetCollection PresetCollection
         {
-            get { return (AdvViewModelPresetCollection)GetValue(PresetCollectionProperty); }
+            get { return (AdvmPresetCollection)GetValue(PresetCollectionProperty); }
             private set { SetValue(PresetCollectionPropertyKey, value); }
         }
 

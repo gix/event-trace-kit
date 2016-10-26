@@ -17,8 +17,9 @@ namespace EventTraceKit.VsExtension
 
     public class TraceLogWindowViewModel : ViewModel, IEventInfoSource
     {
-        private readonly IEventTraceKitSettingsService settings;
-        private readonly AdvViewModelPresetCollection presetCollection;
+        private readonly IGlobalSettings settings;
+        private readonly IViewPresetService viewPresetService;
+        private readonly ITraceSettingsService traceSettingsService;
         private readonly IVsUIShell uiShell;
         private readonly DispatcherTimer updateStatisticsTimer;
         protected TraceSessionDescriptor sessionDescriptor = new TraceSessionDescriptor();
@@ -40,13 +41,15 @@ namespace EventTraceKit.VsExtension
         private readonly EventSymbolSource eventSymbolSource = new EventSymbolSource();
 
         public TraceLogWindowViewModel(
-            IEventTraceKitSettingsService settings,
+            IGlobalSettings settings,
             IOperationalModeProvider modeProvider,
-            AdvViewModelPresetCollection presetCollection,
+            IViewPresetService viewPresetService,
+            ITraceSettingsService traceSettingsService,
             IVsUIShell uiShell = null)
         {
             this.settings = settings;
-            this.presetCollection = presetCollection;
+            this.viewPresetService = viewPresetService;
+            this.traceSettingsService = traceSettingsService;
             this.uiShell = uiShell;
 
             if (modeProvider != null)
@@ -57,6 +60,7 @@ namespace EventTraceKit.VsExtension
             var templatePreset = tableTuple.Item2;
 
             var defaultPreset = GenericEventsViewModelSource.CreateDefaultPreset();
+            var presetCollection = viewPresetService.Presets;
             presetCollection.BuiltInPresets.Add(defaultPreset);
 
             var preset = presetCollection.TryGetPersistedPresetByName(defaultPreset.Name);
@@ -67,12 +71,13 @@ namespace EventTraceKit.VsExtension
             AdvModel = new AsyncDataViewModel(
                 new WorkManager(Dispatcher.CurrentDispatcher),
                 EventsDataView, templatePreset, preset, presetCollection);
+            var activePreset = presetCollection.TryGetCurrentPresetByName(settings.ActiveViewPreset);
+            if (activePreset != null)
+                AdvModel.Preset = activePreset;
 
             GridModel = AdvModel.GridViewModel;
 
-            AdvModel.PresetChanged += (s, e) => {
-                uiShell?.UpdateCommandUI(0);
-            };
+            AdvModel.PresetChanged += OnViewPresetChanged;
 
             syncCtx = new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher);
             SynchronizationContext.SetSynchronizationContext(syncCtx);
@@ -81,11 +86,18 @@ namespace EventTraceKit.VsExtension
 
             Statistics = new TraceLogStatsModel();
             ShowStatistics = true;
-            AutoLog = true;
+            AutoLog = settings.AutoLog;
 
             updateStatisticsTimer = new DispatcherTimer(DispatcherPriority.Background);
             updateStatisticsTimer.Interval = TimeSpan.FromSeconds(1);
             updateStatisticsTimer.Tick += (s, a) => UpdateStats();
+        }
+
+        private void OnViewPresetChanged(
+            object sender, ValueChangedEventArgs<AsyncDataViewModelPreset> args)
+        {
+            settings.ActiveViewPreset = args.NewValue?.Name;
+            uiShell?.UpdateCommandUI(0);
         }
 
         public class TraceEventsView : DataView
@@ -220,7 +232,7 @@ namespace EventTraceKit.VsExtension
         {
             if (settingsViewModel == null) {
                 settingsViewModel = new TraceSettingsViewModel();
-                settingsViewModel.SessionPresets.AddRange(settings.GlobalSettings.Sessions);
+                settingsViewModel.Sessions.AddRange(traceSettingsService.Sessions);
             }
 
             var window = new TraceSessionSettingsWindow();
@@ -229,22 +241,22 @@ namespace EventTraceKit.VsExtension
                 if (window.ShowModal() != true)
                     return;
             } finally {
-                var selectedPreset = settingsViewModel.SelectedSessionPreset;
+                var selectedPreset = settingsViewModel.ActiveSession;
                 window.DataContext = null;
-                settingsViewModel.SelectedSessionPreset = selectedPreset;
+                settingsViewModel.ActiveSession = selectedPreset;
                 settingsViewModel.DialogResult = null;
             }
 
             sessionDescriptor = settingsViewModel.GetDescriptor();
             eventSymbolSource.Update(settingsViewModel.GetEventSymbols());
 
-            settings.GlobalSettings.Sessions.Clear();
-            settings.GlobalSettings.Sessions.AddRange(settingsViewModel.SessionPresets);
+            traceSettingsService.Save(settingsViewModel);
         }
 
         private void OpenViewEditor()
         {
             PresetManagerDialog.ShowPresetManagerDialog(AdvModel);
+            viewPresetService.SaveToStorage();
         }
 
         private void UpdateStats()
@@ -276,7 +288,7 @@ namespace EventTraceKit.VsExtension
                 $"{Statistics.RealTimeBuffersLost} real-time buffers lost)";
         }
 
-        public void Attach(IMenuCommandService commandService)
+        public void AddCommandHandler(IMenuCommandService commandService)
         {
             var id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidCaptureLog);
             commandService.AddCommand(new OleMenuCommand(
@@ -318,6 +330,7 @@ namespace EventTraceKit.VsExtension
         private void OnToggleAutoLog(object sender, EventArgs e)
         {
             AutoLog = !AutoLog;
+            settings.AutoLog = AutoLog;
         }
 
         private void OnViewPresetCombo(object sender, EventArgs args)
@@ -390,7 +403,7 @@ namespace EventTraceKit.VsExtension
     public class TraceLogWindowDesignTimeModel : TraceLogWindowViewModel
     {
         public TraceLogWindowDesignTimeModel()
-            : base(null, null, null)
+            : base(null, null, null, null)
         {
             Statistics.TotalEvents = 1429;
             Statistics.EventsLost = 30;

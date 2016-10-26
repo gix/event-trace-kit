@@ -124,7 +124,7 @@
 
         private AsyncDataViewModel CreateModel(out DataView dataView)
         {
-            var presetCollection = new AdvViewModelPresetCollection();
+            var presetCollection = new AdvmPresetCollection();
             var dataTable = new DataTable("Test");
             var templatePreset = new AsyncDataViewModelPreset();
             templatePreset.Name = "Default";
