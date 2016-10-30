@@ -220,10 +220,7 @@ namespace InstrManifestCompiler.Collections
         ///   An <see cref="IList{T}"/> containing the keys of the object that
         ///   implements <see cref="IOrderedDictionary{TKey,TValue}"/>.
         /// </returns>
-        public IList<TKey> Keys
-        {
-            get { return new KeyCollection(this); }
-        }
+        public IList<TKey> Keys => new KeyCollection(this);
 
         /// <summary>
         ///   Gets an <see cref="IList{T}"/> containing the values in the
@@ -233,10 +230,7 @@ namespace InstrManifestCompiler.Collections
         ///   An <see cref="IList{T}"/> containing the values in the object that
         ///   implements <see cref="IOrderedDictionary{TKey,TValue}"/>.
         /// </returns>
-        public IList<TValue> Values
-        {
-            get { return new ValueCollection(this); }
-        }
+        public IList<TValue> Values => new ValueCollection(this);
 
         /// <summary>
         ///   Gets the element at the specified index.
@@ -346,10 +340,7 @@ namespace InstrManifestCompiler.Collections
         /// <returns>
         ///   The number of elements contained in the <see cref="ICollection{T}"/>.
         /// </returns>
-        public int Count
-        {
-            get { return objectsArray.Count; }
-        }
+        public int Count => objectsArray.Count;
 
         /// <summary>
         ///   Gets an <see cref="ICollection{T}"/> containing the keys of the
@@ -359,10 +350,7 @@ namespace InstrManifestCompiler.Collections
         ///   An <see cref="ICollection{T}"/> containing the keys of the object
         ///   that implements <see cref="IDictionary{TKey,TValue}"/>.
         /// </returns>
-        ICollection<TKey> IDictionary<TKey, TValue>.Keys
-        {
-            get { return new KeyCollection(this); }
-        }
+        ICollection<TKey> IDictionary<TKey, TValue>.Keys => new KeyCollection(this);
 
         /// <summary>
         ///   Gets an <see cref="ICollection{T}"/> containing the values in the
@@ -372,10 +360,7 @@ namespace InstrManifestCompiler.Collections
         ///   An <see cref="ICollection{T}"/> containing the values in the object
         ///   that implements <see cref="IDictionary{TKey,TValue}"/>.
         /// </returns>
-        ICollection<TValue> IDictionary<TKey, TValue>.Values
-        {
-            get { return new ValueCollection(this); }
-        }
+        ICollection<TValue> IDictionary<TKey, TValue>.Values => new ValueCollection(this);
 
         /// <summary>
         ///   Gets or sets the element with the specified key.
@@ -460,7 +445,7 @@ namespace InstrManifestCompiler.Collections
         public bool TryGetValue(TKey key, out TValue value)
         {
             if (key == null)
-                throw new ArgumentNullException("key");
+                throw new ArgumentNullException(nameof(key));
 
             bool ret = objectsTable.TryGetValue(key, out value);
             Contract.Assume(ret == ContainsKey(key));
@@ -526,7 +511,7 @@ namespace InstrManifestCompiler.Collections
         public bool Remove(TKey key)
         {
             if (key == null)
-                throw new ArgumentNullException("key");
+                throw new ArgumentNullException(nameof(key));
 
             int index = IndexOfKey(key);
             if (index < 0)
@@ -541,36 +526,23 @@ namespace InstrManifestCompiler.Collections
 
         #region Implementation of IDictionary
 
-        bool IDictionary.IsFixedSize
-        {
-            get { return false; }
-        }
+        bool IDictionary.IsFixedSize => false;
 
-        bool IDictionary.IsReadOnly
-        {
-            get { return false; }
-        }
+        bool IDictionary.IsReadOnly => false;
 
-        ICollection IDictionary.Keys
-        {
-            get { return new KeyCollection(this); }
-        }
+        ICollection IDictionary.Keys => new KeyCollection(this);
 
-        ICollection IDictionary.Values
-        {
-            get { return new ValueCollection(this); }
-        }
+        ICollection IDictionary.Values => new ValueCollection(this);
 
         object IDictionary.this[object key]
         {
             get { return ((IDictionary)objectsTable)[key]; }
             set
             {
-                if (key == null) {
-                    throw new ArgumentNullException("key");
-                }
+                if (key == null)
+                    throw new ArgumentNullException(nameof(key));
 
-                ThrowIfIllegalNull<TValue>(value, "value");
+                ThrowIfIllegalNull<TValue>(value, nameof(value));
 
                 try {
                     var realKey = (TKey)key;
@@ -661,7 +633,7 @@ namespace InstrManifestCompiler.Collections
         {
             // Requires manual checking because IOrderedDictionary has no contract.
             if (index < 0 || index >= Count)
-                throw new ArgumentOutOfRangeException("index");
+                throw new ArgumentOutOfRangeException(nameof(index));
 
             KeyValuePair<TKey, TValue> entry = objectsArray[index];
             objectsArray.RemoveAt(index);
@@ -672,10 +644,7 @@ namespace InstrManifestCompiler.Collections
 
         #region Implementation of ICollection
 
-        bool ICollection.IsSynchronized
-        {
-            get { return false; }
-        }
+        bool ICollection.IsSynchronized => false;
 
         object ICollection.SyncRoot
         {
@@ -727,10 +696,7 @@ namespace InstrManifestCompiler.Collections
 
         #region Implementation of ICollection<KeyValuePair<TKey, TValue>>
 
-        bool ICollection<KeyValuePair<TKey, TValue>>.IsReadOnly
-        {
-            get { return false; }
-        }
+        bool ICollection<KeyValuePair<TKey, TValue>>.IsReadOnly => false;
 
         void ICollection<KeyValuePair<TKey, TValue>>.Add(KeyValuePair<TKey, TValue> item)
         {
@@ -865,14 +831,14 @@ namespace InstrManifestCompiler.Collections
         {
             string message = string.Format(
                 CultureInfo.CurrentCulture, Strings.Arg_WrongType, key, targetType);
-            throw new ArgumentException(message, "key");
+            throw new ArgumentException(message, nameof(key));
         }
 
         private static void ThrowWrongValueTypeArgumentException(object value, Type targetType)
         {
             string message = string.Format(
                 CultureInfo.CurrentCulture, Strings.Arg_WrongType, value, targetType);
-            throw new ArgumentException(message, "value");
+            throw new ArgumentException(message, nameof(value));
         }
 
         [ContractInvariantMethod]
@@ -890,20 +856,11 @@ namespace InstrManifestCompiler.Collections
                 this.enumerator = enumerator;
             }
 
-            public object Current
-            {
-                get { return Entry; }
-            }
+            public object Current => Entry;
 
-            public object Key
-            {
-                get { return enumerator.Current.Key; }
-            }
+            public object Key => enumerator.Current.Key;
 
-            public object Value
-            {
-                get { return enumerator.Current.Value; }
-            }
+            public object Value => enumerator.Current.Value;
 
             public DictionaryEntry Entry
             {
@@ -935,30 +892,18 @@ namespace InstrManifestCompiler.Collections
             public KeyCollection(OrderedDictionary<TKey, TValue> dictionary)
             {
                 if (dictionary == null)
-                    throw new ArgumentNullException("dictionary");
+                    throw new ArgumentNullException(nameof(dictionary));
 
                 this.dictionary = dictionary;
             }
 
-            public int Count
-            {
-                get { return dictionary.Count; }
-            }
+            public int Count => dictionary.Count;
 
-            bool ICollection<TKey>.IsReadOnly
-            {
-                get { return true; }
-            }
+            bool ICollection<TKey>.IsReadOnly => true;
 
-            bool ICollection.IsSynchronized
-            {
-                get { return false; }
-            }
+            bool ICollection.IsSynchronized => false;
 
-            object ICollection.SyncRoot
-            {
-                get { return ((ICollection)dictionary).SyncRoot; }
-            }
+            object ICollection.SyncRoot => ((ICollection)dictionary).SyncRoot;
 
             public IEnumerator<TKey> GetEnumerator()
             {
@@ -1051,15 +996,9 @@ namespace InstrManifestCompiler.Collections
                     arrayEnumerator = dictionary.objectsArray.GetEnumerator();
                 }
 
-                public TKey Current
-                {
-                    get { return arrayEnumerator.Current.Key; }
-                }
+                public TKey Current => arrayEnumerator.Current.Key;
 
-                object IEnumerator.Current
-                {
-                    get { return Current; }
-                }
+                object IEnumerator.Current => Current;
 
                 public void Dispose()
                 {
@@ -1088,30 +1027,18 @@ namespace InstrManifestCompiler.Collections
             public ValueCollection(OrderedDictionary<TKey, TValue> dictionary)
             {
                 if (dictionary == null)
-                    throw new ArgumentNullException("dictionary");
+                    throw new ArgumentNullException(nameof(dictionary));
 
                 this.dictionary = dictionary;
             }
 
-            public int Count
-            {
-                get { return dictionary.Count; }
-            }
+            public int Count => dictionary.Count;
 
-            bool ICollection<TValue>.IsReadOnly
-            {
-                get { return true; }
-            }
+            bool ICollection<TValue>.IsReadOnly => true;
 
-            bool ICollection.IsSynchronized
-            {
-                get { return false; }
-            }
+            bool ICollection.IsSynchronized => false;
 
-            object ICollection.SyncRoot
-            {
-                get { return ((ICollection)dictionary).SyncRoot; }
-            }
+            object ICollection.SyncRoot => ((ICollection)dictionary).SyncRoot;
 
             public IEnumerator<TValue> GetEnumerator()
             {
@@ -1204,15 +1131,9 @@ namespace InstrManifestCompiler.Collections
                     arrayEnumerator = dictionary.objectsArray.GetEnumerator();
                 }
 
-                public TValue Current
-                {
-                    get { return arrayEnumerator.Current.Value; }
-                }
+                public TValue Current => arrayEnumerator.Current.Value;
 
-                object IEnumerator.Current
-                {
-                    get { return Current; }
-                }
+                object IEnumerator.Current => Current;
 
                 public void Dispose()
                 {

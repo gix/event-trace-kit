@@ -460,7 +460,7 @@ namespace NOpt.Collections
         public bool TryGetValue(TKey key, out TValue value)
         {
             if (key == null)
-                throw new ArgumentNullException("key");
+                throw new ArgumentNullException(nameof(key));
 
             bool ret = objectsTable.TryGetValue(key, out value);
             Contract.Assume(ret == ContainsKey(key));
@@ -526,7 +526,7 @@ namespace NOpt.Collections
         public bool Remove(TKey key)
         {
             if (key == null)
-                throw new ArgumentNullException("key");
+                throw new ArgumentNullException(nameof(key));
 
             int index = IndexOfKey(key);
             if (index < 0)
@@ -567,7 +567,7 @@ namespace NOpt.Collections
             set
             {
                 if (key == null) {
-                    throw new ArgumentNullException("key");
+                    throw new ArgumentNullException(nameof(key));
                 }
 
                 ThrowIfIllegalNull<TValue>(value, "value");
@@ -661,7 +661,7 @@ namespace NOpt.Collections
         {
             // Requires manual checking because IOrderedDictionary has no contract.
             if (index < 0 || index >= Count)
-                throw new ArgumentOutOfRangeException("index");
+                throw new ArgumentOutOfRangeException(nameof(index));
 
             KeyValuePair<TKey, TValue> entry = objectsArray[index];
             objectsArray.RemoveAt(index);
@@ -865,14 +865,14 @@ namespace NOpt.Collections
         {
             string message = string.Format(
                 CultureInfo.CurrentCulture, Strings.Arg_WrongType, key, targetType);
-            throw new ArgumentException(message, "key");
+            throw new ArgumentException(message, nameof(key));
         }
 
         private static void ThrowWrongValueTypeArgumentException(object value, Type targetType)
         {
             string message = string.Format(
                 CultureInfo.CurrentCulture, Strings.Arg_WrongType, value, targetType);
-            throw new ArgumentException(message, "value");
+            throw new ArgumentException(message, nameof(value));
         }
 
         [ContractInvariantMethod]
@@ -935,7 +935,7 @@ namespace NOpt.Collections
             public KeyCollection(OrderedDictionary<TKey, TValue> dictionary)
             {
                 if (dictionary == null)
-                    throw new ArgumentNullException("dictionary");
+                    throw new ArgumentNullException(nameof(dictionary));
 
                 this.dictionary = dictionary;
             }
@@ -1088,7 +1088,7 @@ namespace NOpt.Collections
             public ValueCollection(OrderedDictionary<TKey, TValue> dictionary)
             {
                 if (dictionary == null)
-                    throw new ArgumentNullException("dictionary");
+                    throw new ArgumentNullException(nameof(dictionary));
 
                 this.dictionary = dictionary;
             }

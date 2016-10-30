@@ -57,7 +57,7 @@ namespace InstrManifestCompiler.Collections
                 return string.Format(customMessage, args);
             }
 
-            return string.Format("Duplicate entity '{0}'", typeof(T).Name);
+            return $"Duplicate entity '{typeof(T).Name}'";
         }
 
         public bool Changed(T oldEntity, T newEntity)

@@ -7,7 +7,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
     public class TaskValidationTest : ValidationTest
     {
         [Theory]
-        [MemberData("ValidQNames")]
+        [MemberData(nameof(ValidQNames))]
         public void Name_Valid(object name)
         {
             var task = E("task", A("name", name), A("value", 16));
@@ -18,7 +18,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("InvalidQNames")]
+        [MemberData(nameof(InvalidQNames))]
         public void Name_Invalid(object name)
         {
             var task = E("task", A("name", name), A("value", 16));
@@ -104,7 +104,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("ValidSymbolNames")]
+        [MemberData(nameof(ValidSymbolNames))]
         public void Symbol_Valid(string symbol)
         {
             var task = E("task", A("name", "Task1"), A("value", 16), A("symbol", symbol));
@@ -115,7 +115,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("InvalidSymbolNames")]
+        [MemberData(nameof(InvalidSymbolNames))]
         public void Symbol_Invalid(string symbol)
         {
             var task = E("task", A("name", "Task1"), A("value", 16), A("symbol", symbol));
@@ -198,7 +198,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("ValidMessageRefs")]
+        [MemberData(nameof(ValidMessageRefs))]
         public void Message_Valid(string message)
         {
             var task = E("task", A("name", "Task1"), A("value", 16), A("message", message));
@@ -209,7 +209,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("InvalidMessageRefs")]
+        [MemberData(nameof(InvalidMessageRefs))]
         public void Message_Invalid(string message)
         {
             var task = E("task", A("name", "Task1"), A("value", 16), A("message", message));

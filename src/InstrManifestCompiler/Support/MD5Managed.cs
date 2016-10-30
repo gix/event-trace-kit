@@ -84,7 +84,7 @@ namespace InstrManifestCompiler.Support
         protected override void HashCore(byte[] array, int ibStart, int cbSize)
         {
             if (array == null)
-                throw new ArgumentNullException("array");
+                throw new ArgumentNullException(nameof(array));
             if (hashFinalCalled)
                 throw new CryptographicUnexpectedOperationException("Hash not valid for use in specified state.");
 

@@ -70,7 +70,7 @@ namespace InstrManifestCompiler.EventManifestSchema.Base
         {
             unchecked {
                 return
-                    ((LocalName != null ? LocalName.GetHashCode() : 0) * 397) ^
+                    ((LocalName?.GetHashCode() ?? 0) * 397) ^
                     (Namespace != null ? Namespace.GetHashCode() : 0);
             }
         }
@@ -87,14 +87,14 @@ namespace InstrManifestCompiler.EventManifestSchema.Base
         {
             if (Namespace == null || string.IsNullOrEmpty(Namespace.NamespaceName))
                 return LocalName;
-            return string.Format("{0}:{1}", Namespace.NamespaceName, LocalName);
+            return $"{Namespace.NamespaceName}:{LocalName}";
         }
 
         public string ToPrefixedString()
         {
-            if (Prefix == null || string.IsNullOrEmpty(Prefix))
+            if (string.IsNullOrEmpty(Prefix))
                 return LocalName;
-            return string.Format("{0}:{1}", Prefix, LocalName);
+            return $"{Prefix}:{LocalName}";
         }
 
         /// <summary>

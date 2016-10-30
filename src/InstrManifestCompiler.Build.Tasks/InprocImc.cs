@@ -14,7 +14,6 @@ namespace InstrManifestCompiler.Build.Tasks
     public sealed class InprocImc : NOptTrackedTask, IDiagnosticConsumer
     {
         private readonly DiagnosticsEngine diags;
-        private readonly List<OptSpecifier> optionOrder;
         private readonly ImcOpts opts = new ImcOpts();
 
         private ITaskItem source;
@@ -46,7 +45,7 @@ namespace InstrManifestCompiler.Build.Tasks
         {
             diags = new DiagnosticsEngine(this);
 
-            optionOrder = new List<OptSpecifier> {
+            OptionOrder = new List<OptSpecifier> {
                 Opt.out_eq,
                 Opt.header_file_eq,
                 Opt.source_file_eq,
@@ -65,40 +64,24 @@ namespace InstrManifestCompiler.Build.Tasks
         }
 
         /// <inheritdoc/>
-        protected override string ActionName
-        {
-            get { return "imc"; }
-        }
+        protected override string ActionName => "imc";
 
         /// <inheritdoc/>
-        protected override List<OptSpecifier> OptionOrder
-        {
-            get { return optionOrder; }
-        }
+        protected override List<OptSpecifier> OptionOrder { get; }
 
         /// <inheritdoc/>
-        protected override ITaskItem[] TrackedInputFiles
-        {
-            get { return new[] { Source }; }
-        }
+        protected override ITaskItem[] TrackedInputFiles => new[] { Source };
 
         /// <inheritdoc/>
-        protected override string[] ReadTLogNames
-        {
-            get { return new[] { "imc.read.1.tlog", "imc.*.read.1.tlog" }; }
-        }
+        protected override string[] ReadTLogNames =>
+            new[] { "imc.read.1.tlog", "imc.*.read.1.tlog" };
 
         /// <inheritdoc/>
-        protected override string[] WriteTLogNames
-        {
-            get { return new[] { "imc.write.1.tlog", "imc.*.write.1.tlog" }; }
-        }
+        protected override string[] WriteTLogNames =>
+            new[] { "imc.write.1.tlog", "imc.*.write.1.tlog" };
 
         /// <inheritdoc/>
-        protected override string CommandTLogName
-        {
-            get { return "imc.command.1.tlog"; }
-        }
+        protected override string CommandTLogName => "imc.command.1.tlog";
 
         /// <summary>Gets or sets the input event manifest.</summary>
         [Required]
@@ -281,7 +264,7 @@ namespace InstrManifestCompiler.Build.Tasks
                         location.ColumnNumber, message);
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException("severity");
+                    throw new ArgumentOutOfRangeException(nameof(severity));
             }
         }
     }

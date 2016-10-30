@@ -8,7 +8,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
     public class KeywordValidationTest : ValidationTest
     {
         [Theory]
-        [MemberData("ValidQNames")]
+        [MemberData(nameof(ValidQNames))]
         public void Name_Valid(object name)
         {
             var keyword = E("keyword", A("name", name), A("mask", "0x1"));
@@ -19,7 +19,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("InvalidQNames")]
+        [MemberData(nameof(InvalidQNames))]
         public void Name_Invalid(object name)
         {
             var keyword = E("keyword", A("name", name), A("mask", "0x1"));
@@ -63,7 +63,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("ValidMasks")]
+        [MemberData(nameof(ValidMasks))]
         public void Mask_Valid(object mask)
         {
             var keyword = E("keyword", A("name", "Keyword1"), A("mask", mask));
@@ -112,7 +112,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("ValidSymbolNames")]
+        [MemberData(nameof(ValidSymbolNames))]
         public void Symbol_Valid(string symbol)
         {
             var keyword = E("keyword", A("name", "Keyword1"), A("mask", "0x1"), A("symbol", symbol));
@@ -123,7 +123,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("InvalidSymbolNames")]
+        [MemberData(nameof(InvalidSymbolNames))]
         public void Symbol_Invalid(string symbol)
         {
             var keyword = E("keyword", A("name", "Keyword1"), A("mask", "0x1"), A("symbol", symbol));
@@ -147,7 +147,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("ValidMessageRefs")]
+        [MemberData(nameof(ValidMessageRefs))]
         public void Message_Valid(string message)
         {
             var keyword = E("keyword", A("name", "Keyword1"), A("mask", "0x1"), A("message", message));
@@ -158,7 +158,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("InvalidMessageRefs")]
+        [MemberData(nameof(InvalidMessageRefs))]
         public void Message_Invalid(string message)
         {
             var keyword = E("keyword", A("name", "Keyword1"), A("mask", "0x1"), A("message", message));

@@ -23,10 +23,7 @@ namespace InstrManifestCompiler.Collections
         ///   or after the last element.
         /// </exception>
         /// <filterpriority>2</filterpriority>
-        public object Current
-        {
-            get { return Entry; }
-        }
+        public object Current => Entry;
 
         /// <summary>
         ///   Gets the key of the current dictionary entry.
@@ -40,10 +37,7 @@ namespace InstrManifestCompiler.Collections
         ///   last entry.
         /// </exception>
         /// <filterpriority>2</filterpriority>
-        public object Key
-        {
-            get { return enumerator.Current.Key; }
-        }
+        public object Key => enumerator.Current.Key;
 
         /// <summary>
         ///   Gets the value of the current dictionary entry.
@@ -57,10 +51,7 @@ namespace InstrManifestCompiler.Collections
         ///   last entry.
         /// </exception>
         /// <filterpriority>2</filterpriority>
-        public object Value
-        {
-            get { return enumerator.Current.Value; }
-        }
+        public object Value => enumerator.Current.Value;
 
         /// <summary>
         ///   Gets both the key and the value of the current dictionary entry.

@@ -236,7 +236,7 @@
         }
 
         [Theory]
-        [MemberData("GetFlagData")]
+        [MemberData(nameof(GetFlagData))]
         [InlineData(true, false, null)]
         public void GetFlag(bool expected, bool defaultValue, Arg[] args)
         {
@@ -247,7 +247,7 @@
         }
 
         [Theory]
-        [MemberData("GetFlagData")]
+        [MemberData(nameof(GetFlagData))]
         [InlineData(true, true, null)]
         [InlineData(false, false, null)]
         public void GetFlagDefault(bool expected, bool defaultValue, Arg[] args)
@@ -259,7 +259,7 @@
         }
 
         [Theory]
-        [MemberData("GetFlagData")]
+        [MemberData(nameof(GetFlagData))]
         [InlineData(true, false, null)]
         public void GetFlagNoClaim(bool expected, bool defaultValue, Arg[] args)
         {

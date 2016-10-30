@@ -22,10 +22,7 @@ namespace InstrManifestCompiler.Build.Tasks
 
         protected abstract List<OptSpecifier> OptionOrder { get; }
 
-        protected virtual OptSpecifier? SourcesOption
-        {
-            get { return null; }
-        }
+        protected virtual OptSpecifier? SourcesOption => null;
 
         protected override string GenerateResponseFileCommands(CommandLineFormat format)
         {
@@ -127,7 +124,7 @@ namespace InstrManifestCompiler.Build.Tasks
         protected void SetTaskItem(OptSpecifier opt, ITaskItem value)
         {
             activeArgs.Remove(opt.Id);
-            AddActiveArg(CreateArg(opt, value != null ? value.ItemSpec : null));
+            AddActiveArg(CreateArg(opt, value?.ItemSpec));
         }
 
         private void AddActiveArg(Arg arg)

@@ -823,7 +823,7 @@ namespace InstrManifestCompiler.ResGen
 
         private static uint GetMessageId(LocalizedString message)
         {
-            return message != null ? message.Id : Message.UnusedId;
+            return message?.Id ?? Message.UnusedId;
         }
 
         private byte[] EncodeName(string name)

@@ -163,21 +163,21 @@ namespace InstrManifestCompiler.Support
         public int CompareTo(object obj)
         {
             var comparable = Value as IComparable;
-            return comparable != null ? comparable.CompareTo(obj) : Comparer.Default.Compare(this, obj);
+            return comparable?.CompareTo(obj) ?? Comparer.Default.Compare(this, obj);
         }
 
         public int CompareTo(RefValue<T> other)
         {
             var comparable = Value as IComparable<T>;
-            return comparable != null
-                ? comparable.CompareTo(other.Value)
-                : Comparer<T>.Default.Compare(Value, other.Value);
+            return comparable?.CompareTo(other.Value) ??
+                   Comparer<T>.Default.Compare(Value, other.Value);
         }
 
         public int CompareTo(T other)
         {
             var comparable = Value as IComparable<T>;
-            return comparable != null ? comparable.CompareTo(other) : Comparer<T>.Default.Compare(this, other);
+            return comparable?.CompareTo(other) ??
+                   Comparer<T>.Default.Compare(this, other);
         }
 
         public static implicit operator RefValue<T>(T value)
@@ -187,9 +187,7 @@ namespace InstrManifestCompiler.Support
 
         public static implicit operator T(RefValue<T> value)
         {
-            if (value == null)
-                return default(T);
-            return value.Value;
+            return value?.Value;
         }
     }
 
@@ -264,21 +262,22 @@ namespace InstrManifestCompiler.Support
         public int CompareTo(object obj)
         {
             var comparable = Value as IComparable;
-            return comparable != null ? comparable.CompareTo(obj) : Comparer.Default.Compare(this, obj);
+            return comparable?.CompareTo(obj) ??
+                   Comparer.Default.Compare(this, obj);
         }
 
         public int CompareTo(StructValue<T> other)
         {
             var comparable = Value as IComparable<T>;
-            return comparable != null
-                ? comparable.CompareTo(other.Value)
-                : Comparer<T>.Default.Compare(Value, other.Value);
+            return comparable?.CompareTo(other.Value) ??
+                   Comparer<T>.Default.Compare(Value, other.Value);
         }
 
         public int CompareTo(T other)
         {
             var comparable = Value as IComparable<T>;
-            return comparable != null ? comparable.CompareTo(other) : Comparer<T>.Default.Compare(this, other);
+            return comparable?.CompareTo(other) ??
+                   Comparer<T>.Default.Compare(this, other);
         }
 
         //public static implicit operator StructValue<T>(T value)
@@ -345,8 +344,6 @@ namespace InstrManifestCompiler.Support
 
         public string ToString(string format, IFormatProvider formatProvider)
         {
-            if (value == null)
-                return string.Empty;
             var f = value as IFormattable;
             if (f == null)
                 return string.Empty;
@@ -378,21 +375,22 @@ namespace InstrManifestCompiler.Support
         public int CompareTo(object obj)
         {
             var comparable = Value as IComparable;
-            return comparable != null ? comparable.CompareTo(obj) : Comparer.Default.Compare(this, obj);
+            return comparable?.CompareTo(obj) ??
+                   Comparer.Default.Compare(this, obj);
         }
 
         public int CompareTo(NullableValue<T> other)
         {
             var comparable = Value as IComparable<T>;
-            return comparable != null
-                ? comparable.CompareTo(other.Value)
-                : Comparer<T>.Default.Compare(Value, other.Value);
+            return comparable?.CompareTo(other.Value) ??
+                   Comparer<T>.Default.Compare(Value, other.Value);
         }
 
         public int CompareTo(T other)
         {
             var comparable = Value as IComparable<T>;
-            return comparable != null ? comparable.CompareTo(other) : Comparer<T>.Default.Compare(this, other);
+            return comparable?.CompareTo(other) ??
+                   Comparer<T>.Default.Compare(this, other);
         }
 
         public static implicit operator T?(NullableValue<T> value)

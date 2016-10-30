@@ -35,9 +35,7 @@ namespace InstrManifestCompiler.Build.Tasks
                 path = Path.Combine(directory, "tmp" + Guid.NewGuid().ToString("N") + extension);
                 ErrorUtilities.VerifyThrow(!File.Exists(path), "Guid should be unique");
                 File.WriteAllText(path, String.Empty);
-            } catch (Exception ex) {
-                if (ExceptionHandling.NotExpectedException(ex))
-                    throw;
+            } catch (Exception ex) when (!ExceptionHandling.NotExpectedException(ex)) {
                 throw new IOException(
                     //ResourceUtilities.FormatResourceString("Shared.FailedCreatingTempFile", ex.Message),
                     ex.Message,

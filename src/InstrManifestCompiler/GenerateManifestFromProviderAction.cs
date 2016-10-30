@@ -379,7 +379,7 @@ namespace InstrManifestCompiler
                 case ChannelType.Analytic: return "Analytic";
                 case ChannelType.Debug: return "Debug";
                 default:
-                    throw new ArgumentOutOfRangeException("type");
+                    throw new ArgumentOutOfRangeException(nameof(type));
             }
         }
 

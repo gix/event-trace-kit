@@ -34,25 +34,13 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         internal EnableBit EnableBit { get; set; }
 
-        public byte ChannelValue
-        {
-            get { return Channel != null ? Channel.Value.GetValueOrDefault() : (byte)0; }
-        }
+        public byte ChannelValue => Channel?.Value.GetValueOrDefault() ?? (byte)0;
 
-        public byte LevelValue
-        {
-            get { return Level != null ? Level.Value : (byte)0; }
-        }
+        public byte LevelValue => Level?.Value ?? (byte)0;
 
-        public ushort TaskValue
-        {
-            get { return Task != null ? Task.Value : (ushort)0; }
-        }
+        public ushort TaskValue => Task?.Value ?? (ushort)0;
 
-        public byte OpcodeValue
-        {
-            get { return Opcode != null ? Opcode.Value : (byte)0; }
-        }
+        public byte OpcodeValue => Opcode?.Value ?? (byte)0;
 
         public ulong KeywordMask
         {

@@ -39,10 +39,7 @@ namespace InstrManifestCompiler.CodeGen
             public override string GetIdentifier(IMapItem item, IMap map)
             {
                 if (string.IsNullOrWhiteSpace(item.Symbol))
-                    return string.Format(
-                        "{0}{1}",
-                        map.Symbol,
-                        map.Items.IndexOf(item));
+                    return $"{map.Symbol}{map.Items.IndexOf(item)}";
 
                 return item.Symbol;
             }
@@ -64,7 +61,8 @@ namespace InstrManifestCompiler.CodeGen
 
             public override string GetTemplateGuardId(Template template)
             {
-                return string.Format("ETW_TEMPLATE_{0}_DEFINED", GetTemplateSuffix(template));
+                var suffix = GetTemplateSuffix(template);
+                return $"ETW_TEMPLATE_{suffix}_DEFINED";
             }
 
             public override string GetEventDescriptorId(Event evt)
@@ -269,7 +267,7 @@ namespace InstrManifestCompiler.CodeGen
                 "EXTERN_C __declspec(selectany) uint64_t const {0}[{1}] = {{ ",
                 naming.GetProviderKeywordsId(provider),
                 enableBits.Count);
-            WriteList(enableBits, b => string.Format("0x{0:X8}", b.KeywordMask));
+            WriteList(enableBits, b => $"0x{b.KeywordMask:X8}");
             ow.WriteLine(" };");
 
             ow.Write(
@@ -751,7 +749,7 @@ namespace InstrManifestCompiler.CodeGen
                             GetNumberExpr(data.Length, properties, string.Empty),
                             GetNumberExpr(data.Count, properties));
                     }
-                    return string.Format("_In_reads_({0})", expr);
+                    return $"_In_reads_({expr})";
 
                 case "Binary":
                     return string.Format(

@@ -7,7 +7,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
     public class OpcodeValidationTest : ValidationTest
     {
         [Theory]
-        [MemberData("ValidQNames")]
+        [MemberData(nameof(ValidQNames))]
         public void Name_Valid(object name)
         {
             var opcode = E("opcode", A("name", name), A("value", 16));
@@ -18,7 +18,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("InvalidQNames")]
+        [MemberData(nameof(InvalidQNames))]
         public void Name_Invalid(object name)
         {
             var opcode = E("opcode", A("name", name), A("value", 16));
@@ -106,7 +106,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("ValidSymbolNames")]
+        [MemberData(nameof(ValidSymbolNames))]
         public void Symbol_Valid(string symbol)
         {
             var opcode = E("opcode", A("name", "Opcode1"), A("value", 16), A("symbol", symbol));
@@ -117,7 +117,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("InvalidSymbolNames")]
+        [MemberData(nameof(InvalidSymbolNames))]
         public void Symbol_Invalid(string symbol)
         {
             var opcode = E("opcode", A("name", "Opcode1"), A("value", 16), A("symbol", symbol));
@@ -141,7 +141,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("ValidMessageRefs")]
+        [MemberData(nameof(ValidMessageRefs))]
         public void Message_Valid(string message)
         {
             var opcode = E("opcode", A("name", "Opcode1"), A("value", 16), A("message", message));
@@ -152,7 +152,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("InvalidMessageRefs")]
+        [MemberData(nameof(InvalidMessageRefs))]
         public void Message_Invalid(string message)
         {
             var opcode = E("opcode", A("name", "Opcode1"), A("value", 16), A("message", message));

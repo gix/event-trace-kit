@@ -37,10 +37,7 @@ namespace InstrManifestCompiler.Build.Tasks
         }
 
         /// <inheritdoc/>
-        protected override string ToolName
-        {
-            get { return ImcToolPath ?? "imc.exe"; }
-        }
+        protected override string ToolName => ImcToolPath ?? "imc.exe";
 
         /// <inheritdoc/>
         protected override List<OptSpecifier> OptionOrder { get; }
@@ -49,27 +46,17 @@ namespace InstrManifestCompiler.Build.Tasks
         protected override ITaskItem[] TrackedInputFiles => new[] { Source };
 
         /// <inheritdoc/>
-        protected override string[] ReadTLogNames
-        {
-            get { return new[] { "imc.read.1.tlog", "imc.*.read.1.tlog" }; }
-        }
+        protected override string[] ReadTLogNames =>
+            new[] { "imc.read.1.tlog", "imc.*.read.1.tlog" };
 
         /// <inheritdoc/>
-        protected override string[] WriteTLogNames
-        {
-            get { return new[] { "imc.write.1.tlog", "imc.*.write.1.tlog" }; }
-        }
+        protected override string[] WriteTLogNames =>
+            new[] { "imc.write.1.tlog", "imc.*.write.1.tlog" };
 
         /// <inheritdoc/>
-        protected override string CommandTLogName
-        {
-            get { return "imc.command.1.tlog"; }
-        }
+        protected override string CommandTLogName => "imc.command.1.tlog";
 
-        protected override ExecutableType? ToolType
-        {
-            get { return ExecutableType.Managed32Bit; }
-        }
+        protected override ExecutableType? ToolType => ExecutableType.Managed32Bit;
 
         public string ImcToolPath { get; set; }
 

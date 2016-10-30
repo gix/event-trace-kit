@@ -37,7 +37,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("ValidChannelNames")]
+        [MemberData(nameof(ValidChannelNames))]
         public void Name_Valid(object name)
         {
             var channel = E("channel", A("name", name), A("type", "Operational"));
@@ -48,7 +48,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("InvalidChannelNames")]
+        [MemberData(nameof(InvalidChannelNames))]
         public void Name_Invalid(object name)
         {
             var channel = E("channel", A("name", name), A("type", "Operational"));
@@ -210,7 +210,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("ValidSymbolNames")]
+        [MemberData(nameof(ValidSymbolNames))]
         public void Symbol_Valid(string symbol)
         {
             var channel = E("channel", A("name", "Channel1"), A("type", "Operational"), A("symbol", symbol));
@@ -221,7 +221,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("InvalidSymbolNames")]
+        [MemberData(nameof(InvalidSymbolNames))]
         public void Symbol_Invalid(string symbol)
         {
             var channel = E("channel", A("name", "Channel1"), A("type", "Operational"), A("symbol", symbol));
@@ -245,7 +245,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("ValidMessageRefs")]
+        [MemberData(nameof(ValidMessageRefs))]
         public void Message_Valid(string message)
         {
             var channel = E("channel", A("name", "Channel1"), A("type", "Operational"), A("message", message));
@@ -256,7 +256,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("InvalidMessageRefs")]
+        [MemberData(nameof(InvalidMessageRefs))]
         public void Message_Invalid(string message)
         {
             var channel = E("channel", A("name", "Channel1"), A("type", "Operational"), A("message", message));

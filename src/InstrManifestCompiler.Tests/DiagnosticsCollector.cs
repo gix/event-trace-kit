@@ -12,7 +12,7 @@ namespace InstrManifestCompiler.Tests
             Diagnostics = new List<Diagnostic>();
         }
 
-        public bool ErrorOccurred { get { return ErrorCount > 0; } }
+        public bool ErrorOccurred => ErrorCount > 0;
         public int ErrorCount { get; private set; }
 
         public void Report(
@@ -46,13 +46,8 @@ namespace InstrManifestCompiler.Tests
             public string Message { get; private set; }
             public object[] Args { get; private set; }
 
-            public string FormattedMessage
-            {
-                get
-                {
-                    return string.Format(CultureInfo.InvariantCulture, Message, Args);
-                }
-            }
+            public string FormattedMessage =>
+                string.Format(CultureInfo.InvariantCulture, Message, Args);
 
             public override string ToString()
             {

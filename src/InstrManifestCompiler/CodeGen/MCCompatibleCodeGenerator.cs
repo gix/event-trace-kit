@@ -239,7 +239,7 @@ namespace InstrManifestCompiler.CodeGen
                 "EXTERN_C __declspec(selectany) const ULONGLONG {0}[{1}] = {{",
                 naming.GetProviderKeywordsId(provider),
                 enableBits.Count);
-            WriteList(enableBits, b => string.Format("0x{0:x}", b.KeywordMask));
+            WriteList(enableBits, b => $"0x{b.KeywordMask:x}");
             ow.WriteLine("};");
 
             ow.Write(
@@ -696,7 +696,7 @@ namespace InstrManifestCompiler.CodeGen
                             GetNumberExpr(data.Length, properties, string.Empty),
                             GetNumberExpr(data.Count, properties));
                     }
-                    return string.Format("_In_reads_({0})", expr);
+                    return $"_In_reads_({expr})";
 
                 case "Binary":
                     return string.Format(

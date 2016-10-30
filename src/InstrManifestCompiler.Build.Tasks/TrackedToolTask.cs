@@ -308,9 +308,7 @@ namespace InstrManifestCompiler.Build.Tasks
                             Log.LogErrorFromResources(
                                 Strings.Names.Error_MissingFile,
                                 "tracker.exe");
-                    } catch (Exception ex) {
-                        if (ExceptionHandling.NotExpectedException(ex))
-                            throw;
+                    } catch (Exception ex) when (!ExceptionHandling.NotExpectedException(ex)) {
                         Log.LogErrorWithCodeFromResources(
                             Strings.Names.General_InvalidValue,
                             "TrackerSdkPath",
@@ -321,9 +319,7 @@ namespace InstrManifestCompiler.Build.Tasks
                     try {
                         dllName = FileTracker.GetFileTrackerPath(
                             toolType, TrackerFrameworkPath);
-                    } catch (Exception ex) {
-                        if (ExceptionHandling.NotExpectedException(ex))
-                            throw;
+                    } catch (Exception ex) when (!ExceptionHandling.NotExpectedException(ex)) {
                         Log.LogErrorWithCodeFromResources(
                             Strings.Names.General_InvalidValue,
                             "TrackerFrameworkPath",

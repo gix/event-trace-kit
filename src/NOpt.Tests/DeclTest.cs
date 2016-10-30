@@ -51,7 +51,7 @@ namespace NOpt.Tests
         protected override string GetKeyForItem(Option item)
         {
             if (item == null)
-                throw new ArgumentNullException("item");
+                throw new ArgumentNullException(nameof(item));
             return item.Name;
         }
 
@@ -63,7 +63,7 @@ namespace NOpt.Tests
         public OptionSet Add(string prototype, string description, Action<string> action, bool hidden)
         {
             if (action == null)
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
 
             string[] names = prototype.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
             int? mainId = null;

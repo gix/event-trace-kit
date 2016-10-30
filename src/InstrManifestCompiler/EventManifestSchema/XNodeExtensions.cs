@@ -347,7 +347,7 @@ namespace InstrManifestCompiler.EventManifestSchema
                 return format != NumberFormat.PrefixedHex || isHex;
             }
 
-            throw new ArgumentOutOfRangeException("format");
+            throw new ArgumentOutOfRangeException(nameof(format));
         }
 
         private static bool HasHexPrefix(string number)

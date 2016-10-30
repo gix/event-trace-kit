@@ -107,7 +107,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("ValidSymbolNames")]
+        [MemberData(nameof(ValidSymbolNames))]
         public void Symbol_Valid(string symbol)
         {
             var @event = E("event", A("value", 16), A("symbol", symbol));
@@ -118,7 +118,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("InvalidSymbolNames")]
+        [MemberData(nameof(InvalidSymbolNames))]
         public void Symbol_Invalid(string symbol)
         {
             var @event = E("event", A("value", 16), A("symbol", symbol));
@@ -142,7 +142,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("ValidMessageRefs")]
+        [MemberData(nameof(ValidMessageRefs))]
         public void Message_Valid(string message)
         {
             var @event = E("event", A("value", 16), A("message", message));
@@ -153,7 +153,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
         }
 
         [Theory]
-        [MemberData("InvalidMessageRefs")]
+        [MemberData(nameof(InvalidMessageRefs))]
         public void Message_Invalid(string message)
         {
             var @event = E("event", A("value", 16), A("message", message));

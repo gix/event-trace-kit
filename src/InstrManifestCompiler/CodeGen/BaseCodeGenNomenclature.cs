@@ -10,20 +10,11 @@ namespace InstrManifestCompiler.CodeGen
 
     internal abstract class BaseCodeGenNomenclature : ICodeGenNomenclature
     {
-        public virtual string EventDataDescriptorId
-        {
-            get { return "data"; }
-        }
+        public virtual string EventDataDescriptorId => "data";
 
-        public virtual string RegHandleId
-        {
-            get { return "regHandle"; }
-        }
+        public virtual string RegHandleId => "regHandle";
 
-        public virtual string EventDescriptorId
-        {
-            get { return "descriptor"; }
-        }
+        public virtual string EventDescriptorId => "descriptor";
 
         public virtual string GetIdentifier(Provider provider)
         {
