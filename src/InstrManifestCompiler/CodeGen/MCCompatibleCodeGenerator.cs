@@ -216,7 +216,7 @@ namespace InstrManifestCompiler.CodeGen
         private void WriteEnableBits(Provider provider)
         {
             var enableBits = provider.EnableBits;
-            int enableByteCount = (provider.EnableBits.Count + 31) / 32;
+            int enableByteCount = (enableBits.Count + 31) / 32;
 
             if (enableByteCount == 0) {
                 ow.WriteLine(
@@ -436,7 +436,7 @@ namespace InstrManifestCompiler.CodeGen
                 "#define {0}() (({1}[{2}] & 0x{3:X8}) != 0)",
                 enableFuncId,
                 naming.GetProviderEnableBitsId(evt.Provider),
-                evt.EnableBit.GetByte(EnableByteSize),
+                evt.EnableBit.GetIndex(EnableByteSize),
                 evt.EnableBit.GetMask(EnableByteSize));
             ow.WriteLine();
 

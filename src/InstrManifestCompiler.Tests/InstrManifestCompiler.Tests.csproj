@@ -64,6 +64,7 @@
     </Compile>
     <Compile Include="DiagnosticsCollector.cs" />
     <Compile Include="EventManifestSchema\ChannelValidationTest.cs" />
+    <Compile Include="EventManifestSchema\EnableBitTest.cs" />
     <Compile Include="EventManifestSchema\EventValidationTest.cs" />
     <Compile Include="EventManifestSchema\FilterValidationTest.cs" />
     <Compile Include="EventManifestSchema\KeywordValidationTest.cs" />

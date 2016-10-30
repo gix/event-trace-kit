@@ -17,6 +17,7 @@ namespace InstrManifestCompiler.CodeGen
     [ExportMetadata("Name", "cxx")]
     internal sealed class CxxCodeGenerator : ICodeGenerator
     {
+        // Size of the integer type used to store enable bits.
         private const int EnableByteSize = 4;
 
         private static readonly Template DefaultTemplate = new Template(Value.Create(string.Empty));
@@ -256,7 +257,7 @@ namespace InstrManifestCompiler.CodeGen
         private void WriteEnableBits(Provider provider)
         {
             var enableBits = provider.EnableBits;
-            int enableByteCount = (provider.EnableBits.Count + 31) / 32;
+            int enableByteCount = (enableBits.Count + 31) / 32;
             if (enableByteCount == 0)
                 return;
 
@@ -453,7 +454,7 @@ namespace InstrManifestCompiler.CodeGen
                     ow.WriteLine(
                         "return ({0}[{1}] & 0x{2:X8}) != 0;",
                         naming.GetProviderEnableBitsId(evt.Provider),
-                        evt.EnableBit.GetByte(EnableByteSize),
+                        evt.EnableBit.GetIndex(EnableByteSize),
                         evt.EnableBit.GetMask(EnableByteSize));
                 else
                     ow.WriteLine(

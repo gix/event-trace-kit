@@ -13,15 +13,15 @@ namespace InstrManifestCompiler.EventManifestSchema.Base
             KeywordMask = keywordMask;
         }
 
-        public int GetByte(int byteSize)
+        public int GetIndex(int bytesPerItem)
         {
-            int bits = byteSize * 32;
+            int bits = bytesPerItem * 8;
             return Bit / bits;
         }
 
-        public ulong GetMask(int byteSize)
+        public ulong GetMask(int bytesPerItem)
         {
-            int bits = byteSize * 32;
+            int bits = bytesPerItem * 8;
             return (ulong)1 << (Bit - (Bit / bits * bits));
         }
     }
