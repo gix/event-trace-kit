@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ImcProject Include="src\InstrManifestCompiler*\InstrManifestCompiler*.csproj"/>
+    <ImcProject Include="src\NOpt*\NOpt*.csproj"/>
+  </ItemGroup>
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)' == ''">Release</Configuration>
+    <ImcPackageDir>$(MSBuildThisFileDirectory)dist</ImcPackageDir>
+  </PropertyGroup>
+
+  <Target Name="BuildImc">
+    <MSBuild Projects="@(ImcProject)"
+             Properties="Configuration=$(Configuration);Platform=AnyCPU"
+             BuildInParallel="true"
+             StopOnFirstFailure="true"/>
+  </Target>
+
+  <Target Name="TestImc" DependsOnTargets="BuildImc">
+  </Target>
+
+  <Target Name="GetImcVersion" DependsOnTargets="BuildImc">
+    <GetAssemblyIdentity AssemblyFiles="build\any\bin\InstrManifestCompiler.Build.Tasks.dll">
+      <Output TaskParameter="Assemblies"
+              ItemName="_AssemblyIdentities"/>
+    </GetAssemblyIdentity>
+    <PropertyGroup>
+      <ImcVersion>%(_AssemblyIdentities.Version)</ImcVersion>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="PackageImc" DependsOnTargets="TestImc;GetImcVersion">
+    <MakeDir Directories="$(ImcPackageDir)"/>
+    <Exec Command="nuget.exe pack -Version &quot;$(ImcVersion)&quot; -NoPackageAnalysis -OutputDirectory &quot;$(ImcPackageDir)&quot; InstrManifestCompiler.Build.Tasks.nuspec"/>
+  </Target>
+</Project>
