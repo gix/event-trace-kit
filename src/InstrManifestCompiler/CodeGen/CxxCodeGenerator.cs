@@ -211,7 +211,7 @@ namespace InstrManifestCompiler.CodeGen
                 WriteEnableBits(provider);
                 ow.WriteLine(
                     "EXTERN_C __declspec(selectany) {0}TraceContextEx {1} " +
-                    "= {{ 0, 0, 0, 0, 0, 0, 0, 0, {2}, {3}, {4}, {5} }};",
+                    "= {{ 0, 0, 0, 0, 0, false, 0, 0, {2}, {3}, {4}, {5} }};",
                     etwNamespace,
                     naming.GetProviderContextId(provider),
                     enableBits.Count,
@@ -221,7 +221,8 @@ namespace InstrManifestCompiler.CodeGen
             } else {
                 ow.WriteLine(
                     "EXTERN_C __declspec(selectany) {0}TraceContext {1} = {{}};",
-                    etwNamespace, naming.GetProviderContextId(provider));
+                    etwNamespace,
+                    naming.GetProviderContextId(provider));
             }
             ow.WriteLine("EXTERN_C __declspec(selectany) REGHANDLE {0} = (REGHANDLE)0;",
                          naming.GetProviderHandleId(provider));
@@ -234,9 +235,10 @@ namespace InstrManifestCompiler.CodeGen
             ow.WriteLine("{");
             using (ow.IndentScope())
                 ow.WriteLine(
-                    "{0}EventRegister({1}, {0}ControlCallback, &{2}, &{3});",
+                    "{0}EventRegister({1}, {0}{2}, &{3}, &{4});",
                     etwNamespace,
                     naming.GetProviderGuidId(provider),
+                    options.UseCustomEventEnabledChecks ? "ControlCallbackEx" : "ControlCallback",
                     naming.GetProviderContextId(provider),
                     naming.GetProviderHandleId(provider));
             ow.WriteLine("}");
