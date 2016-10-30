@@ -16,5 +16,6 @@ namespace EventTraceKit.VsExtension
         public const int cmdidOpenViewEditor = 0x0600;
         public const int cmdidViewPresetCombo = 0x700;
         public const int cmdidViewPresetComboGetList = 0x710;
+        public const int cmdidToggleStatusBar = 0x800;
     }
 }

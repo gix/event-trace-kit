@@ -154,15 +154,15 @@
             var inactiveSelectedBackgroundKey = new ThemeResourceKey(
                 id, "Inactive Selected Text", ThemeResourceKeyType.BackgroundBrush);
 
-            Resources[TraceLogFonts.EntryFontFamilyKey] = new FontFamily("Consolas");
-            Resources[TraceLogFonts.EntryFontSizeKey] = 9;
-            Resources[TraceLogColors.ForegroundKey] = Resources[foregroundKey];
-            Resources[TraceLogColors.BackgroundKey] = Resources[backgroundKey];
-            Resources[TraceLogColors.BackgroundAltKey] = GetAlternateBrush((SolidColorBrush)Resources[backgroundKey]);
-            Resources[TraceLogColors.SelectedForegroundKey] = Resources[foregroundKey];
-            Resources[TraceLogColors.SelectedBackgroundKey] = Resources[selectedBackgroundKey];
-            Resources[TraceLogColors.InactiveSelectedForegroundKey] = Resources[foregroundKey];
-            Resources[TraceLogColors.InactiveSelectedBackgroundKey] = Resources[inactiveSelectedBackgroundKey];
+            Resources[TraceLogFonts.RowFontFamilyKey] = new FontFamily("Consolas");
+            Resources[TraceLogFonts.RowFontSizeKey] = 9;
+            Resources[TraceLogColors.RowForegroundBrushKey] = Resources[foregroundKey];
+            Resources[TraceLogColors.RowBackgroundBrushKey] = Resources[backgroundKey];
+            Resources[TraceLogColors.AlternatingRowBackgroundBrushKey] = GetAlternateBrush((SolidColorBrush)Resources[backgroundKey]);
+            Resources[TraceLogColors.SelectedRowForegroundBrushKey] = Resources[foregroundKey];
+            Resources[TraceLogColors.SelectedRowBackgroundBrushKey] = Resources[selectedBackgroundKey];
+            Resources[TraceLogColors.InactiveSelectedRowForegroundBrushKey] = Resources[foregroundKey];
+            Resources[TraceLogColors.InactiveSelectedRowBackgroundBrushKey] = Resources[inactiveSelectedBackgroundKey];
         }
 
         private SolidColorBrush GetAlternateBrush(

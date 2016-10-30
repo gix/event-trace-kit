@@ -158,6 +158,7 @@ namespace EventTraceKit.VsExtension.UITests
         {
             public string ActiveViewPreset { get; set; }
             public bool AutoLog { get; set; }
+            public bool ShowStatusBar { get; set; }
         }
 
         private sealed class OperationalModeProviderStub : IOperationalModeProvider

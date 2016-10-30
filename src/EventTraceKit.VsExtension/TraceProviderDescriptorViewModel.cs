@@ -24,6 +24,7 @@ namespace EventTraceKit.VsExtension
         private bool includeSecurityId;
         private bool includeTerminalSessionId;
         private bool includeStackTrace;
+        private bool filterProcesses;
         private bool filterEvents;
 
         public TraceProviderDescriptorViewModel()
@@ -113,6 +114,12 @@ namespace EventTraceKit.VsExtension
             set { SetProperty(ref includeStackTrace, value); }
         }
 
+        public bool FilterProcesses
+        {
+            get { return filterProcesses; }
+            set { SetProperty(ref filterProcesses, value); }
+        }
+
         public bool FilterEvents
         {
             get { return filterEvents; }
@@ -123,7 +130,7 @@ namespace EventTraceKit.VsExtension
 
         public ObservableCollection<TraceEventDescriptorViewModel> Events { get; }
 
-        public TraceProviderDescriptor ToModel()
+        public TraceProviderDescriptor CreateDescriptor()
         {
             var descriptor = new TraceProviderDescriptor(Id);
             descriptor.Level = Level;
@@ -134,8 +141,12 @@ namespace EventTraceKit.VsExtension
             descriptor.IncludeStackTrace = IncludeStackTrace;
             if (!string.IsNullOrWhiteSpace(Manifest))
                 descriptor.Manifest = Manifest;
-            descriptor.ProcessIds.AddRange(ProcessIds);
-            descriptor.EventIds.AddRange(Events.Where(x => x.IsEnabled).Select(x => x.Id));
+            if (FilterProcesses)
+                descriptor.ProcessIds.AddRange(ProcessIds);
+            if (FilterEvents)
+                descriptor.EventIds.AddRange(
+                    from x in Events where x.IsEnabled select x.Id);
+
             return descriptor;
         }
 

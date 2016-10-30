@@ -1,10 +1,10 @@
 ﻿namespace EventTraceKit.VsExtension
 {
     using System;
-    using System.ComponentModel.Composition;
     using System.ComponentModel.Design;
     using System.IO;
     using System.Runtime.InteropServices;
+    using System.Windows;
     using EnvDTE;
     using Extensions;
     using Microsoft.VisualStudio;
@@ -12,13 +12,20 @@
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
     using Microsoft.VisualStudio.Shell.Settings;
-    using Serialization;
 
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [InstalledProductRegistration("#110", "#112", productId: "1.0", IconResourceID = 400)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
-    [ProvideToolWindow(typeof(TraceLogPane))]
-    [ProvideProfile(typeof(EventTraceKitProfileManager), "EventTraceKit", "General", 1001, 1002, false, DescriptionResourceID = 1003)]
+    [ProvideToolWindow(typeof(TraceLogPane),
+        Style = VsDockStyle.Tabbed,
+        Window = VsGuids.OutputWindowFrameString,
+        Orientation = ToolWindowOrientation.Right)]
+    [ProvideProfile(typeof(EventTraceKitProfileManager), "EventTraceKit", "General",
+                    1001, 1002, false, DescriptionResourceID = 1003)]
+    [ProvideBindingPath]
+    //[FontAndColorsRegistration(
+    //    "Trace Log", FontAndColorDefaultsProvider.ServiceId,
+    //    TraceLogFontAndColorDefaults.CategoryIdString)]
     [Guid(PackageGuidString)]
     public class EventTraceKitPackage : Package
     {
@@ -31,6 +38,7 @@
         private IVsUIShell vsUiShell;
         private ViewPresetService viewPresetService;
         private TraceSettingsService traceSettingsService;
+        //private ResourceSynchronizer resourceSynchronizer;
 
         public EventTraceKitPackage()
         {
@@ -40,14 +48,23 @@
         protected override void Initialize()
         {
             base.Initialize();
+
+            //var fncStorage = this.GetService<SVsFontAndColorStorage, IVsFontAndColorStorage>();
+            //resourceSynchronizer = new ResourceSynchronizer(
+            //    fncStorage, Application.Current.Resources.MergedDictionaries);
+            //
+            //IServiceContainer container = this;
+            //container.AddService(
+            //    typeof(SVsFontAndColorDefaultsProvider), CreateService, true);
+
+            Application.Current.Resources.MergedDictionaries.Add(
+                new TraceLogResourceDictionary());
+
             vsUiShell = this.GetService<SVsUIShell, IVsUIShell>();
 
             AddMenuCommandHandlers();
 
-            //var componentModel = this.GetService<SComponentModel, IComponentModel>();
-            //var exportProvider = componentModel.DefaultExportProvider;
-            //globalSettings = exportProvider.GetExportedValue<IGlobalSettings>();
-            globalSettings = new GlobalSettings(CreateSettingsStore());
+            globalSettings = new SettingsStoreGlobalSettings(CreateSettingsStore());
 
             string appDataDirectory = GetAppDataDirectory();
             var storage = new FileSettingsStorage(appDataDirectory);
@@ -61,6 +78,13 @@
             traceLogPane = new Lazy<TraceLogPane>(
                 () => new TraceLogPane(TraceLogWindowFactory, TraceLogWindowClose));
         }
+
+        //private object CreateService(IServiceContainer container, Type service)
+        //{
+        //    if (service.IsEquivalentTo(typeof(SVsFontAndColorDefaultsProvider)))
+        //        return new SVsFontAndColorDefaultsProvider(resourceSynchronizer);
+        //    return null;
+        //}
 
         private TraceLogWindow TraceLogWindowFactory(IServiceProvider sp)
         {
@@ -184,7 +208,8 @@
             string resourceValue;
             IVsResourceManager resourceManager = (IVsResourceManager)GetService(typeof(SVsResourceManager));
             if (resourceManager == null)
-                throw new InvalidOperationException("Could not get SVsResourceManager service. Make sure the package is Sited before calling this method");
+                throw new InvalidOperationException(
+                    "Could not get SVsResourceManager service. Make sure the package is Sited before calling this method");
             Guid packageGuid = GetType().GUID;
             int hr = resourceManager.LoadResourceString(ref packageGuid, -1, resourceName, out resourceValue);
             ErrorHandler.ThrowOnFailure(hr);
@@ -217,138 +242,5 @@
         // {2C602C2D-4BA7-4C64-A5E1-DCE75CBBD530}
         // as Base64: LSxgLKdLZEyl4dznXLvVMA==
         private const string EventTraceKitOptionKey = "ETK_LSxgLKdLZEyl4dznXLvVMA==";
-    }
-
-    public interface IGlobalSettings
-    {
-        string ActiveViewPreset { get; set; }
-        bool AutoLog { get; set; }
-    }
-
-    [Export(typeof(IGlobalSettings))]
-    internal sealed class GlobalSettings : IGlobalSettings
-    {
-        private const string ErrorGetFormat = "Cannot get setting {0}";
-        private const string ErrorSetFormat = "Cannot set setting {0}";
-
-        private const string CollectionPath = "EventTraceKit";
-        private const string ActiveViewPresetName = "ActiveViewPreset";
-        private const string AutoLogName = "AutoLog";
-
-        private readonly WritableSettingsStore settingsStore;
-
-        [ImportingConstructor]
-        internal GlobalSettings(SVsServiceProvider vsServiceProvider)
-            : this(vsServiceProvider.GetWritableSettingsStore())
-        {
-        }
-
-        internal GlobalSettings(WritableSettingsStore settingsStore)
-        {
-            this.settingsStore = settingsStore;
-        }
-
-        public string ActiveViewPreset
-        {
-            get { return GetString(ActiveViewPresetName, null); }
-            set { SetString(ActiveViewPresetName, value, null); }
-        }
-
-        public bool AutoLog
-        {
-            get { return GetBool(AutoLogName, false); }
-            set { SetBool(AutoLogName, value, false); }
-        }
-
-        private void Report(string format, Exception exception)
-        {
-            // FIXME
-        }
-
-        private void EnsureCollectionExists()
-        {
-            if (!settingsStore.CollectionExists(CollectionPath))
-                settingsStore.CreateCollection(CollectionPath);
-        }
-
-        private bool GetBool(string propertyName, bool defaultValue)
-        {
-            EnsureCollectionExists();
-            try {
-                if (!settingsStore.PropertyExists(CollectionPath, propertyName))
-                    return defaultValue;
-                return settingsStore.GetBoolean(CollectionPath, propertyName);
-            } catch (Exception ex) {
-                Report(string.Format(ErrorGetFormat, propertyName), ex);
-                return defaultValue;
-            }
-        }
-
-        private void SetBool(string propertyName, bool value, bool defaultValue)
-        {
-            EnsureCollectionExists();
-            try {
-                if (value == defaultValue)
-                    settingsStore.DeleteProperty(CollectionPath, propertyName);
-                else
-                    settingsStore.SetBoolean(CollectionPath, propertyName, value);
-            } catch (Exception ex) {
-                Report(string.Format(ErrorSetFormat, propertyName), ex);
-            }
-        }
-
-        private string GetString(string propertyName, string defaultValue)
-        {
-            EnsureCollectionExists();
-            try {
-                if (!settingsStore.PropertyExists(CollectionPath, propertyName))
-                    return defaultValue;
-                return settingsStore.GetString(CollectionPath, propertyName);
-            } catch (Exception ex) {
-                Report(string.Format(ErrorGetFormat, propertyName), ex);
-                return defaultValue;
-            }
-        }
-
-        private void SetString(string propertyName, string value, string defaultValue)
-        {
-            EnsureCollectionExists();
-            try {
-                if (value == defaultValue)
-                    settingsStore.DeleteProperty(CollectionPath, propertyName);
-                else
-                    settingsStore.SetString(CollectionPath, propertyName, value);
-            } catch (Exception ex) {
-                Report(string.Format(ErrorSetFormat, propertyName), ex);
-            }
-        }
-
-        private T GetObject<T>(string propertyName, Func<T> defaultValue)
-        {
-            EnsureCollectionExists();
-            try {
-                if (!settingsStore.PropertyExists(CollectionPath, propertyName))
-                    return defaultValue();
-                var serializer = new SettingsSerializer();
-                var stream = settingsStore.GetMemoryStream(CollectionPath, propertyName);
-                using (stream)
-                    return serializer.Load<T>(stream);
-            } catch (Exception ex) {
-                Report(string.Format(ErrorGetFormat, propertyName), ex);
-                return defaultValue();
-            }
-        }
-
-        private void SetObject<T>(string propertyName, T value)
-        {
-            EnsureCollectionExists();
-            try {
-                var serializer = new SettingsSerializer();
-                var stream = serializer.SaveToStream(value);
-                settingsStore.SetMemoryStream(CollectionPath, propertyName, stream);
-            } catch (Exception ex) {
-                Report(string.Format(ErrorSetFormat, propertyName), ex);
-            }
-        }
     }
 }

@@ -149,19 +149,18 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             set { SetValue(RowHeightProperty, value); }
         }
 
-        private void OnRowHeightChanged(double oldValue, double newValue)
-        {
-            if (!DoubleUtils.AreClose(oldValue, newValue))
-                InvalidateVisual();
-
-            //if (this.ViewModel != null)
-            //    this.ViewModel.RowHeightReflected = newValue;
-        }
-
         private double CoerceRowHeight(double baseValue)
         {
             double rowHeight = DoubleUtils.Max(FontSize * 1.2, 12.0, baseValue);
             return Math.Ceiling(rowHeight);
+        }
+
+        private void OnRowHeightChanged(double oldValue, double newValue)
+        {
+            if (!DoubleUtils.AreClose(oldValue, newValue)) {
+                InvalidateRowCache();
+                InvalidateVisual();
+            }
         }
 
         #endregion
@@ -1299,6 +1298,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         {
             var source = (AsyncDataGridCellsPresenter)d;
             source.typefaceCache.Clear();
+            source.renderedCellsVisual.InvalidateRowCache();
         }
 
         private void VerifyScrollData(Size viewportSize, Size extentSize)

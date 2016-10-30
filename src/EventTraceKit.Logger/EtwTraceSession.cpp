@@ -40,14 +40,14 @@ struct EventIdFilter : EVENT_FILTER_EVENT_ID
 {
     size_t ByteSize() const
     {
-        USHORT actualCount = std::max(USHORT(1), Count);
-        return sizeof(EVENT_FILTER_EVENT_ID) + (sizeof(Events[0]) * actualCount);
+        USHORT extraCount = std::max(USHORT(1), Count) - 1;
+        return sizeof(EVENT_FILTER_EVENT_ID) + (sizeof(Events[0]) * extraCount);
     }
 
     void* operator new(size_t n, size_t eventIds)
     {
         size_t extraCount = std::max(size_t(1), eventIds) - 1;
-        return ::operator new(n + extraCount * sizeof(USHORT));
+        return ::operator new(n + (sizeof(Events[0]) * extraCount));
     }
 
     void operator delete(void* mem)

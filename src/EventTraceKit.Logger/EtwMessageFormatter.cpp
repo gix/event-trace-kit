@@ -261,12 +261,35 @@ ULONG FormatProperty(
     return ec;
 }
 
+struct ReentrancyScope
+{
+    ReentrancyScope(std::atomic<int>& counter)
+        : counter(counter)
+    {
+        int old = counter.fetch_add(1);
+        //assert(old == 0);
+        Locked = old == 0;
+    }
+
+    ~ReentrancyScope()
+    {
+        --counter;
+    }
+
+    std::atomic<int>& counter;
+    bool Locked;
+};
+
 } // namespace
 
 bool EtwMessageFormatter::FormatEventMessage(
     EventInfo info, size_t pointerSize, wchar_t* buffer, size_t bufferSize)
 {
     if (!info)
+        return false;
+
+    ReentrancyScope reentrancy(reentrancyCount);
+    if (!reentrancy.Locked)
         return false;
 
     ArrayRef<uint8_t> userData = info.UserData();
@@ -309,10 +332,6 @@ bool EtwMessageFormatter::FormatEventMessage(
         formattedPropertiesOffsets.push_back(begin);
     }
 
-    for (auto const& begin : formattedPropertiesOffsets)
-        formattedPropertiesPointers.push_back(
-            reinterpret_cast<DWORD_PTR>(&formattedProperties[begin]));
-
     if (!message) {
         (void)StringCchCopyNW(
             buffer, bufferSize,
@@ -320,6 +339,10 @@ bool EtwMessageFormatter::FormatEventMessage(
             formattedProperties.length());
         return true;
     }
+
+    for (auto const& begin : formattedPropertiesOffsets)
+        formattedPropertiesPointers.push_back(
+            reinterpret_cast<DWORD_PTR>(&formattedProperties[begin]));
 
     auto const Flags = FORMAT_MESSAGE_FROM_STRING | FORMAT_MESSAGE_ARGUMENT_ARRAY;
     DWORD numWritten = FormatMessageW(

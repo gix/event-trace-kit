@@ -1,7 +1,5 @@
 namespace EventTraceKit.VsExtension
 {
-    using System;
-
     internal static class VsGuids
     {
         /// <summary>
@@ -10,6 +8,6 @@ namespace EventTraceKit.VsExtension
         /// selecting it in the Persisted window and then looking in the Properties
         /// window.
         /// </summary>
-        public static readonly Guid OutputWindowFrame = new Guid("34E76E81-EE4A-11D0-AE2E-00A0C90FFFC3");
+        public const string OutputWindowFrameString = "34E76E81-EE4A-11D0-AE2E-00A0C90FFFC3";
     }
 }

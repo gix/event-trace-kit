@@ -96,7 +96,7 @@
 
         public TraceSessionDescriptor GetDescriptor()
         {
-            return ActiveSession?.GetDescriptor();
+            return ActiveSession?.CreateDescriptor();
         }
 
         public Dictionary<EventKey, string> GetEventSymbols()

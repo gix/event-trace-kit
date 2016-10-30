@@ -57,9 +57,8 @@ namespace EventTraceKit.VsExtension
             get
             {
                 VerifyAccess();
-                if (executeCommand == null) {
+                if (executeCommand == null)
                     executeCommand = new DelegateCommand(obj => Execute());
-                }
                 return executeCommand;
             }
         }

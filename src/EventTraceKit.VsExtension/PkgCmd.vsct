@@ -30,7 +30,7 @@
           <ButtonText>&amp;Trace Log</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidTraceLogCmdSet" id="cmdidCaptureLog" priority="0x1010" type="Button">
+      <Button guid="guidTraceLogCmdSet" id="cmdidCaptureLog" priority="0x1" type="Button">
         <Parent guid="guidTraceLogCmdSet" id="ToolbarCaptureGroup"/>
         <Icon guid="ImageCatalogGuid" id="RecordDot"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
@@ -40,7 +40,7 @@
           <ButtonText>Ca&amp;pture</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidTraceLogCmdSet" id="cmdidClearLog" priority="0x1020" type="Button">
+      <Button guid="guidTraceLogCmdSet" id="cmdidClearLog" priority="0x2" type="Button">
         <Parent guid="guidTraceLogCmdSet" id="ToolbarCaptureGroup"/>
         <Icon guid="ImageCatalogGuid" id="ClearWindowContent"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
@@ -48,17 +48,24 @@
           <ButtonText>&amp;Clear Log</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidTraceLogCmdSet" id="cmdidAutoLog" priority="0x1030" type="Button">
+      <Button guid="guidTraceLogCmdSet" id="cmdidAutoLog" priority="0x3" type="Button">
         <Parent guid="guidTraceLogCmdSet" id="ToolbarCaptureGroup"/>
         <Icon guid="ImageCatalogGuid" id="RunUpdate"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
-        <CommandFlag>IconAndText</CommandFlag>
         <Strings>
           <ButtonText>&amp;Auto-Log</ButtonText>
           <ToolTipText>&amp;Automatically Log When Debugging or Running</ToolTipText>
         </Strings>
       </Button>
-      <Button guid="guidTraceLogCmdSet" id="cmdidOpenViewEditor" priority="0x1050" type="Button">
+      <Button guid="guidTraceLogCmdSet" id="cmdidConfigureSession" priority="0x4" type="Button">
+        <Parent guid="guidTraceLogCmdSet" id="ToolbarCaptureGroup"/>
+        <Icon guid="ImageCatalogGuid" id="Settings"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>C&amp;onfigure Tracing Session</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidTraceLogCmdSet" id="cmdidOpenViewEditor" priority="0x2" type="Button">
         <Parent guid="guidTraceLogCmdSet" id="ToolbarConfigGroup"/>
         <Icon guid="ImageCatalogGuid" id="ColumnSettings"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
@@ -66,12 +73,13 @@
           <ButtonText>Open &amp;View Editor</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidTraceLogCmdSet" id="cmdidConfigureSession" priority="0x1060" type="Button">
+      <Button guid="guidTraceLogCmdSet" id="cmdidToggleStatusBar" priority="0x3" type="Button">
         <Parent guid="guidTraceLogCmdSet" id="ToolbarConfigGroup"/>
-        <Icon guid="ImageCatalogGuid" id="Settings"/>
+        <Icon guid="ImageCatalogGuid" id="StatusStrip"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
-          <ButtonText>C&amp;onfigure Tracing Session</ButtonText>
+          <ButtonText>Status Bar</ButtonText>
+          <ToolTipText>Toggle Status &amp;Bar</ToolTipText>
         </Strings>
       </Button>
     </Buttons>
@@ -79,7 +87,7 @@
     <Combos>
       <Combo guid="guidTraceLogCmdSet" id="cmdidViewPresetCombo"
              idCommandList="cmdidViewPresetComboGetList" type="DropDownCombo"
-             priority="0x1040" defaultWidth="200">
+             priority="0x1" defaultWidth="200">
         <Parent guid="guidTraceLogCmdSet" id="ToolbarConfigGroup"/>
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
@@ -115,6 +123,7 @@
       <IDSymbol name="cmdidOpenViewEditor" value="0x0600"/>
       <IDSymbol name="cmdidViewPresetCombo" value="0x0700"/>
       <IDSymbol name="cmdidViewPresetComboGetList" value="0x0710"/>
+      <IDSymbol name="cmdidToggleStatusBar" value="0x0800"/>
     </GuidSymbol>
 
     <GuidSymbol name="guidTraceLogToolbarImages" value="{B053DA21-1C9B-42B4-AF85-4C75F075C5E6}">

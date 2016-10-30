@@ -25,7 +25,7 @@ namespace EventTraceKit.VsExtension
         protected TraceSessionDescriptor sessionDescriptor = new TraceSessionDescriptor();
 
         private string status;
-        private bool showStatistics;
+        private bool showStatusBar;
         private string formattedEventStatistics;
         private string formattedBufferStatistics;
         private bool autoLog;
@@ -85,8 +85,8 @@ namespace EventTraceKit.VsExtension
             taskFactory = new TaskFactory(scheduler);
 
             Statistics = new TraceLogStatsModel();
-            ShowStatistics = true;
             AutoLog = settings.AutoLog;
+            ShowStatusBar = settings.ShowStatusBar;
 
             updateStatisticsTimer = new DispatcherTimer(DispatcherPriority.Background);
             updateStatisticsTimer.Interval = TimeSpan.FromSeconds(1);
@@ -134,10 +134,10 @@ namespace EventTraceKit.VsExtension
             set { SetProperty(ref autoLog, value); }
         }
 
-        public bool ShowStatistics
+        public bool ShowStatusBar
         {
-            get { return showStatistics; }
-            set { SetProperty(ref showStatistics, value); }
+            get { return showStatusBar; }
+            set { SetProperty(ref showStatusBar, value); }
         }
 
         public string FormattedEventStatistics
@@ -307,6 +307,10 @@ namespace EventTraceKit.VsExtension
             id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidOpenViewEditor);
             commandService.AddCommand(new OleMenuCommand((s, e) => OpenViewEditor(), id));
 
+            id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidToggleStatusBar);
+            commandService.AddCommand(
+                new OleMenuCommand(OnToggleStatusBar, null, OnQueryToggleStatusBar, id));
+
             id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidViewPresetCombo);
             commandService.AddCommand(new OleMenuCommand(OnViewPresetCombo, id));
 
@@ -331,6 +335,18 @@ namespace EventTraceKit.VsExtension
         {
             AutoLog = !AutoLog;
             settings.AutoLog = AutoLog;
+        }
+
+        private void OnQueryToggleStatusBar(object sender, EventArgs e)
+        {
+            var command = (OleMenuCommand)sender;
+            command.Checked = ShowStatusBar;
+        }
+
+        private void OnToggleStatusBar(object sender, EventArgs e)
+        {
+            ShowStatusBar = !ShowStatusBar;
+            settings.ShowStatusBar = ShowStatusBar;
         }
 
         private void OnViewPresetCombo(object sender, EventArgs args)
@@ -414,7 +430,7 @@ namespace EventTraceKit.VsExtension
             Statistics.LogBuffersLost = 50;
             Statistics.RealTimeBuffersLost = 60;
 
-            ShowStatistics = true;
+            ShowStatusBar = true;
             FormatStatistics();
         }
     }

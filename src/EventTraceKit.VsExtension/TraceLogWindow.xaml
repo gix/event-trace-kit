@@ -15,7 +15,7 @@
   mc:Ignorable="d"
   d:DesignWidth="900"
   d:DesignHeight="200"
-  d:DataContext="{d:DesignInstance {x:Type etkvs:TraceLogWindowDesignTimeModel}, IsDesignTimeCreatable=True}">
+  d:DataContext="{d:DesignInstance {x:Type etkvs:TraceLogWindowDesignTimeModel}, IsDesignTimeCreatable=False}">
   <UserControl.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
@@ -27,7 +27,7 @@
 
   <DockPanel>
     <StatusBar DockPanel.Dock="Bottom"
-               Visibility="{Binding ShowStatistics, Converter={StaticResource BooleanToVisibilityConverter}}"
+               Visibility="{Binding ShowStatusBar, Converter={StaticResource BooleanToVisibilityConverter}}"
                Background="{DynamicResource {x:Static vsfx:VsBrushes.CommandBarGradientKey}}"
                Foreground="{DynamicResource {x:Static vsfx:VsBrushes.CommandBarTextActiveKey}}">
       <StatusBarItem VerticalContentAlignment="Stretch">
@@ -49,15 +49,17 @@
 
     <etkc:AsyncDataGrid
       ViewModel="{Binding GridModel}"
-      Foreground="{DynamicResource {x:Static etks:TraceLogColors.ForegroundKey}}"
       Background="{DynamicResource {x:Static vsui:TreeViewColors.BackgroundBrushKey}}"
-      RowBackground="{DynamicResource {x:Static etks:TraceLogColors.BackgroundKey}}"
-      AlternatingRowBackground="{DynamicResource {x:Static etks:TraceLogColors.BackgroundAltKey}}"
-      FrozenColumnBackground="{DynamicResource {x:Static etks:TraceLogColors.FrozenColumnBackgroundKey}}"
-      RowSelectionForeground="{DynamicResource {x:Static etks:TraceLogColors.SelectedForegroundKey}}"
-      RowSelectionBackground="{DynamicResource {x:Static etks:TraceLogColors.SelectedBackgroundKey}}"
-      RowInactiveSelectionForeground="{DynamicResource {x:Static etks:TraceLogColors.InactiveSelectedForegroundKey}}"
-      RowInactiveSelectionBackground="{DynamicResource {x:Static etks:TraceLogColors.InactiveSelectedBackgroundKey}}"
+      RowFontFamily="{DynamicResource {x:Static etks:TraceLogFonts.RowFontFamilyKey}}"
+      RowFontSize="{DynamicResource {x:Static etks:TraceLogFonts.RowFontSizeKey}}"
+      RowForeground="{DynamicResource {x:Static etks:TraceLogColors.RowForegroundBrushKey}}"
+      RowBackground="{DynamicResource {x:Static etks:TraceLogColors.RowBackgroundBrushKey}}"
+      AlternatingRowBackground="{DynamicResource {x:Static etks:TraceLogColors.AlternatingRowBackgroundBrushKey}}"
+      FrozenColumnBackground="{DynamicResource {x:Static etks:TraceLogColors.FrozenColumnBackgroundBrushKey}}"
+      RowSelectionForeground="{DynamicResource {x:Static etks:TraceLogColors.SelectedRowForegroundBrushKey}}"
+      RowSelectionBackground="{DynamicResource {x:Static etks:TraceLogColors.SelectedRowBackgroundBrushKey}}"
+      RowInactiveSelectionForeground="{DynamicResource {x:Static etks:TraceLogColors.InactiveSelectedRowForegroundBrushKey}}"
+      RowInactiveSelectionBackground="{DynamicResource {x:Static etks:TraceLogColors.InactiveSelectedRowBackgroundBrushKey}}"
       RowFocusBorderBrush="{DynamicResource {x:Static etkvs:CommonControlBrushes.FocusVisualForegroundKey}}"/>
   </DockPanel>
 </UserControl>

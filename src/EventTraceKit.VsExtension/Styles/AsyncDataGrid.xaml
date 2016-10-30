@@ -63,7 +63,7 @@
                   x:Name="PART_CellsPresenter"
                   HorizontalGridLinesThickness="0"
                   VerticalGridLinesThickness="0"
-                  Foreground="{TemplateBinding Foreground}"
+                  Foreground="{TemplateBinding RowForeground}"
                   PrimaryBackground="{TemplateBinding RowBackground}"
                   FrozenColumnBackground="{TemplateBinding FrozenColumnBackground}"
                   SecondaryBackground="{TemplateBinding AlternatingRowBackground}"

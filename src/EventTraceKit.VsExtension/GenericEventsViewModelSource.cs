@@ -257,7 +257,7 @@ namespace EventTraceKit.VsExtension
                     Id = new Guid("8823874B-917D-4D64-ABDF-EA29E6C87789"),
                     Name = "Time Elapsed",
                     IsVisible = true,
-                    Width = 100,
+                    Width = 120,
                     CellFormat = "HH:mm:ss.fffffff"
                 }.EnsureFrozen();
             decodingSourcePreset =
@@ -434,7 +434,7 @@ namespace EventTraceKit.VsExtension
                     Id = new Guid("8823874B-917D-4D64-ABDF-EA29E6C87789"),
                     Name = "Time Elapsed",
                     IsVisible = true,
-                    Width = 100,
+                    Width = 120,
                     CellFormat = "HH:mm:ss.fffffff"
                 }.EnsureFrozen();
 
@@ -458,6 +458,7 @@ namespace EventTraceKit.VsExtension
             preset.ConfigurableColumns.Add(processIdPreset);
             preset.ConfigurableColumns.Add(threadIdPreset);
             preset.ConfigurableColumns.Add(messagePreset);
+            preset.LeftFrozenColumnCount = 2;
             preset.Freeze();
 
             return preset;

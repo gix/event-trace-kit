@@ -55,6 +55,7 @@
     <AssemblyOriginatorKeyFile>..\Common\EventTraceKit.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CustomMarshalers" />
     <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.Expression.Interactions, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
@@ -82,6 +83,7 @@
     <Reference Include="Microsoft.VisualStudio.Shell.14.0, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.VisualStudio.Shell.14.0.14.3.25407\lib\Microsoft.VisualStudio.Shell.14.0.dll</HintPath>
       <Private>True</Private>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Immutable.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.VisualStudio.Shell.Immutable.10.0.10.0.30319\lib\net40\Microsoft.VisualStudio.Shell.Immutable.10.0.dll</HintPath>
@@ -102,6 +104,7 @@
     <Reference Include="Microsoft.VisualStudio.Shell.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <HintPath>..\packages\Microsoft.VisualStudio.Shell.Interop.7.10.6071\lib\Microsoft.VisualStudio.Shell.Interop.dll</HintPath>
       <Private>True</Private>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
@@ -126,10 +129,12 @@
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <HintPath>..\packages\Microsoft.VisualStudio.Shell.Interop.8.0.8.0.50727\lib\Microsoft.VisualStudio.Shell.Interop.8.0.dll</HintPath>
       <Private>True</Private>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <HintPath>..\packages\Microsoft.VisualStudio.Shell.Interop.9.0.9.0.30729\lib\Microsoft.VisualStudio.Shell.Interop.9.0.dll</HintPath>
       <Private>True</Private>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <HintPath>..\packages\Microsoft.VisualStudio.TextManager.Interop.7.10.6070\lib\Microsoft.VisualStudio.TextManager.Interop.dll</HintPath>
@@ -182,9 +187,7 @@
     <Compile Include="Controls\FreezableAreaSeparatorColumn.cs" />
     <Compile Include="Controls\MenuItemCommand.cs" />
     <Compile Include="Controls\SelectorUtils.cs" />
-    <Compile Include="EventTraceKitProfileManager.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="EventTraceKitProfileManager.cs" />
     <Compile Include="Controls\InsertionAdorner.cs" />
     <Compile Include="Extensions\PackageExtensions.cs" />
     <Compile Include="Extensions\PointUtils.cs" />
@@ -194,13 +197,19 @@
     <Compile Include="Extensions\VsSdkExtensions.cs" />
     <Compile Include="Extensions\Extensions.cs" />
     <Compile Include="Extensions\XElementExtensions.cs" />
+    <Compile Include="FileUtils.cs" />
+    <Compile Include="FontAndColorsRegistrationAttribute.cs" />
     <Compile Include="Formatting\FormatProviders.cs" />
     <Compile Include="AdvmPresetCollection.cs" />
+    <Compile Include="SettingsStoreGlobalSettings.cs" />
+    <Compile Include="IGlobalSettings.cs" />
     <Compile Include="ListBoxDragPreview.cs" />
     <Compile Include="Controls\MultiDragListBox.cs" />
     <Compile Include="Controls\MultiDragListView.cs" />
     <Compile Include="ManagedTdhFormatter.cs" />
     <Compile Include="NativeTdhFormatter.cs" />
+    <Compile Include="Native\FormatMessageFlags.cs" />
+    <Compile Include="Native\MOVEFILE_FLAGS.cs" />
     <Compile Include="Native\RECT.cs" />
     <Compile Include="PresetManager\ExceptionFilterEventArgs.cs" />
     <Compile Include="PresetManager\PresetManagerDialog.xaml.cs">
@@ -241,6 +250,12 @@
     <Compile Include="Settings\Persistence\NamespaceMapping.cs" />
     <Compile Include="Settings\Persistence\SettingsElement.cs" />
     <Compile Include="Settings\Persistence\Tracing.cs" />
+    <Compile Include="Styles\FontAndColorsResourceDictionary.cs" />
+    <Compile Include="Styles\FontAndColorsResourceKey.cs" />
+    <Compile Include="Styles\ResourceSynchronizer.cs" />
+    <Compile Include="FontAndColorDefaultsProvider.cs" />
+    <Compile Include="TraceLogFontAndColorDefaults.cs" />
+    <Compile Include="TraceLogResourceDictionary.cs" />
     <Compile Include="ValueChangedEventArgs.cs" />
     <Compile Include="ValueChangedEventHandler.cs" />
     <Compile Include="Windows\FreezableCustomSerializerAccessBase.cs" />
@@ -312,7 +327,7 @@
     <Compile Include="Controls\AsyncDataGridColumn.cs" />
     <Compile Include="Controls\AsyncDataGridViewModel.cs" />
     <Compile Include="Styles\ResourceKeys.cs" />
-    <Compile Include="FontsAndColorsHelper.cs" />
+    <Compile Include="FontAndColorsHelper.cs" />
     <Compile Include="Controls\ActivityRing.cs" />
     <Compile Include="Controls\ProgressRing.cs" />
     <Compile Include="Windows\DependencyPropertyExtensions.cs" />
@@ -456,10 +471,6 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Controls\Primitives\Split.cur" />
-    <Content Include="BindingPaths.pkgdef">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
     <Content Include="$(OutDir)EventTraceKit.Logger.pdb">
       <Link>EventTraceKit.Logger.pdb</Link>
       <IncludeInVSIX>true</IncludeInVSIX>

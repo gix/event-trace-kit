@@ -117,6 +117,29 @@ namespace EventTraceKit.VsExtension.Controls
 
         #endregion
 
+        #region public Brush RowForeground { get; set; }
+
+        /// <summary>
+        ///   Identifies the <see cref="RowForeground"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty RowForegroundProperty =
+            DependencyProperty.Register(
+                nameof(RowForeground),
+                typeof(Brush),
+                typeof(AsyncDataGrid),
+                new PropertyMetadata(SystemColors.ControlTextBrush));
+
+        /// <summary>
+        ///   Gets or sets the row foreground.
+        /// </summary>
+        public Brush RowForeground
+        {
+            get { return (Brush)GetValue(RowForegroundProperty); }
+            set { SetValue(RowForegroundProperty, value); }
+        }
+
+        #endregion
+
         #region public Brush RowBackground { get; set; }
 
         /// <summary>
@@ -703,7 +726,8 @@ namespace EventTraceKit.VsExtension.Controls
                     ContextMenu menu = ViewModel.BuildContextMenu();
                     if (menu != null) {
                         menu.PlacementTarget = this;
-                        menu.IsOpen = true;
+                        using (EnterContextMenuVisualState())
+                            menu.IsOpen = true;
                         e.Handled = true;
                     }
                 }

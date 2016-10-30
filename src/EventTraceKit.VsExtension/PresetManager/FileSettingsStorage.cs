@@ -4,7 +4,6 @@ namespace EventTraceKit.VsExtension
     using System.Collections.Generic;
     using System.IO;
     using System.Threading;
-    using Collections;
     using Microsoft.VisualStudio;
     using Microsoft.VisualStudio.PlatformUI;
     using Serialization;

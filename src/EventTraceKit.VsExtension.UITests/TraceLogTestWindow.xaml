@@ -34,14 +34,14 @@
       ViewModel="{Binding GridModel}"
       RowFontFamily="Consolas"
       RowFontSize="9pt"
-      Foreground="{DynamicResource {x:Static styles:TraceLogColors.ForegroundKey}}"
+      Foreground="{DynamicResource {x:Static styles:TraceLogColors.RowForegroundBrushKey}}"
       Background="{DynamicResource {x:Static vsp:TreeViewColors.BackgroundBrushKey}}"
-      RowBackground="{DynamicResource {x:Static styles:TraceLogColors.BackgroundKey}}"
-      AlternatingRowBackground="{DynamicResource {x:Static styles:TraceLogColors.BackgroundAltKey}}"
-      RowSelectionForeground="{DynamicResource {x:Static styles:TraceLogColors.SelectedForegroundKey}}"
-      RowSelectionBackground="{DynamicResource {x:Static styles:TraceLogColors.SelectedBackgroundKey}}"
-      RowInactiveSelectionForeground="{DynamicResource {x:Static styles:TraceLogColors.InactiveSelectedForegroundKey}}"
-      RowInactiveSelectionBackground="{DynamicResource {x:Static styles:TraceLogColors.InactiveSelectedBackgroundKey}}"
+      RowBackground="{DynamicResource {x:Static styles:TraceLogColors.RowBackgroundBrushKey}}"
+      AlternatingRowBackground="{DynamicResource {x:Static styles:TraceLogColors.AlternatingRowBackgroundBrushKey}}"
+      RowSelectionForeground="{DynamicResource {x:Static styles:TraceLogColors.SelectedRowForegroundBrushKey}}"
+      RowSelectionBackground="{DynamicResource {x:Static styles:TraceLogColors.SelectedRowBackgroundBrushKey}}"
+      RowInactiveSelectionForeground="{DynamicResource {x:Static styles:TraceLogColors.InactiveSelectedRowForegroundBrushKey}}"
+      RowInactiveSelectionBackground="{DynamicResource {x:Static styles:TraceLogColors.InactiveSelectedRowBackgroundBrushKey}}"
       RowFocusBorderBrush="{DynamicResource {x:Static EtkVs:CommonControlBrushes.FocusVisualForegroundKey}}"/>
   </Grid>
 </Window>

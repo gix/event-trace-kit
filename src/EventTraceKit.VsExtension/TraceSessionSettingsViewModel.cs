@@ -293,7 +293,7 @@
             target.Keywords = target.Keywords ?? source.Keywords;
         }
 
-        public TraceSessionDescriptor GetDescriptor()
+        public TraceSessionDescriptor CreateDescriptor()
         {
             var descriptor = new TraceSessionDescriptor();
             descriptor.LogFileName = LogFileName;
@@ -301,7 +301,7 @@
             descriptor.MinimumBuffers = MinimumBuffers;
             descriptor.MaximumBuffers = MaximumBuffers;
             descriptor.Providers.AddRange(
-                from x in Providers where x.IsEnabled select x.ToModel());
+                from x in Providers where x.IsEnabled select x.CreateDescriptor());
             return descriptor;
         }
 

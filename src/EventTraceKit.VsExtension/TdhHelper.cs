@@ -67,9 +67,9 @@ namespace EventTraceKit.VsExtension
 
         internal unsafe string ValueAtKey(void* pdata, TDH_IN_TYPE inputType)
         {
-            if (pdata == null) {
-                throw new ArgumentNullException("pdata");
-            }
+            if (pdata == null)
+                throw new ArgumentNullException(nameof(pdata));
+
             var stringFromBitMap = string.Empty;
             if ((inputType == TDH_IN_TYPE.INT32) || (inputType == TDH_IN_TYPE.UINT32)) {
                 if (pEventMapInfo[0].MapValueTypeFormatStringUnion !=
@@ -185,7 +185,7 @@ namespace EventTraceKit.VsExtension
                 fixed (char* ptr = messageBuffer)
                 {
                     var flags = FormatMessageFlags.FromString | FormatMessageFlags.ArgumentArray;
-                    var numWritten = TdhNativeMethods.FormatMessageW(
+                    var numWritten = NativeMethods.FormatMessageW(
                         flags, message, 0, 0, new IntPtr(ptr),
                         (uint)messageBuffer.Length, arguments);
                     if (numWritten == 0)
@@ -809,7 +809,7 @@ namespace EventTraceKit.VsExtension
                     if (tdhOutType == TDH_OUT_TYPE.SOCKETADDRESS && dataLength <= 128) {
                         fixed (char* chRef = temporaryStringForSockAddressString) {
                             var length = temporaryStringForSockAddressString.Length;
-                            if (TdhNativeMethods.WSAAddressToString(
+                            if (NativeMethods.WSAAddressToString(
                                 new IntPtr(pdata), dataLength, new IntPtr(), new IntPtr(chRef),
                                 ref length) == 0)
                                 return new UnmanagedString(chRef);
@@ -829,7 +829,7 @@ namespace EventTraceKit.VsExtension
                 case TDH_IN_TYPE.FILETIME: {
                     var systemTime = new SYSTEMTIME();
                     var lpFileTime = *(FILETIME*)pdata;
-                    TdhNativeMethods.FileTimeToSystemTime(ref lpFileTime, out systemTime);
+                    NativeMethods.FileTimeToSystemTime(ref lpFileTime, out systemTime);
                     return string.Format(
                         CultureInfo.CurrentUICulture, "{0:00}/{1:00}/{2:0000} {3:00}:{4:00}:{5:00}.{6:000}",
                         systemTime.wMonth, systemTime.wDay, systemTime.wYear, systemTime.wHour,
@@ -1028,50 +1028,6 @@ namespace EventTraceKit.VsExtension
             Build,
             Consume
         }
-    }
-
-    [Flags]
-    public enum FormatMessageFlags
-    {
-        /// <native>FORMAT_MESSAGE_IGNORE_INSERTS</native>
-        IgnoreInserts = 0x00000200,
-
-        /// <native>FORMAT_MESSAGE_FROM_STRING</native>
-        FromString = 0x00000400,
-
-        /// <native>FORMAT_MESSAGE_FROM_HMODULE</native>
-        FromHmodule = 0x00000800,
-
-        /// <native>FORMAT_MESSAGE_FROM_SYSTEM</native>
-        FromSystem = 0x00001000,
-
-        /// <native>FORMAT_MESSAGE_ARGUMENT_ARRAY</native>
-        ArgumentArray = 0x00002000,
-
-        /// <native>FORMAT_MESSAGE_MAX_WIDTH_MASK</native>
-        MaxWidthMask = 0x000000FF,
-    }
-
-    internal static class TdhNativeMethods
-    {
-        [DllImport("Kernel32.dll", SetLastError = true)]
-        public static extern uint FormatMessageW(
-            [MarshalAs(UnmanagedType.U4)] FormatMessageFlags dwFlags,
-            UnmanagedString lpSource,
-            uint dwMessageId,
-            uint dwLanguageId,
-            IntPtr lpBuffer,
-            uint nSize,
-            [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPWStr)]
-            string[] Arguments);
-
-        [DllImport("Kernel32.dll", SetLastError = true)]
-        public static extern bool FileTimeToSystemTime(
-            [In] ref FILETIME lpFileTime, out SYSTEMTIME lpSystemTime);
-
-        [DllImport("WS2_32.dll", EntryPoint = "WSAAddressToStringW", CharSet = CharSet.Unicode, SetLastError = true)]
-        public static extern int WSAAddressToString(
-            IntPtr pSockAddressStruct, uint cbSockAddressStruct, IntPtr lpProtocolInfo, IntPtr resultString, ref int cbResultStringLength);
     }
 
     public class ParseTdhContext
