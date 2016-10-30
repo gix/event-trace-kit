@@ -13,8 +13,7 @@ using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("NOpt.Tests")]
 [assembly: AssemblyDescription("Option parser tests")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyVersion("1.0.*")]
 
 [assembly: ComVisible(false)]
 [assembly: Guid("E0D12917-E241-497F-9057-00415228700B")]

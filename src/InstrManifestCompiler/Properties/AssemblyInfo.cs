@@ -4,8 +4,7 @@ using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("imc.exe")]
 [assembly: AssemblyDescription("Instrumentation Manifest Compiler")]
-[assembly: AssemblyVersion("1.0.1.0")]
-[assembly: AssemblyFileVersion("1.0.1.0")]
+[assembly: AssemblyVersion("1.0.*")]
 
 [assembly: ComVisible(false)]
 [assembly: Guid("17BCCEF0-8967-4E09-9959-30BAE17884E3")]

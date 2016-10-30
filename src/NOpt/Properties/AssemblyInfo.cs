@@ -14,8 +14,7 @@ using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("NOpt")]
 [assembly: AssemblyDescription("Option parser")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyVersion("1.0.*")]
 
 [assembly: ComVisible(true)]
 [assembly: Guid("8FD102B8-0860-4396-B73C-64AA09B3B663")]
