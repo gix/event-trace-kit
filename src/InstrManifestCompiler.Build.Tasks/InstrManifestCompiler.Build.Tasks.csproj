@@ -138,6 +138,7 @@
     <None Include="..\Common\EventTraceKit.snk">
       <Link>Properties\EventTraceKit.snk</Link>
     </None>
+    <None Include="packages.config" />
     <None Include="Resources\MSBuild\imc.props" />
     <None Include="Resources\MSBuild\imc.targets" />
     <None Include="Resx.tt">
@@ -177,5 +178,17 @@
       <MSBuildRes Include="Resources\MSBuild\**\*.*" />
     </ItemGroup>
     <Copy SourceFiles="@(MSBuildRes)" DestinationFiles="@(MSBuildRes->'$(OutDir)%(RecursiveDir)%(Filename)%(Extension)')" />
+  </Target>
+  <PropertyGroup>
+    <CodeContractsInstallDir Condition="'$(CodeContractsInstallDir)' == ''">$(MSBuildThisFileDirectory)..\packages\DotNet.Contracts.1.10.20606.1\</CodeContractsInstallDir>
+  </PropertyGroup>
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\DotNet.Contracts.1.10.20606.1\MsBuild\v14.0\Microsoft.CodeContracts.targets" Condition="Exists('..\packages\DotNet.Contracts.1.10.20606.1\MsBuild\v14.0\Microsoft.CodeContracts.targets')" />
+  </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\DotNet.Contracts.1.10.20606.1\MsBuild\v14.0\Microsoft.CodeContracts.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\DotNet.Contracts.1.10.20606.1\MsBuild\v14.0\Microsoft.CodeContracts.targets'))" />
   </Target>
 </Project>
