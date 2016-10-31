@@ -144,4 +144,3 @@ namespace EventTraceKit.VsExtension.Controls
         ColumnSelection
     }
 }
-

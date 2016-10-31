@@ -1,6 +1,7 @@
 namespace EventTraceKit.VsExtension
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Globalization;
     using System.Security.Principal;
@@ -8,6 +9,7 @@ namespace EventTraceKit.VsExtension
     using Controls;
     using Windows;
     using Native;
+    using Utilities;
 
     public sealed class GenericEventsViewModelSource
     {
@@ -469,8 +471,8 @@ namespace EventTraceKit.VsExtension
         {
             var table = new DataTable("Generic Events");
             var templatePreset = new AsyncDataViewModelPreset();
-            var formatter = new NativeTdhFormatter();
-            var info = new CrimsonEventsInfo(eventInfoSource, formatter, symbolSource);
+            var formatterPool = new ObjectPool<IMessageFormatter>(() => new NativeTdhFormatter(), 10);
+            var info = new CrimsonEventsInfo(eventInfoSource, formatterPool, symbolSource);
 
             AddColumn(table, templatePreset, timePointGeneratorPreset, DataColumn.Create(info.ProjectTimePoint));
             AddColumn(table, templatePreset, timeAbsoluteGeneratorPreset, DataColumn.Create(info.ProjectTimeAbsolute));
@@ -531,7 +533,7 @@ namespace EventTraceKit.VsExtension
                 new Guid("D733D8B0-7D18-4AEB-A3FC-8C4613BC2A40");
 
             private readonly IEventInfoSource eventInfoSource;
-            private readonly IMessageFormatter messageFormatter;
+            private readonly ObjectPool<IMessageFormatter> messageFormatterPool;
             private readonly IEventSymbolSource eventSymbolSource;
             private readonly Dictionary<int, SafeBstrHandle> winmetaOpcodeNames;
 
@@ -539,11 +541,11 @@ namespace EventTraceKit.VsExtension
 
             public CrimsonEventsInfo(
                 IEventInfoSource eventInfoSource,
-                IMessageFormatter messageFormatter,
+                ObjectPool<IMessageFormatter> messageFormatterPool,
                 IEventSymbolSource eventSymbolSource)
             {
                 this.eventInfoSource = eventInfoSource;
-                this.messageFormatter = messageFormatter;
+                this.messageFormatterPool = messageFormatterPool;
                 this.eventSymbolSource = eventSymbolSource;
 
                 // Standard Windows system opcodes taken from winmeta.xml in the
@@ -682,8 +684,13 @@ namespace EventTraceKit.VsExtension
             {
                 var info = GetEventInfo(index);
 
-                return messageFormatter.GetMessageForEvent(
-                    info, tdhContext, CultureInfo.CurrentCulture);
+                var formatter = messageFormatterPool.Acquire();
+                try {
+                    return formatter.GetMessageForEvent(
+                        info, tdhContext, CultureInfo.CurrentCulture);
+                } finally {
+                    messageFormatterPool.Release(formatter);
+                }
             }
 
             public EventType ProjectEventType(int index)

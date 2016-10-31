@@ -153,7 +153,7 @@
             } catch (NotSupportedException) {
                 // paths like "!Bogus\\dir:with/junk_.in it" can cause NotSupportedException to be thrown
                 // from Security.Util.StringExpressionSet.CanonicalizePath when ':' is found in the path
-                // beyond string index position 1.  
+                // beyond string index position 1.
             }
 
             if (!safeToReturn) {

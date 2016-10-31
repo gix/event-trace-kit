@@ -1,3 +1,6 @@
+#include "Descriptors.h"
+#include "TraceLog.h"
+
 #include "ADT/Guid.h"
 #include "InteropHelper.h"
 #include "ITraceLog.h"
@@ -14,66 +17,6 @@ using namespace System::Collections::Generic;
 using namespace System::Runtime::InteropServices;
 using namespace System::Threading::Tasks;
 using msclr::interop::marshal_as;
-
-
-namespace EventTraceKit
-{
-
-public ref struct TraceStatistics
-{
-    property unsigned NumberOfBuffers;
-    property unsigned FreeBuffers;
-    property unsigned EventsLost;
-    property unsigned BuffersWritten;
-    property unsigned LogBuffersLost;
-    property unsigned RealTimeBuffersLost;
-    property unsigned LoggerThreadId;
-};
-
-public ref class TraceProviderDescriptor
-{
-public:
-    TraceProviderDescriptor(Guid id)
-    {
-        Id = id;
-        Level = 0xFF;
-        MatchAnyKeyword = 0xFFFFFFFFFFFFFFFFULL;
-        MatchAllKeyword = 0;
-
-        ProcessIds = gcnew List<unsigned>();
-        EventIds = gcnew List<uint16_t>();
-    }
-
-    property Guid Id;
-    property uint8_t Level;
-    property uint64_t MatchAnyKeyword;
-    property uint64_t MatchAllKeyword;
-
-    property bool IncludeSecurityId;
-    property bool IncludeTerminalSessionId;
-    property bool IncludeStackTrace;
-
-    property String^ Manifest;
-    property List<unsigned>^ ProcessIds;
-    property List<uint16_t>^ EventIds;
-};
-
-public ref class TraceSessionDescriptor
-{
-public:
-    TraceSessionDescriptor()
-    {
-        Providers = gcnew List<TraceProviderDescriptor^>();
-    }
-
-    property Nullable<unsigned> BufferSize;
-    property Nullable<unsigned> MinimumBuffers;
-    property Nullable<unsigned> MaximumBuffers;
-    property String^ LogFileName;
-    property IList<TraceProviderDescriptor^>^ Providers;
-};
-
-} // namespace EventTraceKit
 
 namespace msclr
 {
@@ -116,72 +59,15 @@ inline etk::TraceProviderDescriptor marshal_as(EventTraceKit::TraceProviderDescr
 namespace EventTraceKit
 {
 
-public value struct TraceSessionInfo
+public ref struct TraceStatistics
 {
-    property long long StartTime;
-    property long long PerfFreq;
-    property unsigned PointerSize;
-};
-
-public value struct EventInfo
-{
-    property IntPtr EventRecord;
-    property IntPtr TraceEventInfo;
-    property IntPtr TraceEventInfoSize;
-};
-
-public ref class TraceLog : public System::IDisposable
-{
-public:
-    [UnmanagedFunctionPointer(CallingConvention::Cdecl)]
-    delegate void EventsChangedDelegate(UIntPtr);
-
-    TraceLog()
-    {
-        onEventsChangedCallback = gcnew EventsChangedDelegate(this, &TraceLog::OnEventsChanged);
-
-        auto nativeCallback = static_cast<etk::TraceLogEventsChangedCallback*>(
-            Marshal::GetFunctionPointerForDelegate(onEventsChangedCallback).ToPointer());
-        auto nativeLog = etk::CreateEtwTraceLog(nativeCallback);
-        if (!nativeLog)
-            throw gcnew Exception("Failed to create native trave log.");
-
-        this->nativeLog = nativeLog.release();
-    }
-
-    ~TraceLog() { this->!TraceLog(); }
-    !TraceLog() { delete nativeLog; }
-
-    event Action<UIntPtr>^ EventsChanged;
-
-    property unsigned EventCount
-    {
-        unsigned get() { return nativeLog->GetEventCount(); }
-    }
-
-    void Clear() { nativeLog->Clear(); }
-
-    EventInfo GetEvent(int index)
-    {
-        auto eventInfo = nativeLog->GetEvent(index);
-        EventInfo info;
-        info.EventRecord = IntPtr(eventInfo.Record());
-        info.TraceEventInfo = IntPtr(eventInfo.Info());
-        info.TraceEventInfoSize = IntPtr((void*)eventInfo.InfoSize());
-        return info;
-    }
-
-internal:
-    etk::ITraceLog* Native() { return nativeLog;  }
-
-private:
-    void OnEventsChanged(UIntPtr newCount)
-    {
-        EventsChanged(newCount);
-    }
-
-    EventsChangedDelegate^ onEventsChangedCallback;
-    etk::ITraceLog* nativeLog;
+    property unsigned NumberOfBuffers;
+    property unsigned FreeBuffers;
+    property unsigned EventsLost;
+    property unsigned BuffersWritten;
+    property unsigned LogBuffersLost;
+    property unsigned RealTimeBuffersLost;
+    property unsigned LoggerThreadId;
 };
 
 public ref class TraceSession : public System::IDisposable

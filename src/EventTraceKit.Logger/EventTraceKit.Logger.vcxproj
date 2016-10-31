@@ -89,8 +89,10 @@
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</CompileAsManaged>
     </ClCompile>
     <ClCompile Include="ADT\WaitEvent.cpp" />
-    <ClCompile Include="EtwMessageFormatter.cpp" />
-    <ClCompile Include="EtwMessageFormatterManaged.cpp">
+    <ClCompile Include="EventTraceKit\IMessageFormatter.h" />
+    <ClCompile Include="EventTraceKit\ParseTdhContext.cpp" />
+    <ClCompile Include="TdhMessageFormatter.cpp" />
+    <ClCompile Include="EventTraceKit\NativeTdhFormatter.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</BasicRuntimeChecks>
@@ -114,7 +116,7 @@
     </ClCompile>
     <ClCompile Include="Support\ErrorHandling.cpp" />
     <ClCompile Include="Support\SetThreadName.cpp" />
-    <ClCompile Include="TraceSession.cpp">
+    <ClCompile Include="EventTraceKit\TraceSession.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
       <MinimalRebuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</MinimalRebuild>
@@ -138,7 +140,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ADT\ArrayRef.h" />
-    <ClInclude Include="EtwMessageFormatter.h" />
+    <ClInclude Include="EventTraceKit\Descriptors.h" />
+    <ClInclude Include="EventTraceKit\ParseTdhContext.h" />
+    <ClInclude Include="EventTraceKit\TraceLog.h" />
+    <ClInclude Include="TdhMessageFormatter.h" />
     <ClInclude Include="InteropHelper.h" />
     <ClInclude Include="ITraceLog.h" />
     <ClInclude Include="EventInfo.h" />

@@ -1029,9 +1029,4 @@ namespace EventTraceKit.VsExtension
             Consume
         }
     }
-
-    public class ParseTdhContext
-    {
-        public int NativePointerSize { get; set; } = 8;
-    }
 }

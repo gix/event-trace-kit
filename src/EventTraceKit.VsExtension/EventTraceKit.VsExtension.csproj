@@ -187,7 +187,9 @@
     <Compile Include="Controls\FreezableAreaSeparatorColumn.cs" />
     <Compile Include="Controls\MenuItemCommand.cs" />
     <Compile Include="Controls\SelectorUtils.cs" />
-    <Compile Include="EventTraceKitProfileManager.cs" />
+    <Compile Include="EventTraceKitProfileManager.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Controls\InsertionAdorner.cs" />
     <Compile Include="Extensions\PackageExtensions.cs" />
     <Compile Include="Extensions\PointUtils.cs" />
@@ -201,13 +203,13 @@
     <Compile Include="FontAndColorsRegistrationAttribute.cs" />
     <Compile Include="Formatting\FormatProviders.cs" />
     <Compile Include="AdvmPresetCollection.cs" />
+    <Compile Include="Utilities\ObjectPool.cs" />
     <Compile Include="SettingsStoreGlobalSettings.cs" />
     <Compile Include="IGlobalSettings.cs" />
     <Compile Include="ListBoxDragPreview.cs" />
     <Compile Include="Controls\MultiDragListBox.cs" />
     <Compile Include="Controls\MultiDragListView.cs" />
     <Compile Include="ManagedTdhFormatter.cs" />
-    <Compile Include="NativeTdhFormatter.cs" />
     <Compile Include="Native\FormatMessageFlags.cs" />
     <Compile Include="Native\MOVEFILE_FLAGS.cs" />
     <Compile Include="Native\RECT.cs" />
@@ -297,7 +299,6 @@
     <Compile Include="HslColor.cs" />
     <Compile Include="HsvColor.cs" />
     <Compile Include="IEventInfoSource.cs" />
-    <Compile Include="IMessageFormatter.cs" />
     <Compile Include="Keyword.cs" />
     <Compile Include="MultiRange.cs" />
     <Compile Include="Native\NativeMethods.cs" />

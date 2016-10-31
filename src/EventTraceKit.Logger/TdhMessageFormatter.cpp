@@ -1,8 +1,8 @@
-﻿#include "EtwMessageFormatter.h"
+﻿#include "TdhMessageFormatter.h"
 
 #include "ADT/ArrayRef.h"
 #include <evntcons.h>
-#include <Tdh.h>
+#include <tdh.h>
 #include <in6addr.h>
 #include <strsafe.h>
 
@@ -261,35 +261,12 @@ ULONG FormatProperty(
     return ec;
 }
 
-struct ReentrancyScope
-{
-    ReentrancyScope(std::atomic<int>& counter)
-        : counter(counter)
-    {
-        int old = counter.fetch_add(1);
-        //assert(old == 0);
-        Locked = old == 0;
-    }
-
-    ~ReentrancyScope()
-    {
-        --counter;
-    }
-
-    std::atomic<int>& counter;
-    bool Locked;
-};
-
 } // namespace
 
-bool EtwMessageFormatter::FormatEventMessage(
+bool TdhMessageFormatter::FormatEventMessage(
     EventInfo info, size_t pointerSize, wchar_t* buffer, size_t bufferSize)
 {
     if (!info)
-        return false;
-
-    ReentrancyScope reentrancy(reentrancyCount);
-    if (!reentrancy.Locked)
         return false;
 
     ArrayRef<uint8_t> userData = info.UserData();

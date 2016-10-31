@@ -1,4 +1,5 @@
 ﻿#pragma once
+#if __cplusplus_cli
 #include "ADT/StringView.h"
 
 #include <msclr/marshal.h>
@@ -62,3 +63,5 @@ inline std::vector<T> marshal_as_vector(System::Collections::Generic::List<T>^ l
 
 } // namespace interop
 } // namespace msclr
+
+#endif // __cplusplus_cli

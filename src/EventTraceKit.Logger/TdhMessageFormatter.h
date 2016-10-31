@@ -1,12 +1,11 @@
 ﻿#pragma once
 #include "EventInfoCache.h"
-#include <atomic>
 #include <vector>
 
 namespace etk
 {
 
-class EtwMessageFormatter
+class TdhMessageFormatter
 {
 public:
     bool FormatEventMessage(
@@ -17,7 +16,6 @@ private:
     std::wstring formattedProperties;
     std::vector<size_t> formattedPropertiesOffsets;
     std::vector<DWORD_PTR> formattedPropertiesPointers;
-    std::atomic<int> reentrancyCount;
 };
 
 } // namespace etk
