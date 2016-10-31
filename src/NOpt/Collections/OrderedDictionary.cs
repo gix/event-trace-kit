@@ -113,6 +113,7 @@ namespace NOpt.Collections
         public OrderedDictionary(int capacity)
             : this(capacity, null)
         {
+            Contract.Requires<ArgumentOutOfRangeException>(capacity >= 0);
         }
 
         /// <summary>
@@ -207,6 +208,7 @@ namespace NOpt.Collections
         /// </remarks>
         public OrderedDictionary(int capacity, IEqualityComparer<TKey> comparer)
         {
+            Contract.Requires<ArgumentOutOfRangeException>(capacity >= 0);
             this.comparer = comparer;
             objectsTable = new Dictionary<TKey, TValue>(capacity, comparer);
             objectsArray = new List<KeyValuePair<TKey, TValue>>(capacity);

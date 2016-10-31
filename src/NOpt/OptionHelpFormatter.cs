@@ -67,6 +67,8 @@ namespace NOpt
 
         private IList<OptionGroup> GroupOptions(IEnumerable<Option> options)
         {
+            Contract.Ensures(Contract.Result<IList<OptionGroup>>() != null);
+
             var groups = new OrderedDictionary<string, OptionGroup>();
             var helpMap = new Dictionary<Option, OptionHelp>();
 
