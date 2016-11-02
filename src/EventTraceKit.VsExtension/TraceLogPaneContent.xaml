@@ -8,14 +8,14 @@
   xmlns:etkvs="clr-namespace:EventTraceKit.VsExtension"
   xmlns:etkc="clr-namespace:EventTraceKit.VsExtension.Controls"
   xmlns:etks="clr-namespace:EventTraceKit.VsExtension.Styles"
-  x:Class="EventTraceKit.VsExtension.TraceLogWindow"
+  x:Class="EventTraceKit.VsExtension.TraceLogPaneContent"
   UseLayoutRounding="True"
   Background="{DynamicResource {x:Static vsfx:VsBrushes.WindowKey}}"
   Foreground="{DynamicResource {x:Static vsfx:VsBrushes.WindowTextKey}}"
   mc:Ignorable="d"
   d:DesignWidth="900"
   d:DesignHeight="200"
-  d:DataContext="{d:DesignInstance {x:Type etkvs:TraceLogWindowDesignTimeModel}, IsDesignTimeCreatable=False}">
+  d:DataContext="{d:DesignInstance {x:Type etkvs:TraceLogPaneDesignTimeModel}, IsDesignTimeCreatable=False}">
   <UserControl.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>

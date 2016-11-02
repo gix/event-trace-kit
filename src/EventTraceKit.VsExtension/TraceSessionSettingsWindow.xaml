@@ -260,7 +260,7 @@
     <DockPanel>
       <Border DockPanel.Dock="Top"
               Background="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarGradientBrushKey}}">
-        <StackPanel Grid.Column="1" Margin="8" Orientation="Horizontal">
+        <StackPanel Margin="8" Orientation="Horizontal">
           <StackPanel.Resources>
             <CollectionViewSource x:Key="SortedSessionPresets" Source="{Binding Sessions}">
               <CollectionViewSource.SortDescriptions>

@@ -200,9 +200,27 @@
     <Compile Include="Extensions\Extensions.cs" />
     <Compile Include="Extensions\XElementExtensions.cs" />
     <Compile Include="FileUtils.cs" />
+    <Compile Include="FilterDialog.xaml.cs">
+      <DependentUpon>FilterDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="FilterDialogViewModel.cs" />
     <Compile Include="FontAndColorsRegistrationAttribute.cs" />
+    <Compile Include="Formatting\DefaultFormatProviderSource.cs" />
+    <Compile Include="Formatting\FormatProviderExtensions.cs" />
     <Compile Include="Formatting\FormatProviders.cs" />
     <Compile Include="AdvmPresetCollection.cs" />
+    <Compile Include="Formatting\IFormatProviderSource.cs" />
+    <Compile Include="Formatting\NumericalFormatProvider.cs" />
+    <Compile Include="Formatting\SupportedFormat.cs" />
+    <Compile Include="Formatting\TimePointFormatProvider.cs" />
+    <Compile Include="ImageIds.cs" />
+    <Compile Include="KnownImageMonikers.cs" />
+    <Compile Include="Native\EventHeaderCPtr.cs" />
+    <Compile Include="Native\EventPropertyInfoCPtr.cs" />
+    <Compile Include="Native\EventRecordCPtr.cs" />
+    <Compile Include="Native\TraceEventInfoCPtr.cs" />
+    <Compile Include="Native\TraceDataHelper.cs" />
+    <Compile Include="Native\UnmanagedString.cs" />
     <Compile Include="Utilities\ObjectPool.cs" />
     <Compile Include="SettingsStoreGlobalSettings.cs" />
     <Compile Include="IGlobalSettings.cs" />
@@ -258,6 +276,7 @@
     <Compile Include="FontAndColorDefaultsProvider.cs" />
     <Compile Include="TraceLogFontAndColorDefaults.cs" />
     <Compile Include="TraceLogResourceDictionary.cs" />
+    <Compile Include="Utilities\UnboundedCache.cs" />
     <Compile Include="ValueChangedEventArgs.cs" />
     <Compile Include="ValueChangedEventHandler.cs" />
     <Compile Include="Windows\FreezableCustomSerializerAccessBase.cs" />
@@ -283,7 +302,7 @@
     <Compile Include="SolutionFileGatherer.cs" />
     <Compile Include="ThemedDialogWindow.cs" />
     <Compile Include="Windows\ToggleSelectOnSpace.cs" />
-    <Compile Include="TraceLogWindowViewModel.cs" />
+    <Compile Include="TraceLogPaneViewModel.cs" />
     <Compile Include="TraceProviderDescriptorViewModel.cs" />
     <Compile Include="Windows\HexNumberConverter.cs" />
     <Compile Include="Windows\MenuPopupPositionerExtension.cs" />
@@ -335,7 +354,7 @@
     <Compile Include="EventTraceKitPackage.cs" />
     <Compile Include="VsGuids.cs" />
     <Compile Include="Windows\ValidateValueCallbacks.cs" />
-    <Compile Include="Native\Native.cs" />
+    <Compile Include="Native\EventConsumer.cs" />
     <Compile Include="Controls\Primitives\AsyncDataGridRenderedCellsVisual.cs" />
     <Compile Include="Controls\Primitives\AsyncDataGridCellsPresenter.cs" />
     <Compile Include="PkgCmdId.cs" />
@@ -346,8 +365,8 @@
     <Compile Include="TimePointFormatter.cs" />
     <Compile Include="TraceLogPane.cs" />
     <Compile Include="TraceLogWindowCommand.cs" />
-    <Compile Include="TraceLogWindow.xaml.cs">
-      <DependentUpon>TraceLogWindow.xaml</DependentUpon>
+    <Compile Include="TraceLogPaneContent.xaml.cs">
+      <DependentUpon>TraceLogPaneContent.xaml</DependentUpon>
     </Compile>
     <Compile Include="TraceSessionSettingsWindow.xaml.cs">
       <DependentUpon>TraceSessionSettingsWindow.xaml</DependentUpon>
@@ -363,8 +382,15 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="EventTraceKit.VsExtension.imagemanifest">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="Resources\EventTraceKit.16.16.png" />
+    <None Include="Resources\EventTraceKit.svg" />
     <None Include="Key.snk" />
     <None Include="packages.config" />
+    <None Include="Resources\TraceLog.16.16.pdn" />
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
@@ -376,6 +402,10 @@
     </VSCTCompile>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="FilterDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="PresetManager\PresetManagerDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -383,6 +413,10 @@
     <Page Include="PresetManager\PresetSaveAsDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Resources\TraceLog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Styles\ActivityRing.xaml">
       <SubType>Designer</SubType>
@@ -432,7 +466,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="TraceLogWindow.xaml">
+    <Page Include="TraceLogPaneContent.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -471,13 +505,14 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="ImageIds.vsct" />
+    <Resource Include="Resources\TraceLog.16.16.png" />
     <EmbeddedResource Include="Controls\Primitives\Split.cur" />
     <Content Include="$(OutDir)EventTraceKit.Logger.pdb">
       <Link>EventTraceKit.Logger.pdb</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Resources\Toolbar.png" />
-    <Content Include="Resources\ToolWindow1Package.ico" />
+    <None Include="Resources\EventTraceKit.ico" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Common\EventTraceKit.snk">

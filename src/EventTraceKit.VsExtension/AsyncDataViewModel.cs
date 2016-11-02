@@ -204,11 +204,16 @@ namespace EventTraceKit.VsExtension
         private int countReadOperationInProgress;
         internal object DataValidityToken => DataView.DataValidityToken;
 
+        public event EventHandler DataInvalidated;
+
         private readonly ActionThrottler rowCountChangedThrottler =
             new ActionThrottler(TimeSpan.FromMilliseconds(100));
 
         private void OnRowCountChanged(object sender, EventArgs eventArgs)
         {
+            if (dataView.RowCount == 0)
+                workManager.UIThreadTaskFactory.StartNew(() => DataInvalidated?.Invoke(this, EventArgs.Empty));
+
             rowCountChangedThrottler.Run(
                 () => workManager.UIThreadTaskFactory.StartNew(() => RaiseUpdate(false)));
         }

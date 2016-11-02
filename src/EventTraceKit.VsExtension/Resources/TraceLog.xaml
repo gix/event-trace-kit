@@ -1,0 +1,24 @@
+<Viewbox Width="16" Height="16" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+  <Rectangle Width="16" Height="16">
+    <Shape.Fill>
+      <DrawingBrush>
+        <DrawingBrush.Drawing>
+          <DrawingGroup>
+            <DrawingGroup.Children>
+              <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
+              <GeometryDrawing Brush="#FF666666" Geometry="F1M1,9L1,8 1.5,8 4.5,8 4.5,8.5 4.026,8.342 6.026,2.342 6.621,0.556 8.99,12.402 8.5,12.5 8.019,12.363 10.019,5.363 10.463,3.809 11.974,8.342 11.5,8.5 11.5,8 14.5,8 15,8 15,9 14.5,9 11.14,9 11.026,8.658 10.026,5.658 10.5,5.5 10.981,5.637 8.414,14.62 8.01,12.598 6.01,2.598 6.5,2.5 6.974,2.658 4.86,9 4.5,9 1.5,9 1,9z" />
+              <!-- Unwidened stroked geometry -->
+              <!--
+              <GeometryDrawing Geometry="F1M1.5,8.5L4.5,8.5 6.5,2.5 8.5,12.5 10.5,5.5 11.5,8.5 14.5,8.5M1.5,8.5z">
+                <GeometryDrawing.Pen>
+                  <Pen Brush="#66FF00FF" Thickness="1" StartLineCap="Square" EndLineCap="Square"/>
+                </GeometryDrawing.Pen>
+              </GeometryDrawing>
+              -->
+            </DrawingGroup.Children>
+          </DrawingGroup>
+        </DrawingBrush.Drawing>
+      </DrawingBrush>
+    </Shape.Fill>
+  </Rectangle>
+</Viewbox>

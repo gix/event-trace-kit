@@ -86,12 +86,12 @@
         //    return null;
         //}
 
-        private TraceLogWindow TraceLogWindowFactory(IServiceProvider sp)
+        private TraceLogPaneContent TraceLogWindowFactory(IServiceProvider sp)
         {
             var dte = sp.GetService<SDTE, DTE>();
             var operationalModeProvider = new DteOperationalModeProvider(dte, this);
 
-            var traceLog = new TraceLogWindowViewModel(
+            var traceLog = new TraceLogPaneViewModel(
                 globalSettings,
                 operationalModeProvider,
                 viewPresetService,
@@ -102,7 +102,7 @@
             if (commandService != null)
                 traceLog.AddCommandHandler(commandService);
 
-            return new TraceLogWindow { DataContext = traceLog };
+            return new TraceLogPaneContent { DataContext = traceLog };
         }
 
         private void TraceLogWindowClose()

@@ -72,6 +72,7 @@
       <Button Margin="7,1,1,1" Content="Stop" Command="{Binding StopCommand}"/>
       <Button Margin="7,1,1,1" Content="Clear" Command="{Binding ClearCommand}"/>
       <Button Margin="7,1,1,1" Content="View Editor" Command="{Binding OpenViewEditorCommand}"/>
+      <Button Margin="7,1,1,1" Content="Filter Editor" Command="{Binding OpenFilterEditorCommand}"/>
       <StackPanel Orientation="Horizontal">
         <TextBlock Margin="7,1,1,1" Text="Rows" VerticalAlignment="Center"/>
         <TextBox Margin="7,1,1,1" Text="{Binding RowCount}" Width="50" VerticalAlignment="Center"/>
@@ -86,8 +87,8 @@
       ViewModel="{Binding GridModel}"
       RowFontFamily="{Binding RowFontFamily}"
       RowFontSize="{Binding RowFontSize}"
-      Foreground="{Binding Foreground}"
       Background="{Binding Background}"
+      RowForeground="{Binding RowForeground}"
       RowBackground="{Binding RowBackground}"
       AlternatingRowBackground="{Binding AlternatingRowBackground}"
       RowSelectionForeground="{Binding RowSelectionForeground}"

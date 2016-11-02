@@ -10,13 +10,14 @@
     <ClCompile Include="EventInfoCache.cpp" />
     <ClCompile Include="Support\SetThreadName.cpp" />
     <ClCompile Include="EtwTraceLog.cpp" />
-    <ClCompile Include="WatchDog.cpp" />
     <ClCompile Include="ManifestInfo.cpp" />
     <ClCompile Include="TdhMessageFormatter.cpp" />
     <ClCompile Include="EventTraceKit\IMessageFormatter.h" />
     <ClCompile Include="EventTraceKit\TraceSession.cpp" />
     <ClCompile Include="EventTraceKit\NativeTdhFormatter.cpp" />
     <ClCompile Include="EventTraceKit\ParseTdhContext.cpp" />
+    <ClCompile Include="EventTraceKit\TraceLog.cpp" />
+    <ClCompile Include="EventTraceKit\WatchDog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EtwTraceProcessor.h" />
@@ -45,11 +46,11 @@
     <ClInclude Include="EventInfo.h" />
     <ClInclude Include="IEventSink.h" />
     <ClInclude Include="ITraceLog.h" />
-    <ClInclude Include="WatchDog.h" />
     <ClInclude Include="TdhMessageFormatter.h" />
     <ClInclude Include="EventTraceKit\Descriptors.h" />
     <ClInclude Include="EventTraceKit\TraceLog.h" />
     <ClInclude Include="EventTraceKit\ParseTdhContext.h" />
     <ClInclude Include="InteropHelper.h" />
+    <ClInclude Include="EventTraceKit\WatchDog.h" />
   </ItemGroup>
 </Project>

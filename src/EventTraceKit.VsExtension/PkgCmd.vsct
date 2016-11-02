@@ -4,6 +4,7 @@
   <Extern href="stdidcmd.h"/>
   <Extern href="vsshlids.h"/>
   <Include href="KnownImageIds.vsct"/>
+  <Include href="ImageIds.vsct"/>
 
   <Commands package="guidEventTraceKitPackage">
     <Menus>
@@ -15,17 +16,21 @@
     </Menus>
 
     <Groups>
-      <Group guid="guidTraceLogCmdSet" id="ToolbarCaptureGroup" priority="0x1000">
+      <Group guid="guidTraceLogCmdSet" id="ToolbarCaptureGroup" priority="0x1">
         <Parent guid="guidTraceLogCmdSet" id="Toolbar"/>
       </Group>
-      <Group guid="guidTraceLogCmdSet" id="ToolbarConfigGroup" priority="0x2000">
+      <Group guid="guidTraceLogCmdSet" id="ToolbarConfigGroup" priority="0x2">
+        <Parent guid="guidTraceLogCmdSet" id="Toolbar"/>
+      </Group>
+      <Group guid="guidTraceLogCmdSet" id="ToolbarOptionsGroup" priority="0x3">
         <Parent guid="guidTraceLogCmdSet" id="Toolbar"/>
       </Group>
     </Groups>
 
     <Buttons>
       <Button guid="guidTraceLogCmdSet" id="cmdidTraceLog" priority="0x0100" type="Button">
-        <Icon guid="guidTraceLogToolbarImages" id="bmpTraceLog"/>
+        <Icon guid="EtkImagesGuid" id="TraceLog"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>&amp;Trace Log</ButtonText>
         </Strings>
@@ -73,8 +78,33 @@
           <ButtonText>Open &amp;View Editor</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidTraceLogCmdSet" id="cmdidToggleStatusBar" priority="0x3" type="Button">
+      <Button guid="guidTraceLogCmdSet" id="cmdidEnableFilter" priority="0x3" type="Button">
         <Parent guid="guidTraceLogCmdSet" id="ToolbarConfigGroup"/>
+        <Icon guid="ImageCatalogGuid" id="Filter"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>Enable Filter</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidTraceLogCmdSet" id="cmdidOpenFilterEditor" priority="0x4" type="Button">
+        <Parent guid="guidTraceLogCmdSet" id="ToolbarConfigGroup"/>
+        <Icon guid="ImageCatalogGuid" id="EditFilter"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>Open &amp;Filter Editor</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidTraceLogCmdSet" id="cmdidToggleColumnHeaders" priority="0x1" type="Button">
+        <Parent guid="guidTraceLogCmdSet" id="ToolbarOptionsGroup"/>
+        <Icon guid="ImageCatalogGuid" id="TableViewNameOnly"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>Status Bar</ButtonText>
+          <ToolTipText>Toggle Status &amp;Bar</ToolTipText>
+        </Strings>
+      </Button>
+      <Button guid="guidTraceLogCmdSet" id="cmdidToggleStatusBar" priority="0x2" type="Button">
+        <Parent guid="guidTraceLogCmdSet" id="ToolbarOptionsGroup"/>
         <Icon guid="ImageCatalogGuid" id="StatusStrip"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
@@ -96,10 +126,6 @@
         </Strings>
       </Combo>
     </Combos>
-
-    <Bitmaps>
-      <Bitmap guid="guidTraceLogToolbarImages" href="Resources\Toolbar.png"/>
-    </Bitmaps>
   </Commands>
 
   <CommandPlacements>
@@ -115,6 +141,7 @@
       <IDSymbol name="Toolbar" value="0x1000"/>
       <IDSymbol name="ToolbarCaptureGroup" value="0x2000"/>
       <IDSymbol name="ToolbarConfigGroup" value="0x3000"/>
+      <IDSymbol name="ToolbarOptionsGroup" value="0x4000"/>
       <IDSymbol name="cmdidTraceLog" value="0x0100"/>
       <IDSymbol name="cmdidAutoLog" value="0x0200"/>
       <IDSymbol name="cmdidCaptureLog" value="0x0300"/>
@@ -123,15 +150,10 @@
       <IDSymbol name="cmdidOpenViewEditor" value="0x0600"/>
       <IDSymbol name="cmdidViewPresetCombo" value="0x0700"/>
       <IDSymbol name="cmdidViewPresetComboGetList" value="0x0710"/>
-      <IDSymbol name="cmdidToggleStatusBar" value="0x0800"/>
-    </GuidSymbol>
-
-    <GuidSymbol name="guidTraceLogToolbarImages" value="{B053DA21-1C9B-42B4-AF85-4C75F075C5E6}">
-      <IDSymbol name="bmpTraceLog" value="1"/>
-      <IDSymbol name="bmpAutoLog" value="2"/>
-      <IDSymbol name="bmpClearLog" value="3"/>
-      <IDSymbol name="bmpSettings" value="4"/>
-      <IDSymbol name="bmpCapture" value="5"/>
+      <IDSymbol name="cmdidEnableFilter" value="0x0800"/>
+      <IDSymbol name="cmdidOpenFilterEditor" value="0x0850"/>
+      <IDSymbol name="cmdidToggleColumnHeaders" value="0x0900"/>
+      <IDSymbol name="cmdidToggleStatusBar" value="0x0A00"/>
     </GuidSymbol>
   </Symbols>
 </CommandTable>

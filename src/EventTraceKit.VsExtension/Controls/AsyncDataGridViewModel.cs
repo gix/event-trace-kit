@@ -10,8 +10,11 @@ namespace EventTraceKit.VsExtension.Controls
 
     public class AsyncDataGridViewModel : DependencyObject
     {
+        private readonly AsyncDataViewModel advModel;
+
         public AsyncDataGridViewModel(AsyncDataViewModel advModel)
         {
+            this.advModel = advModel;
             ColumnsModel = new AsyncDataGridColumnsViewModel(advModel);
             CellsPresenter = new AsyncDataGridCellsPresenterViewModel(advModel);
         }
@@ -25,6 +28,12 @@ namespace EventTraceKit.VsExtension.Controls
         public int FocusIndex => CellsPresenter.FocusIndex;
 
         public event ItemEventHandler<bool> Updated;
+
+        public event EventHandler DataInvalidated
+        {
+            add { advModel.DataInvalidated += value; }
+            remove { advModel.DataInvalidated -= value; }
+        }
 
         internal void RaiseUpdated(bool refreshViewModelFromModel = true)
         {

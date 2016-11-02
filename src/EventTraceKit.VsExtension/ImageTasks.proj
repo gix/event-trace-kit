@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Generate" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <VsSdkDir Condition="'$(VsSdkDir)' == ''">$(VSSDK140Install)</VsSdkDir>
+    <ManifestFromResources Condition="'$(ManifestFromResources)' == ''">$(VsSdkDir)VisualStudioIntegration\Tools\Bin\ManifestFromResources.exe</ManifestFromResources>
+    <ManifestToCode Condition="'$(ManifestToCode)' == ''">$(VsSdkDir)VisualStudioIntegration\Tools\Bin\ManifestToCode.exe</ManifestToCode>
+    <AssemblyName>EventTraceKit.VsExtension</AssemblyName>
+    <ImageManifestName>$(AssemblyName).imagemanifest</ImageManifestName>
+    <ImageIdClass>ImageIds</ImageIdClass>
+    <MonikerClass>KnownImageMonikers</MonikerClass>
+    <ManifestToCodeOpts>/manifest:$(ImageManifestName) /imageIdClass:$(ImageIdClass) /monikerClass:$(MonikerClass) /namespace:$(AssemblyName)</ManifestToCodeOpts>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ImageResource Include="Resources/TraceLog.xaml"/>
+    <ImageResource Include="Resources/TraceLog.*.png"/>
+  </ItemGroup>
+
+  <Target Name="Nop"/>
+
+  <Target Name="GenerateImageManifest"
+          Inputs="@(ImageResource)"
+          Outputs="$(ImageManifestName)">
+    <Exec Command="&quot;$(ManifestFromResources)&quot; /noLogo /assembly:$(AssemblyName) /resources:@(ImageResource) /guidName:EtkImagesGuid"
+          WorkingDirectory="$(MSBuildThisFileDirectory)"/>
+  </Target>
+
+  <Target Name="GenerateImageCmdTable" DependsOnTargets="GenerateImageManifest"
+          Inputs="$(ImageManifestName)"
+          Outputs="$(ImageIdClass).vsct">
+    <Exec Command="&quot;$(ManifestToCode)&quot; /noLogo /language:VSCT $(ManifestToCodeOpts)"
+          WorkingDirectory="$(MSBuildThisFileDirectory)"/>
+  </Target>
+
+  <Target Name="GenerateImageMonikers" DependsOnTargets="GenerateImageManifest"
+          Inputs="$(ImageManifestName)"
+          Outputs="$(MonikerClass).cs">
+    <Exec Command="&quot;$(ManifestToCode)&quot; /noLogo /language:CSharp $(ManifestToCodeOpts)"
+          WorkingDirectory="$(MSBuildThisFileDirectory)"/>
+  </Target>
+
+  <Target Name="Generate" DependsOnTargets="GenerateImageCmdTable;GenerateImageMonikers"/>
+  <Target Name="Regen" DependsOnTargets="Clean;Generate"/>
+
+  <Target Name="Clean">
+    <Delete Files="$(ImageManifestName)"/>
+    <Delete Files="$(ImageIdClass).vsct"/>
+    <Delete Files="$(MonikerClass).cs"/>
+  </Target>
+</Project>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Generate" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Magick Condition="'$(Magick)' == ''">C:\Program Files\ImageMagick-7.0.3-Q8\magick.exe</Magick>
+    <Inkscape Condition="'$(Inkscape)' == ''">C:\Program Files\Inkscape\inkscape.exe</Inkscape>
+  </PropertyGroup>
+
+  <Target Name="Nop"/>
+
+  <Target Name="CreateIcon"
+          Inputs="EventTraceKit.svg"
+          Outputs="EventTraceKit.ico">
+    <Exec Command="&quot;$(Inkscape)&quot; -z -e EventTraceKit.256.256.g.png -w 256 -h 256 EventTraceKit.svg" WorkingDirectory="$(MSBuildThisFileDirectory)"/>
+    <Exec Command="&quot;$(Inkscape)&quot; -z -e EventTraceKit.128.128.g.png -w 128 -h 128 EventTraceKit.svg" WorkingDirectory="$(MSBuildThisFileDirectory)"/>
+    <Exec Command="&quot;$(Inkscape)&quot; -z -e EventTraceKit.64.64.g.png -w 64 -h 64 EventTraceKit.svg" WorkingDirectory="$(MSBuildThisFileDirectory)"/>
+    <Exec Command="&quot;$(Inkscape)&quot; -z -e EventTraceKit.48.48.g.png -w 48 -h 48 EventTraceKit.svg" WorkingDirectory="$(MSBuildThisFileDirectory)"/>
+    <Exec Command="&quot;$(Inkscape)&quot; -z -e EventTraceKit.32.32.g.png -w 32 -h 32 EventTraceKit.svg" WorkingDirectory="$(MSBuildThisFileDirectory)"/>
+    <Exec Command="&quot;$(Inkscape)&quot; -z -e EventTraceKit.24.24.g.png -w 24 -h 24 EventTraceKit.svg" WorkingDirectory="$(MSBuildThisFileDirectory)"/>
+    <Exec Command="&quot;$(Magick)&quot; EventTraceKit.256.256.g.png EventTraceKit.128.128.g.png EventTraceKit.64.64.g.png EventTraceKit.48.48.g.png EventTraceKit.32.32.g.png EventTraceKit.24.24.g.png EventTraceKit.16.16.png EventTraceKit.ico" WorkingDirectory="$(MSBuildThisFileDirectory)"/>
+    <ItemGroup>
+      <_TmpFiles Include="EventTraceKit.*.g.png"/>
+    </ItemGroup>
+    <Delete Files="@(_TmpFiles)"/>
+  </Target>
+</Project>

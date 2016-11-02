@@ -4,10 +4,12 @@
 #include "Support/Allocator.h"
 
 #include <atomic>
+#include <condition_variable>
 #include <deque>
 #include <shared_mutex>
 #include <string>
 #include <vector>
+#include "Support/SetThreadName.h"
 
 namespace etk
 {
@@ -15,10 +17,54 @@ namespace etk
 namespace
 {
 
+class ManualResetEventSlim
+{
+public:
+    ManualResetEventSlim(bool signaled = false)
+        : signaled(signaled)
+    {
+    }
+
+    void Set()
+    {
+        {
+            std::unique_lock<std::mutex> lock(mutex);
+            signaled = true;
+        }
+
+        cv.notify_all();
+    }
+
+    void Reset()
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        signaled = false;
+    }
+
+
+    void Wait()
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        while (!signaled)
+            cv.wait(lock);
+    }
+
+private:
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool signaled;
+};
+
 class EtwTraceLog : public ITraceLog
 {
 public:
-    explicit EtwTraceLog(TraceLogEventsChangedCallback* callback = nullptr);
+    explicit EtwTraceLog();
+
+    void SetCallback(TraceLogEventsChangedCallback* callback, void* state)
+    {
+        this->changedCallback = callback;
+        this->changedCallbackState = state;
+    }
 
     virtual void ProcessEvent(EVENT_RECORD const& record) override;
 
@@ -44,6 +90,7 @@ private:
 
     mutable std::shared_mutex mutex;
     TraceLogEventsChangedCallback* changedCallback;
+    void* changedCallbackState;
 };
 
 template<typename Allocator>
@@ -76,12 +123,14 @@ EVENT_RECORD* CopyEvent(Allocator& alloc, EVENT_RECORD const* record)
     return copy;
 }
 
-void NullCallback(size_t) {}
+void NullCallback(size_t, void*) {}
+bool AlwaysFilter(void*, void*, size_t) { return true; }
 
 } // namespace
 
-EtwTraceLog::EtwTraceLog(TraceLogEventsChangedCallback* callback /*= nullptr*/)
-    : changedCallback(callback ? callback : &NullCallback)
+EtwTraceLog::EtwTraceLog()
+    : changedCallback(&NullCallback)
+    , changedCallbackState()
 {
 }
 
@@ -95,7 +144,7 @@ void EtwTraceLog::ProcessEvent(EVENT_RECORD const& record)
     }
 
     size_t newCount = ++eventCount;
-    changedCallback(newCount);
+    changedCallback(newCount, changedCallbackState);
 }
 
 void EtwTraceLog::Clear()
@@ -107,7 +156,7 @@ void EtwTraceLog::Clear()
         eventInfoCache.Clear();
     }
 
-    changedCallback(0);
+    changedCallback(0, changedCallbackState);
 }
 
 EventInfo EtwTraceLog::GetEvent(size_t index) const
@@ -137,9 +186,184 @@ void EtwTraceLog::UnregisterManifests()
     //    ec = TdhUnloadManifest(&providerBinary[0]);
 }
 
+class FilteredTraceLog : public IFilteredTraceLog
+{
+public:
+    explicit FilteredTraceLog(TraceLogEventsChangedCallback* callback = nullptr,
+                              TraceLogFilterEvent* filter = nullptr)
+        : filter(filter ? filter : &AlwaysFilter)
+        , changedCallback(callback ? callback : &NullCallback)
+        , changedCallbackState(nullptr)
+    {
+        running = true;
+        filterThread = std::thread(std::bind(&FilteredTraceLog::ThreadProc, this));
+    }
+
+    ~FilteredTraceLog()
+    {
+        running = false;
+        changedEvent.Set();
+        if (filterThread.joinable())
+            filterThread.join();
+    }
+
+    virtual size_t GetEventCount() override { return eventCount; }
+
+    virtual EventInfo GetEvent(size_t index) const override
+    {
+        if (index >= eventCount) return EventInfo();
+
+        std::shared_lock<std::shared_mutex> lock(mutex);
+        if (index >= events.size()) return EventInfo();
+        return events[index];
+    }
+
+    virtual void SetFilter(TraceLogFilterEvent* filter) override
+    {
+        pendingFilter = filter != nullptr ? filter : &AlwaysFilter;
+        changedEvent.Set();
+    }
+
+    void SetLog(ITraceLog* traceLog)
+    {
+        this->traceLog = traceLog;
+    }
+
+    static void Callback(size_t /*newCount*/, void* state)
+    {
+        static_cast<FilteredTraceLog*>(state)->changedEvent.Set();
+    }
+
+    ManualResetEventSlim changedEvent;
+
+private:
+    void ThreadProc()
+    {
+        SetCurrentThreadName("ETW Filter Thread");
+
+        for (;;) {
+            changedEvent.Wait();
+            if (!running)
+                break;
+
+            changedEvent.Reset();
+            auto newFilter = pendingFilter.exchange(nullptr);
+            if (newFilter) {
+                filter = newFilter;
+                Rebuild();
+                continue;
+            }
+
+            ProcessEvents();
+        }
+    }
+
+    void ProcessEvents()
+    {
+        size_t newTotal = traceLog->GetEventCount();
+
+        if (newTotal > prevTotal)
+            ProcessLog(prevTotal, newTotal);
+        else if (newTotal == 0)
+            Clear();
+        else if (newTotal < prevTotal)
+            Rebuild();
+
+        prevTotal = newTotal;
+    }
+
+    void Rebuild()
+    {
+        Clear();
+        ProcessLog(0, traceLog->GetEventCount());
+    }
+
+    void ProcessLog(size_t begin, size_t end)
+    {
+        size_t count = 0;
+        for (size_t i = begin; i < end; ++i) {
+            EventInfo evt = traceLog->GetEvent(i);
+            if (MatchesFilter(evt)) {
+                std::unique_lock<std::shared_mutex> lock(mutex);
+                events.push_back(evt);
+                ++count;
+            }
+
+            if (count > RebuildBatchSize) {
+                AddCount(count);
+                count = 0;
+            }
+        }
+
+        if (count > 0)
+            AddCount(count);
+    }
+
+    bool MatchesFilter(EventInfo const& evt) const
+    {
+        return filter(evt.Record(), evt.Info(), evt.InfoSize());
+    }
+
+    void Clear()
+    {
+        SetCount(0);
+        std::unique_lock<std::shared_mutex> lock(mutex);
+        events.clear();
+    }
+
+    void AddCount(size_t additionalCount)
+    {
+        size_t total = eventCount += additionalCount;
+        changedCallback(total, changedCallbackState);
+    }
+
+    void SetCount(size_t newCount)
+    {
+        eventCount = newCount;
+        changedCallback(newCount, changedCallbackState);
+    }
+
+    static size_t const RebuildBatchSize = 50;
+
+    // Owned by ThreadProc
+    size_t prevTotal = 0;
+    TraceLogFilterEvent* filter;
+
+    // Shared
+    mutable std::shared_mutex mutex;
+    std::deque<EventInfo> events;
+    std::atomic<size_t> eventCount;
+    std::atomic<TraceLogFilterEvent*> pendingFilter;
+
+    std::atomic<bool> running;
+    std::thread filterThread;
+
+    // Immutable
+    ITraceLog* traceLog;
+    TraceLogEventsChangedCallback* changedCallback;
+    void* changedCallbackState;
+};
+
+
 std::unique_ptr<ITraceLog> CreateEtwTraceLog(TraceLogEventsChangedCallback* callback)
 {
-    return std::make_unique<EtwTraceLog>(callback);
+    auto log = std::make_unique<EtwTraceLog>();
+    log->SetCallback(callback, nullptr);
+    return std::move(log);
+}
+
+std::tuple<std::unique_ptr<ITraceLog>, std::unique_ptr<IFilteredTraceLog>>
+CreateFilteredTraceLog(TraceLogEventsChangedCallback* callback, TraceLogFilterEvent* filter)
+{
+    auto filteredLog = std::make_unique<FilteredTraceLog>(callback, filter);
+    auto traceLog = std::make_unique<EtwTraceLog>();
+    filteredLog->SetLog(traceLog.get());
+    traceLog->SetCallback(&FilteredTraceLog::Callback, filteredLog.get());
+
+    std::unique_ptr<ITraceLog> t = std::move(traceLog);
+    std::unique_ptr<IFilteredTraceLog> f = std::move(filteredLog);
+
+    return std::tuple<std::unique_ptr<ITraceLog>, std::unique_ptr<IFilteredTraceLog>>(std::move(t), std::move(f));
 }
 
 } // namespace etk

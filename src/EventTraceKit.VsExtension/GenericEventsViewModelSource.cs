@@ -1,15 +1,14 @@
 namespace EventTraceKit.VsExtension
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Globalization;
     using System.Security.Principal;
     using System.Windows;
     using Controls;
-    using Windows;
     using Native;
     using Utilities;
+    using Windows;
 
     public sealed class GenericEventsViewModelSource
     {
@@ -469,10 +468,11 @@ namespace EventTraceKit.VsExtension
         public Tuple<DataTable, AsyncDataViewModelPreset> CreateTable(
             IEventInfoSource eventInfoSource, EventSymbolSource symbolSource)
         {
-            var table = new DataTable("Generic Events");
-            var templatePreset = new AsyncDataViewModelPreset();
             var formatterPool = new ObjectPool<IMessageFormatter>(() => new NativeTdhFormatter(), 10);
             var info = new CrimsonEventsInfo(eventInfoSource, formatterPool, symbolSource);
+
+            var table = new DataTable("Generic Events");
+            var templatePreset = new AsyncDataViewModelPreset();
 
             AddColumn(table, templatePreset, timePointGeneratorPreset, DataColumn.Create(info.ProjectTimePoint));
             AddColumn(table, templatePreset, timeAbsoluteGeneratorPreset, DataColumn.Create(info.ProjectTimeAbsolute));
@@ -700,6 +700,8 @@ namespace EventTraceKit.VsExtension
                     return EventType.Classic;
                 if (record.IsTraceLoggingEvent())
                     return EventType.TraceLogging;
+                if (record.IsWppEvent())
+                    return EventType.WPP;
                 return EventType.Manifested;
             }
 
@@ -802,5 +804,15 @@ namespace EventTraceKit.VsExtension
                 return GetTraceEventInfo(index).DecodingSource;
             }
         }
+    }
+
+    public enum EventType
+    {
+        Unknown,
+        Classic,
+        Manifested,
+        TraceLogging,
+        WPP,
+        MaxValue
     }
 }

@@ -382,6 +382,7 @@ namespace EventTraceKit.VsExtension.Controls
         {
             var oldValue = (AsyncDataGridViewModel)e.OldValue;
             if (oldValue != null) {
+                oldValue.DataInvalidated -= OnViewModelDataInvalidated;
                 oldValue.ColumnsModel.ColumnsChanged -= OnColumnsChanged;
                 oldValue.Updated -= OnViewModelUpdated;
             }
@@ -390,6 +391,7 @@ namespace EventTraceKit.VsExtension.Controls
             if (newValue != null) {
                 newValue.Updated += OnViewModelUpdated;
                 newValue.ColumnsModel.ColumnsChanged += OnColumnsChanged;
+                newValue.DataInvalidated += OnViewModelDataInvalidated;
             }
         }
 
@@ -549,15 +551,13 @@ namespace EventTraceKit.VsExtension.Controls
             CancelButtonPart = GetTemplateChild(PART_CancelButton) as Button;
 
             if (CellsScrollViewer != null) {
-                CellsScrollViewer.SizeChanged += CellsScrollViewerSizeChanged;
-
-                var horizontalOffsetBinding = new Binding(nameof(CellsScrollViewer.HorizontalOffset));
-                horizontalOffsetBinding.Source = CellsScrollViewer;
-                SetBinding(HorizontalScrollOffsetProperty, horizontalOffsetBinding);
+                var binding = new Binding(nameof(CellsScrollViewer.HorizontalOffset));
+                binding.Source = CellsScrollViewer;
+                SetBinding(HorizontalScrollOffsetProperty, binding);
             }
 
             if (CellsPresenter != null)
-                CellsPresenter.MouseUp += OnCellsPresenterMouseUp;
+                CellsPresenter.MouseDown += OnCellsPresenterMouseDown;
 
             UpdateStates(false);
         }
@@ -656,29 +656,26 @@ namespace EventTraceKit.VsExtension.Controls
         {
         }
 
-        private void OnCellsPresenterMouseUp(object sender, MouseButtonEventArgs e)
+        private void OnCellsPresenterMouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.Handled)
                 return;
 
-            //var relativeTo = sender as AsyncDataGridCellsPresenter;
-            //if (relativeTo != null) {
-            //    AsyncDataGridColumnViewModel columnFromPosition = relativeTo.GetColumnFromPosition(e.GetPosition(relativeTo).X);
-            //    ViewModel.ColumnsViewModel.SetClickedColumn(columnFromPosition);
+            //var cellsPresenter = sender as AsyncDataGridCellsPresenter;
+            //if (cellsPresenter != null) {
+            //    var x = e.GetPosition(cellsPresenter).X;
+            //    var columnFromPosition = cellsPresenter.GetColumnFromPosition(x);
+            //    ViewModel.ColumnsModel.SetClickedColumn(columnFromPosition);
             //}
         }
 
         private void UpdateStates(bool useTransitions)
         {
-            if (true/*IsReadyInternal*/) {
-                VisualStateManager.GoToState(this, "Ready", useTransitions);
-            } else {
-                VisualStateManager.GoToState(this, "Processing", useTransitions);
-            }
-        }
-
-        private void CellsScrollViewerSizeChanged(object sender, SizeChangedEventArgs e)
-        {
+            //if (true/*IsReadyInternal*/) {
+            //    VisualStateManager.GoToState(this, "Ready", useTransitions);
+            //} else {
+            //    VisualStateManager.GoToState(this, "Processing", useTransitions);
+            //}
         }
 
         private void OnCancelButtonPartChanged(DependencyPropertyChangedEventArgs e)
@@ -701,6 +698,11 @@ namespace EventTraceKit.VsExtension.Controls
         }
 
         private void OnColumnsChanged(object sender, EventArgs args)
+        {
+            CellsPresenter?.InvalidateRowCache();
+        }
+
+        private void OnViewModelDataInvalidated(object sender, EventArgs args)
         {
             CellsPresenter?.InvalidateRowCache();
         }

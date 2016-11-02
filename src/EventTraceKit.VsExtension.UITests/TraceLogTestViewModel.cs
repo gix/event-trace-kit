@@ -9,7 +9,7 @@ namespace EventTraceKit.VsExtension.UITests
     using Microsoft.VisualStudio.PlatformUI;
     using Task = System.Threading.Tasks.Task;
 
-    public class TraceLogTestViewModel : TraceLogWindowViewModel
+    public class TraceLogTestViewModel : TraceLogPaneViewModel
     {
         private string selectedTheme;
         private bool isRunning;
@@ -147,7 +147,11 @@ namespace EventTraceKit.VsExtension.UITests
             public AdvmPresetCollection Presets { get; } =
                 new AdvmPresetCollection();
 
-            public event EventHandler<ExceptionFilterEventArgs> ExceptionFilter;
+            public event EventHandler<ExceptionFilterEventArgs> ExceptionFilter
+            {
+                add {}
+                remove {}
+            }
 
             public void SaveToStorage()
             {
@@ -158,13 +162,18 @@ namespace EventTraceKit.VsExtension.UITests
         {
             public string ActiveViewPreset { get; set; }
             public bool AutoLog { get; set; }
+            public bool ShowColumnHeaders { get; set; }
             public bool ShowStatusBar { get; set; }
         }
 
         private sealed class OperationalModeProviderStub : IOperationalModeProvider
         {
             public VsOperationalMode CurrentMode => VsOperationalMode.Design;
-            public event EventHandler<VsOperationalMode> OperationalModeChanged;
+            public event EventHandler<VsOperationalMode> OperationalModeChanged
+            {
+                add { }
+                remove { }
+            }
         }
     }
 }

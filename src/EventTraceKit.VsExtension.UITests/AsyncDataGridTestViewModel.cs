@@ -21,7 +21,7 @@
 
         private FontFamily rowFontFamily;
         private double rowFontSize;
-        private Brush foreground;
+        private Brush rowForeground;
         private Brush background;
         private Brush rowBackground;
         private Brush alternatingRowBackground;
@@ -39,6 +39,7 @@
             StopCommand = new AsyncDelegateCommand(Stop, CanStop);
             ClearCommand = new AsyncDelegateCommand(Clear);
             OpenViewEditorCommand = new AsyncDelegateCommand(OpenViewEditor);
+            OpenFilterEditorCommand = new AsyncDelegateCommand(OpenFilterEditor);
 
             SelectableBrushes = new ObservableCollection<BrushEntry>();
             foreach (var property in typeof(Brushes).GetProperties(BindingFlags.Static | BindingFlags.Public).OrderBy(x => x.Name)) {
@@ -50,8 +51,8 @@
 
             PropertyEditors = new ObservableCollection<PropertyEditor>();
             PropertyEditors.Add(new SliderPropertyEditor(nameof(RowFontSize), x => RowFontSize = x));
-            PropertyEditors.Add(new BrushPropertyEditor(nameof(Foreground), SelectableBrushes, x => Foreground = x));
             PropertyEditors.Add(new BrushPropertyEditor(nameof(Background), SelectableBrushes, x => Background = x));
+            PropertyEditors.Add(new BrushPropertyEditor(nameof(RowForeground), SelectableBrushes, x => RowForeground = x));
             PropertyEditors.Add(new BrushPropertyEditor(nameof(RowBackground), SelectableBrushes, x => RowBackground = x));
             PropertyEditors.Add(new BrushPropertyEditor(nameof(RowBackground) + "Alt", SelectableBrushes, x => AlternatingRowBackground = x));
             PropertyEditors.Add(new BrushPropertyEditor(nameof(RowSelectionForeground), SelectableBrushes, x => RowSelectionForeground = x));
@@ -62,7 +63,7 @@
 
             RowFontFamily = new FontFamily("Consolas");
             RowFontSize = (double)new FontSizeConverter().ConvertFromInvariantString("9pt");
-            Foreground = Brushes.Black;
+            RowForeground = Brushes.Black;
             Background = Brushes.White;
             RowBackground = Brushes.WhiteSmoke;
             AlternatingRowBackground = Brushes.AliceBlue;
@@ -91,10 +92,11 @@
             return !IsRunning;
         }
 
-        private async Task Start()
+        private Task Start()
         {
             IsRunning = true;
             CommandManager.InvalidateRequerySuggested();
+            return Task.CompletedTask;
         }
 
         private bool CanStop()
@@ -119,6 +121,19 @@
             var dialog = PresetManagerDialog.CreateDialog(adv);
             dialog.Owner = Application.Current.MainWindow;
             dialog.ShowDialog();
+            return Task.CompletedTask;
+        }
+
+        private Task OpenFilterEditor()
+        {
+            var viewModel = new FilterDialogViewModel();
+            var dialog = new FilterDialog { DataContext = viewModel };
+            if (dialog.ShowDialog() != true)
+                return Task.CompletedTask;
+
+            var predicate = viewModel.GetFilter().CreatePredicateExpr();
+            MessageBox.Show(predicate.ToString());
+
             return Task.CompletedTask;
         }
 
@@ -150,7 +165,7 @@
 
             dataView = new DataView(dataTable, new DefaultFormatProviderSource());
             return new AsyncDataViewModel(
-                new WorkManager(Dispatcher.CurrentDispatcher), 
+                new WorkManager(Dispatcher.CurrentDispatcher),
                 dataView, templatePreset, templatePreset, presetCollection);
         }
 
@@ -158,6 +173,7 @@
         public ICommand StopCommand { get; }
         public ICommand ClearCommand { get; }
         public ICommand OpenViewEditorCommand { get; }
+        public ICommand OpenFilterEditorCommand { get; }
 
         public ObservableCollection<BrushEntry> SelectableBrushes { get; }
         public ObservableCollection<PropertyEditor> PropertyEditors { get; }
@@ -190,10 +206,10 @@
             set { SetProperty(ref rowFontSize, value); }
         }
 
-        public Brush Foreground
+        public Brush RowForeground
         {
-            get { return foreground; }
-            set { SetProperty(ref foreground, value); }
+            get { return rowForeground; }
+            set { SetProperty(ref rowForeground, value); }
         }
 
         public Brush Background

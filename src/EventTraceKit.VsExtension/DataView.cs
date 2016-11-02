@@ -97,8 +97,10 @@
             DataColumn column = table.Columns[info.ColumnId];
 
             var columnView = column.CreateView(info);
-            if (columnView.FormatProvider == null)
+            if (columnView.FormatProvider == null) {
                 columnView.FormatProvider = formatProviderSource.GetFormatProvider(column.DataType);
+                columnView.Format = formatProviderSource.GetFormat(columnView.FormatProvider, columnView.Format);
+            }
 
             return columnView;
         }

@@ -1,4 +1,5 @@
 ﻿#pragma once
+#if __cplusplus_cli
 
 namespace EventTraceKit
 {
@@ -29,3 +30,5 @@ private:
 };
 
 } // namespace EventTraceKit
+
+#endif // __cplusplus_cli

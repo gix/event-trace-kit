@@ -1209,6 +1209,19 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         private int? prevFirst;
         private int? prevLast;
 
+        public AsyncDataGridColumn GetColumnFromPosition(double x)
+        {
+            x += HorizontalOffset;
+            foreach (var column in VisibleColumns) {
+                if (x <= column.Width)
+                    return column;
+
+                x -= column.Width;
+            }
+
+            return null;
+        }
+
         public void InvalidateRowCache()
         {
             renderedCellsVisual.InvalidateRowCache();

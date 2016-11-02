@@ -15,32 +15,31 @@ namespace EventTraceKit.VsExtension
     using Microsoft.VisualStudio.Shell.Interop;
     using Task = System.Threading.Tasks.Task;
 
-    public class TraceLogWindowViewModel : ViewModel, IEventInfoSource
+    public class TraceLogPaneViewModel : ViewModel, IEventInfoSource
     {
         private readonly IGlobalSettings settings;
         private readonly IViewPresetService viewPresetService;
         private readonly ITraceSettingsService traceSettingsService;
         private readonly IVsUIShell uiShell;
-        private readonly DispatcherTimer updateStatisticsTimer;
+
+        private readonly DispatcherTimer updateStatsTimer;
         protected TraceSessionDescriptor sessionDescriptor = new TraceSessionDescriptor();
 
+        // Property backing fields
         private string status;
+        private bool isCollecting;
+        private bool autoLog;
         private bool showStatusBar;
         private string formattedEventStatistics;
         private string formattedBufferStatistics;
-        private bool autoLog;
-        private bool isCollecting;
+
         private TraceLog traceLog;
         private TraceSession session;
 
-        private DateTime lastUpdateEvent = DateTime.MinValue;
-        private readonly TimeSpan updateThreshold = TimeSpan.FromMilliseconds(50);
-        private DispatcherSynchronizationContext syncCtx;
-        private TaskScheduler scheduler;
         private readonly TaskFactory taskFactory;
         private readonly EventSymbolSource eventSymbolSource = new EventSymbolSource();
 
-        public TraceLogWindowViewModel(
+        public TraceLogPaneViewModel(
             IGlobalSettings settings,
             IOperationalModeProvider modeProvider,
             IViewPresetService viewPresetService,
@@ -54,6 +53,10 @@ namespace EventTraceKit.VsExtension
 
             if (modeProvider != null)
                 modeProvider.OperationalModeChanged += OnOperationalModeChanged;
+
+            AutoLog = settings.AutoLog;
+            ShowStatusBar = settings.ShowStatusBar;
+            IsFilterEnabled = true;
 
             var tableTuple = new GenericEventsViewModelSource().CreateTable(this, eventSymbolSource);
             var dataTable = tableTuple.Item1;
@@ -76,21 +79,18 @@ namespace EventTraceKit.VsExtension
                 AdvModel.Preset = activePreset;
 
             GridModel = AdvModel.GridViewModel;
+            GridModel.ColumnsModel.Visibility = settings.ShowColumnHeaders ? Visibility.Visible : Visibility.Collapsed;
 
             AdvModel.PresetChanged += OnViewPresetChanged;
 
-            syncCtx = new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher);
+            var syncCtx = new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher);
             SynchronizationContext.SetSynchronizationContext(syncCtx);
-            scheduler = TaskScheduler.FromCurrentSynchronizationContext();
+            var scheduler = TaskScheduler.FromCurrentSynchronizationContext();
             taskFactory = new TaskFactory(scheduler);
 
-            Statistics = new TraceLogStatsModel();
-            AutoLog = settings.AutoLog;
-            ShowStatusBar = settings.ShowStatusBar;
-
-            updateStatisticsTimer = new DispatcherTimer(DispatcherPriority.Background);
-            updateStatisticsTimer.Interval = TimeSpan.FromSeconds(1);
-            updateStatisticsTimer.Tick += (s, a) => UpdateStats();
+            updateStatsTimer = new DispatcherTimer(DispatcherPriority.Background);
+            updateStatsTimer.Interval = TimeSpan.FromSeconds(1);
+            updateStatsTimer.Tick += (s, e) => UpdateStats();
         }
 
         private void OnViewPresetChanged(
@@ -114,7 +114,7 @@ namespace EventTraceKit.VsExtension
         public AsyncDataViewModel AdvModel { get; }
         public AsyncDataGridViewModel GridModel { get; }
 
-        public TraceLogStatsModel Statistics { get; }
+        public TraceLogStatsModel Statistics { get; } = new TraceLogStatsModel();
 
         public string Status
         {
@@ -186,15 +186,16 @@ namespace EventTraceKit.VsExtension
             try {
                 traceLog = new TraceLog();
                 traceLog.EventsChanged += OnEventsChanged;
+                RefreshFilter();
                 session = new TraceSession(sessionDescriptor);
                 await session.StartAsync(traceLog);
                 IsCollecting = true;
-                updateStatisticsTimer.Start();
+                updateStatsTimer.Start();
             } catch (Exception ex) {
                 session?.Stop();
                 session = null;
                 IsCollecting = false;
-                updateStatisticsTimer.Stop();
+                updateStatsTimer.Stop();
                 Status = ex.ToString();
                 MessageBox.Show(
                     "Failed to start trace session.\r\n" + ex.Message,
@@ -220,13 +221,15 @@ namespace EventTraceKit.VsExtension
                 session = null;
                 Status = null;
                 IsCollecting = false;
-                updateStatisticsTimer.Stop();
+                updateStatsTimer.Stop();
             } catch (Exception ex) {
                 Status = ex.ToString();
             }
         }
 
         private TraceSettingsViewModel settingsViewModel;
+        private Filter currentFilter;
+        private bool isFilterEnabled;
 
         private void Configure()
         {
@@ -257,6 +260,19 @@ namespace EventTraceKit.VsExtension
         {
             PresetManagerDialog.ShowPresetManagerDialog(AdvModel);
             viewPresetService.SaveToStorage();
+        }
+
+        private void OpenFilterEditor()
+        {
+            var viewModel = new FilterDialogViewModel();
+            viewModel.SetFilter(currentFilter);
+
+            var dialog = new FilterDialog { DataContext = viewModel };
+            if (dialog.ShowModal() != true)
+                return;
+
+            currentFilter = viewModel.GetFilter();
+            traceLog.SetFilter(currentFilter.CreatePredicate());
         }
 
         private void UpdateStats()
@@ -307,15 +323,26 @@ namespace EventTraceKit.VsExtension
             id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidOpenViewEditor);
             commandService.AddCommand(new OleMenuCommand((s, e) => OpenViewEditor(), id));
 
-            id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidToggleStatusBar);
+            id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidEnableFilter);
             commandService.AddCommand(
-                new OleMenuCommand(OnToggleStatusBar, null, OnQueryToggleStatusBar, id));
+                new OleMenuCommand(OnToggleEnableFilter, null, OnQueryToggleEnableFilter, id));
+
+            id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidOpenFilterEditor);
+            commandService.AddCommand(new OleMenuCommand((s, e) => OpenFilterEditor(), id));
 
             id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidViewPresetCombo);
             commandService.AddCommand(new OleMenuCommand(OnViewPresetCombo, id));
 
             id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidViewPresetComboGetList);
             commandService.AddCommand(new OleMenuCommand(OnViewPresetComboGetList, id));
+
+            id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidToggleColumnHeaders);
+            commandService.AddCommand(
+                new OleMenuCommand(OnToggleColumnHeaders, null, OnQueryToggleColumnHeaders, id));
+
+            id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidToggleStatusBar);
+            commandService.AddCommand(
+                new OleMenuCommand(OnToggleStatusBar, null, OnQueryToggleStatusBar, id));
         }
 
         private void OnQueryToggleCaptureLog(object sender, EventArgs e)
@@ -335,6 +362,53 @@ namespace EventTraceKit.VsExtension
         {
             AutoLog = !AutoLog;
             settings.AutoLog = AutoLog;
+        }
+
+        public bool IsFilterEnabled
+        {
+            get { return isFilterEnabled; }
+            set
+            {
+                if (isFilterEnabled != value) {
+                    isFilterEnabled = value;
+                    RefreshFilter();
+                }
+            }
+        }
+
+        private void RefreshFilter()
+        {
+            if (traceLog == null)
+                return;
+
+            if (!isFilterEnabled)
+                traceLog.SetFilter(null);
+            else if (currentFilter != null)
+                traceLog.SetFilter(currentFilter.CreatePredicate());
+        }
+
+        private void OnQueryToggleEnableFilter(object sender, EventArgs e)
+        {
+            var command = (OleMenuCommand)sender;
+            command.Checked = IsFilterEnabled;
+        }
+
+        private void OnToggleEnableFilter(object sender, EventArgs e)
+        {
+            IsFilterEnabled = !IsFilterEnabled;
+        }
+
+        private void OnQueryToggleColumnHeaders(object sender, EventArgs e)
+        {
+            var command = (OleMenuCommand)sender;
+            command.Checked = settings.ShowColumnHeaders;
+        }
+
+        private void OnToggleColumnHeaders(object sender, EventArgs e)
+        {
+            bool value = !settings.ShowColumnHeaders;
+            settings.ShowColumnHeaders = value;
+            GridModel.ColumnsModel.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void OnQueryToggleStatusBar(object sender, EventArgs e)
@@ -416,9 +490,9 @@ namespace EventTraceKit.VsExtension
         }
     }
 
-    public class TraceLogWindowDesignTimeModel : TraceLogWindowViewModel
+    public class TraceLogPaneDesignTimeModel : TraceLogPaneViewModel
     {
-        public TraceLogWindowDesignTimeModel()
+        public TraceLogPaneDesignTimeModel()
             : base(null, null, null, null)
         {
             Statistics.TotalEvents = 1429;

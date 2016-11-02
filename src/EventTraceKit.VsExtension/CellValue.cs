@@ -26,8 +26,8 @@
         {
             string result = null;
 
-            ICustomFormatter formatter;
-            if ((formatter = Value as ICustomFormatter) != null)
+            ICustomFormatter formatter = FormatProvider?.GetFormat(Value?.GetType()) as ICustomFormatter;
+            if (formatter != null)
                 result = formatter.Format(Format, Value, FormatProvider);
 
             IFormattable formattable;

@@ -16,6 +16,7 @@
         private const string CollectionPath = "EventTraceKit";
         private const string ActiveViewPresetName = "ActiveViewPreset";
         private const string AutoLogName = "AutoLog";
+        private const string ShowColumnHeadersName = "ShowColumnHeaders";
         private const string ShowStatusBarName = "ShowStatusBar";
 
         private readonly WritableSettingsStore settingsStore;
@@ -41,6 +42,12 @@
         {
             get { return GetBool(AutoLogName, false); }
             set { SetBool(AutoLogName, value, false); }
+        }
+
+        public bool ShowColumnHeaders
+        {
+            get { return GetBool(ShowColumnHeadersName, true); }
+            set { SetBool(ShowColumnHeadersName, value, true); }
         }
 
         public bool ShowStatusBar
