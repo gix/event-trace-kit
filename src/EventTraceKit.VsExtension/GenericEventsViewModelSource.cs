@@ -3,12 +3,15 @@ namespace EventTraceKit.VsExtension
     using System;
     using System.Collections.Generic;
     using System.Globalization;
+    using System.Runtime.InteropServices;
     using System.Security.Principal;
+    using System.Text;
     using System.Windows;
     using Controls;
     using Native;
     using Utilities;
     using Windows;
+    using Extensions;
 
     public sealed class GenericEventsViewModelSource
     {
@@ -32,6 +35,7 @@ namespace EventTraceKit.VsExtension
         private readonly ColumnViewModelPreset cpuPreset;
         private readonly ColumnViewModelPreset processIdPreset;
         private readonly ColumnViewModelPreset threadIdPreset;
+        private readonly ColumnViewModelPreset userDataPreset;
         private readonly ColumnViewModelPreset userDataLengthPreset;
         private readonly ColumnViewModelPreset activityIdPreset;
         private readonly ColumnViewModelPreset relatedActivityIdPreset;
@@ -193,6 +197,13 @@ namespace EventTraceKit.VsExtension
                     IsVisible = true,
                     Width = 40,
                     HelpText = "Process ID (0 = PID Not Found)"
+                }.EnsureFrozen();
+            userDataPreset =
+                new ColumnViewModelPreset {
+                    Id = new Guid("2E47C924-663F-422A-9232-B1BCB1602280"),
+                    Name = "UserData",
+                    IsVisible = false,
+                    Width = 200
                 }.EnsureFrozen();
             userDataLengthPreset =
                 new ColumnViewModelPreset {
@@ -427,7 +438,7 @@ namespace EventTraceKit.VsExtension
                     Id = new Guid("FC87155E-AD2A-4294-A425-55E914FA1821"),
                     Name = "Time",
                     IsVisible = false,
-                    Width = 100,
+                    Width = 120,
                     CellFormat = "HH:mm:ss.fffffff"
                 }.EnsureFrozen();
             var timeRelativeGeneratorPreset =
@@ -436,7 +447,7 @@ namespace EventTraceKit.VsExtension
                     Name = "Time Elapsed",
                     IsVisible = true,
                     Width = 120,
-                    CellFormat = "HH:mm:ss.fffffff"
+                    CellFormat = "G"
                 }.EnsureFrozen();
 
             var preset = new AsyncDataViewModelPreset();
@@ -497,6 +508,7 @@ namespace EventTraceKit.VsExtension
             AddColumn(table, templatePreset, eventNamePreset, DataColumn.Create(info.ProjectEventName));
             AddColumn(table, templatePreset, eventTypePreset, DataColumn.Create(info.ProjectEventType));
             AddColumn(table, templatePreset, cpuPreset, DataColumn.Create(info.ProjectCpu));
+            AddColumn(table, templatePreset, userDataPreset, DataColumn.Create(info.ProjectUserData));
             AddColumn(table, templatePreset, userDataLengthPreset, DataColumn.Create(info.ProjectUserDataLength));
             AddColumn(table, templatePreset, activityIdPreset, DataColumn.Create(info.ProjectActivityId));
             AddColumn(table, templatePreset, relatedActivityIdPreset, DataColumn.Create(info.ProjectRelatedActivityId));
@@ -712,6 +724,22 @@ namespace EventTraceKit.VsExtension
                 return eventSymbolSource.TryGetSymbol(key);
             }
 
+            public unsafe string ProjectUserData(int index)
+            {
+                var record = GetEventRecord(index);
+                if (record.UserDataLength == 0)
+                    return string.Empty;
+
+                var buffer = new StringBuilder(record.UserDataLength * 3 - 1);
+                var data = (byte*)record.UserData.ToPointer();
+                for (int i = 0; i < record.UserDataLength; ++i) {
+                    if (i > 0) buffer.Append(' ');
+                    buffer.AppendHexByte(data[i]);
+                }
+
+                return buffer.ToString();
+            }
+
             public ushort ProjectUserDataLength(int index)
             {
                 return GetEventRecord(index).UserDataLength;
@@ -781,12 +809,12 @@ namespace EventTraceKit.VsExtension
                 return new DateTime(timePoint.Ticks, DateTimeKind.Utc).ToLocalTime();
             }
 
-            public DateTime ProjectTimeRelative(int index)
+            public TimeSpan ProjectTimeRelative(int index)
             {
                 var startTime = GetStartTime();
                 var time = GetEventRecord(index).TimePoint;
                 var elapsedTicks = time.Ticks - startTime.Ticks;
-                return new DateTime(elapsedTicks, DateTimeKind.Unspecified);
+                return new TimeSpan(elapsedTicks);
             }
 
             public ulong ProjectCpu(int index)

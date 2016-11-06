@@ -4,7 +4,10 @@
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
+    using System.Linq.Expressions;
     using System.Reflection;
+    using System.Runtime.CompilerServices;
+    using System.Runtime.InteropServices;
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Input;
@@ -12,6 +15,7 @@
     using System.Windows.Threading;
     using Controls;
     using Formatting;
+    using Native;
 
     public class AsyncDataGridTestViewModel : ViewModel
     {
@@ -124,15 +128,21 @@
             return Task.CompletedTask;
         }
 
-        private Task OpenFilterEditor()
+        private unsafe Task OpenFilterEditor()
         {
             var viewModel = new FilterDialogViewModel();
             var dialog = new FilterDialog { DataContext = viewModel };
             if (dialog.ShowDialog() != true)
                 return Task.CompletedTask;
 
-            var predicate = viewModel.GetFilter().CreatePredicateExpr();
-            MessageBox.Show(predicate.ToString());
+            var predicateExpr = viewModel.GetFilter().CreatePredicateExpr();
+            var predicate = predicateExpr.CompileToTransientAssembly();
+            MessageBox.Show(predicateExpr.ToString());
+
+            var record = new EVENT_RECORD();
+            record.EventHeader.EventDescriptor.Id = 23;
+            var info = new TRACE_EVENT_INFO();
+            MessageBox.Show(predicate((IntPtr)(&record), (IntPtr)(&info), (UIntPtr)Marshal.SizeOf(typeof(TRACE_EVENT_INFO))).ToString());
 
             return Task.CompletedTask;
         }

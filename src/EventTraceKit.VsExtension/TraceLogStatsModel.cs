@@ -2,6 +2,7 @@ namespace EventTraceKit.VsExtension
 {
     public class TraceLogStatsModel : ViewModel
     {
+        private uint shownEvents;
         private uint totalEvents;
         private uint eventsLost;
         private uint numberOfBuffers;
@@ -9,6 +10,12 @@ namespace EventTraceKit.VsExtension
         private uint buffersWritten;
         private uint logBuffersLost;
         private uint realTimeBuffersLost;
+
+        public uint ShownEvents
+        {
+            get { return shownEvents; }
+            set { SetProperty(ref shownEvents, value); }
+        }
 
         public uint TotalEvents
         {

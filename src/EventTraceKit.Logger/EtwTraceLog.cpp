@@ -126,66 +126,6 @@ EVENT_RECORD* CopyEvent(Allocator& alloc, EVENT_RECORD const* record)
 void NullCallback(size_t, void*) {}
 bool AlwaysFilter(void*, void*, size_t) { return true; }
 
-} // namespace
-
-EtwTraceLog::EtwTraceLog()
-    : changedCallback(&NullCallback)
-    , changedCallbackState()
-{
-}
-
-void EtwTraceLog::ProcessEvent(EVENT_RECORD const& record)
-{
-    EVENT_RECORD* eventCopy = CopyEvent(eventRecordAllocator, &record);
-
-    {
-        std::unique_lock<std::shared_mutex> lock(mutex);
-        events.push_back(eventInfoCache.Get(*eventCopy));
-    }
-
-    size_t newCount = ++eventCount;
-    changedCallback(newCount, changedCallbackState);
-}
-
-void EtwTraceLog::Clear()
-{
-    eventCount = 0;
-    {
-        std::unique_lock<std::shared_mutex> lock(mutex);
-        events.clear();
-        eventInfoCache.Clear();
-    }
-
-    changedCallback(0, changedCallbackState);
-}
-
-EventInfo EtwTraceLog::GetEvent(size_t index) const
-{
-    if (index >= eventCount) return EventInfo();
-
-    std::shared_lock<std::shared_mutex> lock(mutex);
-    if (index >= events.size()) return EventInfo();
-    return events[index];
-}
-
-void EtwTraceLog::RegisterManifests()
-{
-    TDHSTATUS ec = 0;
-    for (std::wstring& manifest : manifests)
-        ec = TdhLoadManifest(&manifest[0]);
-    for (std::wstring& providerBinary : providerBinaries)
-        ec = TdhLoadManifestFromBinary(&providerBinary[0]);
-}
-
-void EtwTraceLog::UnregisterManifests()
-{
-    TDHSTATUS ec = 0;
-    for (std::wstring& manifest : manifests)
-        ec = TdhUnloadManifest(&manifest[0]);
-    //for (std::wstring& providerBinary : providerBinaries)
-    //    ec = TdhUnloadManifest(&providerBinary[0]);
-}
-
 class FilteredTraceLog : public IFilteredTraceLog
 {
 public:
@@ -344,6 +284,65 @@ private:
     void* changedCallbackState;
 };
 
+} // namespace
+
+EtwTraceLog::EtwTraceLog()
+    : changedCallback(&NullCallback)
+    , changedCallbackState()
+{
+}
+
+void EtwTraceLog::ProcessEvent(EVENT_RECORD const& record)
+{
+    EVENT_RECORD* eventCopy = CopyEvent(eventRecordAllocator, &record);
+
+    {
+        std::unique_lock<std::shared_mutex> lock(mutex);
+        events.push_back(eventInfoCache.Get(*eventCopy));
+    }
+
+    size_t newCount = ++eventCount;
+    changedCallback(newCount, changedCallbackState);
+}
+
+void EtwTraceLog::Clear()
+{
+    eventCount = 0;
+    {
+        std::unique_lock<std::shared_mutex> lock(mutex);
+        events.clear();
+        eventInfoCache.Clear();
+    }
+
+    changedCallback(0, changedCallbackState);
+}
+
+EventInfo EtwTraceLog::GetEvent(size_t index) const
+{
+    if (index >= eventCount) return EventInfo();
+
+    std::shared_lock<std::shared_mutex> lock(mutex);
+    if (index >= events.size()) return EventInfo();
+    return events[index];
+}
+
+void EtwTraceLog::RegisterManifests()
+{
+    TDHSTATUS ec = 0;
+    for (std::wstring& manifest : manifests)
+        ec = TdhLoadManifest(&manifest[0]);
+    for (std::wstring& providerBinary : providerBinaries)
+        ec = TdhLoadManifestFromBinary(&providerBinary[0]);
+}
+
+void EtwTraceLog::UnregisterManifests()
+{
+    TDHSTATUS ec = 0;
+    for (std::wstring& manifest : manifests)
+        ec = TdhUnloadManifest(&manifest[0]);
+    //for (std::wstring& providerBinary : providerBinaries)
+    //    ec = TdhUnloadManifest(&providerBinary[0]);
+}
 
 std::unique_ptr<ITraceLog> CreateEtwTraceLog(TraceLogEventsChangedCallback* callback)
 {

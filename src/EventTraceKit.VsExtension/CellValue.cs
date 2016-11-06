@@ -1,6 +1,7 @@
 ﻿namespace EventTraceKit.VsExtension
 {
     using System;
+    using System.Globalization;
 
     public class CellValue
     {
@@ -28,7 +29,7 @@
 
             ICustomFormatter formatter = FormatProvider?.GetFormat(Value?.GetType()) as ICustomFormatter;
             if (formatter != null)
-                result = formatter.Format(Format, Value, FormatProvider);
+                result = formatter.Format(Format, Value, CultureInfo.CurrentCulture);
 
             IFormattable formattable;
             if (result == null && (formattable = Value as IFormattable) != null)

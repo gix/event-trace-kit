@@ -96,6 +96,7 @@ namespace EventTraceKit.VsExtension
         public void UnionWith(MultiRange other)
         {
             if (ranges.Count == 0) {
+                Count = other.Count;
                 ranges.AddRange(other.ranges);
                 return;
             }

@@ -7,6 +7,7 @@
     [SupportedFormat(2, "mN", "Milliseconds", "ms")]
     [SupportedFormat(3, "uN", "Microseconds", "\x00b5s")]
     [SupportedFormat(4, "nN", "Nanoseconds", "ns")]
+    [SupportedFormat(5, "tN", "Ticks")]
     internal class TimePointFormatProvider : IFormatProvider, ICustomFormatter
     {
         public object GetFormat(Type formatType) { return this; }
@@ -18,7 +19,7 @@
 
             if (arg is TimePoint) {
                 var timePoint = (TimePoint)arg;
-                return TimePointFormatter.ToString(timePoint.ToNanoseconds, format, formatProvider);
+                return TimePointFormatter.ToString(timePoint.Ticks, format, formatProvider);
             }
 
             return arg.ToString();

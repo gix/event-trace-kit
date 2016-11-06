@@ -251,7 +251,7 @@
             dialog.Controls.Add(new TaskDialogCommandLink((int)MergeStrategy.Merge, "Merge both"));
             dialog.Controls.Add(new TaskDialogCommandLink((int)MergeStrategy.Keep, "Keep existing provider"));
             dialog.Controls.Add(new TaskDialogCommandLink((int)MergeStrategy.Overwrite, "Overwrite existing provider"));
-            dialog.VerificationCheckBoxText = "Do this for the next conflicts";
+            dialog.VerificationText = "Do this for the next conflicts";
             return dialog.Show();
         }
 

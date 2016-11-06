@@ -12,6 +12,8 @@ namespace EventTraceKit.VsExtension
         public const string FormatMillisecondsGrouped = "mN";
         public const string FormatNanoseconds = "n";
         public const string FormatNanosecondsGrouped = "nN";
+        public const string FormatTicks = "t";
+        public const string FormatTicksGrouped = "tN";
         public const string FormatSeconds = "s";
         public const string FormatSecondsGrouped = "sN";
         public const string FormatWithUnits = "U";
@@ -56,6 +58,12 @@ namespace EventTraceKit.VsExtension
                 case TimeUnit.Nanoseconds:
                     value = ticks * 100;
                     unitSymbol = "ns";
+                    digitsFormat = includeThousandsSeparator ? "N0" : "F0";
+                    break;
+
+                case TimeUnit.Ticks:
+                    value = ticks;
+                    unitSymbol = "t";
                     digitsFormat = includeThousandsSeparator ? "N0" : "F0";
                     break;
 
@@ -113,6 +121,11 @@ namespace EventTraceKit.VsExtension
                             return false;
                         unit = TimeUnit.Nanoseconds;
                         break;
+                    case 't':
+                        if (parsedUnit)
+                            return false;
+                        unit = TimeUnit.Ticks;
+                        break;
 
                     default:
                         return false;
@@ -130,6 +143,7 @@ namespace EventTraceKit.VsExtension
         Seconds,
         Milliseconds,
         Microseconds,
-        Nanoseconds
+        Nanoseconds,
+        Ticks
     }
 }

@@ -9,9 +9,10 @@
   xmlns:sys="clr-namespace:System;assembly=mscorlib"
   xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
   xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
-  xmlns:imaging="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.Imaging"
+  xmlns:vsimg="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.Imaging"
   xmlns:imageCatalog="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
   xmlns:windows="clr-namespace:EventTraceKit.VsExtension.Windows"
+  xmlns:imaging="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Imaging"
   mc:Ignorable="d"
   d:DataContext="{d:DesignInstance {x:Type etkvs:FilterDialogViewModel}, d:IsDesignTimeCreatable=True}"
   Title="Filter Editor"
@@ -84,6 +85,8 @@
         <DataGrid.Resources>
           <Style TargetType="{x:Type DataGridRow}" BasedOn="{StaticResource {x:Type DataGridRow}}">
             <EventSetter Event="MouseDoubleClick" Handler="OnRowDoubleClick"/>
+            <!-- Default or Transparent results in weird artifacts in the image. -->
+            <Setter Property="imaging:ImageThemingUtilities.ImageBackgroundColor" Value="#00000000"/>
           </Style>
         </DataGrid.Resources>
         <i:Interaction.Triggers>
@@ -92,14 +95,14 @@
           </ei:KeyTrigger>
         </i:Interaction.Triggers>
         <DataGrid.Columns>
-          <DataGridTemplateColumn Header="Property">
+          <DataGridTemplateColumn Header="Property" Width="100">
             <DataGridTemplateColumn.CellTemplate>
               <DataTemplate DataType="{x:Type etkvs:FilterCondition}">
                 <StackPanel Orientation="Horizontal">
                   <CheckBox IsChecked="{Binding IsEnabled}"/>
-                  <imaging:CrispImage x:Name="image" Moniker="{x:Static imageCatalog:KnownMonikers.StatusOKOutline}"
-                                      Margin="3,0"/>
-                  <TextBlock Text="{Binding DisplayName}"/>
+                  <vsimg:CrispImage x:Name="image" Moniker="{x:Static imageCatalog:KnownMonikers.StatusOK}"
+                                      Margin="4,0,0,0"/>
+                  <TextBlock Text="{Binding DisplayName}" Margin="8,0,0,0"/>
                 </StackPanel>
                 <DataTemplate.Triggers>
                   <DataTrigger Binding="{Binding Action}" Value="Exclude">

@@ -45,17 +45,17 @@
     [StructLayout(LayoutKind.Sequential)]
     public struct EVENT_HEADER
     {
-        public readonly ushort Size;
-        public readonly ushort HeaderType;
-        public readonly ushort Flags;
-        public readonly ushort EventProperty;
-        public readonly uint ThreadId;
-        public readonly uint ProcessId;
-        public readonly TimePoint TimeStamp;
-        public readonly Guid ProviderId;
-        public readonly EVENT_DESCRIPTOR EventDescriptor;
-        public readonly TimeUnionStruct TimeUnion;
-        public readonly Guid ActivityId;
+        public ushort Size;
+        public ushort HeaderType;
+        public ushort Flags;
+        public ushort EventProperty;
+        public uint ThreadId;
+        public uint ProcessId;
+        public TimePoint TimeStamp;
+        public Guid ProviderId;
+        public EVENT_DESCRIPTOR EventDescriptor;
+        public TimeUnionStruct TimeUnion;
+        public Guid ActivityId;
 
         public bool HasExtendedInfo => HasFlag(EVENT_HEADER_FLAG.EXTENDED_INFO);
         public bool IsPrivateSession => HasFlag(EVENT_HEADER_FLAG.PRIVATE_SESSION);
@@ -102,13 +102,13 @@
     [StructLayout(LayoutKind.Sequential)]
     public struct EVENT_DESCRIPTOR : IEquatable<EVENT_DESCRIPTOR>
     {
-        public readonly ushort Id;
-        public readonly byte Version;
-        public readonly byte Channel;
-        public readonly byte Level;
-        public readonly byte Opcode;
-        public readonly ushort Task;
-        public readonly ulong Keyword;
+        public ushort Id;
+        public byte Version;
+        public byte Channel;
+        public byte Level;
+        public byte Opcode;
+        public ushort Task;
+        public ulong Keyword;
 
         public bool Equals(EVENT_DESCRIPTOR other)
         {

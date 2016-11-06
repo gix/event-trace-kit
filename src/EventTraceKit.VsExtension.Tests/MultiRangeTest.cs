@@ -202,6 +202,34 @@
         }
 
         [Fact]
+        public void UnionWith_Empty()
+        {
+            var range1 = new MultiRange();
+            var range2 = new MultiRange { 10, 11, 12 };
+
+            range1.UnionWith(range2);
+
+            Assert.Equal(3, range1.Count);
+            Assert.Equal(3, range2.Count);
+            Assert.Equal(new[] { R(10, 13) }, range1.GetRanges());
+            Assert.Equal(new[] { R(10, 13) }, range2.GetRanges());
+        }
+
+        [Fact]
+        public void UnionWith_Empty2()
+        {
+            var range1 = new MultiRange { 10, 11, 12 };
+            var range2 = new MultiRange();
+
+            range1.UnionWith(range2);
+
+            Assert.Equal(3, range1.Count);
+            Assert.Equal(0, range2.Count);
+            Assert.Equal(new[] { R(10, 13) }, range1.GetRanges());
+            Assert.Empty(range2.GetRanges());
+        }
+
+        [Fact]
         public void UnionWith_NonOverlapping()
         {
             var range1 = new MultiRange { 23, 24, 25 };

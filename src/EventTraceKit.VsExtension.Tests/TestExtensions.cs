@@ -5,7 +5,7 @@
     using System.Linq;
     using System.Xml.Linq;
 
-    public static class Extensions
+    public static class TestExtensions
     {
         public static IEnumerable<XAttribute> NonXmlnsAttributes(this XElement element)
         {

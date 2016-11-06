@@ -228,7 +228,7 @@ namespace EventTraceKit.VsExtension
         }
 
         private TraceSettingsViewModel settingsViewModel;
-        private Filter currentFilter;
+        private TraceLogFilter currentFilter;
         private bool isFilterEnabled;
 
         private void Configure()
@@ -272,7 +272,7 @@ namespace EventTraceKit.VsExtension
                 return;
 
             currentFilter = viewModel.GetFilter();
-            traceLog.SetFilter(currentFilter.CreatePredicate());
+            RefreshFilter();
         }
 
         private void UpdateStats()
@@ -282,7 +282,8 @@ namespace EventTraceKit.VsExtension
 
             var stats = session.Query();
 
-            Statistics.TotalEvents = (uint)EventsDataView.EventCount;
+            Statistics.ShownEvents = traceLog?.EventCount ?? 0;
+            Statistics.TotalEvents = traceLog?.TotalEventCount ?? 0;
             Statistics.EventsLost = stats.EventsLost;
             Statistics.NumberOfBuffers = stats.NumberOfBuffers;
             Statistics.BuffersWritten = stats.BuffersWritten;
@@ -295,6 +296,7 @@ namespace EventTraceKit.VsExtension
         protected void FormatStatistics()
         {
             FormattedEventStatistics =
+                $"Showing {Statistics.ShownEvents} of " +
                 $"{Statistics.TotalEvents} Events " +
                 $"({Statistics.EventsLost} lost)";
             FormattedBufferStatistics =

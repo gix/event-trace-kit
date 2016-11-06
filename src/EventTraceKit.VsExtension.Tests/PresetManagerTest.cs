@@ -2,7 +2,7 @@
 {
     using System.Windows.Threading;
     using Controls;
-    using Formatting;
+    using VsExtension.Formatting;
     using Xunit;
 
     public class PresetManagerTest

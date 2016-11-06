@@ -44,6 +44,9 @@
             if (type == typeof(TimePoint))
                 return new TimePointFormatProvider();
 
+            if (type == typeof(TimeSpan))
+                return new TimeSpanFormatProvider();
+
             return null;
         }
     }

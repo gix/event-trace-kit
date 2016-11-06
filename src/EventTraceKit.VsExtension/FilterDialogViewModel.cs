@@ -5,6 +5,10 @@
     using System.Collections.ObjectModel;
     using System.Linq;
     using System.Linq.Expressions;
+    using System.Reflection;
+    using System.Reflection.Emit;
+    using System.Runtime.CompilerServices;
+    using System.Runtime.InteropServices;
     using System.Threading.Tasks;
     using System.Windows.Input;
     using Collections;
@@ -110,12 +114,12 @@
             set { SetProperty(ref dialogResult, value); }
         }
 
-        public Filter GetFilter()
+        public TraceLogFilter GetFilter()
         {
-            return new Filter(Conditions);
+            return new TraceLogFilter(Conditions);
         }
 
-        public void SetFilter(Filter filter)
+        public void SetFilter(TraceLogFilter filter)
         {
             Conditions.Clear();
             if (filter != null)
@@ -258,9 +262,14 @@
         }
     }
 
-    public class Filter
+    public class TraceLogFilter
     {
-        public Filter(IReadOnlyList<FilterCondition> conditions)
+        public TraceLogFilter()
+            : this(Enumerable.Empty<FilterCondition>())
+        {
+        }
+
+        public TraceLogFilter(IEnumerable<FilterCondition> conditions)
         {
             Conditions = new List<FilterCondition>(conditions);
         }
@@ -269,7 +278,7 @@
 
         public Expression<TraceLogFilterPredicate> CreatePredicateExpr()
         {
-            var builder = new EventRecordFilterBuilder();
+            var builder = new TraceLogFilterBuilder();
 
             var enabled = Conditions.Where(x => x.IsEnabled).ToList();
             var includedConds = enabled.Where(x => x.Action == FilterConditionAction.Include).ToList();
@@ -284,10 +293,36 @@
 
         public TraceLogFilterPredicate CreatePredicate()
         {
-            return CreatePredicateExpr().Compile();
+            // Lambdas compiled with LambdaExpression.Compile perform costly
+            // security checks (SecurityTransparent, APTCA, class access checks
+            // like SecurityCritical or SecuritySafeCritical, and LinkDemands),
+            // see clr!JIT_MethodAccessCheck in vm/jithelpers.cpp.
+            // The only way to avoid these seems to be to use a proper (dynamic)
+            // assembly. We use a GC-collectable transient assembly to host the
+            // delegate.
+            var predicate = CreatePredicateExpr().CompileToTransientAssembly();
+
+            // Force JIT-compiling the delegate, executing the pre-stub.
+            // Otherwise calling the delegate involves calls to:
+            //   clr!PrecodeFixupThunk
+            //   clr!ThePreStub
+            //   clr!PreStubWorker
+            //   ...
+            // This must be done twice, no idea exactly why.
+            Warmup(predicate);
+            Warmup(predicate);
+
+            return predicate;
         }
 
-        private Expression CreateComparisonExpr(FilterCondition condition, EventRecordFilterBuilder builder)
+        private unsafe void Warmup(TraceLogFilterPredicate predicate)
+        {
+            var record = new EVENT_RECORD();
+            var info = new TRACE_EVENT_INFO();
+            predicate((IntPtr)(&record), (IntPtr)(&info), (UIntPtr)Marshal.SizeOf<TRACE_EVENT_INFO>());
+        }
+
+        private Expression CreateComparisonExpr(FilterCondition condition, TraceLogFilterBuilder builder)
         {
             var propertyExpr = condition.Property.CreateExpression(builder);
             var value = Expression.Constant(condition.Value);
@@ -397,7 +432,7 @@
     {
         string Name { get; }
         IEnumerable<FilterRelation> Relations { get; }
-        Expression CreateExpression(EventRecordFilterBuilder builder);
+        Expression CreateExpression(TraceLogFilterBuilder builder);
         ValueHolder CreateValue();
     }
 
@@ -445,11 +480,11 @@
 
     public abstract class ExpressionProperty<T> : IModelProperty
     {
-        private readonly Func<EventRecordFilterBuilder, Expression> exprFactory;
+        private readonly Func<TraceLogFilterBuilder, Expression> exprFactory;
 
         protected ExpressionProperty(
             string name, IEnumerable<FilterRelation> relations,
-            Func<EventRecordFilterBuilder, Expression> exprFactory)
+            Func<TraceLogFilterBuilder, Expression> exprFactory)
         {
             Name = name;
             this.exprFactory = exprFactory;
@@ -459,7 +494,7 @@
         public string Name { get; }
         public IEnumerable<FilterRelation> Relations { get; }
 
-        public Expression CreateExpression(EventRecordFilterBuilder builder)
+        public Expression CreateExpression(TraceLogFilterBuilder builder)
         {
             return exprFactory(builder);
         }
@@ -479,7 +514,7 @@
     {
         public NumericProperty(
             string name, IEnumerable<FilterRelation> relations,
-            Func<EventRecordFilterBuilder, Expression> exprFactory)
+            Func<TraceLogFilterBuilder, Expression> exprFactory)
             : base(name, relations, exprFactory)
         {
         }
@@ -489,7 +524,7 @@
     {
         public GuidProperty(
             string name, IEnumerable<FilterRelation> relations,
-            Func<EventRecordFilterBuilder, Expression> exprFactory)
+            Func<TraceLogFilterBuilder, Expression> exprFactory)
             : base(name, relations, exprFactory)
         {
         }
@@ -499,7 +534,7 @@
     {
         public EnumProperty(
             string name, IEnumerable<FilterRelation> relations,
-            Func<EventRecordFilterBuilder, Expression> exprFactory)
+            Func<TraceLogFilterBuilder, Expression> exprFactory)
             : base(name, relations, exprFactory)
         {
         }
@@ -520,39 +555,37 @@
         }
     }
 
-    public class EventRecordFilterBuilder
+    public class TraceLogFilterBuilder
     {
-        public EventRecordFilterBuilder()
+        public TraceLogFilterBuilder()
         {
             EvtPtr = Expression.Parameter(typeof(IntPtr), "evtPtr");
             InfoPtr = Expression.Parameter(typeof(IntPtr), "infoPtr");
             InfoSize = Expression.Parameter(typeof(UIntPtr), "infoSize");
 
-            var eventRecordCtor = typeof(EventRecordCPtr).GetConstructor(new[] { typeof(IntPtr) });
-            var traceInfoCtor = typeof(TraceEventInfoCPtr).GetConstructor(new[] { typeof(IntPtr), typeof(UIntPtr) });
-
-            Evt = Expression.New(eventRecordCtor, EvtPtr);
-            Info = Expression.New(traceInfoCtor, InfoPtr, InfoSize);
+            Evt = Expression.Parameter(typeof(FastEventRecordCPtr), "evt");
+            Info = Expression.Parameter(typeof(TraceEventInfoCPtr), "info");
         }
 
         public ParameterExpression EvtPtr { get; }
         public ParameterExpression InfoPtr { get; }
         public ParameterExpression InfoSize { get; }
 
-        public Expression Evt { get; }
-        public Expression Info { get; }
+        public ParameterExpression Evt { get; }
+        public ParameterExpression Info { get; }
+
+        private Expression EventHeader => Expression.Property(Evt, nameof(EventRecordCPtr.EventHeader));
+        private Expression EventDescriptor => Expression.Property(EventHeader, nameof(EventHeaderCPtr.EventDescriptor));
 
         public Expression TimePoint => Expression.Field(Evt, nameof(EventRecordCPtr.TimePoint));
         public Expression UserDataLength => Expression.Property(Evt, nameof(EventRecordCPtr.UserDataLength));
         public Expression DecodingSource => Expression.Property(Info, nameof(TraceEventInfoCPtr.DecodingSource));
 
-        private Expression EventHeader => Expression.Property(Evt, nameof(EventRecordCPtr.EventHeader));
         public Expression ProviderId => Expression.Property(EventHeader, nameof(EventHeaderCPtr.ProviderId));
         public Expression ProcessId => Expression.Property(EventHeader, nameof(EventHeaderCPtr.ProcessId));
         public Expression ThreadId => Expression.Property(EventHeader, nameof(EventHeaderCPtr.ThreadId));
         public Expression ActivityId => Expression.Property(EventHeader, nameof(EventHeaderCPtr.ActivityId));
 
-        private Expression EventDescriptor => Expression.Property(EventHeader, nameof(EventHeaderCPtr.EventDescriptor));
         public Expression Id => Expression.Field(EventDescriptor, nameof(EVENT_DESCRIPTOR.Id));
         public Expression Version => Expression.Field(EventDescriptor, nameof(EVENT_DESCRIPTOR.Version));
         public Expression Channel => Expression.Field(EventDescriptor, nameof(EVENT_DESCRIPTOR.Channel));
@@ -565,8 +598,16 @@
 
         public Expression<TraceLogFilterPredicate> CreateLambda(Expression body)
         {
+            var eventRecordCtor = typeof(FastEventRecordCPtr).GetConstructor(new[] { typeof(IntPtr) });
+            var traceInfoCtor = typeof(TraceEventInfoCPtr).GetConstructor(new[] { typeof(IntPtr), typeof(UIntPtr) });
+
+            var evtInit = Expression.Assign(Evt, Expression.New(eventRecordCtor, EvtPtr));
+            var infoInit = Expression.Assign(Info, Expression.New(traceInfoCtor, InfoPtr, InfoSize));
+
+            var block = Expression.Block(new[] { Evt, Info }, evtInit, infoInit, body);
             var lambda = Expression.Lambda<TraceLogFilterPredicate>(
-                body, EvtPtr, InfoPtr, InfoSize);
+                block, EvtPtr, InfoPtr, InfoSize);
+
             return lambda;
         }
     }
@@ -587,6 +628,26 @@
 
     public static class ExprUtils
     {
+        public static T CompileToTransientAssembly<T>(this Expression<T> lambda)
+        {
+            var id = Guid.NewGuid();
+            var assemblyName = new AssemblyName($"DelegateHostAssembly_{id:n}");
+            var assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(
+                assemblyName, AssemblyBuilderAccess.RunAndCollect);
+
+            var moduleBuilder = assemblyBuilder.DefineDynamicModule("transient");
+            var typeBuilder = moduleBuilder.DefineType("DelegateHost");
+            var methodBuilder = typeBuilder.DefineMethod(
+                "Execute", MethodAttributes.Public | MethodAttributes.Static);
+
+            lambda.CompileToMethod(methodBuilder);
+
+            var lambdaHost = typeBuilder.CreateType();
+            var execute = lambdaHost.GetMethod(methodBuilder.Name);
+
+            return (T)(object)Delegate.CreateDelegate(typeof(T), execute);
+        }
+
         public static Expression NullCheck(Expression expr, Expression ifTrue, Expression ifFalse)
         {
             return Expression.Condition(IsNull(expr), ifTrue, ifFalse);

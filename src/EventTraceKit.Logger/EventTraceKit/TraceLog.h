@@ -35,6 +35,11 @@ public:
         unsigned get() { return filteredLog->GetEventCount(); }
     }
 
+    property unsigned TotalEventCount
+    {
+        unsigned get() { return nativeLog->GetEventCount(); }
+    }
+
     void Clear() { nativeLog->Clear(); }
 
     EventInfo GetEvent(int index)

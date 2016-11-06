@@ -27,8 +27,9 @@ struct EventKey
 
     static EventKey FromEventHeader(EVENT_HEADER& header)
     {
+        bool isClassicEvent = (header.Flags & EVENT_HEADER_FLAG_CLASSIC_HEADER) != 0;
         return EventKey(header.ProviderId,
-                        header.EventDescriptor.Id,
+                        !isClassicEvent ? header.EventDescriptor.Id : header.EventDescriptor.Opcode,
                         header.EventDescriptor.Version);
     }
 

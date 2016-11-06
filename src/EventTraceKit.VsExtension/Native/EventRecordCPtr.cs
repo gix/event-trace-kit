@@ -89,4 +89,79 @@
             return EventHeader.HasData && EventHeader.Pointer->IsTraceMessage;
         }
     }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct FastEventRecordCPtr
+    {
+        private readonly EVENT_RECORD* pEventRecord;
+
+        public FastEventRecordCPtr(IntPtr pEventRecord)
+        {
+            this.pEventRecord = (EVENT_RECORD*)pEventRecord;
+        }
+
+        public FastEventRecordCPtr(EVENT_RECORD* pEventRecord)
+        {
+            this.pEventRecord = pEventRecord;
+        }
+
+        public EVENT_RECORD* Ptr => pEventRecord;
+        public bool HasData => pEventRecord != null;
+
+        public TimePoint TimePoint => pEventRecord->EventHeader.TimeStamp;
+        public IntPtr UserData => pEventRecord->UserData;
+        public ushort UserDataLength => pEventRecord->UserDataLength;
+        public ulong ProcessorIndex => pEventRecord->ProcessorIndex;
+
+        public FastEventHeaderCPtr EventHeader => new FastEventHeaderCPtr(&pEventRecord->EventHeader);
+
+        public bool Is32Bit(int nativePointerSize)
+        {
+            return pEventRecord->Is32Bit(nativePointerSize);
+        }
+
+        public EVENT_HEADER_EXTENDED_DATA_ITEM* FindExtendedData(EVENT_HEADER_EXT_TYPE type)
+        {
+            for (int i = 0; i < pEventRecord->ExtendedDataCount; ++i) {
+                if (pEventRecord->ExtendedData[i].ExtType == type)
+                    return &pEventRecord->ExtendedData[i];
+            }
+
+            return null;
+        }
+
+        public Guid? TryGetRelatedActivityId()
+        {
+            var item = FindExtendedData(EVENT_HEADER_EXT_TYPE.RELATED_ACTIVITYID);
+            if (item != null)
+                return item->RelatedActivityId;
+            return null;
+        }
+
+        public bool IsClassicEvent()
+        {
+            return pEventRecord->EventHeader.ClassicHeader;
+        }
+
+        public bool IsTraceLoggingEvent()
+        {
+            if (pEventRecord->EventHeader.EventDescriptor.Channel == 11)
+                return true;
+
+            for (int i = 0; i < pEventRecord->ExtendedDataCount; ++i) {
+                if (pEventRecord->ExtendedData[i].ExtType == EVENT_HEADER_EXT_TYPE.EVENT_SCHEMA_TL)
+                    return true;
+            }
+
+            return false;
+        }
+
+        public bool IsWppEvent()
+        {
+            // The provider used TraceMessage or TraceMessageVa to log the event.
+            // Most providers do not use these functions to write events, so
+            // this flag typically indicates that the event was written by WPP.
+            return pEventRecord->EventHeader.IsTraceMessage;
+        }
+    }
 }

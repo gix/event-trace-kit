@@ -1,12 +1,20 @@
 namespace EventTraceKit.VsExtension.Controls
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
+    using System.Windows.Interop;
     using Microsoft.VisualStudio.Imaging;
+    using Microsoft.VisualStudio.Threading;
+    using Microsoft.Windows.TaskDialogs;
+    using Microsoft.Windows.TaskDialogs.Controls;
+    using Threading;
 
     public class AsyncDataGridViewModel : DependencyObject
     {
@@ -86,7 +94,7 @@ namespace EventTraceKit.VsExtension.Controls
                     break;
 
                 case CopyBehavior.Selection:
-                    CopySelection();
+                    CopySelection().Forget();
                     break;
 
                 default:
@@ -94,42 +102,57 @@ namespace EventTraceKit.VsExtension.Controls
             }
         }
 
-        private bool CopySelection()
+        private async Task CopySelection()
         {
             var advModel = ColumnsModel.Model;
             var visibleColumns = ColumnsModel.VisibleColumns;
             var rowSelection = RowSelection.GetSnapshot();
 
             if (!visibleColumns.Any() || rowSelection.Count == 0)
-                return true;
+                return;
 
             var columns = visibleColumns
                 .Where(x => !x.IsSeparator)
                 .Select(x => new KeyValuePair<string, int>(x.ColumnName, x.ModelVisibleColumnIndex))
                 .ToList();
 
-            var text = advModel.WorkManager.BackgroundThread.Send(() => {
-                var buffer = new StringBuilder();
-                foreach (var column in columns)
-                    buffer.AppendFormat("{0}, ", column.Key);
-
-                buffer.Length -= 2;
-                buffer.AppendLine();
-
-                foreach (var row in rowSelection) {
-                    foreach (var column in columns) {
-                        string cell = advModel.GetCellValue(row, column.Value).ToString();
-                        buffer.AppendFormat("{0}, ", cell);
-                    }
+            var text = await advModel.WorkManager.BackgroundTaskFactory.RunWithProgress(
+                "Copying…",
+                Application.Current.MainWindow,
+                (cancel, progress) => {
+                    var buffer = new StringBuilder();
+                    foreach (var column in columns)
+                        buffer.AppendFormat("{0}, ", column.Key);
 
                     buffer.Length -= 2;
                     buffer.AppendLine();
-                }
 
-                return buffer.ToString();
-            });
+                    int total = rowSelection.Count;
 
-            return ClipboardUtils.SetText(text);
+                    var options = new ParallelOptions();
+                    options.CancellationToken = cancel;
+
+                    var formattedRows = new string[rowSelection.Count];
+                    Parallel.ForEach(rowSelection, options,
+                        (row, loopState, idx) => {
+                            var buf = new StringBuilder();
+                            foreach (var column in columns) {
+                                var value = advModel.GetCellValue(row, column.Value);
+                                buf.AppendFormat("{0}, ", value);
+                            }
+                            buf.Length -= 2;
+                            buf.AppendLine();
+                            formattedRows[idx] = buf.ToString();
+                            progress.Report(new ProgressState(1, total));
+                        });
+
+                    foreach (var formattedRow in formattedRows)
+                        buffer.Append(formattedRow);
+
+                    return buffer.ToString();
+                });
+
+            ClipboardUtils.SetText(text);
         }
 
         private void CopyCell()
