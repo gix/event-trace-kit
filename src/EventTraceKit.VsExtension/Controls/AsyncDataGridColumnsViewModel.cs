@@ -249,7 +249,7 @@ namespace EventTraceKit.VsExtension.Controls
             int oldIndex = columns.IndexOf(srcColumn);
             int newIndex = columns.IndexOf(dstColumn);
 
-            if (IsFrozenVisibleColumnIndex(oldIndex) != IsFrozenVisibleColumnIndex(newIndex))
+            if (srcColumn.IsFrozen != dstColumn.IsFrozen)
                 return;
 
             if (oldIndex != newIndex)
