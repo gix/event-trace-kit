@@ -128,18 +128,6 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 double rowHeight = cellsPresenter.RowHeight;
                 double columnHeight = Math.Min((rowCount * rowHeight) - verticalOffset, canvasHeight);
 
-                Brush frozenColumnBackground = cellsPresenter.FrozenColumnBackground;
-                for (int col = firstVisibleColumn; col <= lastVisibleColumn; ++col) {
-                    double leftEdge = columnEdges[col] - horizontalOffset;
-                    double rightEdge = columnEdges[col + 1] - horizontalOffset;
-                    double width = rightEdge - leftEdge;
-                    if (visibleColumns[col].IsFrozen) {
-                        dc.DrawRectangle(
-                            frozenColumnBackground,
-                            null, new Rect(leftEdge, 0, width, columnHeight));
-                    }
-                }
-
                 Brush primaryBackground = cellsPresenter.PrimaryBackground;
                 Brush secondaryBackground = cellsPresenter.SecondaryBackground;
                 for (int row = firstVisibleRow; row <= lastVisibleRow; ++row) {
@@ -149,6 +137,24 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                     dc.DrawRectangle(
                         background, null,
                         new Rect(0, topEdge, canvasWidth, rowHeight));
+                }
+
+                Brush frozenColumnBackground = cellsPresenter.FrozenColumnBackground;
+                if (firstNonFrozenColumn > firstVisibleColumn) {
+                    double leftEdge = columnEdges[firstVisibleColumn];
+                    double rightEdge = columnEdges[firstNonFrozenColumn];
+                    double width = rightEdge - leftEdge;
+                    dc.DrawRectangle(
+                        frozenColumnBackground,
+                        null, new Rect(leftEdge, 0, width, columnHeight));
+                }
+
+                if (lastNonFrozenColumn < lastVisibleColumn) {
+                    double width = columnEdges[lastVisibleColumn + 1] - columnEdges[lastNonFrozenColumn + 1];
+                    double leftEdge = canvasWidth - width;
+                    dc.DrawRectangle(
+                        frozenColumnBackground,
+                        null, new Rect(leftEdge, 0, width, columnHeight));
                 }
 
                 Brush selectionForeground = cellsPresenter.SelectionForeground;

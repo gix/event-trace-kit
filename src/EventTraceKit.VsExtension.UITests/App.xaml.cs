@@ -154,11 +154,16 @@
             var inactiveSelectedBackgroundKey = new ThemeResourceKey(
                 id, "Inactive Selected Text", ThemeResourceKeyType.BackgroundBrush);
 
+            var rowBackgroundColor = ((SolidColorBrush)Resources[backgroundKey]).Color;
+            rowBackgroundColor.A = (byte)(0.4 * 255);
+            var rowBackground = new SolidColorBrush(rowBackgroundColor);
+
             Resources[TraceLogFonts.RowFontFamilyKey] = new FontFamily("Consolas");
             Resources[TraceLogFonts.RowFontSizeKey] = 9;
             Resources[TraceLogColors.RowForegroundBrushKey] = Resources[foregroundKey];
-            Resources[TraceLogColors.RowBackgroundBrushKey] = Resources[backgroundKey];
-            Resources[TraceLogColors.AlternatingRowBackgroundBrushKey] = GetAlternateBrush((SolidColorBrush)Resources[backgroundKey]);
+            Resources[TraceLogColors.RowBackgroundBrushKey] = rowBackground;
+            Resources[TraceLogColors.AlternatingRowBackgroundBrushKey] = GetAlternateBrush(rowBackground);
+            Resources[TraceLogColors.FrozenColumnBackgroundBrushKey] = GetAlternateBrush(rowBackground, 0.15);
             Resources[TraceLogColors.SelectedRowForegroundBrushKey] = Resources[foregroundKey];
             Resources[TraceLogColors.SelectedRowBackgroundBrushKey] = Resources[selectedBackgroundKey];
             Resources[TraceLogColors.InactiveSelectedRowForegroundBrushKey] = Resources[foregroundKey];

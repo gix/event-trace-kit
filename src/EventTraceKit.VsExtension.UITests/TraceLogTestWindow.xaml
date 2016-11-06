@@ -38,6 +38,7 @@
       Background="{DynamicResource {x:Static vsp:TreeViewColors.BackgroundBrushKey}}"
       RowBackground="{DynamicResource {x:Static styles:TraceLogColors.RowBackgroundBrushKey}}"
       AlternatingRowBackground="{DynamicResource {x:Static styles:TraceLogColors.AlternatingRowBackgroundBrushKey}}"
+      FrozenColumnBackground="{DynamicResource {x:Static styles:TraceLogColors.FrozenColumnBackgroundBrushKey}}"
       RowSelectionForeground="{DynamicResource {x:Static styles:TraceLogColors.SelectedRowForegroundBrushKey}}"
       RowSelectionBackground="{DynamicResource {x:Static styles:TraceLogColors.SelectedRowBackgroundBrushKey}}"
       RowInactiveSelectionForeground="{DynamicResource {x:Static styles:TraceLogColors.InactiveSelectedRowForegroundBrushKey}}"
