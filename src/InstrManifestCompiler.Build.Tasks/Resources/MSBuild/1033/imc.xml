@@ -160,7 +160,7 @@
     ReverseSwitch="Gno-stubs"/>
   <StringProperty
     Category="CodeGen"
-    Name="AlwaysInlineAttr"
+    Name="AlwaysInlineAttribute"
     DisplayName="always-inline Attribute"
     Description="String used to mark always-inline functions, usually a macro name (e.g. FOO_ALWAYS_INLINE)."
     IsRequired="false"
@@ -169,7 +169,7 @@
     Separator="="/>
   <StringProperty
     Category="CodeGen"
-    Name="NoinlineAttr"
+    Name="NoinlineAttribute"
     DisplayName="noinline Attribute"
     Description="String used to mark noinline functions, usually a macro name (e.g. FOO_NOINLINE)."
     IsRequired="false"
