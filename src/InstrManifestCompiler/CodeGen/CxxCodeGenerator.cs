@@ -24,17 +24,18 @@ namespace InstrManifestCompiler.CodeGen
 
         private readonly ICodeGenOptions options;
         private readonly string etwNamespace = string.Empty;
-        private readonly ICodeGenNomenclature naming = new Nomenclature();
+        private readonly ICodeGenNomenclature naming;
 
         private IndentableTextWriter ow;
 
         private sealed class Nomenclature : BaseCodeGenNomenclature
         {
-            public override string GetIdentifier(Event evt)
+            private readonly CxxCodeGenerator generator;
+            private string etwMacroPrefix;
+
+            public Nomenclature(CxxCodeGenerator generator)
             {
-                if (evt.Symbol == null)
-                    return base.GetIdentifier(evt);
-                return evt.Symbol + "Id";
+                this.generator = generator;
             }
 
             public override string GetIdentifier(IMapItem item, IMap map)
@@ -62,8 +63,20 @@ namespace InstrManifestCompiler.CodeGen
 
             public override string GetTemplateGuardId(Template template)
             {
+                var prefix = GetEtwMacroPrefix();
                 var suffix = GetTemplateSuffix(template);
-                return $"ETW_TEMPLATE_{suffix}_DEFINED";
+                return $"{prefix}ETW_TEMPLATE_{suffix}_DEFINED";
+            }
+
+            private string GetEtwMacroPrefix()
+            {
+                if (etwMacroPrefix == null) {
+                    if (!string.IsNullOrEmpty(generator.etwNamespace))
+                        etwMacroPrefix = generator.etwNamespace.Trim(':').Replace("::", "_") + "_";
+                    else
+                        etwMacroPrefix = string.Empty;
+                }
+                return etwMacroPrefix;
             }
 
             public override string GetEventDescriptorId(Event evt)
@@ -115,6 +128,8 @@ namespace InstrManifestCompiler.CodeGen
             this.options = options;
             if (!string.IsNullOrWhiteSpace(options.EtwNamespace))
                 etwNamespace = ConvertToCxxNamespace(options.EtwNamespace);
+
+            naming = new Nomenclature(this);
         }
 
         private string ConvertToCxxNamespace(string ns)
