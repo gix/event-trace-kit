@@ -241,7 +241,7 @@ namespace InstrManifestCompiler.CodeGen
                     etwNamespace,
                     naming.GetProviderContextId(provider));
             }
-            ow.WriteLine("EXTERN_C __declspec(selectany) REGHANDLE {0} = (REGHANDLE)0;",
+            ow.WriteLine("EXTERN_C __declspec(selectany) REGHANDLE {0} = {{}};",
                          naming.GetProviderHandleId(provider));
             ow.WriteLine();
 
@@ -377,6 +377,7 @@ namespace InstrManifestCompiler.CodeGen
             ow.WriteLine("//");
             ow.WriteLine("// Maps");
             ow.WriteLine("//");
+            ow.WriteLine();
 
             foreach (var map in provider.Maps.Where(m => m.Kind == MapKind.BitMap).Cast<BitMap>())
                 if (map.Symbol != null && map.Items.Count > 0)
@@ -435,7 +436,7 @@ namespace InstrManifestCompiler.CodeGen
                 naming.GetEventDescriptorId(evt),
                 evt.Value, version, channel, level, opcode, task, keywordMask, "}");
             if (!options.SkipDefines)
-                ow.WriteLine("uint16_t const {0} = 0x{1:X};", naming.GetIdentifier(evt), evt.Value);
+                ow.WriteLine("uint16_t const {0}Id = 0x{1:X};", naming.GetIdentifier(evt), evt.Value);
         }
 
         private void WriteEvents(Provider provider)
@@ -481,11 +482,9 @@ namespace InstrManifestCompiler.CodeGen
             ow.WriteLine("}");
             ow.WriteLine();
 
-            if (evt.Message != null) {
-                ow.WriteLine("/// <summary>");
-                ow.WriteLine("///   {0}", evt.Message.Value);
-                ow.WriteLine("/// </summary>");
-            }
+            if (evt.Message != null)
+                ow.WriteLine("// Message: {0}", evt.Message.Value);
+
             if (!string.IsNullOrWhiteSpace(options.AlwaysInlineAttribute))
                 ow.Write("{0} ", options.AlwaysInlineAttribute);
             ow.WriteLine("unsigned long {0}({1}",
@@ -673,11 +672,11 @@ namespace InstrManifestCompiler.CodeGen
                     data.Index);
 
                 if (data.InType.Name == WinEventSchema.UnicodeString) {
-                    writer.WriteLine("                    ({0} != nullptr) ? {0} : L\"nullptr\",", argName);
-                    writer.WriteLine("                    ({0} != nullptr) ? (ULONG)((wcslen({0}) + 1) * sizeof(WCHAR)) : (ULONG)sizeof(L\"nullptr\"));", argName);
+                    writer.WriteLine("                    ({0} != nullptr) ? {0} : L\"null\",", argName);
+                    writer.WriteLine("                    static_cast<ULONG>(({0} != nullptr) ? ((wcslen({0}) + 1) * sizeof(WCHAR)) : sizeof(L\"null\")));", argName);
                 } else {
-                    writer.WriteLine("                    ({0} != nullptr) ? {0} : \"nullptr\",", argName);
-                    writer.WriteLine("                    ({0} != nullptr) ? (ULONG)((strlen({0}) + 1) * sizeof(CHAR)) : (ULONG)sizeof(\"nullptr\"));", argName);
+                    writer.WriteLine("                    ({0} != nullptr) ? {0} : \"null\",", argName);
+                    writer.WriteLine("                    static_cast<ULONG>(({0} != nullptr) ? ((strlen({0}) + 1) * sizeof(CHAR)) : sizeof(\"null\")));", argName);
                 }
                 return;
             }
