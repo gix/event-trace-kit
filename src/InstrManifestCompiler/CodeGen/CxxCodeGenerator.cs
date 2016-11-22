@@ -88,7 +88,7 @@ namespace InstrManifestCompiler.CodeGen
 
             public override string GetEventFuncId(Event evt, string prefix = null, string suffix = null)
             {
-                return (prefix ?? string.Empty) + evt.Symbol + (suffix ?? string.Empty);
+                return (prefix ?? string.Empty) + GetIdentifier(evt) + (suffix ?? string.Empty);
             }
 
             public override string GetNumberedArgId(int idx)
@@ -98,7 +98,7 @@ namespace InstrManifestCompiler.CodeGen
 
             public override string GetArgumentId(Property property, bool usePropertyName)
             {
-                return usePropertyName ? property.Name.Value : GetNumberedArgId(property.Index);
+                return usePropertyName ? GetIdentifier(property) : GetNumberedArgId(property.Index);
             }
 
             public override string GetLengthArgumentId(Property property, bool usePropertyName)

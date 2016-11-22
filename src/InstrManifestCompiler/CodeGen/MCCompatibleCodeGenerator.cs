@@ -96,7 +96,7 @@ namespace InstrManifestCompiler.CodeGen
 
             public override string GetArgumentId(Property property, bool usePropertyName)
             {
-                return usePropertyName ? property.Name.Value : GetNumberedArgId(property.Index);
+                return usePropertyName ? GetIdentifier(property) : GetNumberedArgId(property.Index);
             }
 
             public override string GetLengthArgumentId(Property property, bool usePropertyName)

@@ -122,6 +122,31 @@ namespace InstrManifestCompiler.CodeGen
             return @string.Symbol;
         }
 
+        public virtual string GetIdentifier(Property property)
+        {
+            return SanitizeIdentifier(property.Name.Value);
+        }
+
+        public string SanitizeIdentifier(string identifier)
+        {
+            var builder = new StringBuilder(identifier);
+
+            int i;
+            for (i = 0; i < builder.Length; ++i) {
+                if (char.IsDigit(builder[i]))
+                    builder[i] = '_';
+                else
+                    break;
+            }
+
+            for (; i < builder.Length; ++i) {
+                if (!IsAlphaNumeric(builder[i]))
+                    builder[i] = '_';
+            }
+
+            return builder.ToString();
+        }
+
         public abstract string GetTemplateSuffix(Template template);
 
         public abstract string GetTemplateId(Template template);
@@ -273,21 +298,7 @@ namespace InstrManifestCompiler.CodeGen
 
         protected string GetIdentifierFromName(string name)
         {
-            var builder = new StringBuilder(name);
-            int i;
-            for (i = 0; i < builder.Length; ++i) {
-                if (char.IsDigit(builder[i]))
-                    builder[i] = '_';
-                else
-                    break;
-            }
-
-            for (; i < builder.Length; ++i) {
-                if (!IsAlphaNumeric(builder[i]))
-                    builder[i] = '_';
-            }
-
-            return builder.ToString();
+            return SanitizeIdentifier(name);
         }
 
         private bool IsAlphaNumeric(char c)
