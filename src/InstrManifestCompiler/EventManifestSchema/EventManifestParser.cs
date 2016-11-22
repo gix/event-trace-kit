@@ -438,6 +438,9 @@ namespace InstrManifestCompiler.EventManifestSchema
             var id = elem.GetGuid("guid");
             var symbol = elem.GetCSymbol("symbol");
             var msgRef = elem.GetOptionalString("message");
+            var resourceFileName = elem.GetOptionalString("resourceFileName");
+            var messageFileName = elem.GetOptionalString("messageFileName");
+            var parameterFileName = elem.GetOptionalString("parameterFileName");
 
             LocalizedString message = null;
             if (msgRef != null) {
@@ -449,7 +452,10 @@ namespace InstrManifestCompiler.EventManifestSchema
 
             var provider = new Provider(name, id, symbol, message) {
                 Location = elem.GetLocation(),
-                Manifest = manifest
+                Manifest = manifest,
+                ResourceFileName = resourceFileName,
+                MessageFileName = messageFileName,
+                ParameterFileName = parameterFileName,
             };
 
             var ctx = new EventManifestContext(provider, manifest, metadata);

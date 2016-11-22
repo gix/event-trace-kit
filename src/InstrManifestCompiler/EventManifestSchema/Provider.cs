@@ -51,6 +51,9 @@ namespace InstrManifestCompiler.EventManifestSchema
         public RefValue<string> Name { get; private set; }
         public StructValue<Guid> Id { get; private set; }
         public RefValue<string> Symbol { get; private set; }
+        public RefValue<string> ResourceFileName { get; set; }
+        public RefValue<string> MessageFileName { get; set; }
+        public RefValue<string> ParameterFileName { get; set; }
         public LocalizedString Message { get; set; }
 
         public ChannelCollection Channels { get; private set; }

@@ -42,7 +42,7 @@ namespace InstrManifestCompiler
                 return ExitCode.UserError;
             }
 
-            string providerBinary = opts.Inputs[0];
+            string providerBinary = Path.GetFullPath(opts.Inputs[0]);
             string manifestFile = opts.OutputManifest;
 
             var module = SafeModuleHandle.LoadImageResource(providerBinary);
@@ -60,6 +60,11 @@ namespace InstrManifestCompiler
                 EventManifest manifest;
                 using (var stream = module.OpenResource("WEVT_TEMPLATE", 1))
                     manifest = templateReader.ReadWevtTemplate(stream, messages);
+
+                foreach (var provider in manifest.Providers) {
+                    provider.ResourceFileName = providerBinary;
+                    provider.MessageFileName = providerBinary;
+                }
 
                 StripReservedMetadata(manifest, metadata);
                 InferSymbols(manifest);
@@ -295,9 +300,13 @@ namespace InstrManifestCompiler
                 ns + "provider",
                 new XAttribute("name", provider.Name.Value),
                 new XAttribute("guid", provider.Id.Value.ToString("B")),
-                new XAttribute("symbol", provider.Symbol.Value),
-                new XAttribute("resourceFileName", "{missing}"),
-                new XAttribute("messageFileName", "{missing}"));
+                new XAttribute("symbol", provider.Symbol.Value));
+            if (provider.ResourceFileName != null)
+                elem.Add(new XAttribute("resourceFileName", provider.ResourceFileName.Value));
+            if (provider.MessageFileName != null)
+                elem.Add(new XAttribute("messageFileName", provider.MessageFileName.Value));
+            if (provider.ParameterFileName != null)
+                elem.Add(new XAttribute("parameterFileName", provider.ParameterFileName.Value));
             AddOptionalMessage(elem, provider.Message);
 
             if (provider.Events.Count > 0)
