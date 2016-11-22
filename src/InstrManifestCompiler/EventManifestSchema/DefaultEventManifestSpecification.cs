@@ -67,7 +67,7 @@ namespace InstrManifestCompiler.EventManifestSchema
                 result = false;
                 diags.ReportError(
                     channel.Name.Location ?? channel.Location,
-                    "Length of channel name must be in [1, 255], but is {0}.",
+                    "Length of channel name must be in the range [1, 255], but is {0}.",
                     channel.Name.Value.Length);
             }
 
@@ -85,7 +85,7 @@ namespace InstrManifestCompiler.EventManifestSchema
                 result = false;
                 diags.ReportError(
                     channel.Value.Location ?? channel.Location,
-                    "Invalid value '{0}' (0x{0:X}) for channel '{1}'. User-defined channel values must be in [16, 255].",
+                    "Invalid value '{0}' (0x{0:X}) for channel '{1}'. User-defined channel values must be in the range [16, 255].",
                     channel.Value,
                     channel.Name);
             }
@@ -129,7 +129,7 @@ namespace InstrManifestCompiler.EventManifestSchema
                 result = false;
                 diags.ReportError(
                     level.Value.Location ?? level.Location,
-                    "Invalid value '{0}' (0x{0:X}) for level '{1}'. User-defined level values must be in [16, 255].",
+                    "Invalid value '{0}' (0x{0:X}) for level '{1}'. User-defined level values must be in the range [16, 255].",
                     level.Value,
                     level.Symbol ?? "<no symbol>");
             }
@@ -145,7 +145,7 @@ namespace InstrManifestCompiler.EventManifestSchema
                 result = false;
                 diags.ReportError(
                     task.Value.Location ?? task.Location,
-                    "Invalid value '{0}' (0x{0:X}) for task '{1}'. User-defined task values must be in [16, 255].",
+                    "Invalid value '{0}' (0x{0:X}) for task '{1}'. User-defined task values must be in the range [16, 255].",
                     task.Value,
                     task.Symbol ?? "<no symbol>");
             }
@@ -161,7 +161,7 @@ namespace InstrManifestCompiler.EventManifestSchema
                 result = false;
                 diags.ReportError(
                     opcode.Value.Location ?? opcode.Location,
-                    "Invalid value '{0}' (0x{0:X}) for opcode '{1}'. User-defined opcode values must be in [10, 239].",
+                    "Invalid value '{0}' (0x{0:X}) for opcode '{1}'. User-defined opcode values must be in the range [10, 239].",
                     opcode.Value,
                     opcode.Symbol ?? "<no symbol>");
             }
