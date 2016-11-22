@@ -28,7 +28,7 @@
   <!-- Selective Build: Remove unselected build items from the project. -->
   <Target Name="SelectEventManifestCompile" DependsOnTargets="_SelectedFiles;SelectCustomBuild">
     <ItemGroup Condition="'@(SelectedFiles)'!=''">
-      <EventManifestCompile Remove="@(SelectEventManifestCompile)" Condition="'%(Identity)'!='@(SelectedFiles)'"/>
+      <EventManifestCompile Remove="@(EventManifestCompile)" Condition="'%(Identity)'!='@(SelectedFiles)'"/>
       <EventManifestCompile>
         <MinimalRebuildFromTracking>false</MinimalRebuildFromTracking>
       </EventManifestCompile>
