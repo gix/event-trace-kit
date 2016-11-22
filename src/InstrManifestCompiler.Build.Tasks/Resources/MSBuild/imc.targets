@@ -50,13 +50,15 @@
     <Imc Condition="'%(EventManifestCompile.ExcludedFromBuild)' != 'true'"
         ImcToolPath                = "$(ImcToolPath)"
         Source                     = "%(Identity)"
-
         OutputBaseName             = "%(EventManifestCompile.OutputBaseName)"
-        HeaderFile                 = "%(EventManifestCompile.HeaderFile)"
-        SourceFile                 = "%(EventManifestCompile.SourceFile)"
+
+        GenerateResources          = "%(EventManifestCompile.GenerateResources)"
         MessageTableFile           = "%(EventManifestCompile.MessageTableFile)"
         EventTemplateFile          = "%(EventManifestCompile.EventTemplateFile)"
 
+        GenerateCode               = "%(EventManifestCompile.GenerateCode)"
+        HeaderFile                 = "%(EventManifestCompile.HeaderFile)"
+        SourceFile                 = "%(EventManifestCompile.SourceFile)"
         CodeGenerator              = "%(EventManifestCompile.CodeGenerator)"
         LogNamespace               = "%(EventManifestCompile.LogNamespace)"
         EtwNamespace               = "%(EventManifestCompile.EtwNamespace)"

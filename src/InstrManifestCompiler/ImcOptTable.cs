@@ -15,6 +15,10 @@ namespace InstrManifestCompiler
         dump_msg,
         dump_wevt,
         gen_manifest,
+        res,
+        no_res,
+        code,
+        no_code,
 
         // Output
         O_group,
@@ -68,8 +72,8 @@ namespace InstrManifestCompiler
                 .AddSeparate(Opt.gen_manifest, "-", "gen-manifest", "Generate event manifest from binary provider and write to <file>", metaVar: "<file>")
                 .AddGroup(Opt.O_group, "<O group>", "Output")
                 .AddJoined(Opt.out_eq, "-", "out=", "Base output filename", metaVar: "<file>", groupId: Opt.O_group)
-                .AddSeparate(Opt.h, "-", "h", metaVar: "<file>", groupId: Opt.O_group, aliasId: Opt.header_file_eq)
-                .AddSeparate(Opt.s, "-", "s", metaVar: "<file>", groupId: Opt.O_group, aliasId: Opt.source_file_eq)
+                .AddFlag(Opt.res, "-", "res")
+                .AddFlag(Opt.no_res, "-", "no-res", "Do not generate resources")
                 .AddSeparate(Opt.m, "-", "m", metaVar: "<file>", groupId: Opt.O_group, aliasId: Opt.msg_file_eq)
                 .AddSeparate(Opt.w, "-", "w", metaVar: "<file>", groupId: Opt.O_group, aliasId: Opt.wevt_file_eq)
                 .AddSeparate(Opt.r, "-", "r", metaVar: "<file>", groupId: Opt.O_group, aliasId: Opt.rc_file_eq)
@@ -78,6 +82,10 @@ namespace InstrManifestCompiler
                 .AddJoined(Opt.msg_file_eq, "-", "msg-file=", "Write message table to <file>", metaVar: "<file>", groupId: Opt.O_group)
                 .AddJoined(Opt.wevt_file_eq, "-", "etwbin-file=", "Write ETW binary template to <file>", metaVar: "<file>", groupId: Opt.O_group)
                 .AddJoined(Opt.rc_file_eq, "-", "rc-file=", "Write resource includes to <file>", metaVar: "<file>", groupId: Opt.O_group)
+                .AddFlag(Opt.code, "-", "code")
+                .AddFlag(Opt.no_code, "-", "no-code", "Do not generate logging code")
+                .AddSeparate(Opt.h, "-", "h", metaVar: "<file>", groupId: Opt.O_group, aliasId: Opt.header_file_eq)
+                .AddSeparate(Opt.s, "-", "s", metaVar: "<file>", groupId: Opt.O_group, aliasId: Opt.source_file_eq)
                 .AddGroup(Opt.G_group, "<G group>", "CodeGen Options")
                 .AddJoined(Opt.Ggenerator_eq, "-", "Ggenerator=", "Code generator to use (cxx, mc)", groupId: Opt.G_group)
                 .AddJoined(Opt.Glog_prefix_eq, "-", "Glog-prefix=", "Log call prefix", groupId: Opt.G_group)

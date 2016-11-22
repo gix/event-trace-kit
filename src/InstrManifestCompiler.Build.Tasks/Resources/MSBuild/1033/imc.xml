@@ -6,7 +6,7 @@
       Order="170">
   <Rule.Categories>
     <Category Name="General" DisplayName="General"/>
-    <Category Name="Output" DisplayName="Output Files"/>
+    <Category Name="ResGen" DisplayName="Resource Generation"/>
     <Category Name="CodeGen" DisplayName="Code Generation"/>
     <Category Name="All Options" DisplayName="All Options" Subtype="Search"/>
     <Category Name="Command Line" DisplayName="Command Line" Subtype="CommandLine"/>
@@ -16,6 +16,15 @@
   </Rule.DataSource>
 
   <!-- General properties -->
+  <StringProperty
+    Category="General"
+    Name="OutputBaseName"
+    DisplayName="Generated Files Base Name"
+    Description="Specifies the default base name of all generated files. If unspecified, the base name is inferred from the input file name."
+    IsRequired="false"
+    SwitchPrefix="-"
+    Switch="out"
+    Separator="="/>
   <StringProperty
     Category="General"
     Name="WinmetaPath"
@@ -35,28 +44,17 @@
     Switch="schema"
     Separator="="/>
 
-  <!-- Output properties -->
-  <StringProperty
-    Category="Output"
-    Name="OutputBaseName"
-    DisplayName="Generates Files Base Name"
-    Description="Specifies the default base name of all generated files. If unspecified, the base name is inferred from the input file name."
-    IsRequired="false"
+  <!-- Resource properties -->
+  <BoolProperty
+    Category="ResGen"
+    Name="GenerateResources"
+    DisplayName="Generate resources"
+    Description="Specifies whether resources are generated. These include the ETW template, associated message tables and a resource include file."
     SwitchPrefix="-"
-    Switch="out"
-    Separator="="/>
+    Switch="res"
+    ReverseSwitch="no-res"/>
   <StringProperty
-    Category="Output"
-    Name="HeaderFile"
-    DisplayName="Header File Name"
-    Description="Specifies the path to the generated header file."
-    IsRequired="false"
-    Subtype="file"
-    SwitchPrefix="-"
-    Switch="header-file"
-    Separator="="/>
-  <StringProperty
-    Category="Output"
+    Category="ResGen"
     Name="MessageTableFile"
     DisplayName="Message Table File Name"
     Description="Specifies the path for generated message table files. The culture of the contained messages is automatically added to the file name."
@@ -66,7 +64,7 @@
     Switch="msg-file"
     Separator="="/>
   <StringProperty
-    Category="Output"
+    Category="ResGen"
     Name="EventTemplateFile"
     DisplayName="Event Template File Name"
     Description="Specifies the path to the generated ETW binary template."
@@ -76,7 +74,7 @@
     Switch="etwbin-file"
     Separator="="/>
   <StringProperty
-    Category="Output"
+    Category="ResGen"
     Name="ResourceFile"
     DisplayName="Resource File Name"
     Description="Specifies the path to the generated resource include file."
@@ -87,6 +85,24 @@
     Separator="="/>
 
   <!-- CodeGen properties -->
+  <BoolProperty
+    Category="CodeGen"
+    Name="GenerateCode"
+    DisplayName="Generate code"
+    Description="Specifies whether logging code is generated."
+    SwitchPrefix="-"
+    Switch="code"
+    ReverseSwitch="no-code"/>
+  <StringProperty
+    Category="CodeGen"
+    Name="HeaderFile"
+    DisplayName="Header File Name"
+    Description="Specifies the path to the generated header file."
+    IsRequired="false"
+    Subtype="file"
+    SwitchPrefix="-"
+    Switch="header-file"
+    Separator="="/>
   <StringProperty
     Category="CodeGen"
     Name="CodeGenerator"

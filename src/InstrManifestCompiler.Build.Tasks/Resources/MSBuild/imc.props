@@ -3,6 +3,8 @@
   <ItemDefinitionGroup>
     <EventManifestCompile>
       <OutputBaseName             Condition="'%(EventManifestCompile.OutputBaseName)'             == ''">%(RelativeDir)%(Filename).Generated</OutputBaseName>
+      <GenerateResources          Condition="'%(EventManifestCompile.GenerateResources)'          == ''">true</GenerateResources>
+      <GenerateCode               Condition="'%(EventManifestCompile.GenerateCode)'               == ''">true</GenerateCode>
       <UseCustomEnabledChecks     Condition="'%(EventManifestCompile.UseCustomEnabledChecks)'     == ''">true</UseCustomEnabledChecks>
       <SkipDefines                Condition="'%(EventManifestCompile.SkipDefines)'                == ''">true</SkipDefines>
       <LoggingMacroPrefix         Condition="'%(EventManifestCompile.LoggingMacroPrefix)'         == ''">EventEnabled</LoggingMacroPrefix>

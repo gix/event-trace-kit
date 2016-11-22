@@ -23,6 +23,8 @@ namespace InstrManifestCompiler.Build.Tasks
                 Opt.rc_file_eq,
                 Opt.schema_eq,
                 Opt.winmeta_eq,
+                Opt.res, Opt.no_res,
+                Opt.code, Opt.no_code,
                 Opt.Ggenerator_eq,
                 Opt.Glog_ns_eq,
                 Opt.Getw_ns_eq,
@@ -114,6 +116,18 @@ namespace InstrManifestCompiler.Build.Tasks
         {
             get { return GetString(Opt.rc_file_eq); }
             set { SetString(Opt.rc_file_eq, value); }
+        }
+
+        public bool GenerateResources
+        {
+            get { return GetBool(Opt.res, Opt.no_res); }
+            set { SetBool(Opt.res, Opt.no_res, value); }
+        }
+
+        public bool GenerateCode
+        {
+            get { return GetBool(Opt.code, Opt.no_code); }
+            set { SetBool(Opt.code, Opt.no_code, value); }
         }
 
         public string CodeGenerator

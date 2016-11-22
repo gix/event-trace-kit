@@ -90,10 +90,14 @@ namespace InstrManifestCompiler
             if (diags.ErrorOccurred)
                 return false;
 
-            WriteEventTemplate(manifest);
-            WriteCode(manifest);
-            WriteMessageTables(manifest);
-            WriteResourceFile(manifest);
+            if (opts.GenerateCode)
+                WriteCode(manifest);
+
+            if (opts.GenerateResources) {
+                WriteEventTemplate(manifest);
+                WriteMessageTables(manifest);
+                WriteResourceFile(manifest);
+            }
 
             return !diags.ErrorOccurred;
         }

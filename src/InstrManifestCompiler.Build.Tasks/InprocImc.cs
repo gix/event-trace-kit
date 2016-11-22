@@ -177,7 +177,6 @@ namespace InstrManifestCompiler.Build.Tasks
 
         protected override string GenerateOptions()
         {
-            var builder = new StringBuilder();
             var dictionary = new SortedDictionary<string, string>();
 
             var opts = CreateOptions();
@@ -186,6 +185,8 @@ namespace InstrManifestCompiler.Build.Tasks
             dictionary.Add("CodeSourceFile", opts.CodeSourceFile);
             dictionary.Add("MessageTableFile", opts.MessageTableFile);
             dictionary.Add("EventTemplateFile", opts.EventTemplateFile);
+            dictionary.Add("GenerateResources", opts.GenerateResources.ToString());
+            dictionary.Add("GenerateCode", opts.GenerateCode.ToString());
             dictionary.Add("Generator", opts.CodeGenerator);
             dictionary.Add("LogNamespace", opts.LogNamespace);
             dictionary.Add("EtwNamespace", opts.EtwNamespace);
@@ -198,9 +199,8 @@ namespace InstrManifestCompiler.Build.Tasks
 
             using (var stream = new MemoryStream())
             using (var jw = JsonReaderWriterFactory.CreateJsonWriter(stream)) {
-                foreach (var pair in dictionary) {
+                foreach (var pair in dictionary)
                     jw.WriteElementString(pair.Key, pair.Value);
-                }
             }
 
             return string.Empty;

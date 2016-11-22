@@ -21,6 +21,8 @@ namespace InstrManifestCompiler
     {
         public ImcOpts()
         {
+            GenerateCode = true;
+            GenerateResources = true;
             LogCallPrefix = "EventWrite";
             AlwaysInlineAttribute = "FORCEINLINE";
             NoInlineAttribute = "DECLSPEC_NOINLINE";
@@ -39,17 +41,19 @@ namespace InstrManifestCompiler
         public List<string> Inputs { get; set; }
         public string WinmetaPath { get; set; }
         public string SchemaPath { get; set; }
-
         public string OutputBaseName { get; set; }
-        public string CodeHeaderFile { get; set; }
-        public string CodeSourceFile { get; set; }
+
+        public bool GenerateResources { get; set; }
         public string MessageTableFile { get; set; }
         public string EventTemplateFile { get; set; }
         public string ResourceFile { get; set; }
 
+        public bool GenerateCode { get; set; }
+        public string CodeHeaderFile { get; set; }
+        public string CodeSourceFile { get; set; }
         public string CodeGenerator { get; set; }
-        public string LogNamespace { get; set; }
         public string EtwNamespace { get; set; }
+        public string LogNamespace { get; set; }
         public string LogCallPrefix { get; set; }
         public bool UseCustomEventEnabledChecks { get; set; }
         public bool SkipDefines { get; set; }

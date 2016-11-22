@@ -85,14 +85,16 @@
             opts.DumpMessageTable = args.GetLastArgValue(Opt.dump_msg);
             opts.DumpEventTemplate = args.GetLastArgValue(Opt.dump_wevt);
             opts.OutputManifest = args.GetLastArgValue(Opt.gen_manifest);
-
             opts.OutputBaseName = args.GetLastArgValue(Opt.out_eq);
-            opts.CodeHeaderFile = args.GetLastArgValue(Opt.header_file_eq);
-            opts.CodeSourceFile = args.GetLastArgValue(Opt.source_file_eq);
+
+            opts.GenerateResources = args.GetFlag(Opt.res, Opt.no_res, true);
             opts.MessageTableFile = args.GetLastArgValue(Opt.msg_file_eq);
             opts.EventTemplateFile = args.GetLastArgValue(Opt.wevt_file_eq);
             opts.ResourceFile = args.GetLastArgValue(Opt.rc_file_eq);
 
+            opts.GenerateCode = args.GetFlag(Opt.code, Opt.no_code, true);
+            opts.CodeHeaderFile = args.GetLastArgValue(Opt.header_file_eq);
+            opts.CodeSourceFile = args.GetLastArgValue(Opt.source_file_eq);
             opts.CodeGenerator = args.GetLastArgValue(Opt.Ggenerator_eq, opts.CodeGenerator);
             opts.LogNamespace = args.GetLastArgValue(Opt.Glog_ns_eq, opts.LogNamespace);
             opts.EtwNamespace = args.GetLastArgValue(Opt.Getw_ns_eq, opts.EtwNamespace);
