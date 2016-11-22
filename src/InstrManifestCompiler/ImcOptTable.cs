@@ -74,7 +74,7 @@ namespace InstrManifestCompiler
                 .AddSeparate(Opt.w, "-", "w", metaVar: "<file>", groupId: Opt.O_group, aliasId: Opt.wevt_file_eq)
                 .AddSeparate(Opt.r, "-", "r", metaVar: "<file>", groupId: Opt.O_group, aliasId: Opt.rc_file_eq)
                 .AddJoined(Opt.header_file_eq, "-", "header-file=", "Generated header filename", metaVar: "<file>", groupId: Opt.O_group)
-                .AddJoined(Opt.source_file_eq, "-", "source-file=", "Generated source filename", metaVar: "<file>", groupId: Opt.O_group)
+                //.AddJoined(Opt.source_file_eq, "-", "source-file=", "Generated source filename", metaVar: "<file>", groupId: Opt.O_group)
                 .AddJoined(Opt.msg_file_eq, "-", "msg-file=", "Write message table to <file>", metaVar: "<file>", groupId: Opt.O_group)
                 .AddJoined(Opt.wevt_file_eq, "-", "etwbin-file=", "Write ETW binary template to <file>", metaVar: "<file>", groupId: Opt.O_group)
                 .AddJoined(Opt.rc_file_eq, "-", "rc-file=", "Write resource includes to <file>", metaVar: "<file>", groupId: Opt.O_group)

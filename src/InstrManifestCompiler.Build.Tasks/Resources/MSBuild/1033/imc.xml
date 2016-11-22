@@ -57,16 +57,6 @@
     Separator="="/>
   <StringProperty
     Category="Output"
-    Name="SourceFile"
-    DisplayName="Source File Name"
-    Description="Specifies the path to the generated source file."
-    IsRequired="false"
-    Subtype="file"
-    SwitchPrefix="-"
-    Switch="source-file"
-    Separator="="/>
-  <StringProperty
-    Category="Output"
     Name="MessageTableFile"
     DisplayName="Message Table File Name"
     Description="Specifies the path for generated message table files. The culture of the contained messages is automatically added to the file name."
