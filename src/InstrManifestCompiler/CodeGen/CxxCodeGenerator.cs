@@ -215,8 +215,9 @@ namespace InstrManifestCompiler.CodeGen
         private void WriteHeader()
         {
             ow.WriteLine("#pragma once");
-            ow.WriteLine();
+            ow.WriteLine("#include <cstdint>");
             ow.WriteLine("#include <cwchar>");
+            ow.WriteLine("#include <evntprov.h>");
             ow.WriteLine();
         }
 
