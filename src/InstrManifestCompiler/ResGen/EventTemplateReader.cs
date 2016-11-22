@@ -675,7 +675,7 @@
                 return;
 
             int index = number.DataPropertyIndex;
-            if (index < 0 || index >= properties.Count) {
+            if (index < 0 || index >= properties.Count || !(properties[index] is DataProperty)) {
                 diags.Report(
                     DiagnosticSeverity.Warning,
                     "Property references invalid property {0}. Template has only {1} properties.",
@@ -683,9 +683,8 @@
                 return;
             }
 
-            var propertyRef = properties[index];
-            number.DataPropertyRef = propertyRef.Name;
-            number.DataProperty = (DataProperty)propertyRef;
+            var propertyRef = (DataProperty)properties[index];
+            number.SetVariable(index, propertyRef.Name, propertyRef);
         }
 
         private Property ReadProperty(
@@ -718,14 +717,14 @@
                 structRanges.Add(Tuple.Create(property, firstPropertyIndex, propertyCount));
 
                 if ((flags & PropertyFlags.VarLength) != 0)
-                    property.Length.DataPropertyIndex = length;
+                    property.Length.SetVariable(refPropertyIndex: length);
                 if ((flags & PropertyFlags.VarCount) != 0)
-                    property.Count.DataPropertyIndex = length;
+                    property.Count.SetVariable(refPropertyIndex: length);
 
                 if ((flags & PropertyFlags.FixedLength) != 0)
-                    property.Length.Value = length;
+                    property.Length.SetFixed(length);
                 if ((flags & PropertyFlags.FixedCount) != 0)
-                    property.Count.Value = length;
+                    property.Count.SetFixed(length);
 
                 return property;
             } else {
@@ -762,14 +761,14 @@
                 property.Map = GetObject<IMap>(mapOffset);
 
                 if ((flags & PropertyFlags.VarLength) != 0)
-                    property.Length.DataPropertyIndex = length;
+                    property.Length.SetVariable(refPropertyIndex: length);
                 if ((flags & PropertyFlags.VarCount) != 0)
-                    property.Count.DataPropertyIndex = length;
+                    property.Count.SetVariable(refPropertyIndex: length);
 
                 if ((flags & PropertyFlags.FixedLength) != 0)
-                    property.Length.Value = length;
+                    property.Length.SetFixed(length);
                 if ((flags & PropertyFlags.FixedCount) != 0)
-                    property.Count.Value = length;
+                    property.Count.SetFixed(length);
 
                 return property;
             }

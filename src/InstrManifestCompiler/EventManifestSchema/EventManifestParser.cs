@@ -850,8 +850,7 @@ namespace InstrManifestCompiler.EventManifestSchema
                 return;
             }
 
-            number.DataPropertyIndex = index;
-            number.DataProperty = (DataProperty)properties[index];
+            number.SetVariable(index, number.DataPropertyRef, (DataProperty)properties[index]);
         }
 
         private static XElement ValidateAndCleanUserData(XElement userData)
@@ -1033,9 +1032,9 @@ namespace InstrManifestCompiler.EventManifestSchema
 
             ushort count;
             if (ushort.TryParse(value, out count))
-                number.Value = count;
+                number.SetFixed(count);
             else
-                number.DataPropertyRef = value;
+                number.SetVariable(refPropertyName: value);
         }
 
         private StructValue<ChannelType> MapChannelType(XElement elem, XAttribute attrib)
