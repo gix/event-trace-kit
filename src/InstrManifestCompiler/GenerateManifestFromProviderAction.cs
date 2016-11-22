@@ -50,15 +50,15 @@ namespace InstrManifestCompiler
 
             using (module) {
                 var metadata = EventManifestParser.LoadWinmeta(diags);
-                var dumper = new ResourceDumper(metadata);
+                var templateReader = new EventTemplateReader(diags, metadata);
 
                 IEnumerable<Message> messages;
                 using (var stream = module.OpenResource(UnsafeNativeMethods.RT_MESSAGETABLE, 1))
-                    messages = dumper.ReadMessageTable(stream);
+                    messages = templateReader.ReadMessageTable(stream);
 
                 EventManifest manifest;
                 using (var stream = module.OpenResource("WEVT_TEMPLATE", 1))
-                    manifest = dumper.ReadWevtTemplate(stream, messages);
+                    manifest = templateReader.ReadWevtTemplate(stream, messages);
 
                 XDocument doc = ToXml(manifest);
                 var settings = new XmlWriterSettings {

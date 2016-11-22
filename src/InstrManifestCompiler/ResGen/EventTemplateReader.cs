@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.Contracts;
     using System.Globalization;
     using System.IO;
     using System.Linq;
@@ -15,24 +16,37 @@
     using InstrManifestCompiler.Native;
     using InstrManifestCompiler.Support;
 
-    internal sealed class ResourceDumper
+    internal sealed class EventTemplateReader
     {
         private readonly IXmlNamespaceResolver nsr;
         private readonly Dictionary<long, object> objectMap = new Dictionary<long, object>();
         private readonly Dictionary<uint, LocalizedString> strings =
             new Dictionary<uint, LocalizedString>();
+
+        private readonly IDiagnostics diags;
         private readonly IEventManifestMetadata metadata;
 
-        private bool log = true;
+        private TextWriter logWriter = Console.Out;
+        private bool log;
+
         private Dictionary<uint, Message> messageMap;
 
-        public ResourceDumper(IEventManifestMetadata metadata = null)
+        public EventTemplateReader(IDiagnostics diags, IEventManifestMetadata metadata = null)
         {
+            Contract.Requires<ArgumentNullException>(diags != null);
+
+            this.diags = diags;
             this.metadata = metadata;
 
             var nsmgr = new XmlNamespaceManager(new NameTable());
             nsmgr.AddNamespace("win", WinEventSchema.Namespace);
             nsr = nsmgr;
+        }
+
+        public TextWriter LogWriter
+        {
+            get { return logWriter; }
+            set { logWriter = value ?? Console.Out; }
         }
 
         public void DumpMessageTable(string filename)
@@ -43,18 +57,48 @@
 
         public void DumpMessageTable(Stream input)
         {
-            using (var reader = IO.CreateBinaryReader(input))
-                ReadMessageTable(reader);
+            log = true;
+            try {
+                using (var reader = IO.CreateBinaryReader(input))
+                    ReadMessageTable(reader);
+            } finally {
+                log = false;
+            }
         }
 
         public IEnumerable<Message> ReadMessageTable(Stream input)
         {
-            log = false;
+            using (var reader = IO.CreateBinaryReader(input))
+                return ReadMessageTable(reader);
+        }
+
+        public void DumpWevtTemplate(string filename)
+        {
+            using (var input = File.OpenRead(filename))
+                DumpWevtTemplate(input);
+        }
+
+        public void DumpWevtTemplate(Stream input)
+        {
+            log = true;
             try {
-                using (var reader = IO.CreateBinaryReader(input))
-                    return ReadMessageTable(reader);
+                using (var reader = new BinaryReader(input))
+                    ReadCrimBlock(reader);
             } finally {
-                log = true;
+                log = false;
+            }
+        }
+
+        public EventManifest ReadWevtTemplate(Stream input, IEnumerable<Message> messages)
+        {
+            if (messages != null)
+                messageMap = messages.ToDictionary(m => m.Id);
+
+            try {
+                using (var reader = new BinaryReader(input))
+                    return ReadCrimBlock(reader);
+            } finally {
+                messageMap = null;
             }
         }
 
@@ -99,7 +143,6 @@
                         encoding = Encoding.ASCII;
                     string text = encoding.GetString(bytes).TrimEnd('\r', '\n', '\0');
 
-                    //new MESSAGE_RESOURCE_ENTRY { Flags = flags, Length = length, Text = text };
                     LogMessage("    0x{0:X8}: {1}", id, text);
                     messages.Add(new Message(id, text));
                 }
@@ -108,45 +151,16 @@
             return messages;
         }
 
-        public void DumpWevtTemplate(string filename)
-        {
-            using (var input = File.OpenRead(filename))
-                DumpWevtTemplate(input);
-        }
-
-        public void DumpWevtTemplate(Stream input)
-        {
-            using (var reader = new BinaryReader(input))
-                ReadCrimBlock(reader);
-        }
-
-        public EventManifest ReadWevtTemplate(Stream input, IEnumerable<Message> messages)
-        {
-            if (messages != null)
-                messageMap = messages.ToDictionary(m => m.Id);
-
-            try {
-                using (var reader = new BinaryReader(input))
-                    return ReadCrimBlock(reader);
-            } finally {
-                messageMap = null;
-            }
-        }
-
         private void LogMessage(object value)
         {
-            Console.WriteLine(value);
+            if (log)
+                logWriter.WriteLine(value);
         }
 
         private void LogMessage(string format, params object[] args)
         {
-            if (!log)
-                return;
-
-            if (args.Length > 0)
-                format = string.Format(format, args);
-
-            Console.WriteLine(format);
+            if (log)
+                logWriter.WriteLine(format, args);
         }
 
         private string FormatMagic(uint magic)
@@ -202,10 +216,10 @@
             return manifest;
         }
 
-        private Provider ReadWevtBlock(Guid guid, BinaryReader r)
+        private Provider ReadWevtBlock(Guid providerId, BinaryReader r)
         {
             string name = string.Format(
-                CultureInfo.InvariantCulture, "{{provider{0:X16}{1}", r.BaseStream.Position, "}");
+                CultureInfo.InvariantCulture, "Provider_{0:N}", providerId);
 
             ReadMagic(r, CrimsonTags.WEVT);
             uint length = r.ReadUInt32();
@@ -219,7 +233,7 @@
                 offsets.Add(Tuple.Create(type, offset));
             }
 
-            var provider = new Provider(name, Value.Create(guid), name);
+            var provider = new Provider(name, Value.Create(providerId), name);
             provider.Message = ResolveMessage(messageId);
 
             foreach (var pair in offsets) {
@@ -624,11 +638,15 @@
 
             var structRanges = new List<Tuple<StructProperty, ushort, ushort>>();
             for (uint i = 0; i < paramCount; ++i)
-                template.Properties.Add(ReadProperty(r, structRanges));
+                template.Properties.Add(ReadProperty(r, structRanges, true));
+
+            ResolvePropertyRefs(template.Properties);
 
             var structProperties = new List<Property>();
             for (uint i = paramCount; i < dataCount; ++i)
                 structProperties.Add(ReadProperty(r, structRanges, false));
+
+            ResolvePropertyRefs(structProperties);
 
             foreach (var range in structRanges) {
                 var @struct = range.Item1;
@@ -643,8 +661,35 @@
             return template;
         }
 
+        private void ResolvePropertyRefs(IReadOnlyList<Property> properties)
+        {
+            foreach (var property in properties) {
+                ResolvePropertyRef(property.Length, properties);
+                ResolvePropertyRef(property.Count, properties);
+            }
+        }
+
+        private void ResolvePropertyRef(IPropertyNumber number, IReadOnlyList<Property> properties)
+        {
+            if (number.DataPropertyIndex == -1)
+                return;
+
+            int index = number.DataPropertyIndex;
+            if (index < 0 || index >= properties.Count) {
+                diags.Report(
+                    DiagnosticSeverity.Warning,
+                    "Property references invalid property {0}. Template has only {1} properties.",
+                    number.DataPropertyIndex, properties.Count);
+                return;
+            }
+
+            var propertyRef = properties[index];
+            number.DataPropertyRef = propertyRef.Name;
+            number.DataProperty = (DataProperty)propertyRef;
+        }
+
         private Property ReadProperty(
-            BinaryReader r, List<Tuple<StructProperty, ushort, ushort>> structRanges, bool print = true)
+            BinaryReader r, List<Tuple<StructProperty, ushort, ushort>> structRanges, bool print)
         {
             var flags = (PropertyFlags)r.ReadUInt32();
             if ((flags & PropertyFlags.Struct) != 0) {
@@ -671,6 +716,17 @@
 
                 var property = new StructProperty(name);
                 structRanges.Add(Tuple.Create(property, firstPropertyIndex, propertyCount));
+
+                if ((flags & PropertyFlags.VarLength) != 0)
+                    property.Length.DataPropertyIndex = length;
+                if ((flags & PropertyFlags.VarCount) != 0)
+                    property.Count.DataPropertyIndex = length;
+
+                if ((flags & PropertyFlags.FixedLength) != 0)
+                    property.Length.Value = length;
+                if ((flags & PropertyFlags.FixedCount) != 0)
+                    property.Count.Value = length;
+
                 return property;
             } else {
                 byte inputType = r.ReadByte();
@@ -688,17 +744,33 @@
                         "  Data({0}, flags={6} (0x{6:X}), in={1:D} ({1}), out={2:D} ({2}), count={3}, length={4}, map=0x{5:X})",
                         name,
                         (InTypeKind)inputType,
-                        (InTypeKind)outputType,
+                        (OutTypeKind)outputType,
                         count,
                         length,
                         mapOffset,
                         flags);
                 }
 
-                InType inType = metadata.GetInType(inputType);
-                var property = new DataProperty(name, inType);
+                DataProperty property;
+                if (metadata != null) {
+                    property = new DataProperty(name, metadata.GetInType(inputType));
+                    property.OutType = metadata.GetXmlType(outputType);
+                } else {
+                    property = new DataProperty(name, new InType(new QName("Dummy"), 0, null));
+                }
+
                 property.Map = GetObject<IMap>(mapOffset);
-                property.OutType = metadata.GetXmlType(outputType);
+
+                if ((flags & PropertyFlags.VarLength) != 0)
+                    property.Length.DataPropertyIndex = length;
+                if ((flags & PropertyFlags.VarCount) != 0)
+                    property.Count.DataPropertyIndex = length;
+
+                if ((flags & PropertyFlags.FixedLength) != 0)
+                    property.Length.Value = length;
+                if ((flags & PropertyFlags.FixedCount) != 0)
+                    property.Count.Value = length;
+
                 return property;
             }
         }
@@ -781,15 +853,20 @@
             if (strings.TryGetValue(messageId, out ls))
                 return ls;
 
-            Message message;
-            string value = null;
-            if (messageMap.TryGetValue(messageId, out message))
-                value = message.Text;
-
             string name = string.Format(CultureInfo.InvariantCulture, "str{0:X8}", messageId);
-            ls = new LocalizedString(name, value ?? "{unresolved}", messageId);
+            string text = LookupMessage(messageId) ?? "{unresolved}";
+
+            ls = new LocalizedString(name, text, messageId);
             strings[messageId] = ls;
             return ls;
+        }
+
+        private string LookupMessage(uint messageId)
+        {
+            Message message;
+            if (messageMap != null && messageMap.TryGetValue(messageId, out message))
+                return message.Text;
+            return null;
         }
 
         private void MarkObject<T>(long offset, T obj)

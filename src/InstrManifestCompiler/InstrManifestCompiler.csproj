@@ -148,7 +148,7 @@
     <Compile Include="EventManifestSchema\IEventManifestParser.cs" />
     <Compile Include="ResGen\EventFieldKind.cs" />
     <Compile Include="EventManifestSchema\EventManifestParser.cs" />
-    <Compile Include="ResGen\ResourceDumper.cs" />
+    <Compile Include="ResGen\EventTemplateReader.cs" />
     <Compile Include="ResGen\EventTemplateWriterOld.cs" />
     <Compile Include="ResGen\EventTemplateWriter.cs" />
     <Compile Include="Collections\IOrderedDictionary.cs" />
