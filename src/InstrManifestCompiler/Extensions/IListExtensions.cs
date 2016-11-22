@@ -3,6 +3,7 @@ namespace InstrManifestCompiler.Extensions
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.Contracts;
+    using System.Linq;
 
     public static class IListExtensions
     {
@@ -50,5 +51,17 @@ namespace InstrManifestCompiler.Extensions
             return -1;
         }
 
+        public static void RemoveAll<T>(this IList<T> list, Predicate<T> match)
+        {
+            var listT = list as List<T>;
+            if (listT != null) {
+                listT.RemoveAll(match);
+                return;
+            }
+
+            var matches = list.Where(new Func<T, bool>(match)).ToList();
+            foreach (var item in matches)
+                list.Remove(item);
+        }
     }
 }

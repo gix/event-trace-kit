@@ -9,6 +9,7 @@ namespace InstrManifestCompiler
     using System.Linq;
     using System.Xml;
     using System.Xml.Linq;
+    using EventManifestSchema.Base;
     using InstrManifestCompiler.EventManifestSchema;
     using InstrManifestCompiler.Extensions;
     using InstrManifestCompiler.Native;
@@ -60,6 +61,10 @@ namespace InstrManifestCompiler
                 using (var stream = module.OpenResource("WEVT_TEMPLATE", 1))
                     manifest = templateReader.ReadWevtTemplate(stream, messages);
 
+                StripReservedMetadata(manifest, metadata);
+                InferSymbols(manifest);
+                StripDefaultMessageIds(manifest);
+
                 XDocument doc = ToXml(manifest);
                 var settings = new XmlWriterSettings {
                     Indent = true,
@@ -73,12 +78,159 @@ namespace InstrManifestCompiler
             return ExitCode.Success;
         }
 
+        private void StripReservedMetadata(EventManifest manifest, IEventManifestMetadata metadata)
+        {
+            foreach (var provider in manifest.Providers) {
+                var channelIds = new HashSet<byte>(metadata.Channels.Select(x => x.Value.Value));
+                var levelNames = new HashSet<QName>(metadata.Levels.Select(x => x.Name.Value));
+                var taskNames = new HashSet<QName>(metadata.Tasks.Select(x => x.Name.Value));
+                var opcodeNames = new HashSet<QName>(metadata.Opcodes.Select(x => x.Name.Value));
+                var keywordNames = new HashSet<QName>(metadata.Keywords.Select(x => x.Name.Value));
+
+                var messageSet = new HashSet<LocalizedString>();
+                messageSet.UnionWith(from x in provider.Channels
+                                     where x.Message != null && channelIds.Contains(x.Value)
+                                     select x.Message);
+                messageSet.UnionWith(from x in provider.Levels
+                                     where x.Message != null && levelNames.Contains(x.Name)
+                                     select x.Message);
+                messageSet.UnionWith(from x in provider.Tasks
+                                     where x.Message != null && taskNames.Contains(x.Name)
+                                     select x.Message);
+                messageSet.UnionWith(from x in provider.Opcodes
+                                     where x.Message != null && opcodeNames.Contains(x.Name)
+                                     select x.Message);
+                messageSet.UnionWith(from x in provider.Keywords
+                                     where x.Message != null && keywordNames.Contains(x.Name)
+                                     select x.Message);
+
+                foreach (var resourceSet in manifest.Resources)
+                    resourceSet.Strings.RemoveAll(x => messageSet.Contains(x));
+
+                provider.Channels.RemoveAll(x => channelIds.Contains(x.Value.Value));
+                provider.Levels.RemoveAll(x => levelNames.Contains(x.Name));
+                provider.Tasks.RemoveAll(x => taskNames.Contains(x.Name));
+                provider.Opcodes.RemoveAll(x => opcodeNames.Contains(x.Name));
+                provider.Keywords.RemoveAll(x => keywordNames.Contains(x.Name));
+            }
+        }
+
+        private static Dictionary<TKey, int> GetCountLookup<T, TKey>(IEnumerable<T> collection, Func<T, TKey> keySelector)
+        {
+            return collection.GroupBy(keySelector).ToDictionary(x => x.Key, x => x.Count());
+        }
+
+        private void InferSymbols(EventManifest manifest)
+        {
+            foreach (var provider in manifest.Providers)
+                InferSymbols(provider);
+        }
+
+        private void InferSymbols(Provider provider)
+        {
+            var symbolTable = new HashSet<string>();
+
+            var taskCounts = GetCountLookup(
+                provider.Events.Where(x => x.Task != null),
+                x => x.Task.Name.Value.LocalName);
+
+            var opcodeCounts = GetCountLookup(
+                provider.Events.Where(x => x.Task == null && x.Opcode != null),
+                x => x.Opcode.Name.Value.LocalName ?? string.Empty);
+
+            foreach (var evt in provider.Events) {
+                if (evt.Task != null) {
+                    string taskName = evt.Task.Name.Value.LocalName;
+                    if (taskCounts[taskName] == 1) {
+                        evt.Symbol = GetUniqueSymbol(taskName, symbolTable);
+                        continue;
+                    }
+
+                    if (evt.Opcode != null) {
+                        string opcodeName = evt.Opcode.Name.Value.LocalName;
+                        evt.Symbol = GetUniqueSymbol(taskName + "_" + opcodeName, symbolTable);
+                        continue;
+                    }
+                } else if (evt.Opcode != null) {
+                    string opcodeName = evt.Opcode.Name.Value.LocalName;
+                    if (opcodeCounts[opcodeName] == 1) {
+                        evt.Symbol = GetUniqueSymbol(opcodeName, symbolTable);
+                        continue;
+                    }
+                }
+
+                evt.Symbol = GetUniqueSymbol("Event" + evt.Value.Value, symbolTable);
+            }
+        }
+
+        private static string GetUniqueSymbol(string symbol, HashSet<string> symbolTable)
+        {
+            symbol = SanitizeSymbol(symbol);
+
+            if (symbolTable.Add(symbol))
+                return symbol;
+
+            for (int suffix = 1; ; ++suffix) {
+                string suffixed = symbol + suffix;
+                if (symbolTable.Add(suffixed))
+                    return suffixed;
+            }
+        }
+
+        private static string SanitizeSymbol(string symbol)
+        {
+            symbol = symbol.Replace('-', '_');
+            if (symbol.Length > 0 && char.IsDigit(symbol[0]))
+                symbol = "_" + symbol;
+            return symbol;
+        }
+
+        private void StripDefaultMessageIds(EventManifest manifest)
+        {
+            var idGenerator = new StableMessageIdGenerator(new NullDiagnostics());
+            foreach (var provider in manifest.Providers) {
+                StripMessageId(provider, x => x.Message, x => idGenerator.CreateId(provider));
+                foreach (var item in provider.Events)
+                    StripMessageId(item, x => x.Message, x => idGenerator.CreateId(x, provider));
+                foreach (var item in provider.Levels)
+                    StripMessageId(item, x => x.Message, x => idGenerator.CreateId(x, provider));
+                foreach (var item in provider.Channels)
+                    StripMessageId(item, x => x.Message, x => idGenerator.CreateId(x, provider));
+                foreach (var item in provider.Tasks)
+                    StripMessageId(item, x => x.Message, x => idGenerator.CreateId(x, provider));
+                foreach (var item in provider.Opcodes)
+                    StripMessageId(item, x => x.Message, x => idGenerator.CreateId(x, provider));
+                foreach (var item in provider.Keywords)
+                    StripMessageId(item, x => x.Message, x => idGenerator.CreateId(x, provider));
+                foreach (var item in provider.Filters)
+                    StripMessageId(item, x => x.Message, x => idGenerator.CreateId(x, provider));
+                foreach (var item in provider.Maps)
+                    foreach (var mapItem in item.Items)
+                        StripMessageId(mapItem, x => x.Message, x => idGenerator.CreateId(x, item, provider));
+            }
+        }
+
+        private void StripMessageId<T>(
+            T entity, Func<T, LocalizedString> messageSelector, Func<T, uint> createId)
+        {
+            if (entity == null)
+                return;
+
+            LocalizedString message = messageSelector(entity);
+            if (message == null)
+                return;
+
+            if (message.Id != LocalizedString.UnusedId && message.Id == createId(entity))
+                message.Id = LocalizedString.UnusedId;
+        }
+
         private XDocument ToXml(EventManifest manifest)
         {
             var providersElem = new XElement(ns + "events");
             foreach (var provider in manifest.Providers)
                 providersElem.Add(ToXml(provider));
-            providersElem.Add(ToMessageTableXml(manifest.Resources));
+
+            //providersElem.Add(ToMessageTableXml(manifest.Resources));
 
             XElement localizationElem = null;
             if (manifest.Resources.Count > 0)
