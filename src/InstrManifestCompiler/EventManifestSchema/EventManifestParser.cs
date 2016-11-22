@@ -815,19 +815,43 @@ namespace InstrManifestCompiler.EventManifestSchema
                 template.Properties.TryAdd(property, diags);
             }
 
-            foreach (var property in template.Properties) {
-                Property p = property;
-                if (property.Count.IsVariable)
-                    property.Count.DataPropertyIndex =
-                        template.Properties.GetIndexByName(p.Count.DataPropertyRef);
-                if (property.Length.IsVariable)
-                    property.Length.DataPropertyIndex =
-                        template.Properties.GetIndexByName(p.Length.DataPropertyRef);
-            }
+            ResolvePropertyRefs(template.Properties);
 
             manifestSpec.IsSatisfiedBy(template);
 
             return template;
+        }
+
+        private void ResolvePropertyRefs(PropertyCollection properties)
+        {
+            foreach (var property in properties) {
+                ResolvePropertyRef(property, property.Count, properties);
+                ResolvePropertyRef(property, property.Length, properties);
+
+                if (property.Kind == PropertyKind.Struct) {
+                    var structProperty = (StructProperty)property;
+                    ResolvePropertyRefs(structProperty.Properties);
+                }
+            }
+        }
+
+        private void ResolvePropertyRef(
+            Property property, IPropertyNumber number, PropertyCollection properties)
+        {
+            if (number.DataPropertyRef == null)
+                return;
+
+            int index = properties.GetIndexByName(number.DataPropertyRef);
+            if (index == -1 || !(properties[index] is DataProperty)) {
+                diags.ReportError(
+                    property.Location,
+                    "For property '{0}', property '{1}' referenced by attribute {2} was not found.",
+                    property.Name, number.DataPropertyRef, number.Name);
+                return;
+            }
+
+            number.DataPropertyIndex = index;
+            number.DataProperty = (DataProperty)properties[index];
         }
 
         private static XElement ValidateAndCleanUserData(XElement userData)
