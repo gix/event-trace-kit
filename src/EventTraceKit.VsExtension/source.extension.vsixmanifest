@@ -3,7 +3,8 @@
   <Metadata>
     <Identity Id="EventTraceKit.Dev14.599d9f45-b882-4de9-bff6-29f8673078d4" Version="0.1.1" Language="en-US" Publisher="Nico Rieck" />
     <DisplayName>EventTraceKit</DisplayName>
-    <Description xml:space="preserve">EventTraceKit</Description>
+    <Description xml:space="preserve">Consume real-time ETW traces (Event Tracing for Windows) directly from Visual Studio.</Description>
+    <Icon>Resources\EventTraceKit.ico</Icon>
   </Metadata>
   <Installation>
     <InstallationTarget Version="[14.0,16.0)" Id="Microsoft.VisualStudio.Community" />

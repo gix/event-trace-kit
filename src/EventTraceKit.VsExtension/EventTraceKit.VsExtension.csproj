@@ -506,7 +506,10 @@
       <Link>EventTraceKit.Logger.pdb</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <None Include="Resources\EventTraceKit.ico" />
+    <Content Include="Resources\EventTraceKit.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Common\EventTraceKit.snk">
