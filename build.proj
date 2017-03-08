@@ -3,6 +3,8 @@
   <ItemGroup>
     <ImcProject Include="src\InstrManifestCompiler*\InstrManifestCompiler*.csproj"/>
     <ImcProject Include="src\NOpt*\NOpt*.csproj"/>
+    <EtkProject Include="src\EventTraceKit.VsExtension\EventTraceKit.VsExtension.csproj"/>
+    <EtkProject Include="src\EventTraceKit.VsExtension.Tests\EventTraceKit.VsExtension.Tests.csproj"/>
   </ItemGroup>
   <PropertyGroup>
     <Configuration Condition="'$(Configuration)' == ''">Release</Configuration>
@@ -37,5 +39,22 @@
       <PackArgs>$(PackArgs) -OutputDirectory "$(ImcPackageDir)"</PackArgs>
     </PropertyGroup>
     <Exec Command="nuget.exe pack $(PackArgs) InstrManifestCompiler.Build.Tasks.nuspec"/>
+  </Target>
+
+  <Target Name="BuildEtk">
+    <MSBuild Projects="@(EtkProject)"
+             Properties="Configuration=$(Configuration);Platform=x86"
+             BuildInParallel="true"
+             StopOnFirstFailure="true"
+             Targets="Rebuild"/>
+  </Target>
+
+  <Target Name="TestEtk" DependsOnTargets="BuildEtk">
+    <!--<xunit Assemblies=""/>-->
+  </Target>
+
+  <Target Name="PackageEtk" DependsOnTargets="TestEtk">
+    <MakeDir Directories="$(ImcPackageDir)"/>
+    <!--<Copy SourceFiles="" DestinationFolder="$(ImcPackageDir)"/>-->
   </Target>
 </Project>

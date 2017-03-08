@@ -1,8 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26228.4
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8182111B-E4CF-4317-8C75-A9792CD967EF}"
+	ProjectSection(SolutionItems) = preProject
+		Common\Common.props = Common\Common.props
+		Common\CommonAssemblyInfo.cs = Common\CommonAssemblyInfo.cs
+		Common\Imc.pfx = Common\Imc.pfx
+		Common\Imc.snk = Common\Imc.snk
+		Common\UniformOutput.props = Common\UniformOutput.props
+	EndProjectSection
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EventTraceKit.Logger", "EventTraceKit.Logger\EventTraceKit.Logger.vcxproj", "{3EDE8E61-F8E3-4645-A940-337F91A9DF65}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EventTraceKit.Logger.WatchDog", "EventTraceKit.Logger.WatchDog\EventTraceKit.Logger.WatchDog.vcxproj", "{32C0585A-5DB9-457C-9E69-1621BC3547A5}"
@@ -20,15 +29,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NOpt.Tests", "NOpt.Tests\NOpt.Tests.csproj", "{9BF497FA-9F6C-44F7-8513-5C7171AAB564}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestRunner", "TestRunner\TestRunner.vcxproj", "{87D7D961-8B2C-41AD-A9A7-C60CB008151D}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8182111B-E4CF-4317-8C75-A9792CD967EF}"
-	ProjectSection(SolutionItems) = preProject
-		Common\Common.props = Common\Common.props
-		Common\CommonAssemblyInfo.cs = Common\CommonAssemblyInfo.cs
-		Common\Imc.pfx = Common\Imc.pfx
-		Common\Imc.snk = Common\Imc.snk
-		Common\UniformOutput.props = Common\UniformOutput.props
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventTraceKit.VsExtension.Tests", "EventTraceKit.VsExtension.Tests\EventTraceKit.VsExtension.Tests.csproj", "{3C8E5DBE-F7FA-45A7-B235-58F9BEF33261}"
 EndProject
