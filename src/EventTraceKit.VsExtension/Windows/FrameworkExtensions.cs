@@ -10,20 +10,21 @@ namespace EventTraceKit.VsExtension.Windows
 
     public static class FrameworkExtensions
     {
-        public static T GetRootVisual<T>(this DependencyObject d)
-            where T : Visual
+        public static T GetRootVisual<T>(this DependencyObject d) where T : Visual
         {
-            var visual = d as Visual;
-            if (visual != null) {
-                var source = PresentationSource.FromVisual(visual);
-                return source?.RootVisual as T;
+            while (true) {
+                if (d is Visual visual) {
+                    var source = PresentationSource.FromVisual(visual);
+                    return source?.RootVisual as T;
+                }
+
+                if (d is FrameworkContentElement element) {
+                    d = element.Parent;
+                    continue;
+                }
+
+                return null;
             }
-
-            var element = d as FrameworkContentElement;
-            if (element != null)
-                return GetRootVisual<T>(element.Parent);
-
-            return null;
         }
 
         public static DependencyObject GetVisualOrLogicalParent(this DependencyObject sourceElement)
@@ -58,12 +59,11 @@ namespace EventTraceKit.VsExtension.Windows
         public static T FindVisualParent<T>(this Visual element) where T : Visual
         {
             for (Visual it = element; it != null; it = VisualTreeHelper.GetParent(it) as Visual) {
-                var result = it as T;
-                if (result != null)
+                if (it is T result)
                     return result;
             }
 
-            return default(T);
+            return default;
         }
 
         public static T FindParent<T>(this FrameworkElement element)
@@ -71,8 +71,7 @@ namespace EventTraceKit.VsExtension.Windows
         {
             for (var it = element.TemplatedParent as FrameworkElement;
                  it != null; it = it.TemplatedParent as FrameworkElement) {
-                T result = it as T;
-                if (result != null)
+                if (it is T result)
                     return result;
             }
 
@@ -94,8 +93,7 @@ namespace EventTraceKit.VsExtension.Windows
 
             for (obj = obj.GetVisualOrLogicalParent(); obj != null;
                  obj = obj.GetVisualOrLogicalParent()) {
-                TAncestor ancestor = obj as TAncestor;
-                if (ancestor != null && predicate(ancestor))
+                if (obj is TAncestor ancestor && predicate(ancestor))
                     return ancestor;
             }
 
@@ -108,8 +106,7 @@ namespace EventTraceKit.VsExtension.Windows
             if (obj == null)
                 throw new ArgumentNullException(nameof(obj));
 
-            TAncestor ancestor = obj as TAncestor;
-            if (ancestor != null)
+            if (obj is TAncestor ancestor)
                 return ancestor;
 
             return obj.FindAncestor<TAncestor>();
@@ -130,7 +127,7 @@ namespace EventTraceKit.VsExtension.Windows
             where T : DependencyObject
         {
             if (obj == null)
-                return default(T);
+                return default;
 
             for (int idx = 0; idx < VisualTreeHelper.GetChildrenCount(obj); ++idx) {
                 DependencyObject child = VisualTreeHelper.GetChild(obj, idx);
@@ -173,8 +170,7 @@ namespace EventTraceKit.VsExtension.Windows
 
             while (queue.Any()) {
                 var item = queue.Dequeue();
-                var visual = item as Visual;
-                if (visual != null)
+                if (item is Visual visual)
                     yield return visual;
 
                 int count = VisualTreeHelper.GetChildrenCount(item);

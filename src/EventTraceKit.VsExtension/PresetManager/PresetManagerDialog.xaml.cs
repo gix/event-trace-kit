@@ -80,7 +80,7 @@
             return new PresetManagerDialog(viewModel);
         }
 
-        public static void ShowPresetManagerDialog(AsyncDataViewModel adv)
+        public static void ShowModalDialog(AsyncDataViewModel adv)
         {
             CreateDialog(adv).ShowModal();
         }
@@ -166,8 +166,7 @@
         private void OnDragPrepare(object source)
         {
             dragSource = (DependencyObject)source;
-            var item = dragSource as ListBoxItem;
-            if (item != null) {
+            if (dragSource is ListBoxItem item) {
                 var listBox = item.GetParentListBox();
                 dragData = listBox.GetOrderedSelectedItemsArray();
             }
@@ -175,8 +174,7 @@
 
         private void OnAvailableListDragStart()
         {
-            var columns = dragData as ColumnViewModelPreset[];
-            if (columns != null) {
+            if (dragData is ColumnViewModelPreset[] columns) {
                 var data = new DataObject(typeof(ColumnViewModelPreset[]), columns);
                 DragDrop.DoDragDrop(dragSource, data, DragDropEffects.Copy);
             }
@@ -184,8 +182,7 @@
 
         private void OnLayoutListDragStart()
         {
-            var columns = dragData as PresetManagerColumnViewModel[];
-            if (columns != null) {
+            if (dragData is PresetManagerColumnViewModel[] columns) {
                 var data = new DataObject(typeof(PresetManagerColumnViewModel[]), columns);
                 DragDrop.DoDragDrop(dragSource, data, DragDropEffects.Move);
             }
@@ -199,8 +196,7 @@
 
         private void OnAvailableListDrop(IDataObject data)
         {
-            PresetManagerColumnViewModel[] toRemove;
-            if (data.TryGetArray(out toRemove))
+            if (data.TryGetArray(out PresetManagerColumnViewModel[] toRemove))
                 viewModel.Remove(toRemove);
         }
 
@@ -218,8 +214,7 @@
 
         public void OnLayoutListItemDrop(object sender, DragEventArgs e)
         {
-            var relativeTo = sender as FrameworkElement;
-            if (relativeTo == null)
+            if (!(sender is FrameworkElement relativeTo))
                 return;
 
             e.Handled = true;
@@ -252,8 +247,7 @@
 
         public void OnLayoutListItemDragEnter(object sender, DragEventArgs e)
         {
-            var relativeTo = sender as ListBoxItem;
-            if (relativeTo == null)
+            if (!(sender is ListBoxItem relativeTo))
                 return;
 
             e.Handled = true;
@@ -274,8 +268,7 @@
 
         public void OnLayoutListItemDragOver(object sender, DragEventArgs e)
         {
-            var relativeTo = sender as ListBoxItem;
-            if (relativeTo == null)
+            if (!(sender is ListBoxItem relativeTo))
                 return;
 
             e.Handled = true;
@@ -316,12 +309,10 @@
 
         private bool CanDrop(IDataObject data, PresetManagerColumnViewModel target, bool moveAfter)
         {
-            ColumnViewModelPreset[] toAdd;
-            if (data.TryGetArray(out toAdd))
+            if (data.TryGetArray(out ColumnViewModelPreset[] toAdd))
                 return true;
 
-            PresetManagerColumnViewModel[] toMove;
-            if (data.TryGetArray(out toMove))
+            if (data.TryGetArray(out PresetManagerColumnViewModel[] toMove))
                 return viewModel.CanMove(toMove, target, moveAfter);
 
             return false;
@@ -331,11 +322,9 @@
         {
             layoutListDragPreview.Hide();
 
-            PresetManagerColumnViewModel[] toMove;
-            ColumnViewModelPreset[] toAdd;
-            if (data.TryGetArray(out toMove))
+            if (data.TryGetArray(out PresetManagerColumnViewModel[] toMove))
                 viewModel.Move(toMove, target, moveAfter);
-            else if (data.TryGetArray(out toAdd))
+            else if (data.TryGetArray(out ColumnViewModelPreset[] toAdd))
                 viewModel.Add(toAdd, target, moveAfter);
         }
 

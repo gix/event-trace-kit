@@ -12,8 +12,7 @@ namespace EventTraceKit.VsExtension.Windows
                 throw InvalidSourceType<TSource>();
             if (!targetType.IsAssignableFrom(typeof(TTarget)))
                 throw InvalidTargetType<TTarget>();
-            TTarget target;
-            if (TryConvert((TSource)value, parameter, culture, out target))
+            if (TryConvert((TSource)value, parameter, culture, out var target))
                 return target;
             return value;
         }
@@ -25,8 +24,7 @@ namespace EventTraceKit.VsExtension.Windows
                 throw InvalidSourceType<TTarget>();
             if (!targetType.IsAssignableFrom(typeof(TSource)))
                 throw InvalidTargetType<TSource>();
-            TSource source;
-            if (TryConvertBack((TTarget)value, parameter, culture, out source))
+            if (TryConvertBack((TTarget)value, parameter, culture, out var source))
                 return source;
             return value;
         }

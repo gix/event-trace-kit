@@ -37,6 +37,7 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>bin\x86\Release\</OutputPath>
@@ -47,6 +48,7 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>false</SignAssembly>
@@ -68,6 +70,10 @@
     <Reference Include="Microsoft.VisualStudio.CoreUtility, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.VisualStudio.CoreUtility.14.3.25407\lib\net45\Microsoft.VisualStudio.CoreUtility.dll</HintPath>
       <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Debugger.Interop.Internal">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\PrivateAssemblies\Microsoft.VisualStudio.Debugger.Interop.Internal.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.ImageCatalog, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.VisualStudio.ImageCatalog.14.3.25407\lib\net45\Microsoft.VisualStudio.ImageCatalog.dll</HintPath>
@@ -158,9 +164,8 @@
       <HintPath>..\packages\Microsoft.VisualStudio.Utilities.14.3.25407\lib\net45\Microsoft.VisualStudio.Utilities.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.Windows, Version=1.0.6153.43024, Culture=neutral, PublicKeyToken=de91bd32a6ee7004, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Windows.1.0.6153.43024\lib\Microsoft.Windows.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Microsoft.VisualStudio.VCProjectEngine, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -170,10 +175,24 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="VSLangProj, Version=7.0.3300.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="VSLangProj140, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="VSLangProj80, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="WinApi.Core, Version=0.1.0.0, Culture=neutral, PublicKeyToken=de91bd32a6ee7004, processorArchitecture=MSIL">
+      <HintPath>..\packages\WinApi.Core.0.1.0-ci-62626-01\lib\net45\WinApi.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
@@ -181,8 +200,9 @@
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="ActionThrottler.cs" />
+    <Compile Include="DefaultTraceSessionService.cs" />
+    <Compile Include="EtkDebugLaunchHook.cs" />
     <Compile Include="EventSymbolSource.cs" />
-    <Compile Include="Extensions\ArrayUtils.cs" />
     <Compile Include="AsyncDelegateCommand.cs" />
     <Compile Include="Extensions\AsyncExtensions.cs" />
     <Compile Include="CharCPtrUtils.cs" />
@@ -206,19 +226,23 @@
     <Compile Include="Extensions\ServiceProviderExtensions.cs" />
     <Compile Include="Extensions\SizeUtils.cs" />
     <Compile Include="Extensions\StringBuilderExtensions.cs" />
+    <Compile Include="Extensions\VectorUtils.cs" />
     <Compile Include="Extensions\VsSdkExtensions.cs" />
     <Compile Include="Extensions\Extensions.cs" />
     <Compile Include="Extensions\XElementExtensions.cs" />
-    <Compile Include="FileUtils.cs" />
-    <Compile Include="FilterDialog.xaml.cs">
+    <Compile Include="IDialogService.cs" />
+    <Compile Include="PortableExecutableUtils.cs" />
+    <Compile Include="ProvideDebuggerLaunchHookAttribute.cs" />
+    <Compile Include="Extensions\StreamExtensions.cs" />
+    <Compile Include="UI\FilterDialog.xaml.cs">
       <DependentUpon>FilterDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="FilterDialogViewModel.cs" />
+    <Compile Include="UI\FilterDialogViewModel.cs" />
     <Compile Include="FontAndColorsRegistrationAttribute.cs" />
     <Compile Include="Formatting\TimeSpanFormatProvider.cs" />
     <Compile Include="Formatting\DefaultFormatProviderSource.cs" />
     <Compile Include="Formatting\FormatProviderExtensions.cs" />
-    <Compile Include="Formatting\FormatProviders.cs" />
+    <Compile Include="Formatting\FormatAttributes.cs" />
     <Compile Include="AdvmPresetCollection.cs" />
     <Compile Include="Formatting\IFormatProviderSource.cs" />
     <Compile Include="Formatting\NumericalFormatProvider.cs" />
@@ -229,10 +253,14 @@
     <Compile Include="Native\EventHeaderCPtr.cs" />
     <Compile Include="Native\EventPropertyInfoCPtr.cs" />
     <Compile Include="Native\EventRecordCPtr.cs" />
+    <Compile Include="Native\ProcessUtils.cs" />
     <Compile Include="Native\TraceEventInfoCPtr.cs" />
     <Compile Include="Native\TraceDataHelper.cs" />
     <Compile Include="Native\UnmanagedString.cs" />
     <Compile Include="Threading\Threading.cs" />
+    <Compile Include="UI\ImportProvidersDialog.xaml.cs">
+      <DependentUpon>ImportProvidersDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Utilities\ObjectPool.cs" />
     <Compile Include="SettingsStoreGlobalSettings.cs" />
     <Compile Include="IGlobalSettings.cs" />
@@ -312,9 +340,9 @@
     <Compile Include="Windows\KeyDownEventTrigger.cs" />
     <Compile Include="SimpleInstrumentationManifestParser.cs" />
     <Compile Include="SolutionFileGatherer.cs" />
-    <Compile Include="ThemedDialogWindow.cs" />
+    <Compile Include="UI\ThemedDialogWindow.cs" />
     <Compile Include="Windows\ToggleSelectOnSpace.cs" />
-    <Compile Include="TraceLogPaneViewModel.cs" />
+    <Compile Include="UI\TraceLogPaneViewModel.cs" />
     <Compile Include="TraceProviderDescriptorViewModel.cs" />
     <Compile Include="Windows\HexNumberConverter.cs" />
     <Compile Include="Windows\MenuPopupPositionerExtension.cs" />
@@ -375,15 +403,15 @@
     <Compile Include="TimePoint.cs" />
     <Compile Include="TimePointConverter.cs" />
     <Compile Include="TimePointFormatter.cs" />
-    <Compile Include="TraceLogPane.cs" />
+    <Compile Include="UI\TraceLogToolWindow.cs" />
     <Compile Include="TraceLogWindowCommand.cs" />
-    <Compile Include="TraceLogPaneContent.xaml.cs">
+    <Compile Include="UI\TraceLogPaneContent.xaml.cs">
       <DependentUpon>TraceLogPaneContent.xaml</DependentUpon>
     </Compile>
-    <Compile Include="TraceSessionSettingsWindow.xaml.cs">
+    <Compile Include="UI\TraceSessionSettingsWindow.xaml.cs">
       <DependentUpon>TraceSessionSettingsWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="TraceSessionSettingsViewModel.cs" />
+    <Compile Include="UI\TraceSessionSettingsViewModel.cs" />
     <Compile Include="ViewModel.cs" />
     <Compile Include="Windows\ValueConverter.cs" />
   </ItemGroup>
@@ -414,7 +442,7 @@
     </VSCTCompile>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="FilterDialog.xaml">
+    <Page Include="UI\FilterDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -478,11 +506,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="TraceLogPaneContent.xaml">
+    <Page Include="UI\ImportProvidersDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\TraceLogPaneContent.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="TraceSessionSettingsWindow.xaml">
+    <Page Include="UI\TraceSessionSettingsWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -543,4 +575,10 @@
     <Error Condition="!Exists('..\packages\Microsoft.VSSDK.BuildTools.15.0.26201\build\Microsoft.VSSDK.BuildTools.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.VSSDK.BuildTools.15.0.26201\build\Microsoft.VSSDK.BuildTools.targets'))" />
   </Target>
   <Import Project="..\packages\Microsoft.VSSDK.BuildTools.15.0.26201\build\Microsoft.VSSDK.BuildTools.targets" Condition="Exists('..\packages\Microsoft.VSSDK.BuildTools.15.0.26201\build\Microsoft.VSSDK.BuildTools.targets')" />
+  <Target Name="AddVsixToolItems" AfterTargets="GetVsixSourceItems">
+    <ItemGroup>
+      <VSIXSourceItem Include="$(OutputPath)..\..\x86$(ConfigSuffix)\bin\TraceLaunch.x86.exe" />
+      <VSIXSourceItem Include="$(OutputPath)..\..\x64$(ConfigSuffix)\bin\TraceLaunch.x64.exe" />
+    </ItemGroup>
+  </Target>
 </Project>

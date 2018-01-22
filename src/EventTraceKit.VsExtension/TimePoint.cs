@@ -93,7 +93,7 @@ namespace EventTraceKit.VsExtension
 
         public override bool Equals(object other)
         {
-            return other is TimePoint && Equals((TimePoint)other);
+            return other is TimePoint point && Equals(point);
         }
 
         public override int GetHashCode()

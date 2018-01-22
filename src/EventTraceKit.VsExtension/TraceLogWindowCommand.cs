@@ -4,6 +4,7 @@
     using System.ComponentModel.Design;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
+    using UI;
 
     /// <summary>
     /// Command handler
@@ -37,8 +38,7 @@
 
             this.package = package;
 
-            var commandService = ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            if (commandService != null) {
+            if (ServiceProvider.GetService(typeof(IMenuCommandService)) is MenuCommandService commandService) {
                 var menuCommandId = new CommandID(CommandSet, CommandId);
                 var menuItem = new MenuCommand(ShowToolWindow, menuCommandId);
                 commandService.AddCommand(menuItem);
@@ -74,7 +74,7 @@
             // Get the instance number 0 of this tool window. This window is single instance so this instance
             // is actually the only one.
             // The last flag is set to true so that if the tool window does not exists it will be created.
-            ToolWindowPane window = package.FindToolWindow(typeof(TraceLogPane), 0, true);
+            ToolWindowPane window = package.FindToolWindow(typeof(TraceLogToolWindow), 0, true);
             if (window?.Frame == null)
                 throw new NotSupportedException("Cannot create tool window");
 

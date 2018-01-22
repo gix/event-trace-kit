@@ -6,7 +6,7 @@
     using System.Linq;
     using System.Reflection;
     using InstrManifestCompiler.Support;
-    using NOpt;
+    using NOption;
 
     public static class Program
     {
@@ -59,8 +59,7 @@
         private static bool ParseOptions(
             string[] cliArgs, OptTable optTable, ImcOpts opts, DiagnosticsEngine diags)
         {
-            MissingArgs missing;
-            IArgumentList args = optTable.ParseArgs(cliArgs, out missing);
+            IArgumentList args = optTable.ParseArgs(cliArgs, out var missing);
 
             bool success = true;
 

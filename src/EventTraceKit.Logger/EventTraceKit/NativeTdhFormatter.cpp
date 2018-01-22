@@ -43,6 +43,7 @@ public:
     NativeTdhFormatter() : formatter(new ::etk::TdhMessageFormatter()) {}
     ~NativeTdhFormatter() { this->!NativeTdhFormatter(); }
     !NativeTdhFormatter() { delete formatter; }
+
 private:
     ::etk::TdhMessageFormatter* formatter;
 };

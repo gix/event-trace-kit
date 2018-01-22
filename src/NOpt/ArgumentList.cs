@@ -8,7 +8,7 @@ namespace NOpt
     using System.Diagnostics.Contracts;
     using System.Linq;
 
-    [DebuggerDisplay("Count = {Count}")]
+    [DebuggerDisplay("Count = {" + nameof(Count) + "}")]
     [DebuggerTypeProxy(typeof(DebuggerProxy))]
     internal sealed class ArgumentList : IArgumentList
     {
@@ -18,8 +18,8 @@ namespace NOpt
 
         public Arg this[int index]
         {
-            get { return args[index]; }
-            set { args[index] = value; }
+            get => args[index];
+            set => args[index] = value;
         }
 
         public bool Remove(Arg arg)
@@ -220,8 +220,8 @@ namespace NOpt
         /// </devdoc>
         Arg IList<Arg>.this[int index]
         {
-            get { return this[index]; }
-            set { this[index] = value; }
+            get => this[index];
+            set => this[index] = value;
         }
 
         /// <devdoc>

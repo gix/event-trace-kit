@@ -1,11 +1,15 @@
 ﻿namespace EventTraceKit.VsExtension
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
+    using System.Text.RegularExpressions;
     using System.Threading;
+    using System.Windows;
     using System.Windows.Input;
+    using System.Windows.Interop;
     using Collections;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
@@ -13,13 +17,16 @@
     using Microsoft.Windows.TaskDialogs;
     using Microsoft.Windows.TaskDialogs.Controls;
     using Serialization;
+    using UI;
     using Task = System.Threading.Tasks.Task;
 
     [SerializedShape(typeof(Settings.Persistence.TraceSession))]
     public class TraceSessionSettingsViewModel : ViewModel
     {
         private ICommand newProviderCommand;
+        private ICommand importProvidersCommand;
         private ICommand removeProviderCommand;
+        private ICommand toggleSelectedProvidersCommand;
         private ICommand addManifestCommand;
         private ICommand browseLogFileCommand;
 
@@ -30,6 +37,8 @@
         private uint? minimumBuffers;
         private uint? maximumBuffers;
         private TraceProviderDescriptorViewModel selectedProvider;
+
+        public IDialogService DialogService { get; set; }
 
         public TraceSessionSettingsViewModel DeepClone()
         {
@@ -47,9 +56,17 @@
             newProviderCommand ??
             (newProviderCommand = new AsyncDelegateCommand(NewProvider));
 
+        public ICommand ImportProvidersCommand =>
+            importProvidersCommand ??
+            (importProvidersCommand = new AsyncDelegateCommand(ImportProviders));
+
         public ICommand RemoveProviderCommand =>
             removeProviderCommand ??
-            (removeProviderCommand = new AsyncDelegateCommand<TraceProviderDescriptorViewModel>(RemoveProvider));
+            (removeProviderCommand = new AsyncDelegateCommand<IList>(RemoveProviders));
+
+        public ICommand ToggleSelectedProvidersCommand =>
+            toggleSelectedProvidersCommand ??
+            (toggleSelectedProvidersCommand = new AsyncDelegateCommand<IList>(ToggleSelectedProviders));
 
         public ICommand AddManifestCommand =>
             addManifestCommand ??
@@ -64,45 +81,48 @@
 
         public Guid Id
         {
-            get { return id; }
-            set { SetProperty(ref id, value); }
+            get => id;
+            set => SetProperty(ref id, value);
         }
 
         public string Name
         {
-            get { return name; }
-            set { SetProperty(ref name, value); }
+            get => name;
+            set => SetProperty(ref name, value);
         }
 
         public string LogFileName
         {
-            get { return logFileName; }
-            set { SetProperty(ref logFileName, value); }
+            get => logFileName;
+            set => SetProperty(ref logFileName, value);
         }
 
         public uint? BufferSize
         {
-            get { return bufferSize; }
-            set { SetProperty(ref bufferSize, value); }
+            get => bufferSize;
+            set => SetProperty(ref bufferSize, value);
         }
 
         public uint? MinimumBuffers
         {
-            get { return minimumBuffers; }
-            set { SetProperty(ref minimumBuffers, value); }
+            get => minimumBuffers;
+            set => SetProperty(ref minimumBuffers, value);
         }
 
         public uint? MaximumBuffers
         {
-            get { return maximumBuffers; }
-            set { SetProperty(ref maximumBuffers, value); }
+            get => maximumBuffers;
+            set => SetProperty(ref maximumBuffers, value);
         }
 
         public TraceProviderDescriptorViewModel SelectedProvider
         {
-            get { return selectedProvider; }
-            set { SetProperty(ref selectedProvider, value); }
+            get => selectedProvider;
+            set => SetProperty(ref selectedProvider, value);
         }
+
+        public ObservableCollection<TraceProviderDescriptorViewModel> SelectedProviders { get; } =
+            new ObservableCollection<TraceProviderDescriptorViewModel>();
 
         private Task NewProvider()
         {
@@ -112,9 +132,19 @@
             return Task.CompletedTask;
         }
 
-        private Task RemoveProvider(TraceProviderDescriptorViewModel provider)
+        private Task RemoveProviders(IList providers)
         {
-            Providers.Remove(provider);
+            Providers.RemoveRange(providers.OfType<TraceProviderDescriptorViewModel>().ToList());
+            return Task.CompletedTask;
+        }
+
+        private static Task ToggleSelectedProviders(IList selectedObjects)
+        {
+            var selectedEvents = selectedObjects.Cast<TraceProviderDescriptorViewModel>().ToList();
+            bool enabled = !selectedEvents.All(x => x.IsEnabled);
+            foreach (var evt in selectedEvents)
+                evt.IsEnabled = enabled;
+
             return Task.CompletedTask;
         }
 
@@ -146,6 +176,34 @@
 
             //    Providers.Add(p);
             //}
+        }
+
+        private Task ImportProviders()
+        {
+            string declarations = ImportProvidersDialog.Prompt(DialogService.Owner);
+            if (string.IsNullOrWhiteSpace(declarations))
+                return Task.CompletedTask;
+
+            var newProviders = ParseProviderDeclarations(declarations);
+            var existingIds = Providers.Select(x => x.Id).ToHashSet();
+
+            foreach (var p in newProviders.Where(x => !existingIds.Contains(x.Key)))
+                Providers.Add(new TraceProviderDescriptorViewModel(p.Key, p.Value));
+
+            return Task.CompletedTask;
+        }
+
+        private static Dictionary<Guid, string> ParseProviderDeclarations(string declarations)
+        {
+            var newProviders = new Dictionary<Guid, string>();
+            foreach (Match match in Regex.Matches(declarations, @"^ *(?<id>\S+):?[ \t]+(?<name>.+?) *$", RegexOptions.Multiline)) {
+                if (Guid.TryParse(match.Groups["id"].Value, out var providerId) &&
+                    !newProviders.ContainsKey(providerId)) {
+                    newProviders.Add(providerId, match.Groups["name"].Value);
+                }
+            }
+
+            return newProviders;
         }
 
         private async Task AddManifest()
@@ -203,14 +261,14 @@
             dialog.DefaultExt = ".etl";
             dialog.OverwritePrompt = true;
             dialog.AddExtension = true;
-            if (dialog.ShowDialog() != true)
+            if (dialog.ShowDialog(DialogService.Owner) != true)
                 return Task.CompletedTask;
 
             LogFileName = dialog.FileName;
             return Task.CompletedTask;
         }
 
-        private static string PromptManifest()
+        private string PromptManifest()
         {
             var dialog = new OpenFileDialog();
             dialog.Title = "Add Manifest";
@@ -218,7 +276,7 @@
                             "Binary Providers (*.dll, *.exe)|*.dll, *.exe|" +
                             "All Files (*.*)|*.*";
             dialog.DefaultExt = ".man";
-            if (dialog.ShowDialog() != true)
+            if (dialog.ShowDialog(DialogService.Owner) != true)
                 return null;
 
             return dialog.FileName;
@@ -232,7 +290,7 @@
             dialog.ExpandedInfo = exception.Message;
             dialog.ExpandedInfoLocation = TaskDialogExpandedInfoLocation.Footer;
             dialog.ExpandedButtonLabel = "Details";
-            dialog.Show();
+            dialog.Show(DialogService.Owner);
         }
 
         private enum MergeStrategy
@@ -242,7 +300,7 @@
             Overwrite = TaskDialog.MinimumCustomButtonId + 2
         }
 
-        private static TaskDialogResult PromptConflictResolution(
+        private TaskDialogResult PromptConflictResolution(
                 TraceProviderDescriptorViewModel duplicateProvider)
         {
             var dialog = new TaskDialog();
@@ -252,7 +310,7 @@
             dialog.Controls.Add(new TaskDialogCommandLink((int)MergeStrategy.Keep, "Keep existing provider"));
             dialog.Controls.Add(new TaskDialogCommandLink((int)MergeStrategy.Overwrite, "Overwrite existing provider"));
             dialog.VerificationText = "Do this for the next conflicts";
-            return dialog.Show();
+            return dialog.Show(DialogService.Owner);
         }
 
         private void MergeProviders(
@@ -316,6 +374,16 @@
             }
 
             return symbols;
+        }
+    }
+
+    public static class TaskDialogExtensions
+    {
+        public static TaskDialogResult Show(this TaskDialog dialog, Window owner)
+        {
+            var wih = new WindowInteropHelper(owner);
+            dialog.OwnerWindow = wih.Handle;
+            return dialog.Show();
         }
     }
 }

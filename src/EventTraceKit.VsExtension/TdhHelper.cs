@@ -497,17 +497,13 @@ namespace EventTraceKit.VsExtension
             IFormatProvider formatProvider,
             EventMapInfoCPtr eventMapInfo = new EventMapInfoCPtr())
         {
-            uint count;
-            bool isArray;
-            uint length;
-            bool hasExplicitLength;
             var flag = eventRecord.Is32Bit(parseTdhContext.NativePointerSize);
             var infoForProperty = traceEventInfo.GetPropertyInfo(propertyIndex);
             if (
                 !GetPropertyParams(
-                    traceEventInfo, tokenizedProperties, context, infoForProperty, flag, out count,
-                    out isArray,
-                    out length, out hasExplicitLength))
+                    traceEventInfo, tokenizedProperties, context, infoForProperty, flag, out uint count,
+                    out bool isArray,
+                    out uint length, out bool hasExplicitLength))
                 throw new InternalErrorException();
 
             if (length > eventRecord.UserDataLength) {
@@ -518,7 +514,6 @@ namespace EventTraceKit.VsExtension
             }
 
             if ((count == 1) && !isArray && !infoForProperty.HasFlag(PROPERTY_FLAGS.PropertyStruct)) {
-                string str;
                 var buffer = tokenizedProperties[(int)propertyIndex].FirstOrDefault();
                 if (buffer == new IntPtr()) {
                     return "Unable to parse data";
@@ -531,7 +526,7 @@ namespace EventTraceKit.VsExtension
                 }
                 if (TryGetStringForTDHData(
                     infoForProperty.SimpleTdhInType, infoForProperty.SimpleTdhOutType, buffer,
-                    eventRecord.TimePoint, flag, length, parseTdhContext, formatProvider, out str, eventMapInfo)) {
+                    eventRecord.TimePoint, flag, length, parseTdhContext, formatProvider, out string str, eventMapInfo)) {
                     return str;
                 }
                 return string.Empty;
@@ -558,16 +553,12 @@ namespace EventTraceKit.VsExtension
             IFormatProvider formatProvider,
             ref IntPtr current)
         {
-            uint count;
-            bool isArray;
-            uint length;
-            bool hasExplicitLength;
             var flag = eventRecord.Is32Bit(parseTdhContext.NativePointerSize);
             var infoForProperty = traceEventInfo.GetPropertyInfo(propertyIndex);
             if (
                 !GetPropertyParams(
-                    traceEventInfo, tokenizedProperties, context, infoForProperty, flag, out count, out isArray,
-                    out length, out hasExplicitLength)) {
+                    traceEventInfo, tokenizedProperties, context, infoForProperty, flag, out uint count, out bool isArray,
+                    out uint length, out bool hasExplicitLength)) {
                 result.Append("Unable to parse data");
                 return;
             }
@@ -604,7 +595,6 @@ namespace EventTraceKit.VsExtension
                     }
                     result.Append("}");
                 } else {
-                    string str;
                     var ptr3 = new IntPtr();
                     if (current == ptr3) {
                         result.Append("Unable to parse data");
@@ -621,7 +611,7 @@ namespace EventTraceKit.VsExtension
                     var eventMapInfo = new EventMapInfoCPtr();
                     if (TryGetStringForTDHData(
                         infoForProperty.SimpleTdhInType, infoForProperty.SimpleTdhOutType, current,
-                        eventRecord.TimePoint, flag, length, parseTdhContext, formatProvider, out str,
+                        eventRecord.TimePoint, flag, length, parseTdhContext, formatProvider, out string str,
                         eventMapInfo)) {
                         result.Append(str);
                     }
@@ -924,15 +914,11 @@ namespace EventTraceKit.VsExtension
             bool is32Bit,
             ref IntPtr current)
         {
-            uint count;
-            bool isArray;
-            uint length;
-            bool hasExplicitLength;
             var infoForProperty = traceEventInfo.GetPropertyInfo(propertyIndex);
             if (
                 !GetPropertyParams(
                     traceEventInfo, tokenizedProperties, context, infoForProperty,
-                    is32Bit, out count, out isArray, out length, out hasExplicitLength)) {
+                    is32Bit, out uint count, out bool isArray, out uint length, out bool hasExplicitLength)) {
                 tokenizedProperties[(int)propertyIndex].Add(new IntPtr());
                 return false;
             }

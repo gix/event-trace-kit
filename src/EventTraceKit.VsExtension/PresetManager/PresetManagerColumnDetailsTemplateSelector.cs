@@ -7,8 +7,7 @@ namespace EventTraceKit.VsExtension
     {
         public override DataTemplate SelectTemplate(object item, DependencyObject container)
         {
-            PresetManagerColumnViewModel model = item as PresetManagerColumnViewModel;
-            if (model == null)
+            if (!(item is PresetManagerColumnViewModel model))
                 return base.SelectTemplate(item, container);
 
             switch (model.ColumnType) {

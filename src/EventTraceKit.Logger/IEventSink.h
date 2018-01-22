@@ -8,7 +8,7 @@ namespace etk
 class IEventSink
 {
 public:
-    virtual ~IEventSink() {}
+    virtual ~IEventSink() = default;
     virtual void ProcessEvent(EVENT_RECORD const& record) = 0;
 };
 

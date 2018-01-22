@@ -1,6 +1,5 @@
 ﻿namespace EventTraceKit.VsExtension.Serialization
 {
-    using Settings;
     using Settings.Persistence;
 
     public class SettingsSerializer : ShapingXamlSerializer<SettingsElement>

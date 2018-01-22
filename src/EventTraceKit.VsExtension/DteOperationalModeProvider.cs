@@ -1,8 +1,8 @@
 ﻿namespace EventTraceKit.VsExtension
 {
     using System;
+    using System.Collections.Generic;
     using EnvDTE;
-    using Microsoft.VisualStudio;
 
     internal class DteOperationalModeProvider
         : IDisposable, IOperationalModeProvider
@@ -10,8 +10,6 @@
         private readonly EventTraceKitPackage package;
         private DTE dte;
         private DebuggerEvents debuggerEvents;
-
-        private event EventHandler<VsOperationalMode> OperationalModeChanged;
 
         public DteOperationalModeProvider(DTE dte, EventTraceKitPackage package)
         {
@@ -44,11 +42,7 @@
 
         public VsOperationalMode CurrentMode { get; private set; }
 
-        event EventHandler<VsOperationalMode> IOperationalModeProvider.OperationalModeChanged
-        {
-            add { OperationalModeChanged += value; }
-            remove { OperationalModeChanged -= value; }
-        }
+        public event Action<VsOperationalMode, IReadOnlyList<DebuggedProjectInfo>> OperationalModeChanged;
 
         private void OnEnterRunMode(dbgEventReason reason)
         {
@@ -76,7 +70,7 @@
             //    $"DteOperationalModeProvider.SwitchMode: {CurrentMode} -> {newMode}\n");
 
             CurrentMode = newMode;
-            OperationalModeChanged?.Invoke(this, newMode);
+            OperationalModeChanged?.Invoke(newMode, null);
         }
     }
 }

@@ -6,8 +6,15 @@ namespace InstrManifestCompiler.Native
 
     internal sealed class ResourceName
     {
-        private readonly string name;
-        private readonly short id;
+        public ResourceName(short id)
+        {
+            Id = id;
+        }
+
+        public ResourceName(string name)
+        {
+            Name = name;
+        }
 
         public static ResourceName FromPtr(IntPtr ptr)
         {
@@ -16,25 +23,8 @@ namespace InstrManifestCompiler.Native
             return new ResourceName(Marshal.PtrToStringUni(ptr));
         }
 
-        public ResourceName(short id)
-        {
-            this.id = id;
-        }
-
-        public ResourceName(string name)
-        {
-            this.name = name;
-        }
-
-        public short Id
-        {
-            get { return id; }
-        }
-
-        public string Name
-        {
-            get { return name; }
-        }
+        public short Id { get; }
+        public string Name { get; }
 
         public override string ToString()
         {

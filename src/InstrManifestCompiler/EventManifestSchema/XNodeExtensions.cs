@@ -82,8 +82,7 @@ namespace InstrManifestCompiler.EventManifestSchema
             if (attrib == null)
                 throw CreateMissingAttributeException(elem, name);
 
-            byte value;
-            if (!TryParse(attrib.Value, NumberFormat.HexDec, out value))
+            if (!TryParse(attrib.Value, NumberFormat.HexDec, out byte value))
                 throw CreateInvalidNumberValueException<byte>(attrib);
 
             return Value.Create(value, attrib.GetLocation());
@@ -97,8 +96,7 @@ namespace InstrManifestCompiler.EventManifestSchema
             if (attrib == null)
                 throw CreateMissingAttributeException(elem, name);
 
-            ushort value;
-            if (!TryParse(attrib.Value, NumberFormat.HexDec, out value))
+            if (!TryParse(attrib.Value, NumberFormat.HexDec, out ushort value))
                 throw CreateInvalidNumberValueException<ushort>(attrib);
 
             return Value.Create(value, attrib.GetLocation());
@@ -112,8 +110,7 @@ namespace InstrManifestCompiler.EventManifestSchema
             if (attrib == null)
                 throw CreateMissingAttributeException(elem, name);
 
-            int value;
-            if (!TryParse(attrib.Value, NumberFormat.HexDec, out value))
+            if (!TryParse(attrib.Value, NumberFormat.HexDec, out int value))
                 throw CreateInvalidNumberValueException<int>(attrib);
 
             return Value.Create(value, attrib.GetLocation());
@@ -127,8 +124,7 @@ namespace InstrManifestCompiler.EventManifestSchema
             if (attrib == null)
                 throw CreateMissingAttributeException(elem, name);
 
-            uint value;
-            if (!TryParse(attrib.Value, NumberFormat.HexDec, out value))
+            if (!TryParse(attrib.Value, NumberFormat.HexDec, out uint value))
                 throw CreateInvalidNumberValueException<uint>(attrib);
 
             return Value.Create(value, attrib.GetLocation());
@@ -143,8 +139,7 @@ namespace InstrManifestCompiler.EventManifestSchema
             if (attrib == null)
                 return Value.CreateOptional(defaultValue);
 
-            int value;
-            if (!TryParse(attrib.Value, NumberFormat.HexDec, out value))
+            if (!TryParse(attrib.Value, NumberFormat.HexDec, out int value))
                 throw CreateInvalidNumberValueException<int>(attrib);
 
             return Value.Create((int?)value, attrib.GetLocation());
@@ -159,8 +154,7 @@ namespace InstrManifestCompiler.EventManifestSchema
             if (attrib == null)
                 return Value.CreateOptional(defaultValue);
 
-            byte value;
-            if (!TryParse(attrib.Value, NumberFormat.HexDec, out value))
+            if (!TryParse(attrib.Value, NumberFormat.HexDec, out byte value))
                 throw CreateInvalidNumberValueException<byte>(attrib);
 
             return Value.Create((byte?)value, attrib.GetLocation());
@@ -175,8 +169,7 @@ namespace InstrManifestCompiler.EventManifestSchema
             if (attrib == null)
                 return Value.CreateOptional(defaultValue);
 
-            ushort value;
-            if (!TryParse(attrib.Value, NumberFormat.HexDec, out value))
+            if (!TryParse(attrib.Value, NumberFormat.HexDec, out ushort value))
                 throw CreateInvalidNumberValueException<ushort>(attrib);
 
             return Value.Create((ushort?)value, attrib.GetLocation());
@@ -190,8 +183,7 @@ namespace InstrManifestCompiler.EventManifestSchema
             if (attrib == null)
                 throw CreateMissingAttributeException(elem, name);
 
-            uint value;
-            if (!TryParse(attrib.Value, NumberFormat.PrefixedHex, out value))
+            if (!TryParse(attrib.Value, NumberFormat.PrefixedHex, out uint value))
                 throw CreateInvalidHexNumberValueException<uint>(attrib);
 
             return Value.Create(value, attrib.GetLocation());
@@ -205,8 +197,7 @@ namespace InstrManifestCompiler.EventManifestSchema
             if (attrib == null)
                 throw CreateMissingAttributeException(elem, name);
 
-            ulong value;
-            if (!TryParse(attrib.Value, NumberFormat.PrefixedHex, out value))
+            if (!TryParse(attrib.Value, NumberFormat.PrefixedHex, out ulong value))
                 throw CreateInvalidHexNumberValueException<ulong>(attrib);
 
             return Value.Create(value, attrib.GetLocation());
@@ -254,8 +245,7 @@ namespace InstrManifestCompiler.EventManifestSchema
             if (attrib == null)
                 throw CreateMissingAttributeException(elem, name);
 
-            Guid value;
-            if (!Guid.TryParseExact(attrib.Value, "B", out value))
+            if (!Guid.TryParseExact(attrib.Value, "B", out var value))
                 throw CreateInvalidNumberValueException<byte>(attrib);
 
             return Value.Create(value, attrib.GetLocation());
@@ -270,8 +260,7 @@ namespace InstrManifestCompiler.EventManifestSchema
             if (attrib == null)
                 return Value.CreateOptional(defaultValue);
 
-            Guid value;
-            if (!Guid.TryParseExact(attrib.Value, "B", out value))
+            if (!Guid.TryParseExact(attrib.Value, "B", out var value))
                 throw CreateInvalidNumberValueException<byte>(attrib);
 
             return Value.Create((Guid?)value, attrib.GetLocation());
@@ -288,8 +277,7 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         private static bool TryParse(string number, NumberFormat format, out byte value)
         {
-            NumberStyles style;
-            if (GetNumberStyle(format, ref number, out style))
+            if (GetNumberStyle(format, ref number, out var style))
                 return byte.TryParse(number, style, CultureInfo.InvariantCulture, out value);
             value = 0;
             return false;
@@ -297,8 +285,7 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         private static bool TryParse(string number, NumberFormat format, out ushort value)
         {
-            NumberStyles style;
-            if (GetNumberStyle(format, ref number, out style))
+            if (GetNumberStyle(format, ref number, out var style))
                 return ushort.TryParse(number, style, CultureInfo.InvariantCulture, out value);
             value = 0;
             return false;
@@ -306,8 +293,7 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         private static bool TryParse(string number, NumberFormat format, out uint value)
         {
-            NumberStyles style;
-            if (GetNumberStyle(format, ref number, out style))
+            if (GetNumberStyle(format, ref number, out var style))
                 return uint.TryParse(number, style, CultureInfo.InvariantCulture, out value);
             value = 0;
             return false;
@@ -315,8 +301,7 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         private static bool TryParse(string number, NumberFormat format, out ulong value)
         {
-            NumberStyles style;
-            if (GetNumberStyle(format, ref number, out style))
+            if (GetNumberStyle(format, ref number, out var style))
                 return ulong.TryParse(number, style, CultureInfo.InvariantCulture, out value);
             value = 0;
             return false;
@@ -324,8 +309,7 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         private static bool TryParse(string number, NumberFormat format, out int value)
         {
-            NumberStyles style;
-            if (GetNumberStyle(format, ref number, out style))
+            if (GetNumberStyle(format, ref number, out var style))
                 return int.TryParse(number, style, CultureInfo.InvariantCulture, out value);
             value = 0;
             return false;

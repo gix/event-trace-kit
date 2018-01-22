@@ -19,15 +19,27 @@ namespace EventTraceKit.VsExtension
     {
         private readonly IGlobalSettings settings;
         private readonly IViewPresetService viewPresetService;
+        private readonly ITraceSessionService sessionService;
         private readonly ITraceSettingsService traceSettingsService;
         private readonly IVsUIShell uiShell;
+
+        private readonly TaskFactory taskFactory;
+        private readonly EventSymbolSource eventSymbolSource = new EventSymbolSource();
 
         private readonly DispatcherTimer updateStatsTimer;
         protected TraceSessionDescriptor sessionDescriptor = new TraceSessionDescriptor();
 
+        public enum LoggerState
+        {
+            Stopped,
+            Starting,
+            Started,
+            Stopping
+        }
+
         // Property backing fields
         private string status;
-        private bool isCollecting;
+        private LoggerState state;
         private bool autoLog;
         private bool showStatusBar;
         private string formattedEventStatistics;
@@ -36,25 +48,30 @@ namespace EventTraceKit.VsExtension
         private TraceLog traceLog;
         private TraceSession session;
 
-        private readonly TaskFactory taskFactory;
-        private readonly EventSymbolSource eventSymbolSource = new EventSymbolSource();
+        private TraceSettingsViewModel settingsViewModel;
+        private TraceLogFilter currentFilter;
+        private bool isFilterEnabled;
 
         public TraceLogPaneViewModel(
             IGlobalSettings settings,
-            IOperationalModeProvider modeProvider,
+            ITraceSessionService sessionService,
             IViewPresetService viewPresetService,
             ITraceSettingsService traceSettingsService,
             IVsUIShell uiShell = null)
         {
+            this.sessionService = sessionService ??
+                throw new ArgumentNullException(nameof(sessionService));
+
             this.settings = settings;
             this.viewPresetService = viewPresetService;
             this.traceSettingsService = traceSettingsService;
             this.uiShell = uiShell;
 
-            if (modeProvider != null)
-                modeProvider.OperationalModeChanged += OnOperationalModeChanged;
+            sessionService.SessionStarting += OnSessionStarting;
+            sessionService.SessionStarted += OnSessionStarted;
+            sessionService.SessionStopped += OnSessionStopped;
 
-            AutoLog = settings.AutoLog;
+            //AutoLog = settings.AutoLog;
             ShowStatusBar = settings.ShowStatusBar;
             IsFilterEnabled = true;
 
@@ -83,8 +100,11 @@ namespace EventTraceKit.VsExtension
 
             AdvModel.PresetChanged += OnViewPresetChanged;
 
-            var syncCtx = new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher);
-            SynchronizationContext.SetSynchronizationContext(syncCtx);
+            if (SynchronizationContext.Current == null) {
+                SynchronizationContext.SetSynchronizationContext(
+                    new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
+            }
+
             var scheduler = TaskScheduler.FromCurrentSynchronizationContext();
             taskFactory = new TaskFactory(scheduler);
 
@@ -118,38 +138,44 @@ namespace EventTraceKit.VsExtension
 
         public string Status
         {
-            get { return status; }
-            set { SetProperty(ref status, value); }
+            get => status;
+            set => SetProperty(ref status, value);
         }
 
-        public bool IsCollecting
-        {
-            get { return isCollecting; }
-            private set { SetProperty(ref isCollecting, value); }
-        }
+        public bool IsCollecting => state == LoggerState.Started || state == LoggerState.Stopping;
 
         public bool AutoLog
         {
-            get { return autoLog; }
-            set { SetProperty(ref autoLog, value); }
+            get => autoLog;
+            set
+            {
+                if (!SetProperty(ref autoLog, value))
+                    return;
+
+                if (AutoLog)
+                    sessionService.EnableAutoLog(
+                        new TraceSessionDescriptor(sessionDescriptor));
+                else
+                    sessionService.DisableAutoLog();
+            }
         }
 
         public bool ShowStatusBar
         {
-            get { return showStatusBar; }
-            set { SetProperty(ref showStatusBar, value); }
+            get => showStatusBar;
+            set => SetProperty(ref showStatusBar, value);
         }
 
         public string FormattedEventStatistics
         {
-            get { return formattedEventStatistics; }
-            set { SetProperty(ref formattedEventStatistics, value); }
+            get => formattedEventStatistics;
+            set => SetProperty(ref formattedEventStatistics, value);
         }
 
         public string FormattedBufferStatistics
         {
-            get { return formattedBufferStatistics; }
-            set { SetProperty(ref formattedBufferStatistics, value); }
+            get => formattedBufferStatistics;
+            set => SetProperty(ref formattedBufferStatistics, value);
         }
 
         private bool CanStartCapture()
@@ -159,22 +185,66 @@ namespace EventTraceKit.VsExtension
 
         private async void ToggleCapture()
         {
-            if (IsCollecting)
-                StopCapture();
-            else if (CanStartCapture())
-                await StartCapture();
+            switch (state) {
+                case LoggerState.Stopped:
+                    if (CanStartCapture())
+                        await StartCapture();
+                    break;
+                case LoggerState.Started:
+                    await StopCapture();
+                    break;
+                case LoggerState.Starting:
+                case LoggerState.Stopping:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         public void Clear()
         {
             try {
-                traceLog?.Clear();
                 session?.Flush();
+                traceLog?.Clear();
                 EventsDataView.Clear();
                 Statistics.Reset();
             } catch (Exception ex) {
                 Status = ex.ToString();
             }
+        }
+
+        private void ChangeState(LoggerState newState)
+        {
+            if (state == newState)
+                return;
+
+            state = newState;
+            RaisePropertyChanged(nameof(IsCollecting));
+            uiShell?.UpdateCommandUI(0);
+        }
+
+        private void OnSessionStarting(TraceLog newLog)
+        {
+            traceLog = newLog;
+            traceLog.EventsChanged += OnEventsChanged;
+            RefreshFilter();
+        }
+
+        private void OnSessionStarted(TraceSession newSession)
+        {
+            session = newSession;
+            Status = null;
+            ChangeState(LoggerState.Started);
+            updateStatsTimer.Start();
+        }
+
+        private void OnSessionStopped(TraceSession _)
+        {
+            updateStatsTimer.Stop();
+            UpdateStats();
+            ChangeState(LoggerState.Stopped);
+            Status = null;
+            session = null;
         }
 
         public async Task StartCapture()
@@ -183,19 +253,17 @@ namespace EventTraceKit.VsExtension
                 return;
 
             Status = null;
+            EventsDataView.Clear();
+            UpdateStats();
+
             try {
-                traceLog = new TraceLog();
-                traceLog.EventsChanged += OnEventsChanged;
-                RefreshFilter();
-                session = new TraceSession(sessionDescriptor);
-                await session.StartAsync(traceLog);
-                IsCollecting = true;
-                updateStatsTimer.Start();
+                ChangeState(LoggerState.Starting);
+                await sessionService.StartSessionAsync(sessionDescriptor);
             } catch (Exception ex) {
-                session?.Stop();
-                session = null;
-                IsCollecting = false;
+                await sessionService.StopSessionAsync();
                 updateStatsTimer.Stop();
+                UpdateStats();
+                ChangeState(LoggerState.Stopped);
                 Status = ex.ToString();
                 MessageBox.Show(
                     "Failed to start trace session.\r\n" + ex.Message,
@@ -210,26 +278,18 @@ namespace EventTraceKit.VsExtension
             EventsDataView.UpdateRowCount((int)newCount.ToUInt32());
         }
 
-        public void StopCapture()
+        public async Task StopCapture()
         {
             if (session == null)
                 return;
 
             try {
-                session.Stop();
-                session.Dispose();
-                session = null;
-                Status = null;
-                IsCollecting = false;
-                updateStatsTimer.Stop();
+                ChangeState(LoggerState.Stopping);
+                await sessionService.StopSessionAsync();
             } catch (Exception ex) {
                 Status = ex.ToString();
             }
         }
-
-        private TraceSettingsViewModel settingsViewModel;
-        private TraceLogFilter currentFilter;
-        private bool isFilterEnabled;
 
         private void Configure()
         {
@@ -241,10 +301,12 @@ namespace EventTraceKit.VsExtension
             var window = new TraceSessionSettingsWindow();
             try {
                 window.DataContext = settingsViewModel;
+                settingsViewModel.Window = window;
                 if (window.ShowModal() != true)
                     return;
             } finally {
                 var selectedPreset = settingsViewModel.ActiveSession;
+                settingsViewModel.Window = null;
                 window.DataContext = null;
                 settingsViewModel.ActiveSession = selectedPreset;
                 settingsViewModel.DialogResult = null;
@@ -258,11 +320,11 @@ namespace EventTraceKit.VsExtension
 
         private void OpenViewEditor()
         {
-            PresetManagerDialog.ShowPresetManagerDialog(AdvModel);
+            PresetManagerDialog.ShowModalDialog(AdvModel);
             viewPresetService.SaveToStorage();
         }
 
-        private void OpenFilterEditor()
+        protected void OpenFilterEditor()
         {
             var viewModel = new FilterDialogViewModel();
             viewModel.SetFilter(currentFilter);
@@ -277,10 +339,7 @@ namespace EventTraceKit.VsExtension
 
         private void UpdateStats()
         {
-            if (session == null)
-                return;
-
-            var stats = session.Query();
+            var stats = session?.Query() ?? new TraceStatistics();
 
             Statistics.ShownEvents = traceLog?.EventCount ?? 0;
             Statistics.TotalEvents = traceLog?.TotalEventCount ?? 0;
@@ -306,7 +365,7 @@ namespace EventTraceKit.VsExtension
                 $"{Statistics.RealTimeBuffersLost} real-time buffers lost)";
         }
 
-        public void AddCommandHandler(IMenuCommandService commandService)
+        public void InitializeMenuCommands(IMenuCommandService commandService)
         {
             var id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidCaptureLog);
             commandService.AddCommand(new OleMenuCommand(
@@ -349,14 +408,14 @@ namespace EventTraceKit.VsExtension
 
         private void OnQueryToggleCaptureLog(object sender, EventArgs e)
         {
-            var command = (OleMenuCommand)sender;
-            command.Enabled = IsCollecting || CanStartCapture();
+            var command = (MenuCommand)sender;
+            command.Enabled = state == LoggerState.Started || (state == LoggerState.Stopped && CanStartCapture());
             command.Checked = IsCollecting;
         }
 
         private void OnQueryToggleAutoLog(object sender, EventArgs e)
         {
-            var command = (OleMenuCommand)sender;
+            var command = (MenuCommand)sender;
             command.Checked = AutoLog;
         }
 
@@ -368,7 +427,7 @@ namespace EventTraceKit.VsExtension
 
         public bool IsFilterEnabled
         {
-            get { return isFilterEnabled; }
+            get => isFilterEnabled;
             set
             {
                 if (isFilterEnabled != value) {
@@ -460,21 +519,6 @@ namespace EventTraceKit.VsExtension
             var items = AdvModel.PresetCollection.EnumerateAllPresetsByName()
                 .Select(x => x.Name + (AdvModel.PresetCollection.HasPersistedPreset(x.Name) ? "*" : "")).ToArray();
             Marshal.GetNativeVariantForObject(items, cmdArgs.OutValue);
-        }
-
-        private async void OnOperationalModeChanged(object sender, VsOperationalMode newMode)
-        {
-            if (!AutoLog)
-                return;
-
-            switch (newMode) {
-                case VsOperationalMode.Design:
-                    StopCapture();
-                    break;
-                case VsOperationalMode.Debug:
-                    await StartCapture();
-                    break;
-            }
         }
 
         public TraceSessionInfo GetInfo()

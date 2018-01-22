@@ -22,7 +22,7 @@ using TraceLogFilterEvent = bool(void* record, void* info, size_t infoSize);
 class IFilteredTraceLog
 {
 public:
-    virtual ~IFilteredTraceLog() {}
+    virtual ~IFilteredTraceLog() = default;
     virtual size_t GetEventCount() = 0;
     virtual EventInfo GetEvent(size_t index) const = 0;
     virtual void SetFilter(TraceLogFilterEvent* filter) = 0;

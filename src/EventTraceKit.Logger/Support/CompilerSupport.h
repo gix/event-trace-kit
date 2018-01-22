@@ -2,15 +2,12 @@
 #include "Support/CompilerConfig.h"
 
 #ifdef ETK_CLANG
-  #define ETK_STR(s) #s
-  #define ETK_JOINSTR(x, y) ETK_STR(x ## y)
-
   #define ETK_GCC_DIAG_DO_PRAGMA(x) _Pragma(#x)
   #define ETK_GCC_DIAG_PRAGMA(x) ETK_GCC_DIAG_DO_PRAGMA(GCC diagnostic x)
 
   #define ETK_DIAGNOSTIC_PUSH()           ETK_GCC_DIAG_PRAGMA(push)
   #define ETK_DIAGNOSTIC_POP()            ETK_GCC_DIAG_PRAGMA(pop)
-  #define ETK_DIAGNOSTIC_DISABLE_CLANG(x) ETK_GCC_DIAG_PRAGMA(ignored ETK_JOINSTR(-W,x))
+  #define ETK_DIAGNOSTIC_DISABLE_CLANG(x) ETK_GCC_DIAG_PRAGMA(ignored x)
   #define ETK_DIAGNOSTIC_DISABLE_MSVC(n)
   #define ETK_DIAGNOSTIC_PUSH_MSVC()
   #define ETK_DIAGNOSTIC_POP_MSVC()

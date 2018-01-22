@@ -20,9 +20,7 @@
 
         internal UIWorkManager(Dispatcher dispatcher)
         {
-            if (dispatcher == null)
-                throw new ArgumentNullException(nameof(dispatcher));
-            this.dispatcher = dispatcher;
+            this.dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
 
             TaskScheduler = dispatcher.ToTaskScheduler();
             TaskFactory = new TaskFactory(TaskScheduler);
@@ -73,10 +71,11 @@
 
     public sealed class WorkManager
     {
-        private BackgroundWorkManager backgroundWorkManager;
         private static readonly object backgroundWorkThreadIDObj;
-        private UIWorkManager uiWorkManager;
         private static readonly object uiWorkThreadIDObj;
+
+        private readonly BackgroundWorkManager backgroundWorkManager;
+        private readonly UIWorkManager uiWorkManager;
 
         static WorkManager()
         {

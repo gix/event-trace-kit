@@ -4,9 +4,7 @@
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
-    using System.Linq.Expressions;
     using System.Reflection;
-    using System.Runtime.CompilerServices;
     using System.Runtime.InteropServices;
     using System.Threading.Tasks;
     using System.Windows;
@@ -294,8 +292,7 @@
 
         private static string FindKnownBrush(Brush brush)
         {
-            string name;
-            KnownBrushes.TryGetValue(brush, out name);
+            KnownBrushes.TryGetValue(brush, out var name);
             return name ?? brush.ToString();
         }
 

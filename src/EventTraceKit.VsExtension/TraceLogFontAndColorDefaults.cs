@@ -74,15 +74,14 @@
             uint inactiveSelectedBackground = 0;
             uint frozenColumnBackground = 0;
 
-            Color fg, bg, bgRow;
-            if (fncHelper.GetTextItemInfo(outputWindow, "Plain Text", out fg, out bgRow)) {
+            if (fncHelper.GetTextItemInfo(outputWindow, "Plain Text", out var fg, out var bgRow)) {
                 rowForeground = ToWin32Color(fg);
                 rowBackground = ToWin32Color(bgRow);
                 alternatingRowBackground = ToWin32Color(GetAlternateColor(bgRow), bgRow);
                 frozenColumnBackground = ToWin32Color(GetAlternateColor(bgRow, 0.15), bgRow);
             }
 
-            if (fncHelper.GetTextItemInfo(outputWindow, "Selected Text", out fg, out bg)) {
+            if (fncHelper.GetTextItemInfo(outputWindow, "Selected Text", out fg, out var bg)) {
                 bg.A = (byte)(textEditBackgroundOpacity * 255);
                 selectedForeground = ToWin32Color(fg);
                 selectedBackground = ToWin32Color(bg, bgRow);
@@ -94,8 +93,7 @@
                 inactiveSelectedBackground = ToWin32Color(bg, bgRow);
             }
 
-            uint autoColor;
-            ErrorHandler.ThrowOnFailure(fncUtils.EncodeAutomaticColor(out autoColor));
+            ErrorHandler.ThrowOnFailure(fncUtils.EncodeAutomaticColor(out var autoColor));
 
             Items.Add(CreateItem(
                 "Row", "Row", null,

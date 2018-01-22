@@ -18,9 +18,9 @@
             Option = option;
         }
 
-        public int ArgIndex { get; set; }
-        public int ArgCount { get; set; }
-        public Option Option { get; set; }
+        public int ArgIndex { get; }
+        public int ArgCount { get; }
+        public Option Option { get; }
 
         public override string ToString()
         {
@@ -44,7 +44,7 @@
         {
             Contract.Requires<ArgumentNullException>(options != null);
 
-            this.options = new List<Option>(options);
+            this.options = new List<Option>(options.Where(x => x != null));
             foreach (var option in this.options)
                 option.InitializeOwner(this);
             VerifyOptions(this.options);
@@ -87,9 +87,8 @@
         {
             if (!id.IsValid)
                 return null;
-            Option opt;
-            if (!optionMap.TryGetValue(id.Id, out opt))
-                throw new ArgumentOutOfRangeException(nameof(id));
+            if (!optionMap.TryGetValue(id.Id, out var opt))
+                return null;
             return opt;
         }
 
@@ -126,10 +125,9 @@
             if (args == null)
                 return list;
 
-            for (int idx = 0; idx < args.Count; ) {
+            for (int idx = 0; idx < args.Count;) {
                 int prev = idx;
-                int missingArgOptIndex;
-                Arg arg = ParseArg(args, ref idx, out missingArgOptIndex);
+                Arg arg = ParseArg(args, ref idx, out int missingArgOptIndex);
                 if (arg == null) {
                     missing = new MissingArgs(
                         prev,
@@ -193,7 +191,7 @@
             var names = new HashSet<string>();
             foreach (var option in options) {
                 if (option.Id <= 0)
-                    throw new InvalidOptTableException("Invalid option id '" + option.Id + "'");
+                    throw new InvalidOptTableException($"Option id '{option.Id}' must be greater than 0");
 
                 if (option.Kind == OptionKind.Unknown) {
                     if (unknownId != 0)
@@ -207,11 +205,11 @@
                     firstRealId = option.Id;
 
                 if (ids.Contains(option.Id))
-                    throw new InvalidOptTableException("Duplicate option id '" + option.Id + "'");
+                    throw new InvalidOptTableException($"Duplicate option id '{option.Id}'");
                 ids.Add(option.Id);
 
                 if (names.Contains(option.Name))
-                    throw new InvalidOptTableException("Duplicate option name '" + option.Name + "'");
+                    throw new InvalidOptTableException($"Duplicate option name '{option.Name}'");
                 names.Add(option.Name);
             }
 

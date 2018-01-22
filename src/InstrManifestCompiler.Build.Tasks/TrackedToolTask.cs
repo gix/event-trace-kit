@@ -484,8 +484,7 @@ namespace InstrManifestCompiler.Build.Tasks
 
             var outOfDateSources = new List<ITaskItem>();
             foreach (ITaskItem item in TrackedInputFiles) {
-                bool commandLineChanged;
-                if (!itemMap.TryGetValue(item, out commandLineChanged))
+                if (!itemMap.TryGetValue(item, out var commandLineChanged))
                     continue;
 
                 outOfDateSources.Add(item);
@@ -644,8 +643,7 @@ namespace InstrManifestCompiler.Build.Tasks
                 string currCmdLine = ApplyPrecompareCommandFilter(
                     GenerateCommandLine(CommandLineFormat.ForTracking));
 
-                string prevCmdLine;
-                if (sourceMap.TryGetValue(FileTracker.FormatRootingMarker(TrackedInputFiles), out prevCmdLine)) {
+                if (sourceMap.TryGetValue(FileTracker.FormatRootingMarker(TrackedInputFiles), out var prevCmdLine)) {
                     prevCmdLine = ApplyPrecompareCommandFilter(prevCmdLine);
                     if (prevCmdLine == null || !currCmdLine.Equals(prevCmdLine, StringComparison.Ordinal))
                         outOfDateItems.AddRange(TrackedInputFiles);
@@ -657,8 +655,7 @@ namespace InstrManifestCompiler.Build.Tasks
                 foreach (ITaskItem item in TrackedInputFiles) {
                     string currCmdLine = ApplyPrecompareCommandFilter(
                         cmdLine + " " + item.GetMetadata("FullPath").ToUpperInvariant());
-                    string prevCmdLine;
-                    if (sourceMap.TryGetValue(FileTracker.FormatRootingMarker(item), out prevCmdLine)) {
+                    if (sourceMap.TryGetValue(FileTracker.FormatRootingMarker(item), out var prevCmdLine)) {
                         prevCmdLine = ApplyPrecompareCommandFilter(prevCmdLine);
                         if (prevCmdLine == null || !currCmdLine.Equals(prevCmdLine, StringComparison.Ordinal))
                             outOfDateItems.Add(item);

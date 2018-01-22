@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Extensions
+namespace EventTraceKit.VsExtension.Extensions
 {
     using System;
     using System.Linq;
@@ -24,14 +24,6 @@
         }
     }
 
-    public static class VectorUtils
-    {
-        public static Vector Abs(Vector vector)
-        {
-            return new Vector(Math.Abs(vector.X), Math.Abs(vector.Y));
-        }
-    }
-
     public static class ItemsControlExtensions
     {
         public static object[] GetOrderedSelectedItemsArray(
@@ -44,6 +36,14 @@
             this ListBoxItem item)
         {
             return (ListBox)ItemsControl.ItemsControlFromItemContainer(item);
+        }
+    }
+
+    public static class Extensions
+    {
+        public static DateTime ToDateTime(this Microsoft.VisualStudio.OLE.Interop.FILETIME time)
+        {
+            return new DateTime(((long)time.dwHighDateTime << 32) | time.dwLowDateTime);
         }
     }
 }

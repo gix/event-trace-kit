@@ -230,9 +230,7 @@ namespace NOpt.Attributes
         {
             Contract.Requires<ArgumentNullException>(prefixedName != null);
 
-            string name;
-            string prefix;
-            if (!TryParse(prefixedName, out prefix, out name))
+            if (!TryParse(prefixedName, out var prefix, out var name))
                 throw new ArgumentException("prefixedName");
 
             Name = name;
@@ -349,8 +347,7 @@ namespace NOpt.Attributes
         {
             SealOptTable();
 
-            MissingArgs missing;
-            IArgumentList al = OptTable.ParseArgs(args, out missing);
+            IArgumentList al = OptTable.ParseArgs(args, out var _);
 
             foreach (var info in infos) {
                 var attribute = info.Member.GetCustomAttribute<OptionAttribute>();

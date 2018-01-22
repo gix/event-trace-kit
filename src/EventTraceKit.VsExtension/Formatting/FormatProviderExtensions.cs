@@ -10,7 +10,8 @@
         public static string DefaultFormat(
             this IFormatProvider formatProvider)
         {
-            return (formatProvider?.GetType()).GetCustomAttribute<DefaultFormatAttribute>(true)?.DefaultFormat;
+            return formatProvider?.GetType()
+                .GetCustomAttribute<DefaultFormatAttribute>(true)?.DefaultFormat;
         }
 
         public static SupportedFormat DefaultSupportedFormat(
@@ -39,7 +40,7 @@
             return formatProvider.GetType()
                 .GetCustomAttributes<SupportedFormatAttribute>()
                 .OrderBy(x => x.Ordinal)
-                .Select(x => x.SupportedFormat)
+                .Select(x => x.GetSupportedFormat())
                 .ToArray();
         }
     }

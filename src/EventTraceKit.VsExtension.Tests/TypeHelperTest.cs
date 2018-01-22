@@ -79,8 +79,7 @@
         [InlineData(typeof(MultiCollection), null)]
         public void TryGetCollectionItemType(Type listType, Type expected)
         {
-            Type itemType;
-            Assert.Equal(expected != null, TypeHelper.TryGetGenericListItemType(listType, out itemType));
+            Assert.Equal(expected != null, TypeHelper.TryGetGenericListItemType(listType, out var itemType));
             Assert.Equal(expected, itemType);
         }
     }

@@ -16,7 +16,7 @@
     using Native;
     using IServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
-    public class FontUtils
+    public static class FontUtils
     {
         private static bool roundFontSizesLoaded;
         private static bool roundFontSizes;
@@ -179,10 +179,7 @@
                     if (fontInfo[0].bPointSizeValid == 1)
                         values["FontRenderingSize"] = FontUtils.FontSizeFromPointSize(fontInfo[0].wPointSize);
 
-                    if ((itemInfo[0].dwFontFlags & (uint)FONTFLAGS.FF_BOLD) != 0)
-                        values["IsBold"] = true;
-                    else
-                        values["IsBold"] = false;
+                    values["IsBold"] = (itemInfo[0].dwFontFlags & (uint)FONTFLAGS.FF_BOLD) != 0;
                 }
 
                 DecodePlainTextColors(ref itemInfo[0]);
@@ -219,8 +216,7 @@
 
         private void DecodePlainTextColor(ref uint color, COLORINDEX automaticIndex)
         {
-            int type;
-            Marshal.ThrowExceptionForHR(fncUtils.GetColorType(color, out type));
+            Marshal.ThrowExceptionForHR(fncUtils.GetColorType(color, out var type));
             switch ((__VSCOLORTYPE)type) {
                 case __VSCOLORTYPE.CT_COLORINDEX:
                     color = DecodeColorIndex(color);
@@ -236,17 +232,15 @@
 
         private uint DecodeColorIndex(uint index)
         {
-            uint color;
             var indices = new COLORINDEX[1];
             Marshal.ThrowExceptionForHR(fncUtils.GetEncodedIndex(index, indices));
-            Marshal.ThrowExceptionForHR(fncUtils.GetRGBOfIndex(indices[0], out color));
+            Marshal.ThrowExceptionForHR(fncUtils.GetRGBOfIndex(indices[0], out var color));
             return color;
         }
 
         private uint DecodeSystemColor(uint systemColorReference)
         {
-            int index;
-            ErrorHandler.ThrowOnFailure(fncUtils.GetEncodedSysColor(systemColorReference, out index));
+            ErrorHandler.ThrowOnFailure(fncUtils.GetEncodedSysColor(systemColorReference, out var index));
             return NativeMethods.GetSysColor(index);
         }
 

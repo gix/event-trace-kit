@@ -7,13 +7,11 @@ namespace InstrManifestCompiler.EventManifestSchema
 
     public sealed class ValueMapItem : MapItem
     {
-        private readonly IMap map;
-
         public ValueMapItem(ValueMap map, StructValue<uint> value, LocalizedString message)
             : base(value, message)
         {
             Contract.Requires<ArgumentNullException>(map != null);
-            this.map = map;
+            Map = map;
         }
 
         public ValueMapItem(
@@ -22,21 +20,15 @@ namespace InstrManifestCompiler.EventManifestSchema
             : base(value, message, symbol)
         {
             Contract.Requires<ArgumentNullException>(map != null);
-            this.map = map;
+            Map = map;
         }
 
-        public override IMap Map
-        {
-            get { return map; }
-        }
+        public override IMap Map { get; }
 
-        public override MapKind Kind
-        {
-            get { return MapKind.ValueMap; }
-        }
+        public override MapKind Kind => MapKind.ValueMap;
     }
 
-    [DebuggerDisplay("{Name}")]
+    [DebuggerDisplay("{" + nameof(Name) + "}")]
     public sealed class ValueMap : Map
     {
         public ValueMap(RefValue<string> name)
@@ -49,10 +41,7 @@ namespace InstrManifestCompiler.EventManifestSchema
         {
         }
 
-        public override MapKind Kind
-        {
-            get { return MapKind.ValueMap; }
-        }
+        public override MapKind Kind => MapKind.ValueMap;
 
         public override void Accept(IProviderItemVisitor visitor)
         {

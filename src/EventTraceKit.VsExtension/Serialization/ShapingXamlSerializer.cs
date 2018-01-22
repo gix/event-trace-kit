@@ -34,12 +34,10 @@
 
         private TSerializedBaseType ConvertToSerializedShape(object element)
         {
-            var serializedType = element as TSerializedBaseType;
-            if (serializedType != null)
+            if (element is TSerializedBaseType serializedType)
                 return serializedType;
 
-            TSerializedBaseType serialized;
-            if (!shaper.TrySerialize(element, out serialized))
+            if (!shaper.TrySerialize(element, out var serialized))
                 throw new InvalidOperationException("Unable to convert object to serialized shape.");
 
             return serialized;
@@ -47,8 +45,7 @@
 
         private T ConvertFromSerializedShape<T>(TSerializedBaseType serialized)
         {
-            T element;
-            if (shaper.TryDeserialize(serialized, out element))
+            if (shaper.TryDeserialize(serialized, out T element))
                 return element;
 
             if (typeof(TSerializedBaseType).IsAssignableFrom(typeof(T)))

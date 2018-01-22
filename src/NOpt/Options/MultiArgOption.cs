@@ -12,8 +12,6 @@ namespace NOpt
     /// </summary>
     public class MultiArgOption : Option
     {
-        private readonly int argCount;
-
         public MultiArgOption(
             OptSpecifier id,
             string prefix,
@@ -31,7 +29,7 @@ namespace NOpt
             Contract.Requires<ArgumentException>(!string.IsNullOrWhiteSpace(prefix));
             Contract.Requires<ArgumentNullException>(name != null);
             Contract.Requires<ArgumentOutOfRangeException>(argCount > 0);
-            this.argCount = argCount;
+            ArgCount = argCount;
         }
 
         public MultiArgOption(
@@ -52,13 +50,10 @@ namespace NOpt
             Contract.Requires<ArgumentException>(!prefixes.Any(string.IsNullOrWhiteSpace));
             Contract.Requires<ArgumentNullException>(name != null);
             Contract.Requires<ArgumentOutOfRangeException>(argCount > 0);
-            this.argCount = argCount;
+            ArgCount = argCount;
         }
 
-        public int ArgCount
-        {
-            get { return argCount; }
-        }
+        public int ArgCount { get; }
 
         protected override OptionRenderStyle RenderStyle
         {

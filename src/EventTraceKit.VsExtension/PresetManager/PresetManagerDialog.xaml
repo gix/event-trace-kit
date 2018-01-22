@@ -334,14 +334,15 @@
                         Padding="5,3"
                         VerticalAlignment="Center"
                         Visibility="{Binding CellFormatVisibility, Mode=OneTime}"
-                        DisplayMemberPath="Description"
+                        DisplayMemberPath="Label"
                         ItemsSource="{Binding SupportedFormats}"
                         SelectedItem="{Binding CellFormat, UpdateSourceTrigger=PropertyChanged}">
-                <!--<ItemsControl.ItemContainerStyle>
+                <ItemsControl.ItemContainerStyle>
                   <Style TargetType="{x:Type ComboBoxItem}" BasedOn="{StaticResource {x:Type ComboBoxItem}}">
-                    <Setter Property="AutomationProperties.Name" Value="{Binding Description, Mode=OneTime}"/>
+                    <Setter Property="AutomationProperties.Name" Value="{Binding Label, Mode=OneTime}"/>
+                    <Setter Property="ToolTip" Value="{Binding HelpText, Mode=OneTime}"/>
                   </Style>
-                </ItemsControl.ItemContainerStyle>-->
+                </ItemsControl.ItemContainerStyle>
               </ComboBox>
             </Grid>
           </StackPanel>

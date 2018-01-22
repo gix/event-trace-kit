@@ -73,8 +73,7 @@
             if (element == null)
                 return;
 
-            var exclusion = element as ISerializationExclusion;
-            if (exclusion != null && exclusion.ExcludeFromSerialization)
+            if (element is ISerializationExclusion exclusion && exclusion.ExcludeFromSerialization)
                 return;
 
             //DependencyObject target = element as DependencyObject;
@@ -114,8 +113,7 @@
 
             ICustomXmlSerializer serializer = null;
 
-            Func<object, ICustomXmlSerializer> func;
-            if (serializable == null && typeToSurrogateCustomSerializerFactoryMap.TryGetValue(serializedType, out func)) {
+            if (serializable == null && typeToSurrogateCustomSerializerFactoryMap.TryGetValue(serializedType, out var func)) {
                 serializer = func(element);
                 if (serializer == null)
                     return null;
@@ -157,8 +155,7 @@
 
         private string GetClrNamespace(Type type)
         {
-            string name;
-            if (namespaceAssembly.TryGetValue(type.Namespace, out name))
+            if (namespaceAssembly.TryGetValue(type.Namespace, out var name))
                 return GetClrNamespace(type.Namespace, name);
 
             return GetClrNamespace(type.Namespace, type.Assembly.GetName().Name);
@@ -291,15 +288,13 @@
 
         private string GetPrefix(Type type)
         {
-            string str;
-            namespacePrefix.TryGetValue(type.Namespace, out str);
+            namespacePrefix.TryGetValue(type.Namespace, out var str);
             return str;
         }
 
         private Type GetSerializedType(object element)
         {
-            var serializable = element as ICustomXmlSerializable;
-            if (serializable != null)
+            if (element is ICustomXmlSerializable serializable)
                 return serializable.GetSerializedType();
 
             Type sourceType = element.GetType();

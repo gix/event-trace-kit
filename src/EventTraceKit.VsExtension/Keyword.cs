@@ -8,6 +8,7 @@ namespace EventTraceKit.VsExtension
     public struct Keyword
         : IEquatable<Keyword>
         , IComparable<Keyword>
+        , IFormattable
     {
         public Keyword(ulong keywordValue)
         {
@@ -72,7 +73,7 @@ namespace EventTraceKit.VsExtension
 
         public override bool Equals(object other)
         {
-            return other is Keyword && Equals((Keyword)other);
+            return other is Keyword keyword && Equals(keyword);
         }
 
         public override int GetHashCode()
@@ -83,6 +84,11 @@ namespace EventTraceKit.VsExtension
         public override string ToString()
         {
             return KeywordValue.ToString(CultureInfo.InvariantCulture);
+        }
+
+        public string ToString(string format, IFormatProvider formatProvider)
+        {
+            return KeywordValue.ToString(format, formatProvider);
         }
     }
 }

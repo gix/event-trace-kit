@@ -7,8 +7,7 @@ namespace EventTraceKit.VsExtension
     {
         public override Style SelectStyle(object item, DependencyObject container)
         {
-            var model = item as PresetManagerColumnViewModel;
-            if (model == null)
+            if (!(item is PresetManagerColumnViewModel model))
                 return base.SelectStyle(item, container);
             if (model.ColumnType == PresetManagerColumnType.Configurable)
                 return ConfigurableColumnStyle;

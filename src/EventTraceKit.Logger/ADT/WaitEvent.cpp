@@ -1,20 +1,22 @@
 #include "WaitEvent.h"
 
-#include "StringView.h"
 #include "Support/ErrorHandling.h"
 #include "Win32Exception.h"
 
 #include <exception>
+#include <string_view>
 
 namespace etk
 {
 std::wstring const WaitEvent::Empty;
 
-class Exception
-    : public std::exception
+class Exception : public std::exception
 {
 public:
-    Exception(char const* msg) : msg(msg) {}
+    Exception(char const* msg)
+        : msg(msg)
+    {
+    }
 
     virtual char const* what() const noexcept override { return msg; }
 
@@ -22,36 +24,40 @@ private:
     char const* msg;
 };
 
-class ArgumentException
-    : public Exception
+class ArgumentException : public Exception
 {
 public:
     ArgumentException(char const* msg)
-        : Exception(msg) {}
+        : Exception(msg)
+    {
+    }
 };
 
-class ArgumentNullException
-    : public ArgumentException
+class ArgumentNullException : public ArgumentException
 {
 public:
     ArgumentNullException(char const* msg)
-        : ArgumentException(msg) {}
+        : ArgumentException(msg)
+    {
+    }
 };
 
-class NotSupportedException
-    : public Exception
+class NotSupportedException : public Exception
 {
 public:
     NotSupportedException(char const* msg)
-        : Exception(msg) {}
+        : Exception(msg)
+    {
+    }
 };
 
-class AbandonedMutexException
-    : public Exception
+class AbandonedMutexException : public Exception
 {
 public:
     AbandonedMutexException()
-        : Exception("Abandoned mutex.") {}
+        : Exception("Abandoned mutex.")
+    {
+    }
 };
 
 WaitEvent::WaitEvent(bool initialState, bool manualReset)
@@ -70,9 +76,8 @@ WaitEvent::WaitEvent(bool initialState, bool manualReset, std::wstring const& na
     if (name.size() > MAX_PATH)
         throw ArgumentException("WaitHandleName is too long.");
 
-    WaitHandle handle(
-        ::CreateEventW(nullptr, manualReset ? TRUE : FALSE,
-                       initialState ? TRUE : FALSE, name.c_str()));
+    WaitHandle handle(::CreateEventW(nullptr, manualReset ? TRUE : FALSE,
+                                     initialState ? TRUE : FALSE, name.c_str()));
 
     if (!handle.IsValid()) {
         DWORD ec = ::GetLastError();
@@ -98,7 +103,8 @@ WaitEvent::WaitEvent(HRESULT& hr, bool initialState, bool manualReset)
     hr = S_OK;
 }
 
-WaitEvent::WaitEvent(HRESULT& hr, bool initialState, bool manualReset, std::wstring const& name)
+WaitEvent::WaitEvent(HRESULT& hr, bool initialState, bool manualReset,
+                     std::wstring const& name)
 {
     WaitHandle handle(::CreateEventW(nullptr, manualReset ? TRUE : FALSE,
                                      initialState ? TRUE : FALSE, name.c_str()));
@@ -137,8 +143,8 @@ WaitEvent WaitEvent::Open(std::wstring const& name, unsigned desiredAccess)
     return WaitEvent(std::move(handle));
 }
 
-WaitEvent WaitEvent::OpenOrCreate(
-    bool initialState, bool manualReset, std::wstring const& name, bool* created /*= nullptr*/)
+WaitEvent WaitEvent::OpenOrCreate(bool initialState, bool manualReset,
+                                  std::wstring const& name, bool* created /*= nullptr*/)
 {
     if (name.length() == 0)
         throw ArgumentNullException("name");
@@ -148,7 +154,8 @@ WaitEvent WaitEvent::OpenOrCreate(
     if (created != nullptr)
         *created = false;
 
-    WaitHandle handle(::OpenEventW(EVENT_MODIFY_STATE | SYNCHRONIZE, false, name.c_str()));
+    WaitHandle handle(
+        ::OpenEventW(EVENT_MODIFY_STATE | SYNCHRONIZE, false, name.c_str()));
     if (handle.IsValid())
         return WaitEvent(std::move(handle));
 
@@ -191,24 +198,29 @@ HRESULT WaitEvent::Reset()
 
 HRESULT WaitEvent::Wait(unsigned timeoutInMillis /*= INFINITE*/) const
 {
-    DWORD result = ::WaitForSingleObject(handle, timeoutInMillis);
+    DWORD const result = ::WaitForSingleObject(handle, timeoutInMillis);
     switch (result) {
-    case WAIT_OBJECT_0: return S_OK;
-    case WAIT_ABANDONED: return HResultFromWin32(WAIT_ABANDONED);
-    case WAIT_TIMEOUT: return E_PENDING;
-    default: return GetLastErrorAsHResult();
+    case WAIT_OBJECT_0:
+        return S_OK;
+    case WAIT_ABANDONED:
+        return HResultFromWin32(WAIT_ABANDONED);
+    case WAIT_TIMEOUT:
+        return E_PENDING;
+    default:
+        return GetLastErrorAsHResult();
     }
 }
 
-unsigned details::WaitFor(WaitTimeoutDuration const& timeout,
-                          ArrayRef<HANDLE> handles, bool waitAll)
+unsigned details::WaitFor(WaitTimeoutDuration const& timeout, ArrayRef<HANDLE> handles,
+                          bool waitAll)
 {
     if (handles.size() > MAXIMUM_WAIT_OBJECTS)
-        throw NotSupportedException("The number of WaitEvent handles must be less than or equal to 64.");
+        throw NotSupportedException(
+            "The number of WaitEvent handles must be less than or equal to 64.");
 
-    DWORD result = ::WaitForMultipleObjects(
-        static_cast<DWORD>(handles.size()), handles.data(),
-        waitAll ? TRUE : FALSE, timeout.count());
+    DWORD const result =
+        ::WaitForMultipleObjects(static_cast<DWORD>(handles.size()), handles.data(),
+                                 waitAll ? TRUE : FALSE, timeout.count());
     if (result >= WAIT_ABANDONED && (result - WAIT_ABANDONED) < handles.size())
         throw AbandonedMutexException();
 

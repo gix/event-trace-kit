@@ -230,8 +230,8 @@ namespace EventTraceKit.VsExtension
 
         public event EventHandler<ExceptionFilterEventArgs> ExceptionFilter
         {
-            add { storage.ExceptionFilter += value; }
-            remove { storage.ExceptionFilter -= value; }
+            add => storage.ExceptionFilter += value;
+            remove => storage.ExceptionFilter -= value;
         }
 
         public void LoadFromStorage()
@@ -267,8 +267,7 @@ namespace EventTraceKit.VsExtension
         {
             var shaper = new SerializationShaper<SettingsElement>();
 
-            ViewPresets viewPresets;
-            if (!shaper.TrySerialize(presetCollection, out viewPresets))
+            if (!shaper.TrySerialize(presetCollection, out ViewPresets viewPresets))
                 return null;
 
             return viewPresets;
@@ -278,8 +277,8 @@ namespace EventTraceKit.VsExtension
         {
             var shaper = new SerializationShaper<SettingsElement>();
 
-            AdvmPresetCollection presets;
-            if (viewPresets != null && shaper.TryDeserialize(viewPresets, out presets) && presets != null)
+            if (viewPresets != null && shaper.TryDeserialize(viewPresets, out AdvmPresetCollection presets)
+                                    && presets != null)
                 return presets;
 
             return new AdvmPresetCollection();

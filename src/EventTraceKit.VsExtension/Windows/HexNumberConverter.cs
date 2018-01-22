@@ -51,38 +51,22 @@ namespace EventTraceKit.VsExtension.Windows
             value = value.Substring(2);
 
             var style = NumberStyles.HexNumber;
-            if (targetType == typeof(sbyte)) {
-                sbyte v;
-                return sbyte.TryParse(value, style, culture, out v) ? (object)v : null;
-            }
-            if (targetType == typeof(short)) {
-                short v;
-                return short.TryParse(value, style, culture, out v) ? (object)v : null;
-            }
-            if (targetType == typeof(int)) {
-                int v;
-                return int.TryParse(value, style, culture, out v) ? (object)v : null;
-            }
-            if (targetType == typeof(long)) {
-                long v;
-                return long.TryParse(value, style, culture, out v) ? (object)v : null;
-            }
-            if (targetType == typeof(byte)) {
-                byte v;
-                return byte.TryParse(value, style, culture, out v) ? (object)v : null;
-            }
-            if (targetType == typeof(ushort)) {
-                ushort v;
-                return ushort.TryParse(value, style, culture, out v) ? (object)v : null;
-            }
-            if (targetType == typeof(uint)) {
-                uint v;
-                return uint.TryParse(value, style, culture, out v) ? (object)v : null;
-            }
-            if (targetType == typeof(ulong)) {
-                ulong v;
-                return ulong.TryParse(value, style, culture, out v) ? (object)v : null;
-            }
+            if (targetType == typeof(sbyte))
+                return sbyte.TryParse(value, style, culture, out var v) ? (object)v : null;
+            if (targetType == typeof(short))
+                return short.TryParse(value, style, culture, out short v) ? (object)v : null;
+            if (targetType == typeof(int))
+                return int.TryParse(value, style, culture, out int v) ? (object)v : null;
+            if (targetType == typeof(long))
+                return long.TryParse(value, style, culture, out long v) ? (object)v : null;
+            if (targetType == typeof(byte))
+                return byte.TryParse(value, style, culture, out byte v) ? (object)v : null;
+            if (targetType == typeof(ushort))
+                return ushort.TryParse(value, style, culture, out ushort v) ? (object)v : null;
+            if (targetType == typeof(uint))
+                return uint.TryParse(value, style, culture, out uint v) ? (object)v : null;
+            if (targetType == typeof(ulong))
+                return ulong.TryParse(value, style, culture, out ulong v) ? (object)v : null;
 
             return null;
         }

@@ -15,8 +15,7 @@ namespace EventTraceKit.VsExtension.Windows
 
         protected override void OnEvent(EventArgs eventArgs)
         {
-            var keyEventArgs = eventArgs as KeyEventArgs;
-            if (keyEventArgs != null && Matches(keyEventArgs))
+            if (eventArgs is KeyEventArgs keyEventArgs && Matches(keyEventArgs))
                 InvokeActions(eventArgs);
         }
 

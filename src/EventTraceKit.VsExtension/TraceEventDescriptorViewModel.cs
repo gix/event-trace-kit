@@ -35,58 +35,58 @@
 
         public bool IsEnabled
         {
-            get { return isEnabled; }
-            set { SetProperty(ref isEnabled, value); }
+            get => isEnabled;
+            set => SetProperty(ref isEnabled, value);
         }
 
         public Tuple<ushort, byte> CreateKey() => Tuple.Create(Id, Version);
 
         public ushort Id
         {
-            get { return id; }
-            set { SetProperty(ref id, value); }
+            get => id;
+            set => SetProperty(ref id, value);
         }
 
         public byte Version
         {
-            get { return version; }
-            set { SetProperty(ref version, value); }
+            get => version;
+            set => SetProperty(ref version, value);
         }
 
         public string Symbol
         {
-            get { return symbol; }
-            set { SetProperty(ref symbol, value); }
+            get => symbol;
+            set => SetProperty(ref symbol, value);
         }
 
         public string Level
         {
-            get { return level; }
-            set { SetProperty(ref level, value); }
+            get => level;
+            set => SetProperty(ref level, value);
         }
 
         public string Channel
         {
-            get { return channel; }
-            set { SetProperty(ref channel, value); }
+            get => channel;
+            set => SetProperty(ref channel, value);
         }
 
         public string Task
         {
-            get { return task; }
-            set { SetProperty(ref task, value); }
+            get => task;
+            set => SetProperty(ref task, value);
         }
 
         public string Opcode
         {
-            get { return opcode; }
-            set { SetProperty(ref opcode, value); }
+            get => opcode;
+            set => SetProperty(ref opcode, value);
         }
 
         public string Keywords
         {
-            get { return keywords; }
-            set { SetProperty(ref keywords, value); }
+            get => keywords;
+            set => SetProperty(ref keywords, value);
         }
 
         public TraceEventDescriptorViewModel DeepClone()

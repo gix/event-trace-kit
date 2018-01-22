@@ -35,8 +35,7 @@ namespace EventTraceKit.VsExtension.Styles
 
         public override bool Equals(object obj)
         {
-            var key = obj as FontAndColorsResourceKey;
-            if (key == null)
+            if (!(obj is FontAndColorsResourceKey key))
                 return false;
 
             return

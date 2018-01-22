@@ -1,6 +1,7 @@
 #pragma once
 #include "Support/Debug.h"
 #include "Support/CompilerSupport.h"
+#include <utility>
 #include <windows.h>
 
 namespace etk
@@ -12,7 +13,12 @@ class Handle
     using HandleType = typename Traits::HandleType;
 
 public:
-    explicit Handle(HandleType handle = Traits::InvalidHandle()) noexcept
+    constexpr Handle() noexcept
+        : handle(Traits::InvalidHandle())
+    {
+    }
+
+    constexpr explicit Handle(HandleType handle) noexcept
         : handle(handle)
     {
     }
@@ -22,7 +28,7 @@ public:
         Close();
     }
 
-    Handle(Handle&& source) noexcept
+    constexpr Handle(Handle&& source) noexcept
         : handle(source.Detach())
     {
     }
@@ -37,12 +43,12 @@ public:
     Handle(Handle const&) = delete;
     Handle& operator =(Handle const&) = delete;
 
-    static HandleType InvalidHandle() noexcept
+    constexpr static HandleType InvalidHandle() noexcept
     {
         return Traits::InvalidHandle();
     }
 
-    bool IsValid() const noexcept
+    constexpr bool IsValid() const noexcept
     {
         return Traits::IsValid(handle);
     }
@@ -67,9 +73,7 @@ public:
 
     HandleType Detach() noexcept
     {
-        HandleType h = handle;
-        handle = Traits::InvalidHandle();
-        return h;
+        return std::exchange(handle, Traits::InvalidHandle());
     }
 
     Handle& operator =(HandleType source)
@@ -78,20 +82,14 @@ public:
         return *this;
     }
 
-    explicit operator bool() const noexcept
+    constexpr explicit operator bool() const noexcept
     {
         return Traits::IsValid(handle);
     }
 
-    HandleType Get() const noexcept
-    {
-        return handle;
-    }
+    constexpr HandleType Get() const noexcept { return handle; }
 
-    operator HandleType() const noexcept
-    {
-        return handle;
-    }
+    constexpr operator HandleType() const noexcept { return handle; }
 
     HandleType* CloseAndGetAddressOf() noexcept
     {
@@ -106,35 +104,42 @@ private:
 
 /// Prevent accidentally calling CloseHandle(HANDLE) with a scoped handle.
 /// Scoped handles must be closed by calling Close().
-template<typename T>
-void CloseHandle(Handle<T> const&) = delete;
+using ::CloseHandle;
+
+template<typename Traits>
+void CloseHandle(Handle<Traits> const&) = delete;
 
 
-struct HandleTraits
+struct MinusOneIsInvalidHandleTraits
 {
     using HandleType = HANDLE;
-
-    static HandleType InvalidHandle() noexcept { return INVALID_HANDLE_VALUE; }
-    static bool IsValid(HandleType h) noexcept { return h != InvalidHandle(); }
-    static void Close(HandleType h) noexcept   { ::CloseHandle(h); }
+    constexpr static HandleType InvalidHandle() noexcept { return INVALID_HANDLE_VALUE; }
+    constexpr static bool IsValid(HandleType h) noexcept { return h != InvalidHandle(); }
+    static void Close(HandleType h) noexcept { ::CloseHandle(h); }
 };
 
-struct NullIsInvalidHandleTraits : HandleTraits
+struct NullIsInvalidHandleTraits
 {
-    static HandleType InvalidHandle() { return nullptr; }
-    static bool IsValid(HandleType h) noexcept { return h != InvalidHandle(); }
+    using HandleType = HANDLE;
+    constexpr static HandleType InvalidHandle() noexcept { return nullptr; }
+    constexpr static bool IsValid(HandleType h) noexcept { return h != InvalidHandle(); }
+    static void Close(HandleType h) noexcept { ::CloseHandle(h); }
 };
 
-struct FileHandleTraits : HandleTraits {};
-struct ProcessHandleTraits : NullIsInvalidHandleTraits {};
-struct ThreadHandleTraits : NullIsInvalidHandleTraits {};
-struct TimerHandleTraits : NullIsInvalidHandleTraits {};
-struct TokenHandleTraits : NullIsInvalidHandleTraits {};
 
+struct FileHandleTraits : MinusOneIsInvalidHandleTraits {};
 using FileHandle = Handle<FileHandleTraits>;
+
+struct ProcessHandleTraits : NullIsInvalidHandleTraits {};
 using ProcessHandle = Handle<ProcessHandleTraits>;
+
+struct ThreadHandleTraits : NullIsInvalidHandleTraits {};
 using ThreadHandle = Handle<ThreadHandleTraits>;
+
+struct TimerHandleTraits : NullIsInvalidHandleTraits {};
 using TimerHandle = Handle<TimerHandleTraits>;
+
+struct TokenHandleTraits : NullIsInvalidHandleTraits {};
 using TokenHandle = Handle<TokenHandleTraits>;
 
 } // namespace etk

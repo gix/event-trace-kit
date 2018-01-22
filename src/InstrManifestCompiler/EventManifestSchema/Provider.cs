@@ -48,29 +48,26 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         public EventManifest Manifest { get; set; }
         public int Index { get; set; }
-        public RefValue<string> Name { get; private set; }
-        public StructValue<Guid> Id { get; private set; }
-        public RefValue<string> Symbol { get; private set; }
+        public RefValue<string> Name { get; }
+        public StructValue<Guid> Id { get; }
+        public RefValue<string> Symbol { get; }
         public RefValue<string> ResourceFileName { get; set; }
         public RefValue<string> MessageFileName { get; set; }
         public RefValue<string> ParameterFileName { get; set; }
         public LocalizedString Message { get; set; }
 
-        public ChannelCollection Channels { get; private set; }
-        public LevelCollection Levels { get; private set; }
-        public OpcodeCollection Opcodes { get; private set; }
-        public TaskCollection Tasks { get; private set; }
-        public KeywordCollection Keywords { get; private set; }
-        public MapCollection Maps { get; private set; }
-        public PatternMapCollection NamedQueries { get; private set; }
-        public FilterCollection Filters { get; private set; }
-        public TemplateCollection Templates { get; private set; }
-        public EventCollection Events { get; private set; }
+        public ChannelCollection Channels { get; }
+        public LevelCollection Levels { get; }
+        public OpcodeCollection Opcodes { get; }
+        public TaskCollection Tasks { get; }
+        public KeywordCollection Keywords { get; }
+        public MapCollection Maps { get; }
+        public PatternMapCollection NamedQueries { get; }
+        public FilterCollection Filters { get; }
+        public TemplateCollection Templates { get; }
+        public EventCollection Events { get; }
 
-        public IReadOnlyList<EnableBit> EnableBits
-        {
-            get { return enableBits; }
-        }
+        public IReadOnlyList<EnableBit> EnableBits => enableBits;
 
         public void PopulateEnableBits()
         {
@@ -81,8 +78,7 @@ namespace InstrManifestCompiler.EventManifestSchema
                 ulong mask = evt.KeywordMask;
                 var key = Tuple.Create(level, mask);
 
-                EnableBit bit;
-                if (!lookup.TryGetValue(key, out bit)) {
+                if (!lookup.TryGetValue(key, out var bit)) {
                     bit = new EnableBit(bitPosition++, level, mask);
                     lookup.Add(key, bit);
                     enableBits.Add(bit);

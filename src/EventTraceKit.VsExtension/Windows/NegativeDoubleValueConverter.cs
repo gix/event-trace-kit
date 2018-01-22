@@ -12,16 +12,14 @@ namespace EventTraceKit.VsExtension.Windows
         public object Convert(
             object value, Type targetType, object parameter, CultureInfo culture)
         {
-            double? nullable = value as double?;
-            return nullable.HasValue ? -nullable.GetValueOrDefault() : value;
+            return value is double v ? -v : value;
 
         }
 
         public object ConvertBack(
             object value, Type targetType, object parameter, CultureInfo culture)
         {
-            double? nullable = value as double?;
-            return nullable.HasValue ? -nullable.GetValueOrDefault() : value;
+            return value is double v ? -v : value;
         }
     }
 }

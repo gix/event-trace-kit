@@ -26,7 +26,7 @@ namespace InstrManifestCompiler.Collections
     [Serializable]
     [ComVisible(false)]
     [DebuggerTypeProxy(typeof(OrderedDictionary<,>.DebuggerProxy))]
-    [DebuggerDisplay("Count = {Count}")]
+    [DebuggerDisplay("Count = {" + nameof(Count) + "}")]
     public sealed class OrderedDictionary<TKey, TValue>
         : IOrderedDictionary<TKey, TValue>,
           IOrderedDictionary,
@@ -883,7 +883,7 @@ namespace InstrManifestCompiler.Collections
         }
 
         [Serializable]
-        [DebuggerDisplay("Count = {Count}")]
+        [DebuggerDisplay("Count = {" + nameof(Count) + "}")]
         [DebuggerTypeProxy(typeof(CollectionDebuggerProxy<>))]
         private sealed class KeyCollection : IList<TKey>, ICollection
         {
@@ -945,21 +945,22 @@ namespace InstrManifestCompiler.Collections
 
             void ICollection.CopyTo(Array array, int index)
             {
-                var strongArray = array as TKey[];
-                if (strongArray != null) {
-                    CopyTo(strongArray, index);
-                    return;
-                }
+                switch (array) {
+                    case TKey[] strongArray:
+                        CopyTo(strongArray, index);
+                        break;
 
-                var objArray = array as object[];
-                if (objArray == null)
-                    throw new ArgumentException(Strings.Arg_InvalidArrayType);
+                    case object[] objArray:
+                        try {
+                            foreach (var entry in dictionary.objectsArray)
+                                objArray[index++] = entry.Key;
+                        } catch (ArrayTypeMismatchException) {
+                            throw new ArgumentException(Strings.Arg_InvalidArrayType);
+                        }
+                        break;
 
-                try {
-                    foreach (var entry in dictionary.objectsArray)
-                        objArray[index++] = entry.Key;
-                } catch (ArrayTypeMismatchException) {
-                    throw new ArgumentException(Strings.Arg_InvalidArrayType);
+                    default:
+                        throw new ArgumentException(Strings.Arg_InvalidArrayType);
                 }
             }
 
@@ -1018,7 +1019,7 @@ namespace InstrManifestCompiler.Collections
         }
 
         [Serializable]
-        [DebuggerDisplay("Count = {Count}")]
+        [DebuggerDisplay("Count = {" + nameof(Count) + "}")]
         [DebuggerTypeProxy(typeof(CollectionDebuggerProxy<>))]
         private sealed class ValueCollection : IList<TValue>, ICollection
         {
@@ -1060,21 +1061,22 @@ namespace InstrManifestCompiler.Collections
 
             void ICollection.CopyTo(Array array, int index)
             {
-                var strongArray = array as TValue[];
-                if (strongArray != null) {
-                    CopyTo(strongArray, index);
-                    return;
-                }
+                switch (array) {
+                    case TValue[] strongArray:
+                        CopyTo(strongArray, index);
+                        break;
 
-                var objArray = array as object[];
-                if (objArray == null)
-                    throw new ArgumentException(Strings.Arg_InvalidArrayType);
+                    case object[] objArray:
+                        try {
+                            foreach (var entry in dictionary.objectsArray)
+                                objArray[index++] = entry.Value;
+                        } catch (ArrayTypeMismatchException) {
+                            throw new ArgumentException(Strings.Arg_InvalidArrayType);
+                        }
+                        break;
 
-                try {
-                    foreach (var entry in dictionary.objectsArray)
-                        objArray[index++] = entry.Value;
-                } catch (ArrayTypeMismatchException) {
-                    throw new ArgumentException(Strings.Arg_InvalidArrayType);
+                    default:
+                        throw new ArgumentException(Strings.Arg_InvalidArrayType);
                 }
             }
 

@@ -9,8 +9,7 @@
             this IDictionary<TKey, TValue> dictionary, TKey key,
             Func<TKey, TValue> valueFactory)
         {
-            TValue value;
-            if (dictionary.TryGetValue(key, out value))
+            if (dictionary.TryGetValue(key, out var value))
                 return value;
 
             value = valueFactory(key);

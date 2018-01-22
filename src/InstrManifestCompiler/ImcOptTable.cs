@@ -1,7 +1,8 @@
 namespace InstrManifestCompiler
 {
     using System.Collections.Generic;
-    using NOpt;
+    using NOption;
+    using NOption.Options;
 
     internal enum Opt
     {

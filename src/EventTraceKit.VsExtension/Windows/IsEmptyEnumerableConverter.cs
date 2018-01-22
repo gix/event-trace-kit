@@ -12,8 +12,7 @@
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var enumerable = value as IEnumerable;
-            return enumerable == null || !enumerable.Any();
+            return !(value is IEnumerable enumerable) || !enumerable.Any();
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

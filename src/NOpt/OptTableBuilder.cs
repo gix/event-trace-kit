@@ -183,7 +183,8 @@ namespace NOpt
             Contract.Requires<ArgumentException>(!string.IsNullOrWhiteSpace(prefix));
             Contract.Requires<ArgumentNullException>(name != null);
 
-            var option = new SeparateOption(id.Id,
+            var option = new SeparateOption(
+                id.Id,
                 prefix,
                 name,
                 helpText: helpText,
@@ -209,7 +210,8 @@ namespace NOpt
             Contract.Requires<ArgumentException>(!prefixes.Any(string.IsNullOrWhiteSpace));
             Contract.Requires<ArgumentNullException>(name != null);
 
-            var option = new SeparateOption(id.Id,
+            var option = new SeparateOption(
+                id.Id,
                 prefixes,
                 name,
                 helpText: helpText,
@@ -234,7 +236,8 @@ namespace NOpt
             Contract.Requires<ArgumentException>(!string.IsNullOrWhiteSpace(prefix));
             Contract.Requires<ArgumentNullException>(name != null);
 
-            var option = new JoinedOrSeparateOption(id.Id,
+            var option = new JoinedOrSeparateOption(
+                id.Id,
                 prefix,
                 name,
                 helpText: helpText,
@@ -260,7 +263,8 @@ namespace NOpt
             Contract.Requires<ArgumentException>(!prefixes.Any(string.IsNullOrWhiteSpace));
             Contract.Requires<ArgumentNullException>(name != null);
 
-            var option = new JoinedOrSeparateOption(id.Id,
+            var option = new JoinedOrSeparateOption(
+                id.Id,
                 prefixes,
                 name,
                 helpText: helpText,
@@ -287,7 +291,8 @@ namespace NOpt
             Contract.Requires<ArgumentNullException>(name != null);
             Contract.Requires<ArgumentOutOfRangeException>(argumentCount > 0);
 
-            var option = new MultiArgOption(id.Id,
+            var option = new MultiArgOption(
+                id.Id,
                 prefix,
                 name,
                 argumentCount,
@@ -316,7 +321,8 @@ namespace NOpt
             Contract.Requires<ArgumentNullException>(name != null);
             Contract.Requires<ArgumentOutOfRangeException>(argumentCount > 0);
 
-            var option = new MultiArgOption(id.Id,
+            var option = new MultiArgOption(
+                id.Id,
                 prefixes,
                 name,
                 argumentCount,
@@ -342,7 +348,8 @@ namespace NOpt
             Contract.Requires<ArgumentException>(!string.IsNullOrWhiteSpace(prefix));
             Contract.Requires<ArgumentNullException>(name != null);
 
-            var option = new RemainingArgsOption(id.Id,
+            var option = new RemainingArgsOption(
+                id.Id,
                 prefix,
                 name,
                 helpText: helpText,
@@ -368,7 +375,8 @@ namespace NOpt
             Contract.Requires<ArgumentException>(!prefixes.Any(string.IsNullOrWhiteSpace));
             Contract.Requires<ArgumentNullException>(name != null);
 
-            var option = new RemainingArgsOption(id.Id,
+            var option = new RemainingArgsOption(
+                id.Id,
                 prefixes,
                 name,
                 helpText: helpText,

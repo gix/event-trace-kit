@@ -162,8 +162,7 @@ namespace InstrManifestCompiler.Support
                 mappedFile.Dispose();
             }
 
-            var fileOutput = output as FileStream;
-            if (fileOutput != null) {
+            if (output is FileStream fileOutput) {
                 mappedFile = MemoryMappedFile.CreateFromFile(
                     fileOutput,
                     null,

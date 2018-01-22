@@ -16,7 +16,7 @@ using WaitHandle = Handle<NullIsInvalidHandleTraits>;
 class WaitEvent
 {
 public:
-    WaitEvent() {}
+    WaitEvent() = default;
 
     WaitEvent(bool initialState, bool manualReset);
     WaitEvent(bool initialState, bool manualReset, std::wstring const& name);
@@ -32,13 +32,13 @@ public:
         bool initialState, bool manualReset, std::wstring const& name,
         bool* created = nullptr);
 
-    WaitEvent(WaitEvent&& source)
+    WaitEvent(WaitEvent&& source) noexcept
         : handle(std::move(source.handle))
     {
         source.handle = WaitHandle::InvalidHandle();
     }
 
-    WaitEvent& operator =(WaitEvent&& source)
+    WaitEvent& operator =(WaitEvent&& source) noexcept
     {
         using std::swap;
         swap(handle, source.handle);
@@ -148,12 +148,12 @@ public:
     AutoResetEvent(bool initialState = false, std::wstring const& name = Empty)
         : WaitEvent(initialState, false, name) { }
 
-    AutoResetEvent(AutoResetEvent&& source)
+    AutoResetEvent(AutoResetEvent&& source) noexcept
         : WaitEvent(std::move(source))
     {
     }
 
-    AutoResetEvent& operator =(AutoResetEvent&& source)
+    AutoResetEvent& operator =(AutoResetEvent&& source) noexcept
     {
         WaitEvent::operator =(std::move(source));
         return *this;
@@ -170,12 +170,12 @@ public:
     ManualResetEvent(bool initialState = false, std::wstring const& name = Empty)
         : WaitEvent(initialState, true, name) { }
 
-    ManualResetEvent(ManualResetEvent&& source)
+    ManualResetEvent(ManualResetEvent&& source) noexcept
         : WaitEvent(std::move(source))
     {
     }
 
-    ManualResetEvent& operator =(ManualResetEvent&& source)
+    ManualResetEvent& operator =(ManualResetEvent&& source) noexcept
     {
         WaitEvent::operator =(std::move(source));
         return *this;

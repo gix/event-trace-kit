@@ -1,9 +1,10 @@
 #pragma once
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
+#include <malloc.h>
 #include <tuple>
 #include <vector>
-#include <malloc.h>
 
 namespace etk
 {
@@ -12,7 +13,9 @@ class Alignment
 {
 public:
     explicit constexpr Alignment(size_t alignment)
-        : alignment((assert(alignment > 0), alignment)) {}
+        : alignment((assert(alignment > 0), alignment))
+    {
+    }
 
     template<typename T>
     constexpr T Align(T value) const
@@ -39,8 +42,10 @@ private:
 };
 
 template<typename T>
-constexpr Alignment AlignmentOf() { return Alignment(alignof(T)); }
-
+constexpr Alignment AlignmentOf()
+{
+    return Alignment(alignof(T));
+}
 
 template<typename Derived>
 class AllocatorBase
@@ -63,9 +68,7 @@ public:
     }
 };
 
-
-class MallocAllocator
-    : public AllocatorBase<MallocAllocator>
+class MallocAllocator : public AllocatorBase<MallocAllocator>
 {
 public:
     using AllocatorBase<MallocAllocator>::Allocate;
@@ -82,16 +85,16 @@ public:
     }
 };
 
-
 template<typename Allocator, size_t SlabSize = 4096>
-class BumpPtrAllocator
-    : public AllocatorBase<BumpPtrAllocator<Allocator, SlabSize>>
+class BumpPtrAllocator : public AllocatorBase<BumpPtrAllocator<Allocator, SlabSize>>
 {
 public:
-    BumpPtrAllocator() {}
+    BumpPtrAllocator() = default;
 
     BumpPtrAllocator(Allocator&& allocator)
-        : allocator(std::move(allocator)) {}
+        : allocator(std::move(allocator))
+    {
+    }
 
     ~BumpPtrAllocator()
     {
@@ -104,22 +107,22 @@ public:
 
     void* Allocate(size_t size, Alignment alignment)
     {
-        size_t remaining = static_cast<size_t>(slabEnd - slabCurr);
+        size_t const remaining = static_cast<size_t>(slabEnd - slabCurr);
 
-        size_t adjustment = alignment.PtrAdjustment(slabCurr);
+        size_t const adjustment = alignment.PtrAdjustment(slabCurr);
         if (adjustment + size < remaining) {
-            char* alignedPtr = slabCurr + adjustment;
+            std::byte* alignedPtr = slabCurr + adjustment;
             slabCurr = alignedPtr + size;
             return alignedPtr;
         }
 
         if (adjustment + size > SlabSize) {
             void* newSlab = AllocateCustomSizedSlab(adjustment + size);
-            return alignment.Align(static_cast<char*>(newSlab));
+            return alignment.Align(static_cast<std::byte*>(newSlab));
         }
 
         AllocateSlab();
-        char* alignedPtr = alignment.Align(static_cast<char*>(slabCurr));
+        std::byte* alignedPtr = alignment.Align(static_cast<std::byte*>(slabCurr));
         slabCurr = alignedPtr + size;
         return alignedPtr;
     }
@@ -133,13 +136,29 @@ public:
             slabCurr -= size;
     }
 
+    void Reset()
+    {
+        DeallocateCustomSizedSlabs();
+        customSizedSlabs.clear();
+        customSizedSlabs.shrink_to_fit();
+
+        if (slabs.empty())
+            return;
+
+        slabCurr = static_cast<std::byte*>(slabs.front());
+        slabEnd = slabCurr + SlabSize;
+
+        DeallocateSlabs(std::next(slabs.begin()), slabs.end());
+        slabs.erase(std::next(slabs.begin()), slabs.end());
+    }
+
 private:
     void AllocateSlab()
     {
         size_t slabSize = SlabSize;
         void* newSlab = allocator.Allocate(slabSize, Alignment(1));
         slabs.push_back(newSlab);
-        slabCurr = static_cast<char*>(newSlab);
+        slabCurr = static_cast<std::byte*>(newSlab);
         slabEnd = slabCurr + slabSize;
     }
 
@@ -147,6 +166,13 @@ private:
     {
         for (void* slab : slabs)
             allocator.Deallocate(slab, SlabSize);
+    }
+
+    void DeallocateSlabs(std::vector<void*>::iterator it,
+                         std::vector<void*>::iterator end)
+    {
+        for (; it != end; ++it)
+            allocator.Deallocate(*it, SlabSize);
     }
 
     void* AllocateCustomSizedSlab(size_t size)
@@ -159,7 +185,8 @@ private:
     void DeallocateCustomSizedSlabs()
     {
         for (auto&& slab : customSizedSlabs) {
-            void* ptr; size_t size;
+            void* ptr;
+            size_t size;
             std::tie(ptr, size) = slab;
             allocator.Deallocate(ptr, size);
         }
@@ -167,8 +194,8 @@ private:
 
     std::vector<void*> slabs;
     std::vector<std::tuple<void*, size_t>> customSizedSlabs;
-    char* slabCurr = nullptr;
-    char* slabEnd = nullptr;
+    std::byte* slabCurr = nullptr;
+    std::byte* slabEnd = nullptr;
     Allocator allocator;
 };
 

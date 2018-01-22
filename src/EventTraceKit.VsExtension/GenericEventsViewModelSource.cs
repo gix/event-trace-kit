@@ -3,15 +3,14 @@ namespace EventTraceKit.VsExtension
     using System;
     using System.Collections.Generic;
     using System.Globalization;
-    using System.Runtime.InteropServices;
     using System.Security.Principal;
     using System.Text;
     using System.Windows;
     using Controls;
+    using Extensions;
     using Native;
     using Utilities;
     using Windows;
-    using Extensions;
 
     public sealed class GenericEventsViewModelSource
     {
@@ -188,6 +187,7 @@ namespace EventTraceKit.VsExtension
                     Name = "TID",
                     IsVisible = true,
                     Width = 40,
+                    TextAlignment = TextAlignment.Right,
                     HelpText = "Thread ID"
                 }.EnsureFrozen();
             processIdPreset =
@@ -196,6 +196,7 @@ namespace EventTraceKit.VsExtension
                     Name = "PID",
                     IsVisible = true,
                     Width = 40,
+                    TextAlignment = TextAlignment.Right,
                     HelpText = "Process ID (0 = PID Not Found)"
                 }.EnsureFrozen();
             userDataPreset =
@@ -423,6 +424,7 @@ namespace EventTraceKit.VsExtension
                     Name = "PID",
                     IsVisible = true,
                     Width = 40,
+                    TextAlignment = TextAlignment.Right,
                     HelpText = "Process ID (0 = PID Not Found)"
                 }.EnsureFrozen();
             var threadIdPreset =
@@ -431,6 +433,7 @@ namespace EventTraceKit.VsExtension
                     Name = "TID",
                     IsVisible = true,
                     Width = 40,
+                    TextAlignment = TextAlignment.Right,
                     HelpText = "Thread ID"
                 }.EnsureFrozen();
             var timeAbsoluteGeneratorPreset =
@@ -679,8 +682,7 @@ namespace EventTraceKit.VsExtension
                 var eventRecord = GetEventRecord(index);
                 if (eventRecord.IsTraceLoggingEvent()) {
                     int opcode = eventRecord.EventHeader.EventDescriptor.Opcode;
-                    SafeBstrHandle name;
-                    if (winmetaOpcodeNames.TryGetValue(opcode, out name))
+                    if (winmetaOpcodeNames.TryGetValue(opcode, out var name))
                         return name.Get();
                 }
 

@@ -15,6 +15,13 @@
                 collection.Add(local);
         }
 
+        public static void RemoveRange<T>(
+            this ICollection<T> collection, IEnumerable<T> items)
+        {
+            foreach (T item in items)
+                collection.Remove(item);
+        }
+
         public static void EnsureCapacity<T>(this List<T> list, int newCapacity)
         {
             if (list.Capacity < newCapacity)
@@ -24,9 +31,7 @@
         private static bool TryAddCapacity<T>(
             ICollection<T> collection, IEnumerable<T> newItems)
         {
-            var list = collection as List<T>;
-            var newItemsCollection = newItems as ICollection<T>;
-            if (list != null && newItemsCollection != null) {
+            if (collection is List<T> list && newItems is ICollection<T> newItemsCollection) {
                 list.EnsureCapacity(list.Count + newItemsCollection.Count);
                 return true;
             }
@@ -84,12 +89,12 @@
             return e.MoveNext();
         }
 
-        public static HashSet<T> ToSet<T>(this IEnumerable<T> collection)
+        public static HashSet<T> ToHashSet<T>(this IEnumerable<T> collection)
         {
             return new HashSet<T>(collection);
         }
 
-        public static HashSet<T> ToSet<T>(
+        public static HashSet<T> ToHashSet<T>(
             this IEnumerable<T> collection, IEqualityComparer<T> comparer)
         {
             return new HashSet<T>(collection, comparer);

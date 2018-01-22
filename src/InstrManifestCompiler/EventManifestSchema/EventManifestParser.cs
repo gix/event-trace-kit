@@ -290,8 +290,7 @@ namespace InstrManifestCompiler.EventManifestSchema
                 var inType = InType.Create(child, nsResolver);
                 foreach (XElement outElem in child.XPathSelectElements("e:outType", nsResolver)) {
                     OutType outType = OutType.Create(outElem, nsResolver);
-                    XmlType xmlType;
-                    if (!meta.TryGetXmlType(outType.XmlType, out xmlType)) {
+                    if (!meta.TryGetXmlType(outType.XmlType, out var xmlType)) {
                         diags.ReportError(
                             outElem.GetLocation(),
                             "InType '{0}' has unknown OutType '{1}'.",
@@ -386,8 +385,7 @@ namespace InstrManifestCompiler.EventManifestSchema
             var msgRef = elem.GetString("message");
             var symbol = elem.GetOptionalString("symbol");
 
-            uint id;
-            if (!uint.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out id))
+            if (!uint.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var id))
                 return null;
 
             var msg = new MessageEntry(msgRef, Value.Create(id, value.Location));
@@ -1036,8 +1034,7 @@ namespace InstrManifestCompiler.EventManifestSchema
             if (value == null)
                 return;
 
-            ushort count;
-            if (ushort.TryParse(value, out count))
+            if (ushort.TryParse(value, out var count))
                 number.SetFixed(count);
             else
                 number.SetVariable(refPropertyName: value);

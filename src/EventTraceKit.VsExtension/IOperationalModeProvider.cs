@@ -1,26 +1,16 @@
 ﻿namespace EventTraceKit.VsExtension
 {
     using System;
+    using System.Collections.Generic;
 
     public interface IOperationalModeProvider
     {
-        VsOperationalMode CurrentMode { get; }
-        event EventHandler<VsOperationalMode> OperationalModeChanged;
+        event Action<VsOperationalMode, IReadOnlyList<DebuggedProjectInfo>> OperationalModeChanged;
     }
 
     public enum VsOperationalMode
     {
         Design = 0,
         Debug = 1
-    }
-
-    internal class VsOperationalModeChangedEventArgs : EventArgs
-    {
-        public VsOperationalModeChangedEventArgs(VsOperationalMode newMode)
-        {
-            NewMode = newMode;
-        }
-
-        public VsOperationalMode NewMode { get; }
     }
 }

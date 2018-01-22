@@ -14,28 +14,26 @@
             TSource source, out TTarget target)
             where TTarget : TSerializedBaseType
         {
-            object element;
-            if (TryConvertForSerialization(typeof(TSource), typeof(TTarget), source, out element)
+            if (TryConvertForSerialization(typeof(TSource), typeof(TTarget), source, out var element)
                 && element is TTarget) {
                 target = (TTarget)element;
                 return true;
             }
 
-            target = default(TTarget);
+            target = default;
             return false;
         }
 
         public static bool TryConvertForSerialization(
             object source, out TSerializedBaseType target)
         {
-            object element;
-            if (TryConvertForSerialization(source?.GetType(), source, out element)
+            if (TryConvertForSerialization(source?.GetType(), source, out var element)
                 && element is TSerializedBaseType) {
                 target = (TSerializedBaseType)element;
                 return true;
             }
 
-            target = default(TSerializedBaseType);
+            target = default;
             return false;
         }
 
@@ -59,9 +57,8 @@
                 !sourceType.IsInstanceOfType(sourceObj))
                 return false;
 
-            Type serializedType;
             Type actualSourceType = sourceObj.GetType();
-            if (!TryGetSerializedType(actualSourceType, out serializedType) ||
+            if (!TryGetSerializedType(actualSourceType, out var serializedType) ||
                 !typeof(TSerializedBaseType).IsAssignableFrom(serializedType))
                 return false;
 
@@ -79,20 +76,15 @@
                 Type sourcePropertyType = sourceProperty.PropertyType.IsInterface ? sourceValue.GetType() : sourceProperty.PropertyType;
                 Type targetPropertyType = targetProperty.PropertyType;
 
-                Type serializedPropertyType;
                 object targetValue;
-                if (TryGetSerializedType(sourcePropertyType, out serializedPropertyType) &&
+                if (TryGetSerializedType(sourcePropertyType, out var serializedPropertyType) &&
                     targetPropertyType.IsAssignableFrom(serializedPropertyType)) {
-                    object element;
-                    if (!TryConvertForSerialization(sourcePropertyType, targetPropertyType, sourceValue, out element))
+                    if (!TryConvertForSerialization(sourcePropertyType, targetPropertyType, sourceValue, out var element))
                         continue;
                     targetValue = element;
                 } else {
-                    Type sourceItemType;
-                    Type targetItemType;
-                    if (CanConvertCollection(sourcePropertyType, targetPropertyType, out sourceItemType, out targetItemType)) {
-                        IList sourceList = sourceValue as IList;
-                        if (sourceList == null)
+                    if (CanConvertCollection(sourcePropertyType, targetPropertyType, out var sourceItemType, out var targetItemType)) {
+                        if (!(sourceValue is IList sourceList))
                             continue;
 
                         IList targetList = SerializeCollection(
@@ -137,8 +129,7 @@
                     return null;
 
                 for (int i = 0; i < sourceList.Count; ++i) {
-                    object targetItem;
-                    if (TryConvertForSerialization(sourceItemType, targetItemType, sourceList[i], out targetItem))
+                    if (TryConvertForSerialization(sourceItemType, targetItemType, sourceList[i], out var targetItem))
                         targetList[i] = targetItem;
                 }
             } else {
@@ -146,8 +137,7 @@
                     return null;
 
                 foreach (object item in sourceList) {
-                    object targetItem;
-                    if (TryConvertForSerialization(sourceItemType, targetItemType, item, out targetItem))
+                    if (TryConvertForSerialization(sourceItemType, targetItemType, item, out var targetItem))
                         targetList.Add(targetItem);
                     else if (sourceItemType.IsValueType && sourceItemType == targetItemType)
                         targetList.Add(item);
@@ -160,14 +150,13 @@
         private static bool CanConvertCollection(
             Type sourceType, Type targetType, out Type sourceItemType, out Type targetItemType)
         {
-            Type serializedItemType;
             targetItemType = null;
             if (!TypeHelper.TryGetGenericListItemType(sourceType, out sourceItemType) ||
                 !TypeHelper.TryGetGenericListItemType(targetType, out targetItemType))
                 return false;
 
             bool isSerializedAsCustomType =
-                TryGetSerializedType(sourceItemType, out serializedItemType) &&
+                TryGetSerializedType(sourceItemType, out var serializedItemType) &&
                 serializedItemType == targetItemType &&
                 typeof(TSerializedBaseType).IsAssignableFrom(serializedItemType);
             if (isSerializedAsCustomType)
@@ -228,9 +217,7 @@
             Type sourceType, Type targetType)
         {
             foreach (PropertyInfo source in sourceType.GetProperties()) {
-                string serializedName;
-                object defaultValue;
-                if (!TryGetSerializedPropertyName(source, out serializedName, out defaultValue))
+                if (!TryGetSerializedPropertyName(source, out var serializedName, out var defaultValue))
                     continue;
 
                 PropertyInfo target = targetType.GetProperty(serializedName);
@@ -278,9 +265,8 @@
 
         public static bool TryDeserialize<T>(object element, out T result)
         {
-            object target;
-            if (!TryDeserialize(element, typeof(T), out target) || !(target is T)) {
-                result = default(T);
+            if (!TryDeserialize(element, typeof(T), out var target) || !(target is T)) {
+                result = default;
                 return false;
             }
 
@@ -290,9 +276,8 @@
 
         private static bool TryDeserialize(object source, Type targetType, out object result)
         {
-            Type serializedType;
             result = null;
-            if (!TryGetSerializedType(targetType, out serializedType) || source == null ||
+            if (!TryGetSerializedType(targetType, out var serializedType) || source == null ||
                 serializedType != source.GetType())
                 return false;
 
@@ -337,18 +322,14 @@
                 //    continue;
                 //}
 
-                Type type5;
                 object targetValue;
                 bool skipWrite = false;
-                if (TryGetSerializedType(targetPropertyType, out type5) && type5 == sourcePropertyType) {
+                if (TryGetSerializedType(targetPropertyType, out var type5) && type5 == sourcePropertyType) {
                     if (!TryDeserialize(sourceValue, targetPropertyType, out targetValue))
                         continue;
                 } else {
-                    Type sourceItemType;
-                    Type targetItemType;
-                    if (CanConvertCollection(targetPropertyType, sourcePropertyType, out targetItemType, out sourceItemType)) {
-                        IList list = sourceValue as IList;
-                        if (list == null)
+                    if (CanConvertCollection(targetPropertyType, sourcePropertyType, out var targetItemType, out var sourceItemType)) {
+                        if (!(sourceValue is IList list))
                             continue;
 
                         IList targetList;
@@ -362,8 +343,7 @@
                                 continue;
 
                             for (int i = 0; i < list.Count; ++i) {
-                                object value;
-                                if (TryDeserialize(list[i], targetItemType, out value))
+                                if (TryDeserialize(list[i], targetItemType, out var value))
                                     targetList[i] = value;
                             }
                         } else {
@@ -376,8 +356,7 @@
                                 continue;
 
                             foreach (var item in list) {
-                                object value;
-                                if (TryDeserialize(item, targetItemType, out value))
+                                if (TryDeserialize(item, targetItemType, out var value))
                                     targetList.Add(value);
                                 else if (sourceItemType.IsValueType && sourceItemType == targetItemType)
                                     targetList.Add(item);
@@ -413,8 +392,7 @@
 
             if (sourceType == typeof(string) && targetType == typeof(Guid)) {
                 string str = sourceValue as string;
-                Guid guid;
-                if (string.IsNullOrEmpty(str) || !Guid.TryParse(str, out guid)) {
+                if (string.IsNullOrEmpty(str) || !Guid.TryParse(str, out var guid)) {
                     targetValue = null;
                     return false;
                 }

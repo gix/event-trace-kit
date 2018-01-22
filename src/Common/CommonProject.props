@@ -14,7 +14,11 @@
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <AdditionalOptions>-Zc:rvalueCast -Zc:inline -Zc:strictStrings -Gw %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalOptions>-Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:externConstexpr -Gw %(AdditionalOptions)</AdditionalOptions>
+      <DiagnosticsFormat>Caret</DiagnosticsFormat>
       <DisableSpecificWarnings>4200;4251;4275;4351;4458;4481;4505;4512;4714;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <TreatSpecificWarningsAsErrors>4013;4099;4150;4172;4477;4715;%(TreatSpecificWarningsAsErrors)</TreatSpecificWarningsAsErrors>
       <ProgramDataBaseFileName Condition=" '$(ConfigurationType)' == 'StaticLibrary' ">$(TargetDir)$(TargetName).pdb</ProgramDataBaseFileName>

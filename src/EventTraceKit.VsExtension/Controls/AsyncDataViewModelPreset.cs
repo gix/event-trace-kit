@@ -165,9 +165,8 @@
             if (ReferenceEquals(this, other))
                 return 0;
 
-            int cmp;
             bool dummy =
-                ComparisonUtils.CompareT(out cmp, Name, other.Name) &&
+                ComparisonUtils.CompareT(out var cmp, Name, other.Name) &&
                 ComparisonUtils.CompareValueT(
                     out cmp, LeftFrozenColumnCount, other.LeftFrozenColumnCount) &&
                 ComparisonUtils.CompareValueT(

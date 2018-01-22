@@ -4,7 +4,7 @@ namespace InstrManifestCompiler.Build.Tasks
     using System.Linq;
     using Microsoft.Build.Framework;
     using Microsoft.Build.Utilities;
-    using NOpt;
+    using NOption;
 
     /// <summary>Base class for NOpt-based tool tasks.</summary>
     public abstract class NOptTrackedTask : TrackedTask

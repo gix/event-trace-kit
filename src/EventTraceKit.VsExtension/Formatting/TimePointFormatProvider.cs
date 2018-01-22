@@ -14,15 +14,10 @@
 
         public string Format(string format, object arg, IFormatProvider formatProvider)
         {
-            if (arg == null)
-                return string.Empty;
-
-            if (arg is TimePoint) {
-                var timePoint = (TimePoint)arg;
+            if (arg is TimePoint timePoint)
                 return TimePointFormatter.ToString(timePoint.Ticks, format, formatProvider);
-            }
 
-            return arg.ToString();
+            return arg?.ToString() ?? string.Empty;
         }
     }
 }

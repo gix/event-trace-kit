@@ -39,8 +39,8 @@ namespace EventTraceKit.VsExtension.Controls
 
         public event EventHandler DataInvalidated
         {
-            add { advModel.DataInvalidated += value; }
-            remove { advModel.DataInvalidated -= value; }
+            add => advModel.DataInvalidated += value;
+            remove => advModel.DataInvalidated -= value;
         }
 
         internal void RaiseUpdated(bool refreshViewModelFromModel = true)

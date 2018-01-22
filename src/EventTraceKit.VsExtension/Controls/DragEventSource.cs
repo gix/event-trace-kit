@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Controls
+namespace EventTraceKit.VsExtension.Controls
 {
     using System;
     using System.Windows;
@@ -53,13 +53,12 @@
 
         private void OnMouseDown(object sender, MouseButtonEventArgs e)
         {
-            var element = sender as UIElement;
-            if (element == null)
+            if (!(sender is UIElement element))
                 return;
 
             // Because our mouse move event is attached to the draggable object
             // and not the surrounding elements (there might not even be any if
-            // its at a window edge!) we need to capture the mouse to continue
+            // it's at a window edge!) we need to capture the mouse to continue
             // receiving mouse move events. Otherwise attempting to drag small
             // elements or at the edges of an element will fail.
             //   Unconditionally capturing the mouse here might interfere with
@@ -75,8 +74,7 @@
 
         private void OnMouseMove(object sender, MouseEventArgs e)
         {
-            var element = sender as UIElement;
-            if (element == null || e.LeftButton != MouseButtonState.Pressed)
+            if (!(sender is UIElement element) || e.LeftButton != MouseButtonState.Pressed)
                 return;
 
             if (IsPreparing) {
@@ -88,8 +86,7 @@
 
         private void OnMouseUp(object sender, MouseButtonEventArgs e)
         {
-            var element = sender as UIElement;
-            if (element == null)
+            if (!(sender is UIElement element))
                 return;
 
             if (IsActive) {
@@ -126,7 +123,7 @@
 
         private bool ShouldStartDrag(Point currentPosition)
         {
-            var delta = VectorUtils.Abs(currentPosition - startPosition);
+            var delta = (currentPosition - startPosition).Abs();
             return delta.X.GreaterThan(minimumDragDistance.X) ||
                    delta.Y.GreaterThan(minimumDragDistance.Y);
         }

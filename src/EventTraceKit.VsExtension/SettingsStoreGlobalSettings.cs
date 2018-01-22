@@ -34,26 +34,26 @@
 
         public string ActiveViewPreset
         {
-            get { return GetString(ActiveViewPresetName, null); }
-            set { SetString(ActiveViewPresetName, value, null); }
+            get => GetString(ActiveViewPresetName, null);
+            set => SetString(ActiveViewPresetName, value, null);
         }
 
         public bool AutoLog
         {
-            get { return GetBool(AutoLogName, false); }
-            set { SetBool(AutoLogName, value, false); }
+            get => GetBool(AutoLogName, false);
+            set => SetBool(AutoLogName, value, false);
         }
 
         public bool ShowColumnHeaders
         {
-            get { return GetBool(ShowColumnHeadersName, true); }
-            set { SetBool(ShowColumnHeadersName, value, true); }
+            get => GetBool(ShowColumnHeadersName, true);
+            set => SetBool(ShowColumnHeadersName, value, true);
         }
 
         public bool ShowStatusBar
         {
-            get { return GetBool(ShowStatusBarName, true); }
-            set { SetBool(ShowStatusBarName, value, true); }
+            get => GetBool(ShowStatusBarName, true);
+            set => SetBool(ShowStatusBarName, value, true);
         }
 
         private void Report(string format, Exception exception)

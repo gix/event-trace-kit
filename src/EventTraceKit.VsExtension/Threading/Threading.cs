@@ -24,12 +24,9 @@
             if (owner != null)
                 dialog.OwnerWindow = new WindowInteropHelper(owner).Handle;
 
-            var progressBar = new TaskDialogProgressBar(0, 100, 0);
-            var cancelButton = new TaskDialogButton(
-                TaskDialogButtonId.Cancel, "Cancel", (s, e) => cts.Cancel());
-
-            dialog.Controls.Add(cancelButton);
-            dialog.Controls.Add(progressBar);
+            dialog.Controls.Add(new TaskDialogButton(
+                TaskDialogButtonId.Cancel, "Cancel", (s, e) => cts.Cancel()));
+            dialog.Controls.Add(new TaskDialogProgressBar(0, 100, 0));
 
             IProgress<ProgressState> progress = new PeriodicProgress<ProgressState>(
                 TimeSpan.FromMilliseconds(100),
@@ -38,20 +35,23 @@
                     dialog.Content = $"{x.Delta}/{x.Total}";
                 });
 
-            var actionTask = taskFactory.StartNew(() => action(cts.Token, progress), cts.Token);
+            var currentScheduler = TaskScheduler.FromCurrentSynchronizationContext();
+            var delay = TimeSpan.FromMilliseconds(250);
 
-            var finishTask = actionTask.ContinueWith(t => {
-                cts.Cancel();
-                if (dialog.IsShown)
-                    dialog.Cancel();
-                return t.Result;
-            }, TaskScheduler.FromCurrentSynchronizationContext());
+            var dialogTask = Task.Delay(delay, cts.Token)
+                .ContinueWith(t => {
+                    if (!cts.IsCancellationRequested)
+                        dialog.Show();
+                }, cts.Token, TaskContinuationOptions.None, currentScheduler);
 
-            await Task.Delay(TimeSpan.FromMilliseconds(250), cts.Token).IgnoreCancellation();
-            if (!cts.IsCancellationRequested)
-                dialog.Show();
+            var result = await taskFactory.StartNew(() => action(cts.Token, progress), cts.Token);
+            cts.Cancel();
+            if (dialog.IsShown)
+                dialog.Close(TaskDialogResult.Close);
 
-            return finishTask.Result;
+            await dialogTask.IgnoreCancellation();
+
+            return result;
         }
 
         public static Task IgnoreCancellation(this Task task)

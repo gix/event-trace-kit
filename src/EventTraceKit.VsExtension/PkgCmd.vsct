@@ -41,6 +41,7 @@
         <CommandFlag>IconIsMoniker</CommandFlag>
         <CommandFlag>IconAndText</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
+        <CommandFlag>DontCache</CommandFlag>
         <Strings>
           <ButtonText>Ca&amp;pture</ButtonText>
         </Strings>
@@ -99,8 +100,8 @@
         <Icon guid="ImageCatalogGuid" id="TableViewNameOnly"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
-          <ButtonText>Status Bar</ButtonText>
-          <ToolTipText>Toggle Status &amp;Bar</ToolTipText>
+          <ButtonText>Headers</ButtonText>
+          <ToolTipText>Toggle Column &amp;Headers</ToolTipText>
         </Strings>
       </Button>
       <Button guid="guidTraceLogCmdSet" id="cmdidToggleStatusBar" priority="0x2" type="Button">

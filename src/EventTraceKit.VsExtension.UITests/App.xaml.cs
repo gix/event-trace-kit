@@ -498,8 +498,7 @@
 
         public int QueryService(ref Guid guidService, ref Guid riid, out IntPtr ppvObject)
         {
-            object obj;
-            if (services.TryGetValue(guidService, out obj)) {
+            if (services.TryGetValue(guidService, out var obj)) {
                 var punk = Marshal.GetIUnknownForObject(obj);
                 return Marshal.QueryInterface(punk, ref riid, out ppvObject);
             }

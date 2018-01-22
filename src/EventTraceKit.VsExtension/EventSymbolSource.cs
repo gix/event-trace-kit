@@ -15,8 +15,7 @@ namespace EventTraceKit.VsExtension
 
         public string TryGetSymbol(EventKey eventKey)
         {
-            string symbol;
-            symbols.TryGetValue(eventKey, out symbol);
+            symbols.TryGetValue(eventKey, out var symbol);
             return symbol;
         }
 

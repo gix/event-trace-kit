@@ -25,8 +25,8 @@ namespace EventTraceKit.VsExtension
         [Serialize]
         public Guid Id
         {
-            get { return (Guid)GetValue(IdProperty); }
-            set { SetValue(IdProperty, value); }
+            get => (Guid)GetValue(IdProperty);
+            set => SetValue(IdProperty, value);
         }
 
         #endregion
@@ -43,8 +43,8 @@ namespace EventTraceKit.VsExtension
         [Serialize]
         public string Name
         {
-            get { return (string)GetValue(NameProperty); }
-            set { SetValue(NameProperty, value); }
+            get => (string)GetValue(NameProperty);
+            set => SetValue(NameProperty, value);
         }
 
         #endregion
@@ -61,8 +61,8 @@ namespace EventTraceKit.VsExtension
         [Serialize]
         public string HelpText
         {
-            get { return (string)GetValue(HelpTextProperty); }
-            set { SetValue(HelpTextProperty, value); }
+            get => (string)GetValue(HelpTextProperty);
+            set => SetValue(HelpTextProperty, value);
         }
 
         #endregion
@@ -80,8 +80,8 @@ namespace EventTraceKit.VsExtension
         [Serialize]
         public int Width
         {
-            get { return (int)GetValue(WidthProperty); }
-            set { SetValue(WidthProperty, value); }
+            get => (int)GetValue(WidthProperty);
+            set => SetValue(WidthProperty, value);
         }
 
         private static object CoerceWidth(DependencyObject d, object baseValue)
@@ -104,8 +104,8 @@ namespace EventTraceKit.VsExtension
         [Serialize]
         public bool IsVisible
         {
-            get { return (bool)GetValue(IsVisibleProperty); }
-            set { SetValue(IsVisibleProperty, Boxed.Bool(value)); }
+            get => (bool)GetValue(IsVisibleProperty);
+            set => SetValue(IsVisibleProperty, Boxed.Bool(value));
         }
 
         #endregion
@@ -122,8 +122,8 @@ namespace EventTraceKit.VsExtension
         [Serialize]
         public TextAlignment TextAlignment
         {
-            get { return (TextAlignment)GetValue(TextAlignmentProperty); }
-            set { SetValue(TextAlignmentProperty, value); }
+            get => (TextAlignment)GetValue(TextAlignmentProperty);
+            set => SetValue(TextAlignmentProperty, value);
         }
 
         #endregion
@@ -140,8 +140,8 @@ namespace EventTraceKit.VsExtension
         [Serialize]
         public string CellFormat
         {
-            get { return (string)GetValue(CellFormatProperty); }
-            set { SetValue(CellFormatProperty, value); }
+            get => (string)GetValue(CellFormatProperty);
+            set => SetValue(CellFormatProperty, value);
         }
 
         #endregion
@@ -168,9 +168,8 @@ namespace EventTraceKit.VsExtension
             if (ReferenceEquals(this, other))
                 return 0;
 
-            int cmp;
             bool dummy =
-                ComparisonUtils.CompareValueT(out cmp, IsVisible, other.IsVisible) &&
+                ComparisonUtils.CompareValueT(out var cmp, IsVisible, other.IsVisible) &&
                 ComparisonUtils.Compare(out cmp, Id, Id) &&
                 ComparisonUtils.Compare(out cmp, TextAlignment, other.TextAlignment) &&
                 ComparisonUtils.CompareT(out cmp, CellFormat, other.CellFormat) &&

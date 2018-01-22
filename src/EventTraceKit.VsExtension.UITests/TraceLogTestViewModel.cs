@@ -3,6 +3,7 @@ namespace EventTraceKit.VsExtension.UITests
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
+    using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Input;
     using EventTraceKit.VsExtension;
@@ -16,7 +17,7 @@ namespace EventTraceKit.VsExtension.UITests
 
         public TraceLogTestViewModel()
             : base(new StubGlobalSettings(),
-                   new OperationalModeProviderStub(),
+                   new StubSessionService(),
                    new StubViewPresetService(),
                    new StubTraceSettingsService())
         {
@@ -25,6 +26,7 @@ namespace EventTraceKit.VsExtension.UITests
             ClearCommand = new AsyncDelegateCommand(Clear);
             ConfigureCommand = new DelegateCommand(Configure);
             OpenViewEditorCommand = new DelegateCommand(OpenViewEditor);
+            OpenFilterCommand = new DelegateCommand(arg => OpenFilterEditor());
 
             foreach (var name in App.Current.AvailableThemes)
                 Themes.Add(name);
@@ -89,7 +91,7 @@ namespace EventTraceKit.VsExtension.UITests
 
         public string SelectedTheme
         {
-            get { return selectedTheme; }
+            get => selectedTheme;
             set
             {
                 if (selectedTheme == value)
@@ -105,11 +107,12 @@ namespace EventTraceKit.VsExtension.UITests
         public ICommand ClearCommand { get; }
         public ICommand ConfigureCommand { get; }
         public ICommand OpenViewEditorCommand { get; }
+        public ICommand OpenFilterCommand { get; }
 
         public bool IsRunning
         {
-            get { return isRunning; }
-            set { SetProperty(ref isRunning, value); }
+            get => isRunning;
+            set => SetProperty(ref isRunning, value);
         }
 
         private bool CanStart()
@@ -129,12 +132,11 @@ namespace EventTraceKit.VsExtension.UITests
             return IsRunning;
         }
 
-        private Task Stop()
+        private async Task Stop()
         {
-            StopCapture();
+            await StopCapture();
             IsRunning = false;
             CommandManager.InvalidateRequerySuggested();
-            return Task.CompletedTask;
         }
 
         private new Task Clear()
@@ -183,6 +185,31 @@ namespace EventTraceKit.VsExtension.UITests
             }
         }
 
+        private class StubSessionService : ITraceSessionService
+        {
+            public event Action<TraceLog> SessionStarting;
+            public event Action<TraceSession> SessionStarted;
+            public event Action<TraceSession> SessionStopped;
+
+            public void EnableAutoLog(TraceSessionDescriptor descriptor)
+            {
+            }
+
+            public void DisableAutoLog()
+            {
+            }
+
+            public Task<TraceSession> StartSessionAsync(TraceSessionDescriptor descriptor)
+            {
+                return Task.FromResult(new TraceSession(new TraceSessionDescriptor()));
+            }
+
+            public Task StopSessionAsync()
+            {
+                return Task.CompletedTask;
+            }
+        }
+
         private class StubViewPresetService : IViewPresetService
         {
             public AdvmPresetCollection Presets { get; } =
@@ -190,8 +217,8 @@ namespace EventTraceKit.VsExtension.UITests
 
             public event EventHandler<ExceptionFilterEventArgs> ExceptionFilter
             {
-                add {}
-                remove {}
+                add { }
+                remove { }
             }
 
             public void SaveToStorage()
@@ -210,7 +237,7 @@ namespace EventTraceKit.VsExtension.UITests
         private sealed class OperationalModeProviderStub : IOperationalModeProvider
         {
             public VsOperationalMode CurrentMode => VsOperationalMode.Design;
-            public event EventHandler<VsOperationalMode> OperationalModeChanged
+            public event Action<VsOperationalMode, IReadOnlyList<DebuggedProjectInfo>> OperationalModeChanged
             {
                 add { }
                 remove { }

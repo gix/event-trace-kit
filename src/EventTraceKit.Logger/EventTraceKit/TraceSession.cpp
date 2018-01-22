@@ -12,8 +12,9 @@
 #include <string>
 
 using namespace System;
-using namespace System::Linq;
 using namespace System::Collections::Generic;
+using namespace System::ComponentModel;
+using namespace System::Linq;
 using namespace System::Runtime::InteropServices;
 using namespace System::Threading::Tasks;
 using msclr::interop::marshal_as;
@@ -39,6 +40,15 @@ inline etk::TraceProviderDescriptor marshal_as(EventTraceKit::TraceProviderDescr
     native.IncludeSecurityId = provider->IncludeSecurityId;
     native.IncludeTerminalSessionId = provider->IncludeTerminalSessionId;
     native.IncludeStackTrace = provider->IncludeStackTrace;
+
+    if (provider->ExecutableName)
+        native.ExecutableName = marshal_as<std::wstring>(provider->ExecutableName);
+    native.ProcessIds = marshal_as_vector(provider->ProcessIds);
+    native.EventIds = marshal_as_vector(provider->EventIds);
+    native.EnableEventIds = provider->EnableEventIds;
+    native.StackWalkEventIds = marshal_as_vector(provider->StackWalkEventIds);
+    native.EnableStackWalkEventIds = provider->EnableStackWalkEventIds;
+
     if (provider->Manifest) {
         auto manifest = marshal_as<std::wstring>(provider->Manifest);
         if (IsProviderBinary(provider->Manifest))
@@ -46,9 +56,6 @@ inline etk::TraceProviderDescriptor marshal_as(EventTraceKit::TraceProviderDescr
         else
             native.SetManifest(manifest);
     }
-
-    native.ProcessIds = marshal_as_vector(provider->ProcessIds);
-    native.EventIds = marshal_as_vector(provider->EventIds);
 
     return native;
 }
@@ -83,18 +90,7 @@ public:
     void Flush();
     TraceStatistics^ Query();
 
-    TraceSessionInfo GetInfo()
-    {
-        if (!this->processor)
-            return TraceSessionInfo();
-
-        auto logFileHeader = this->processor->GetLogFileHeader();
-        TraceSessionInfo info = {};
-        info.StartTime = logFileHeader->StartTime.QuadPart;
-        info.PerfFreq = logFileHeader->PerfFreq.QuadPart;
-        info.PointerSize = logFileHeader->PointerSize;
-        return info;
-    }
+    TraceSessionInfo GetInfo() { return sessionInfo; }
 
 private:
     ref struct StartAsyncHelper
@@ -115,6 +111,7 @@ private:
 
     etk::ITraceSession* session = nullptr;
     etk::ITraceProcessor* processor = nullptr;
+    TraceSessionInfo sessionInfo;
 };
 
 static std::wstring LoggerNameBase = L"EventTraceKit_54644792-9281-48E9-B69D-E82A86F98960";
@@ -175,13 +172,20 @@ void TraceSession::Start(TraceLog^ traceLog)
         throw gcnew ArgumentNullException("traceLog");
 
     watchDog->Start();
-    session->Start();
+    HRESULT hr = session->Start();
+    if (FAILED(hr))
+        throw gcnew Win32Exception(hr);
 
     auto processor = etk::CreateEtwTraceProcessor(*loggerName, *nativeProviders);
     processor->SetEventSink(traceLog->Native());
 
     this->processor = processor.release();
     this->processor->StartProcessing();
+
+    auto logFileHeader = this->processor->GetLogFileHeader();
+    sessionInfo.StartTime = logFileHeader->StartTime.QuadPart;
+    sessionInfo.PerfFreq = logFileHeader->PerfFreq.QuadPart;
+    sessionInfo.PointerSize = logFileHeader->PointerSize;
 }
 
 Task^ TraceSession::StartAsync(TraceLog^ traceLog)
@@ -195,14 +199,7 @@ Task^ TraceSession::StartAsync(TraceLog^ traceLog)
 
 void TraceSession::StartAsyncHelper::Run()
 {
-    parent->watchDog->Start();
-    parent->session->Start();
-
-    auto processor = etk::CreateEtwTraceProcessor(*parent->loggerName, *parent->nativeProviders);
-    processor->SetEventSink(traceLog->Native());
-
-    parent->processor = processor.release();
-    parent->processor->StartProcessing();
+    parent->Start(traceLog);
 }
 
 void TraceSession::Stop()

@@ -42,20 +42,20 @@ namespace EventTraceKit.VsExtension
 
         public bool IsOpen
         {
-            get { return (bool)GetValue(IsOpenProperty); }
-            set { SetValue(IsOpenProperty, Boxed.Bool(value)); }
+            get => (bool)GetValue(IsOpenProperty);
+            set => SetValue(IsOpenProperty, Boxed.Bool(value));
         }
 
         public object Header
         {
-            get { return GetValue(HeaderProperty); }
-            set { SetValue(HeaderProperty, value); }
+            get => GetValue(HeaderProperty);
+            set => SetValue(HeaderProperty, value);
         }
 
         public ObservableCollection<GraphTreeItemHeaderCommand> Items
         {
-            get { return (ObservableCollection<GraphTreeItemHeaderCommand>)GetValue(ItemsProperty); }
-            private set { SetValue(ItemsPropertyKey, value); }
+            get => (ObservableCollection<GraphTreeItemHeaderCommand>)GetValue(ItemsProperty);
+            private set => SetValue(ItemsPropertyKey, value);
         }
     }
 }

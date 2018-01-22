@@ -2,9 +2,9 @@
 
 #include "ADT/ArrayRef.h"
 #include <evntcons.h>
-#include <tdh.h>
 #include <in6addr.h>
 #include <strsafe.h>
+#include <tdh.h>
 
 namespace etk
 {
@@ -13,8 +13,7 @@ namespace
 {
 
 template<typename T, typename U>
-ETK_ALWAYS_INLINE
-T GetAt(U* ptr, size_t offset)
+ETK_ALWAYS_INLINE T GetAt(U* ptr, size_t offset)
 {
     return reinterpret_cast<T>(reinterpret_cast<uint8_t*>(ptr) + offset);
 }
@@ -104,8 +103,7 @@ ULONG GetPropertyLength(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
         *propertyLength = propInfo.length;
     } else {
         wprintf(L"Unexpected length of 0 for intype %d and outtype %d\n",
-                propInfo.nonStructType.InType,
-                propInfo.nonStructType.OutType);
+                propInfo.nonStructType.InType, propInfo.nonStructType.OutType);
 
         return ERROR_EVT_INVALID_EVENT_DATA;
     }
@@ -118,8 +116,7 @@ ULONG GetPropertyLength(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
 // property can specify the size of the array using the count attribute. The
 // count attribute can specify the size directly or specify the name of another
 // property in the event data that contains the size.
-ULONG GetArraySize(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
-                   USHORT* arraySize)
+ULONG GetArraySize(EventInfo info, EVENT_PROPERTY_INFO const& propInfo, USHORT* arraySize)
 {
     if ((propInfo.Flags & PropertyParamCount) == 0) {
         *arraySize = propInfo.count;
@@ -166,18 +163,16 @@ ULONG GetEventMapInfo(EventInfo info, EVENT_PROPERTY_INFO const& propertyInfo,
     if (!info.TryGetAt(propertyInfo.nonStructType.MapNameOffset, mapName))
         return ERROR_EVT_INVALID_EVENT_DATA;
 
-    ULONG ec = GetEventMapInfo(info.Record(), mapName, info->DecodingSource,
-                               mapInfo);
+    ULONG ec = GetEventMapInfo(info.Record(), mapName, info->DecodingSource, mapInfo);
     if (ec != ERROR_SUCCESS)
         return ec;
 
     return ERROR_SUCCESS;
 }
 
-ULONG FormatProperty(
-    EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
-    size_t pointerSize, ArrayRef<uint8_t>& userData, std::wstring& sink,
-    std::vector<wchar_t>& buffer)
+ULONG FormatProperty(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
+                     size_t pointerSize, ArrayRef<uint8_t>& userData, std::wstring& sink,
+                     std::vector<wchar_t>& buffer)
 {
     ULONG ec;
 
@@ -196,7 +191,7 @@ ULONG FormatProperty(
         // If the property is a structure, print the members of the structure.
         if ((propInfo.Flags & PropertyStruct) == PropertyStruct) {
             DWORD lastMember = propInfo.structType.StructStartIndex +
-                propInfo.structType.NumOfStructMembers;
+                               propInfo.structType.NumOfStructMembers;
 
             for (USHORT j = propInfo.structType.StructStartIndex; j < lastMember; ++j) {
                 EVENT_PROPERTY_INFO const& pi = info->EventPropertyInfoArray[j];
@@ -221,32 +216,19 @@ ULONG FormatProperty(
 
         bufferSize = static_cast<DWORD>(buffer.size());
         ec = TdhFormatProperty(
-            info.Info(),
-            mapInfo.get(),
-            static_cast<ULONG>(pointerSize),
-            propInfo.nonStructType.InType,
-            propInfo.nonStructType.OutType,
-            propertyLength,
-            static_cast<USHORT>(userData.size()),
-            const_cast<BYTE*>(userData.data()),
-            &bufferSize,
-            buffer.data(),
-            &userDataConsumed);
+            info.Info(), mapInfo.get(), static_cast<ULONG>(pointerSize),
+            propInfo.nonStructType.InType, propInfo.nonStructType.OutType, propertyLength,
+            static_cast<USHORT>(userData.size()), const_cast<BYTE*>(userData.data()),
+            &bufferSize, buffer.data(), &userDataConsumed);
 
         if (ec == ERROR_INSUFFICIENT_BUFFER) {
             buffer.resize(bufferSize);
             bufferSize = static_cast<DWORD>(buffer.size());
             ec = TdhFormatProperty(
-                info.Info(),
-                mapInfo.get(),
-                static_cast<ULONG>(pointerSize),
-                propInfo.nonStructType.InType,
-                propInfo.nonStructType.OutType,
-                propertyLength,
-                static_cast<USHORT>(userData.size()),
-                const_cast<BYTE*>(userData.data()),
-                &bufferSize,
-                buffer.data(),
+                info.Info(), mapInfo.get(), static_cast<ULONG>(pointerSize),
+                propInfo.nonStructType.InType, propInfo.nonStructType.OutType,
+                propertyLength, static_cast<USHORT>(userData.size()),
+                const_cast<BYTE*>(userData.data()), &bufferSize, buffer.data(),
                 &userDataConsumed);
         }
 
@@ -263,18 +245,19 @@ ULONG FormatProperty(
 
 } // namespace
 
-bool TdhMessageFormatter::FormatEventMessage(
-    EventInfo info, size_t pointerSize, wchar_t* buffer, size_t bufferSize)
+bool TdhMessageFormatter::FormatEventMessage(EventInfo const info,
+                                             size_t const pointerSize,
+                                             wchar_t* const buffer,
+                                             size_t const bufferSize)
 {
     if (!info)
         return false;
 
     ArrayRef<uint8_t> userData = info.UserData();
     if (info.IsStringOnly()) {
-        (void)StringCchCopyNW(
-            buffer, bufferSize,
-            reinterpret_cast<wchar_t const*>(userData.data()),
-            userData.length());
+        (void)StringCchCopyNW(buffer, bufferSize,
+                              reinterpret_cast<wchar_t const*>(userData.data()),
+                              userData.length() / sizeof(wchar_t));
         return true;
     }
 
@@ -283,53 +266,32 @@ bool TdhMessageFormatter::FormatEventMessage(
     formattedPropertiesPointers.clear();
 
     wchar_t const* const message = info.EventMessage();
+    if (!message)
+        return FormatMofEvent(info, pointerSize, buffer, bufferSize);
 
-    DWORD ec;
     for (ULONG i = 0; i < info->TopLevelPropertyCount; ++i) {
         auto const& pi = info->EventPropertyInfoArray[i];
 
-        if (!message) {
-            if (wchar_t const* propertyName = info.GetStringAt(pi.NameOffset)) {
-                formattedProperties.append(propertyName);
-                formattedProperties.append(L": ");
-            }
-        }
-
         size_t begin = formattedProperties.size();
-        ec = FormatProperty(info, pi, pointerSize, userData, formattedProperties, propertyBuffer);
+        DWORD const ec = FormatProperty(info, pi, pointerSize, userData,
+                                        formattedProperties, propertyBuffer);
         if (ec != ERROR_SUCCESS)
             return false;
 
-        if (message) {
-            formattedProperties.push_back(0);
-        } else {
-            formattedProperties.append(L"; ");
-        }
-
+        formattedProperties.push_back(0);
         formattedPropertiesOffsets.push_back(begin);
-    }
-
-    if (!message) {
-        (void)StringCchCopyNW(
-            buffer, bufferSize,
-            formattedProperties.data(),
-            formattedProperties.length());
-        return true;
     }
 
     for (auto const& begin : formattedPropertiesOffsets)
         formattedPropertiesPointers.push_back(
             reinterpret_cast<DWORD_PTR>(&formattedProperties[begin]));
 
-    auto const Flags = FORMAT_MESSAGE_FROM_STRING | FORMAT_MESSAGE_ARGUMENT_ARRAY;
-    DWORD numWritten = FormatMessageW(
-        Flags, message, 0, 0, buffer, bufferSize,
-        reinterpret_cast<va_list*>(formattedPropertiesPointers.data()));
+    auto const formatFlags = FORMAT_MESSAGE_FROM_STRING | FORMAT_MESSAGE_ARGUMENT_ARRAY;
+    DWORD const numWritten =
+        FormatMessageW(formatFlags, message, 0, 0, buffer, bufferSize,
+                       reinterpret_cast<va_list*>(formattedPropertiesPointers.data()));
 
-    if (numWritten == 0)
-        return false;
-
-    return true;
+    return numWritten != 0;
 
 #if 0
     wchar_t const* ptr = info.EventMessage();
@@ -379,6 +341,33 @@ bool TdhMessageFormatter::FormatEventMessage(
 
     return true;
 #endif
+}
+
+bool TdhMessageFormatter::FormatMofEvent(EventInfo const& info, size_t const pointerSize,
+                                         wchar_t* const buffer, size_t const bufferSize)
+{
+    ArrayRef<uint8_t> userData = info.UserData();
+
+    for (ULONG i = 0; i < info->TopLevelPropertyCount; ++i) {
+        auto const& pi = info->EventPropertyInfoArray[i];
+
+        if (i > 0)
+            formattedProperties.append(L"; ");
+
+        if (wchar_t const* propertyName = info.GetStringAt(pi.NameOffset)) {
+            formattedProperties.append(propertyName);
+            formattedProperties.append(L": ");
+        }
+
+        DWORD const ec = FormatProperty(info, pi, pointerSize, userData,
+                                        formattedProperties, propertyBuffer);
+        if (ec != ERROR_SUCCESS)
+            return false;
+    }
+
+    (void)StringCchCopyNW(buffer, bufferSize, formattedProperties.data(),
+                          formattedProperties.length());
+    return true;
 }
 
 } // namespace etk

@@ -9,8 +9,9 @@
 #include <ObjBase.h>
 
 ETK_DIAGNOSTIC_PUSH()
-ETK_DIAGNOSTIC_DISABLE_CLANG(deprecated)
-ETK_DIAGNOSTIC_DISABLE_CLANG(sign-conversion)
+ETK_DIAGNOSTIC_DISABLE_CLANG("-Wdeprecated")
+ETK_DIAGNOSTIC_DISABLE_CLANG("-Wsign-conversion")
+ETK_DIAGNOSTIC_DISABLE_MSVC(4996)
 // HACK: Boost relies on the fat windows.h for the cryptapi instead of including
 // wincrypt.h directly as stated in the documentation. This fails with
 // WIN32_LEAN_AND_MEAN.

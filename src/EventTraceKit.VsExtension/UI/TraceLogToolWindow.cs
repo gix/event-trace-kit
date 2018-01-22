@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension
+﻿namespace EventTraceKit.VsExtension.UI
 {
     using System;
     using System.ComponentModel.Design;
@@ -7,16 +7,17 @@
     using Microsoft.VisualStudio.Shell.Interop;
 
     [Guid("D7E4C7D7-6A52-4586-9D42-D1AD0A407E4F")]
-    public class TraceLogPane : ToolWindowPane
+    public class TraceLogToolWindow : ToolWindowPane
     {
         private readonly Func<IServiceProvider, TraceLogPaneContent> traceLogFactory;
         private readonly Action onClose;
+        private TraceLogPaneContent content;
 
         /// <summary>
-        ///   Initializes a new instance of the <see cref="TraceLogPane"/>
+        ///   Initializes a new instance of the <see cref="TraceLogToolWindow"/>
         ///   class.
         /// </summary>
-        public TraceLogPane(Func<IServiceProvider, TraceLogPaneContent> traceLogFactory, Action onClose)
+        public TraceLogToolWindow(Func<IServiceProvider, TraceLogPaneContent> traceLogFactory, Action onClose)
         {
             this.traceLogFactory = traceLogFactory;
             this.onClose = onClose;
@@ -26,11 +27,7 @@
             ToolBar = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.TraceLogToolbar);
         }
 
-        protected override void Initialize()
-        {
-            base.Initialize();
-            Content = traceLogFactory(this);
-        }
+        public override object Content => content ?? (content = traceLogFactory(this));
 
         protected override void OnClose()
         {
@@ -54,14 +51,14 @@
 
         private class SearchTask : VsSearchTask
         {
-            private readonly TraceLogPane pane;
+            private readonly TraceLogToolWindow toolWindow;
 
             public SearchTask(
                 uint dwCookie, IVsSearchQuery pSearchQuery,
-                IVsSearchCallback pSearchCallback, TraceLogPane pane)
+                IVsSearchCallback pSearchCallback, TraceLogToolWindow toolWindow)
                 : base(dwCookie, pSearchQuery, pSearchCallback)
             {
-                this.pane = pane;
+                this.toolWindow = toolWindow;
             }
 
             protected override void OnStartSearch()

@@ -17,7 +17,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{3EDE8E61-F8E3-4645-A940-337F91A9DF65}</ProjectGuid>
     <RootNamespace>EventTraceKitLogger</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -96,6 +96,8 @@
       <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Async</ExceptionHandling>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</BasicRuntimeChecks>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</BasicRuntimeChecks>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(AdditionalOptions) -Zc:twoPhase-</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(AdditionalOptions) -Zc:twoPhase-</AdditionalOptions>
     </ClCompile>
     <ClCompile Include="EventTraceKit\TraceLog.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
@@ -106,6 +108,8 @@
       <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Async</ExceptionHandling>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</BasicRuntimeChecks>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</BasicRuntimeChecks>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(AdditionalOptions) -Zc:twoPhase-</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(AdditionalOptions) -Zc:twoPhase-</AdditionalOptions>
     </ClCompile>
     <ClCompile Include="EventTraceKit\NativeTdhFormatter.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
@@ -116,6 +120,8 @@
       <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Async</ExceptionHandling>
       <MinimalRebuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</MinimalRebuild>
       <MinimalRebuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</MinimalRebuild>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(AdditionalOptions) -Zc:twoPhase-</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(AdditionalOptions) -Zc:twoPhase-</AdditionalOptions>
     </ClCompile>
     <ClCompile Include="EventTraceKit\TraceSession.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
@@ -126,19 +132,23 @@
       <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Async</ExceptionHandling>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</BasicRuntimeChecks>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</BasicRuntimeChecks>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(AdditionalOptions) -Zc:twoPhase-</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(AdditionalOptions) -Zc:twoPhase-</AdditionalOptions>
     </ClCompile>
     <ClCompile Include="TdhMessageFormatter.cpp" />
     <ClCompile Include="EtwTraceLog.cpp" />
     <ClCompile Include="EtwTraceProcessor.cpp" />
     <ClCompile Include="EtwTraceSession.cpp" />
     <ClCompile Include="EventInfoCache.cpp" />
-    <ClCompile Include="ManifestInfo.cpp">
+    <ClCompile Include="EventTraceKit\ManifestInfo.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
       <MinimalRebuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</MinimalRebuild>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</BasicRuntimeChecks>
       <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Async</ExceptionHandling>
       <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Async</ExceptionHandling>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(AdditionalOptions) -Zc:twoPhase- </AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(AdditionalOptions) -Zc:twoPhase- </AdditionalOptions>
     </ClCompile>
     <ClCompile Include="Support\ErrorHandling.cpp" />
     <ClCompile Include="Support\SetThreadName.cpp" />
@@ -151,16 +161,19 @@
       <ExceptionHandling Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Async</ExceptionHandling>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</BasicRuntimeChecks>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</BasicRuntimeChecks>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(AdditionalOptions) -Zc:twoPhase-</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(AdditionalOptions) -Zc:twoPhase-</AdditionalOptions>
     </ClCompile>
     <ClCompile Include="Win32Exception.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ADT\ArrayRef.h" />
+    <ClInclude Include="ADT\SmallVector.h" />
     <ClInclude Include="EventTraceKit\Descriptors.h" />
     <ClInclude Include="EventTraceKit\ParseTdhContext.h" />
     <ClInclude Include="EventTraceKit\TraceLog.h" />
     <ClInclude Include="TdhMessageFormatter.h" />
-    <ClInclude Include="InteropHelper.h" />
+    <ClInclude Include="EventTraceKit\InteropHelper.h" />
     <ClInclude Include="ITraceLog.h" />
     <ClInclude Include="EventInfo.h" />
     <ClInclude Include="EventInfoCache.h" />
@@ -171,7 +184,6 @@
     <ClInclude Include="ADT\Guid.h" />
     <ClInclude Include="ADT\Handle.h" />
     <ClInclude Include="ADT\LruCache.h" />
-    <ClInclude Include="ADT\StringView.h" />
     <ClInclude Include="ADT\VarStructPtr.h" />
     <ClInclude Include="ADT\WaitEvent.h" />
     <ClInclude Include="EtwTraceProcessor.h" />

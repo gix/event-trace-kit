@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Extensions
+namespace EventTraceKit.VsExtension.Extensions
 {
     using System;
     using System.Runtime.CompilerServices;
@@ -16,7 +16,9 @@
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Point Round(this Point point)
         {
-            return new Point(Math.Round(point.X), Math.Round(point.Y));
+            return new Point(
+                Math.Round(point.X),
+                Math.Round(point.Y));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

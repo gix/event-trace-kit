@@ -20,8 +20,7 @@
             var service = (IProvideValueTarget)serviceProvider.GetService(
                 typeof(IProvideValueTarget));
 
-            var border = service.TargetObject as FrameworkElement;
-            if (border == null)
+            if (!(service.TargetObject is FrameworkElement border))
                 return this;
 
             Popup popup = border.FindAncestor<Popup>();
@@ -33,8 +32,7 @@
 
         private void OnOpened(FrameworkElement border, Popup popup)
         {
-            var element = border.FindName(ElementName) as FrameworkElement;
-            if (element == null)
+            if (!(border.FindName(ElementName) is FrameworkElement element))
                 throw new InvalidOperationException(
                     $"Element with name \"{ElementName}\" not found.");
 
@@ -42,8 +40,7 @@
             if (hwndSource == null)
                 return;
 
-            RECT bounds;
-            NativeMethods.GetWindowRect(hwndSource.Handle, out bounds);
+            NativeMethods.GetWindowRect(hwndSource.Handle, out var bounds);
 
             Point point = element.PointToScreen(new Point());
             if (popup.Placement == PlacementMode.Left || popup.Placement == PlacementMode.Right) {

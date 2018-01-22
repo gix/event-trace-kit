@@ -677,8 +677,7 @@ namespace InstrManifestCompiler.ResGen
             if (obj == null)
                 return 0;
 
-            long offset;
-            if (!offsetMap.TryGetValue(obj, out offset))
+            if (!offsetMap.TryGetValue(obj, out var offset))
                 throw new InternalException(
                     "Offset for unwritten object '{0}' requested.", obj);
 

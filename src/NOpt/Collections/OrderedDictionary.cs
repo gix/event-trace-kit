@@ -26,7 +26,7 @@ namespace NOpt.Collections
     [Serializable]
     [ComVisible(false)]
     [DebuggerTypeProxy(typeof(OrderedDictionary<,>.DebuggerProxy))]
-    [DebuggerDisplay("Count = {Count}")]
+    [DebuggerDisplay("Count = {" + nameof(Count) + "}")]
     public sealed class OrderedDictionary<TKey, TValue>
         : IOrderedDictionary<TKey, TValue>,
           IOrderedDictionary,
@@ -222,10 +222,7 @@ namespace NOpt.Collections
         ///   An <see cref="IList{T}"/> containing the keys of the object that
         ///   implements <see cref="IOrderedDictionary{TKey,TValue}"/>.
         /// </returns>
-        public IList<TKey> Keys
-        {
-            get { return new KeyCollection(this); }
-        }
+        public IList<TKey> Keys => new KeyCollection(this);
 
         /// <summary>
         ///   Gets an <see cref="IList{T}"/> containing the values in the
@@ -235,10 +232,7 @@ namespace NOpt.Collections
         ///   An <see cref="IList{T}"/> containing the values in the object that
         ///   implements <see cref="IOrderedDictionary{TKey,TValue}"/>.
         /// </returns>
-        public IList<TValue> Values
-        {
-            get { return new ValueCollection(this); }
-        }
+        public IList<TValue> Values => new ValueCollection(this);
 
         /// <summary>
         ///   Gets the element at the specified index.
@@ -348,10 +342,7 @@ namespace NOpt.Collections
         /// <returns>
         ///   The number of elements contained in the <see cref="ICollection{T}"/>.
         /// </returns>
-        public int Count
-        {
-            get { return objectsArray.Count; }
-        }
+        public int Count => objectsArray.Count;
 
         /// <summary>
         ///   Gets an <see cref="ICollection{T}"/> containing the keys of the
@@ -361,10 +352,7 @@ namespace NOpt.Collections
         ///   An <see cref="ICollection{T}"/> containing the keys of the object
         ///   that implements <see cref="IDictionary{TKey,TValue}"/>.
         /// </returns>
-        ICollection<TKey> IDictionary<TKey, TValue>.Keys
-        {
-            get { return new KeyCollection(this); }
-        }
+        ICollection<TKey> IDictionary<TKey, TValue>.Keys => new KeyCollection(this);
 
         /// <summary>
         ///   Gets an <see cref="ICollection{T}"/> containing the values in the
@@ -374,10 +362,7 @@ namespace NOpt.Collections
         ///   An <see cref="ICollection{T}"/> containing the values in the object
         ///   that implements <see cref="IDictionary{TKey,TValue}"/>.
         /// </returns>
-        ICollection<TValue> IDictionary<TKey, TValue>.Values
-        {
-            get { return new ValueCollection(this); }
-        }
+        ICollection<TValue> IDictionary<TKey, TValue>.Values => new ValueCollection(this);
 
         /// <summary>
         ///   Gets or sets the element with the specified key.
@@ -396,7 +381,7 @@ namespace NOpt.Collections
         /// </exception>
         public TValue this[TKey key]
         {
-            get { return objectsTable[key]; }
+            get => objectsTable[key];
             set
             {
                 if (objectsTable.ContainsKey(key)) {
@@ -543,29 +528,17 @@ namespace NOpt.Collections
 
         #region Implementation of IDictionary
 
-        bool IDictionary.IsFixedSize
-        {
-            get { return false; }
-        }
+        bool IDictionary.IsFixedSize => false;
 
-        bool IDictionary.IsReadOnly
-        {
-            get { return false; }
-        }
+        bool IDictionary.IsReadOnly => false;
 
-        ICollection IDictionary.Keys
-        {
-            get { return new KeyCollection(this); }
-        }
+        ICollection IDictionary.Keys => new KeyCollection(this);
 
-        ICollection IDictionary.Values
-        {
-            get { return new ValueCollection(this); }
-        }
+        ICollection IDictionary.Values => new ValueCollection(this);
 
         object IDictionary.this[object key]
         {
-            get { return ((IDictionary)objectsTable)[key]; }
+            get => ((IDictionary)objectsTable)[key];
             set
             {
                 if (key == null) {
@@ -627,7 +600,7 @@ namespace NOpt.Collections
 
         object IOrderedDictionary.this[int index]
         {
-            get { return GetAt(index); }
+            get => GetAt(index);
             set
             {
                 try {
@@ -674,10 +647,7 @@ namespace NOpt.Collections
 
         #region Implementation of ICollection
 
-        bool ICollection.IsSynchronized
-        {
-            get { return false; }
-        }
+        bool ICollection.IsSynchronized => false;
 
         object ICollection.SyncRoot
         {
@@ -729,10 +699,7 @@ namespace NOpt.Collections
 
         #region Implementation of ICollection<KeyValuePair<TKey, TValue>>
 
-        bool ICollection<KeyValuePair<TKey, TValue>>.IsReadOnly
-        {
-            get { return false; }
-        }
+        bool ICollection<KeyValuePair<TKey, TValue>>.IsReadOnly => false;
 
         void ICollection<KeyValuePair<TKey, TValue>>.Add(KeyValuePair<TKey, TValue> item)
         {
@@ -892,20 +859,11 @@ namespace NOpt.Collections
                 this.enumerator = enumerator;
             }
 
-            public object Current
-            {
-                get { return Entry; }
-            }
+            public object Current => Entry;
 
-            public object Key
-            {
-                get { return enumerator.Current.Key; }
-            }
+            public object Key => enumerator.Current.Key;
 
-            public object Value
-            {
-                get { return enumerator.Current.Value; }
-            }
+            public object Value => enumerator.Current.Value;
 
             public DictionaryEntry Entry
             {
@@ -928,7 +886,7 @@ namespace NOpt.Collections
         }
 
         [Serializable]
-        [DebuggerDisplay("Count = {Count}")]
+        [DebuggerDisplay("Count = {" + nameof(Count) + "}")]
         [DebuggerTypeProxy(typeof(CollectionDebuggerProxy<>))]
         private sealed class KeyCollection : IList<TKey>, ICollection
         {
@@ -942,25 +900,13 @@ namespace NOpt.Collections
                 this.dictionary = dictionary;
             }
 
-            public int Count
-            {
-                get { return dictionary.Count; }
-            }
+            public int Count => dictionary.Count;
 
-            bool ICollection<TKey>.IsReadOnly
-            {
-                get { return true; }
-            }
+            bool ICollection<TKey>.IsReadOnly => true;
 
-            bool ICollection.IsSynchronized
-            {
-                get { return false; }
-            }
+            bool ICollection.IsSynchronized => false;
 
-            object ICollection.SyncRoot
-            {
-                get { return ((ICollection)dictionary).SyncRoot; }
-            }
+            object ICollection.SyncRoot => ((ICollection)dictionary).SyncRoot;
 
             public IEnumerator<TKey> GetEnumerator()
             {
@@ -1002,21 +948,22 @@ namespace NOpt.Collections
 
             void ICollection.CopyTo(Array array, int index)
             {
-                var strongArray = array as TKey[];
-                if (strongArray != null) {
-                    CopyTo(strongArray, index);
-                    return;
-                }
+                switch (array) {
+                    case TKey[] strongArray:
+                        CopyTo(strongArray, index);
+                        break;
 
-                var objArray = array as object[];
-                if (objArray == null)
-                    throw new ArgumentException(Strings.Arg_InvalidArrayType);
+                    case object[] objArray:
+                        try {
+                            foreach (var entry in dictionary.objectsArray)
+                                objArray[index++] = entry.Key;
+                        } catch (ArrayTypeMismatchException) {
+                            throw new ArgumentException(Strings.Arg_InvalidArrayType);
+                        }
+                        break;
 
-                try {
-                    foreach (var entry in dictionary.objectsArray)
-                        objArray[index++] = entry.Key;
-                } catch (ArrayTypeMismatchException) {
-                    throw new ArgumentException(Strings.Arg_InvalidArrayType);
+                    default:
+                        throw new ArgumentException(Strings.Arg_InvalidArrayType);
                 }
             }
 
@@ -1038,7 +985,7 @@ namespace NOpt.Collections
 
             public TKey this[int index]
             {
-                get { return dictionary.objectsArray[index].Key; }
+                get => dictionary.objectsArray[index].Key;
                 set { throw new NotSupportedException(); }
             }
 
@@ -1053,15 +1000,9 @@ namespace NOpt.Collections
                     arrayEnumerator = dictionary.objectsArray.GetEnumerator();
                 }
 
-                public TKey Current
-                {
-                    get { return arrayEnumerator.Current.Key; }
-                }
+                public TKey Current => arrayEnumerator.Current.Key;
 
-                object IEnumerator.Current
-                {
-                    get { return Current; }
-                }
+                object IEnumerator.Current => Current;
 
                 public void Dispose()
                 {
@@ -1081,7 +1022,7 @@ namespace NOpt.Collections
         }
 
         [Serializable]
-        [DebuggerDisplay("Count = {Count}")]
+        [DebuggerDisplay("Count = {" + nameof(Count) + "}")]
         [DebuggerTypeProxy(typeof(CollectionDebuggerProxy<>))]
         private sealed class ValueCollection : IList<TValue>, ICollection
         {
@@ -1095,25 +1036,13 @@ namespace NOpt.Collections
                 this.dictionary = dictionary;
             }
 
-            public int Count
-            {
-                get { return dictionary.Count; }
-            }
+            public int Count => dictionary.Count;
 
-            bool ICollection<TValue>.IsReadOnly
-            {
-                get { return true; }
-            }
+            bool ICollection<TValue>.IsReadOnly => true;
 
-            bool ICollection.IsSynchronized
-            {
-                get { return false; }
-            }
+            bool ICollection.IsSynchronized => false;
 
-            object ICollection.SyncRoot
-            {
-                get { return ((ICollection)dictionary).SyncRoot; }
-            }
+            object ICollection.SyncRoot => ((ICollection)dictionary).SyncRoot;
 
             public IEnumerator<TValue> GetEnumerator()
             {
@@ -1135,21 +1064,22 @@ namespace NOpt.Collections
 
             void ICollection.CopyTo(Array array, int index)
             {
-                var strongArray = array as TValue[];
-                if (strongArray != null) {
-                    CopyTo(strongArray, index);
-                    return;
-                }
+                switch (array) {
+                    case TValue[] strongArray:
+                        CopyTo(strongArray, index);
+                        break;
 
-                var objArray = array as object[];
-                if (objArray == null)
-                    throw new ArgumentException(Strings.Arg_InvalidArrayType);
+                    case object[] objArray:
+                        try {
+                            foreach (var entry in dictionary.objectsArray)
+                                objArray[index++] = entry.Value;
+                        } catch (ArrayTypeMismatchException) {
+                            throw new ArgumentException(Strings.Arg_InvalidArrayType);
+                        }
+                        break;
 
-                try {
-                    foreach (var entry in dictionary.objectsArray)
-                        objArray[index++] = entry.Value;
-                } catch (ArrayTypeMismatchException) {
-                    throw new ArgumentException(Strings.Arg_InvalidArrayType);
+                    default:
+                        throw new ArgumentException(Strings.Arg_InvalidArrayType);
                 }
             }
 
@@ -1191,8 +1121,8 @@ namespace NOpt.Collections
 
             public TValue this[int index]
             {
-                get { return dictionary.objectsArray[index].Value; }
-                set { throw new NotSupportedException(); }
+                get => dictionary.objectsArray[index].Value;
+                set => throw new NotSupportedException();
             }
 
             [Serializable]
@@ -1206,15 +1136,9 @@ namespace NOpt.Collections
                     arrayEnumerator = dictionary.objectsArray.GetEnumerator();
                 }
 
-                public TValue Current
-                {
-                    get { return arrayEnumerator.Current.Value; }
-                }
+                public TValue Current => arrayEnumerator.Current.Value;
 
-                object IEnumerator.Current
-                {
-                    get { return Current; }
-                }
+                object IEnumerator.Current => Current;
 
                 public void Dispose()
                 {

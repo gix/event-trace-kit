@@ -21,10 +21,9 @@ namespace InstrManifestCompiler.Native
 
         public static bool IsValidSecurityDescriptorString(string descriptorString)
         {
-            SafeLocalMemHandle descriptor;
             uint descriptorSize;
             bool success = ConvertStringSecurityDescriptorToSecurityDescriptor(
-                descriptorString, 1, out descriptor, out descriptorSize);
+                descriptorString, 1, out var descriptor, out descriptorSize);
             descriptor.Dispose();
             return success;
         }

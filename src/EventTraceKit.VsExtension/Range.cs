@@ -43,7 +43,7 @@ namespace EventTraceKit.VsExtension
 
         public override bool Equals(object obj)
         {
-            return obj is Range && Equals((Range)obj);
+            return obj is Range r && Equals(r);
         }
 
         public override int GetHashCode()

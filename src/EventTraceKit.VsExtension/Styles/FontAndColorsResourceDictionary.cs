@@ -17,8 +17,7 @@ namespace EventTraceKit.VsExtension.Styles
 
         protected override void OnGettingValue(object key, ref object value, out bool canCache)
         {
-            var resourceKey = value as FontAndColorsResourceKey;
-            if (resourceKey == null) {
+            if (!(value is FontAndColorsResourceKey resourceKey)) {
                 base.OnGettingValue(key, ref value, out canCache);
                 return;
             }

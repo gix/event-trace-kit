@@ -4,35 +4,29 @@
 
     public struct SupportedFormat
     {
-        private readonly string description;
-
-        public SupportedFormat(string format, string description)
+        public SupportedFormat(string format, string name, string unit = null, string helpText = null)
         {
             Format = format;
-            this.description = description;
-            Unit = null;
-        }
-
-        public SupportedFormat(string format, string description, string unit)
-        {
-            Format = format;
-            this.description = description;
+            Name = name;
             Unit = unit;
+            HelpText = helpText;
         }
 
         public bool HasValue => Format != null;
         public string Format { get; }
         public string Unit { get; }
+        public string Name { get; }
+        public string HelpText { get; }
 
-        public string Description
+        public string Label
         {
             get
             {
                 if (Unit == null)
-                    return description;
+                    return Name;
 
                 return string.Format(
-                    CultureInfo.CurrentCulture, "{0} ({1})", description, Unit);
+                    CultureInfo.CurrentCulture, "{0} ({1})", Name, Unit);
             }
         }
     }

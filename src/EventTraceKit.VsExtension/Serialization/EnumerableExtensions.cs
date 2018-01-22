@@ -10,36 +10,34 @@
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
 
-            var list = source as IList<TSource>;
-            if (list != null) {
+            if (source is IList<TSource> list) {
                 switch (list.Count) {
                     case 1:
                         return list[0];
                     default:
-                        return default(TSource);
+                        return default;
                 }
             }
 
-            var readOnlyList = source as IReadOnlyList<TSource>;
-            if (readOnlyList != null) {
+            if (source is IReadOnlyList<TSource> readOnlyList) {
                 switch (readOnlyList.Count) {
                     case 1:
                         return readOnlyList[0];
                     default:
-                        return default(TSource);
+                        return default;
                 }
             }
 
             using (var enumerator = source.GetEnumerator()) {
                 if (!enumerator.MoveNext())
-                    return default(TSource);
+                    return default;
 
                 TSource current = enumerator.Current;
                 if (!enumerator.MoveNext())
                     return current;
             }
 
-            return default(TSource);
+            return default;
         }
     }
 }

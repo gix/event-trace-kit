@@ -3,25 +3,17 @@ namespace NOpt
     using System;
     using System.Diagnostics;
 
-    [DebuggerDisplay("Opt({id})")]
+    [DebuggerDisplay("Opt({" + nameof(Id) + "})")]
     public struct OptSpecifier
     {
-        private readonly int id;
-
         private OptSpecifier(int id)
         {
-            this.id = id;
+            Id = id;
         }
 
-        public int Id
-        {
-            get { return id; }
-        }
+        public int Id { get; }
 
-        public bool IsValid
-        {
-            get { return id > 0; }
-        }
+        public bool IsValid => Id > 0;
 
         public static implicit operator OptSpecifier(int id)
         {

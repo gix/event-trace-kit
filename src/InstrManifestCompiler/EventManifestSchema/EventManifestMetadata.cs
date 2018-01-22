@@ -57,8 +57,7 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         public XmlType GetXmlType(QName name)
         {
-            XmlType type;
-            if (!xmlTypeMap.TryGetValue(name, out type))
+            if (!xmlTypeMap.TryGetValue(name, out var type))
                 throw new InternalException("Unknown XmlType '{0}'", name);
             return type;
         }
@@ -78,8 +77,7 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         public InType GetInType(QName name)
         {
-            InType type;
-            if (!inTypeMap.TryGetValue(name, out type))
+            if (!inTypeMap.TryGetValue(name, out var type))
                 throw new InternalException("Unknown InType '{0}'", name);
             return type;
         }

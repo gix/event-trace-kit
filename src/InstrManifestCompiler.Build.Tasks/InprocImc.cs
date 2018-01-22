@@ -8,7 +8,7 @@ namespace InstrManifestCompiler.Build.Tasks
     using InstrManifestCompiler.Support;
     using Microsoft.Build.Framework;
     using Microsoft.Build.Utilities;
-    using NOpt;
+    using NOption;
 
     /// <summary>Event Manifest Compiler task.</summary>
     public sealed class InprocImc : NOptTrackedTask, IDiagnosticConsumer
@@ -87,92 +87,92 @@ namespace InstrManifestCompiler.Build.Tasks
         [Required]
         public ITaskItem Source
         {
-            get { return source; }
-            set { source = value; }
+            get => source;
+            set => source = value;
         }
 
         public string OutputBaseName
         {
-            get { return outputBaseName; }
-            set { outputBaseName = value; }
+            get => outputBaseName;
+            set => outputBaseName = value;
         }
 
         public string HeaderFile
         {
-            get { return codeHeaderFile; }
-            set { codeHeaderFile = value; }
+            get => codeHeaderFile;
+            set => codeHeaderFile = value;
         }
 
         public string SourceFile
         {
-            get { return codeSourceFile; }
-            set { codeSourceFile = value; }
+            get => codeSourceFile;
+            set => codeSourceFile = value;
         }
 
         public string MessageTableFile
         {
-            get { return messageTableFile; }
-            set { messageTableFile = value; }
+            get => messageTableFile;
+            set => messageTableFile = value;
         }
 
         public string EventTemplateFile
         {
-            get { return eventTemplateFile; }
-            set { eventTemplateFile = value; }
+            get => eventTemplateFile;
+            set => eventTemplateFile = value;
         }
 
         public string CodeGenerator
         {
-            get { return codeGenerator; }
-            set { codeGenerator = value; }
+            get => codeGenerator;
+            set => codeGenerator = value;
         }
 
         public string LogNamespace
         {
-            get { return logNamespace; }
-            set { logNamespace = value; }
+            get => logNamespace;
+            set => logNamespace = value;
         }
 
         public string EtwNamespace
         {
-            get { return etwNamespace; }
-            set { etwNamespace = value; }
+            get => etwNamespace;
+            set => etwNamespace = value;
         }
 
         public string LogCallPrefix
         {
-            get { return logCallPrefix; }
-            set { logCallPrefix = value; }
+            get => logCallPrefix;
+            set => logCallPrefix = value;
         }
 
         public bool UseCustomEnabledChecks
         {
-            get { return useCustomEnabledChecks.GetValueOrDefault(); }
-            set { useCustomEnabledChecks = value; }
+            get => useCustomEnabledChecks.GetValueOrDefault();
+            set => useCustomEnabledChecks = value;
         }
 
         public bool SkipDefines
         {
-            get { return skipDefines.GetValueOrDefault(); }
-            set { skipDefines = value; }
+            get => skipDefines.GetValueOrDefault();
+            set => skipDefines = value;
         }
 
         public bool GenerateLogStubs
         {
-            get { return generateLogStubs.GetValueOrDefault(); }
-            set { generateLogStubs = value; }
+            get => generateLogStubs.GetValueOrDefault();
+            set => generateLogStubs = value;
         }
 
         public string AlwaysInlineAttribute
         {
-            get { return alwaysInlineAttribute; }
-            set { alwaysInlineAttribute = value; }
+            get => alwaysInlineAttribute;
+            set => alwaysInlineAttribute = value;
         }
 
         public string NoInlineAttribute
         {
-            get { return noInlineAttribute; }
-            set { noInlineAttribute = value; }
+            get => noInlineAttribute;
+            set => noInlineAttribute = value;
         }
 
         protected override string GenerateOptions()

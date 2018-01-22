@@ -1,11 +1,12 @@
 #pragma once
-#include "ADT/StringView.h"
-
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
+
 #include <guiddef.h>
+#include <windows.h>
 
 namespace etk
 {
@@ -43,7 +44,8 @@ struct TraceStatistics
     //! The number of buffers allocated for the event tracing session's buffer pool.
     unsigned NumberOfBuffers;
 
-    //! The number of buffers that are allocated but unused in the event tracing session's buffer pool.
+    //! The number of buffers that are allocated but unused in the event tracing session's
+    //! buffer pool.
     unsigned FreeBuffers;
 
     //! The number of events that were not recorded.
@@ -62,12 +64,12 @@ struct TraceStatistics
     unsigned LoggerThreadId;
 };
 
-struct TraceProviderDescriptor
+class TraceProviderDescriptor
 {
-    TraceProviderDescriptor(
-        GUID id, uint8_t level = 0xFF,
-        uint64_t anyKeywordMask = 0xFFFFFFFFFFFFFFFFULL,
-        uint64_t allKeywordMask = 0)
+public:
+    TraceProviderDescriptor(GUID id, uint8_t level = 0xFF,
+                            uint64_t anyKeywordMask = 0xFFFFFFFFFFFFFFFFULL,
+                            uint64_t allKeywordMask = 0)
         : Id(id)
         , Level(level)
         , MatchAnyKeyword(anyKeywordMask)
@@ -84,46 +86,50 @@ struct TraceProviderDescriptor
     bool IncludeTerminalSessionId = false;
     bool IncludeStackTrace = false;
 
-    wstring_view GetManifest() const
-    {
-        if (manifestOrProviderBinary.empty() || !isManifest)
-            return wstring_view();
-        return manifestOrProviderBinary;
-    }
-
-    void SetManifest(std::wstring&& path)
-    {
-        manifestOrProviderBinary = std::move(path);
-        isManifest = true;
-    }
-
-    void SetManifest(wstring_view path)
-    {
-        manifestOrProviderBinary.assign(path.begin(), path.end());
-        isManifest = true;
-    }
-
-    wstring_view GetProviderBinary() const
-    {
-        if (manifestOrProviderBinary.empty() || isManifest)
-            return wstring_view();
-        return manifestOrProviderBinary;
-    }
-
-    void SetProviderBinary(std::wstring&& path)
-    {
-        manifestOrProviderBinary = std::move(path);
-        isManifest = false;
-    }
-
-    void SetProviderBinary(wstring_view path)
-    {
-        manifestOrProviderBinary.assign(path.begin(), path.end());
-        isManifest = false;
-    }
-
+    std::wstring ExecutableName;
     std::vector<unsigned> ProcessIds;
     std::vector<uint16_t> EventIds;
+    bool EnableEventIds = true;
+    std::vector<uint16_t> StackWalkEventIds;
+    bool EnableStackWalkEventIds = true;
+
+    std::wstring_view GetManifest() const
+    {
+        if (manifestOrProviderBinary.empty() || !isManifest)
+            return std::wstring_view();
+        return manifestOrProviderBinary;
+    }
+
+    void SetManifest(std::wstring path)
+    {
+        manifestOrProviderBinary = std::move(path);
+        isManifest = true;
+    }
+
+    void SetManifest(std::wstring_view path)
+    {
+        manifestOrProviderBinary.assign(path.begin(), path.end());
+        isManifest = true;
+    }
+
+    std::wstring_view GetProviderBinary() const
+    {
+        if (manifestOrProviderBinary.empty() || isManifest)
+            return std::wstring_view();
+        return manifestOrProviderBinary;
+    }
+
+    void SetProviderBinary(std::wstring path)
+    {
+        manifestOrProviderBinary = std::move(path);
+        isManifest = false;
+    }
+
+    void SetProviderBinary(std::wstring_view path)
+    {
+        manifestOrProviderBinary.assign(path.begin(), path.end());
+        isManifest = false;
+    }
 
 private:
     std::wstring manifestOrProviderBinary;
@@ -133,12 +139,12 @@ private:
 class ITraceSession
 {
 public:
-    virtual ~ITraceSession() {}
+    virtual ~ITraceSession() = default;
 
-    virtual void Start() = 0;
-    virtual void Stop() = 0;
-    virtual void Flush() = 0;
-    virtual void Query(TraceStatistics& stats) = 0;
+    virtual HRESULT Start() = 0;
+    virtual HRESULT Stop() = 0;
+    virtual HRESULT Flush() = 0;
+    virtual HRESULT Query(TraceStatistics& stats) = 0;
 
     virtual bool AddProvider(TraceProviderDescriptor const& provider) = 0;
     virtual bool RemoveProvider(GUID const& providerId) = 0;
@@ -148,7 +154,7 @@ public:
     virtual void DisableAllProviders() = 0;
 };
 
-std::unique_ptr<ITraceSession> CreateEtwTraceSession(
-    wstring_view name, TraceProperties const& properties);
+std::unique_ptr<ITraceSession> CreateEtwTraceSession(std::wstring_view name,
+                                                     TraceProperties const& properties);
 
 } // namespace etk

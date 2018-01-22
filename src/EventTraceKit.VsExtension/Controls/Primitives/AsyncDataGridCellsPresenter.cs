@@ -2,7 +2,6 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 {
     using System;
     using System.Collections.ObjectModel;
-    using System.Collections.Specialized;
     using System.ComponentModel;
     using System.Linq;
     using System.Windows;
@@ -12,8 +11,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
     using System.Windows.Input;
     using System.Windows.Media;
     using System.Windows.Threading;
-    using Windows;
     using Extensions;
+    using Windows;
 
     public class AsyncDataGridCellsPresenter : FrameworkElement, IScrollInfo
     {
@@ -25,7 +24,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         private readonly ValueCache<Pen> inactiveSelectionBorderPenCache;
         private readonly ValueCache<Pen> focusBorderPenCache;
 
-        private readonly QueuedDispatcherAction focusIndexUpdate;
+        private readonly QueuedDispatcherAction<int> focusIndexUpdate;
 
         private readonly Action<bool> renderAction;
         private DispatcherOperation renderOperation;
@@ -51,7 +50,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 CreateInactiveSelectionBorderPen);
             focusBorderPenCache = new ValueCache<Pen>(CreateFocusBorderPen);
 
-            focusIndexUpdate = new QueuedDispatcherAction(Dispatcher, EnsureVisible);
+            focusIndexUpdate = new QueuedDispatcherAction<int>(Dispatcher, EnsureVisible);
 
             renderedCellsVisual = new AsyncDataGridRenderedCellsVisual(this);
             AddVisualChild(renderedCellsVisual);

@@ -428,8 +428,7 @@ namespace InstrManifestCompiler.Build.Tasks
 
             var outOfDateSources = new List<ITaskItem>();
             foreach (ITaskItem item in TrackedInputFiles) {
-                bool optionsChanged;
-                if (!itemMap.TryGetValue(item, out optionsChanged))
+                if (!itemMap.TryGetValue(item, out var optionsChanged))
                     continue;
 
                 outOfDateSources.Add(item);
@@ -577,8 +576,7 @@ namespace InstrManifestCompiler.Build.Tasks
                 string currOptions = ApplyPrecompareCommandFilter(
                     GenerateOptions(OptionFormat.ForTracking));
 
-                string prevOptions;
-                if (sourceMap.TryGetValue(FileTracker.FormatRootingMarker(TrackedInputFiles), out prevOptions)) {
+                if (sourceMap.TryGetValue(FileTracker.FormatRootingMarker(TrackedInputFiles), out var prevOptions)) {
                     prevOptions = ApplyPrecompareCommandFilter(prevOptions);
                     if (prevOptions == null || !currOptions.Equals(prevOptions, StringComparison.Ordinal))
                         outOfDateItems.AddRange(TrackedInputFiles);
@@ -590,8 +588,7 @@ namespace InstrManifestCompiler.Build.Tasks
                 foreach (ITaskItem item in TrackedInputFiles) {
                     string currOptions = ApplyPrecompareCommandFilter(
                         cmdLine + " " + item.GetMetadata("FullPath").ToUpperInvariant());
-                    string prevOptions;
-                    if (sourceMap.TryGetValue(FileTracker.FormatRootingMarker(item), out prevOptions)) {
+                    if (sourceMap.TryGetValue(FileTracker.FormatRootingMarker(item), out var prevOptions)) {
                         prevOptions = ApplyPrecompareCommandFilter(prevOptions);
                         if (prevOptions == null || !currOptions.Equals(prevOptions, StringComparison.Ordinal))
                             outOfDateItems.Add(item);

@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using Collections;
 
-    internal class ComparisonUtils
+    internal static class ComparisonUtils
     {
         public static bool CompareValueT<T>(
             out int cmp, T first, T second) where T : struct, IComparable<T>

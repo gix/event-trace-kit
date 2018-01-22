@@ -117,8 +117,7 @@ namespace InstrManifestCompiler.Support
 
         public string ToString(string format, IFormatProvider formatProvider)
         {
-            var f = Value as IFormattable;
-            if (f != null)
+            if (Value is IFormattable f)
                 return f.ToString(format, formatProvider);
             if (Value != null)
                 return Value.ToString();
@@ -134,11 +133,10 @@ namespace InstrManifestCompiler.Support
 
         public override bool Equals(object obj)
         {
-            var sourceValue = obj as RefValue<T>;
-            if (sourceValue != null)
+            if (obj is RefValue<T> sourceValue)
                 return Equals(sourceValue);
-            if (obj is T)
-                return Equals((T)obj);
+            if (obj is T val)
+                return Equals(val);
             return false;
         }
 

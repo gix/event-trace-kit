@@ -1,6 +1,7 @@
 ﻿#pragma once
 #if __cplusplus_cli
-#include "ADT/StringView.h"
+#include <algorithm>
+#include <string_view>
 
 #include <msclr/marshal.h>
 #include <msclr/marshal_cppstd.h>
@@ -19,7 +20,7 @@ inline System::DateTime marshal_as<System::DateTime, ::FILETIME>(::FILETIME cons
 }
 
 template<>
-inline System::String^ marshal_as(etk::wstring_view const& str)
+inline System::String^ marshal_as(std::wstring_view const& str)
 {
     auto size = static_cast<int>(
         std::min(static_cast<size_t>(System::Int32::MaxValue), str.size()));

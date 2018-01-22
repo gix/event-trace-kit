@@ -6,7 +6,7 @@ namespace InstrManifestCompiler.EventManifestSchema
     using InstrManifestCompiler.EventManifestSchema.Base;
     using InstrManifestCompiler.Support;
 
-    [DebuggerDisplay("{Name} (0x{Mask,h})")]
+    [DebuggerDisplay("{" + nameof(Name) + "} (0x{Mask,h})")]
     public sealed class Keyword : ProviderItem
     {
         public Keyword(RefValue<QName> name, StructValue<ulong> mask)
@@ -24,8 +24,8 @@ namespace InstrManifestCompiler.EventManifestSchema
             Message = message;
         }
 
-        public RefValue<QName> Name { get; private set; }
-        public StructValue<ulong> Mask { get; private set; }
+        public RefValue<QName> Name { get; }
+        public StructValue<ulong> Mask { get; }
 
         public RefValue<string> Symbol { get; set; }
         public LocalizedString Message { get; set; }

@@ -3,12 +3,46 @@
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
+    using System.Collections.Specialized;
     using System.Threading.Tasks;
+    using System.Windows;
     using System.Windows.Input;
     using Serialization;
 
+    public static class NotifyExtensions
+    {
+        public static void HandleChanges<T>(
+            this ObservableCollection<T> collection,
+            NotifyCollectionChangedEventArgs args,
+            Action<T> oldAction,
+            Action<T> newAction)
+        {
+            switch (args.Action) {
+                case NotifyCollectionChangedAction.Add:
+                case NotifyCollectionChangedAction.Remove:
+                case NotifyCollectionChangedAction.Replace:
+                case NotifyCollectionChangedAction.Move:
+                    if (args.OldItems != null) {
+                        foreach (T item in args.OldItems)
+                            oldAction(item);
+                    }
+                    if (args.NewItems != null) {
+                        foreach (T item in args.NewItems)
+                            newAction(item);
+                    }
+                    break;
+                case NotifyCollectionChangedAction.Reset:
+                    foreach (var item in collection)
+                        newAction(item);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+    }
+
     [SerializedShape(typeof(Settings.Persistence.TraceSettings))]
-    public class TraceSettingsViewModel : ViewModel
+    public class TraceSettingsViewModel : ViewModel, IDialogService
     {
         private bool? dialogResult;
         private TraceSessionSettingsViewModel activeSession;
@@ -19,14 +53,20 @@
         public TraceSettingsViewModel()
         {
             AcceptCommand = new AsyncDelegateCommand(Accept);
+            Sessions.CollectionChanged += OnSessionsChanged;
+        }
+
+        private void OnSessionsChanged(object sender, NotifyCollectionChangedEventArgs args)
+        {
+            Sessions.HandleChanges(args, x => x.DialogService = null, x => x.DialogService = this);
         }
 
         public ICommand AcceptCommand { get; }
 
         public bool? DialogResult
         {
-            get { return dialogResult; }
-            set { SetProperty(ref dialogResult, value); }
+            get => dialogResult;
+            set => SetProperty(ref dialogResult, value);
         }
 
         public ICommand NewPresetCommand =>
@@ -40,12 +80,15 @@
 
         public TraceSessionSettingsViewModel ActiveSession
         {
-            get { return activeSession; }
-            set { SetProperty(ref activeSession, value); }
+            get => activeSession;
+            set => SetProperty(ref activeSession, value);
         }
 
         public ObservableCollection<TraceSessionSettingsViewModel> Sessions { get; }
             = new ObservableCollection<TraceSessionSettingsViewModel>();
+
+        Window IDialogService.Owner => Window;
+        public Window Window { get; set; }
 
         private Task NewPreset()
         {

@@ -86,8 +86,7 @@ namespace NOpt.Tests
                 .CreateTable();
             var args = new[] { arg };
 
-            MissingArgs missing;
-            IArgumentList al = optTable.ParseArgs(args, out missing);
+            IArgumentList al = optTable.ParseArgs(args, out var missing);
 
             Assert.Equal(0, missing.ArgIndex);
             Assert.Equal(0, missing.ArgCount);
@@ -106,8 +105,7 @@ namespace NOpt.Tests
                 .CreateTable();
             var args = new[] { "--aaa", "--aa", "-aaaa", "-a", "-aaa" };
 
-            MissingArgs missing;
-            IArgumentList al = optTable.ParseArgs(args, out missing);
+            IArgumentList al = optTable.ParseArgs(args, out MissingArgs missing);
 
             Assert.Equal(0, missing.ArgIndex);
             Assert.Equal(0, missing.ArgCount);
@@ -127,8 +125,7 @@ namespace NOpt.Tests
                 .CreateTable();
             var args = new[] { "--opt", "/opt", "-opt" };
 
-            MissingArgs missing;
-            IArgumentList al = optTable.ParseArgs(args, out missing);
+            IArgumentList al = optTable.ParseArgs(args, out var missing);
 
             Assert.Equal(0, missing.ArgIndex);
             Assert.Equal(0, missing.ArgCount);
@@ -159,8 +156,7 @@ namespace NOpt.Tests
                 .CreateTable();
             var args = new[] { arg };
 
-            MissingArgs missing;
-            IArgumentList al = optTable.ParseArgs(args, out missing);
+            IArgumentList al = optTable.ParseArgs(args, out var missing);
 
             Assert.Equal(0, missing.ArgIndex);
             Assert.Equal(0, missing.ArgCount);
@@ -185,8 +181,7 @@ namespace NOpt.Tests
                 .CreateTable();
             var args = new[] { prefix + name + arg };
 
-            MissingArgs missing;
-            IArgumentList al = optTable.ParseArgs(args, out missing);
+            IArgumentList al = optTable.ParseArgs(args, out var missing);
 
             Assert.Equal(0, missing.ArgIndex);
             Assert.Equal(0, missing.ArgCount);
@@ -202,8 +197,7 @@ namespace NOpt.Tests
                 .CreateTable();
             var args = new[] { "--opt=value1", "/opt=value2", "-opt=value3" };
 
-            MissingArgs missing;
-            IArgumentList al = optTable.ParseArgs(args, out missing);
+            IArgumentList al = optTable.ParseArgs(args, out var missing);
 
             Assert.Equal(0, missing.ArgIndex);
             Assert.Equal(0, missing.ArgCount);
@@ -224,8 +218,7 @@ namespace NOpt.Tests
                 .CreateTable();
             var args = new[] { "--aaa1", "--aa2", "-aaaaa", "-a4", "-aaa5" };
 
-            MissingArgs missing;
-            IArgumentList al = optTable.ParseArgs(args, out missing);
+            IArgumentList al = optTable.ParseArgs(args, out var missing);
 
             Assert.Equal(0, missing.ArgIndex);
             Assert.Equal(0, missing.ArgCount);
@@ -258,8 +251,7 @@ namespace NOpt.Tests
                 .CreateTable();
             var args = new[] { arg };
 
-            MissingArgs missing;
-            IArgumentList al = optTable.ParseArgs(args, out missing);
+            IArgumentList al = optTable.ParseArgs(args, out var missing);
 
             Assert.Equal(0, missing.ArgIndex);
             Assert.Equal(0, missing.ArgCount);
@@ -268,9 +260,6 @@ namespace NOpt.Tests
         }
 
         [Theory]
-        [InlineData("-", "opt", "abc")]
-        [InlineData("--", "opt", "1")]
-        [InlineData("/", "opt", "xyz 123")]
         [InlineData("-", "opt", "abc")]
         [InlineData("--", "opt", "1")]
         [InlineData("/", "opt", "xyz 123")]
@@ -284,8 +273,7 @@ namespace NOpt.Tests
                 .CreateTable();
             var args = new[] { prefix + name, arg };
 
-            MissingArgs missing;
-            IArgumentList al = optTable.ParseArgs(args, out missing);
+            IArgumentList al = optTable.ParseArgs(args, out var missing);
 
             Assert.Equal(0, missing.ArgIndex);
             Assert.Equal(0, missing.ArgCount);
@@ -301,8 +289,7 @@ namespace NOpt.Tests
                 .CreateTable();
             var args = new[] { "-opt", "v1", "-opt" };
 
-            MissingArgs missing;
-            IArgumentList al = optTable.ParseArgs(args, out missing);
+            IArgumentList al = optTable.ParseArgs(args, out var missing);
 
             Assert.Equal(2, missing.ArgIndex);
             Assert.Equal(1, missing.ArgCount);
@@ -330,8 +317,7 @@ namespace NOpt.Tests
                 .CreateTable();
             var args = new[] { prefix + name }.Concat(extraArgs).ToArray();
 
-            MissingArgs missing;
-            IArgumentList al = optTable.ParseArgs(args, out missing);
+            IArgumentList al = optTable.ParseArgs(args, out var missing);
 
             Assert.Equal(0, missing.ArgIndex);
             Assert.Equal(0, missing.ArgCount);
@@ -367,8 +353,7 @@ namespace NOpt.Tests
                 .CreateTable();
             var args = preArgs.Concat(new[] { prefix + name }).Concat(postArgs).ToArray();
 
-            MissingArgs missing;
-            IArgumentList al = optTable.ParseArgs(args, out missing);
+            IArgumentList al = optTable.ParseArgs(args, out var missing);
 
             Assert.Equal(preArgs.Length, missing.ArgIndex);
             Assert.Equal(argCount - postArgs.Length, missing.ArgCount);
@@ -387,13 +372,12 @@ namespace NOpt.Tests
                 .CreateTable();
             var args = new[] { prefix + name, prefix + name, "value", "-flag" };
 
-            MissingArgs missing;
-            IArgumentList al = optTable.ParseArgs(args, out missing);
+            IArgumentList al = optTable.ParseArgs(args, out var missing);
 
             Assert.Equal(0, missing.ArgIndex);
             Assert.Equal(0, missing.ArgCount);
             Assert.Equal(1, al.Count);
-            Assert.Equal(optTable.MakeArg(1, prefix + name, 0, new[] { prefix + name, "value", "-flag" }), al[0], argComparer);
+            Assert.Equal(optTable.MakeArg(1, prefix + name, 0, prefix + name, "value", "-flag"), al[0], argComparer);
         }
 
         [Fact]
@@ -405,8 +389,7 @@ namespace NOpt.Tests
                 .CreateTable();
             var args = new[] { "-a=123", "-a" };
 
-            MissingArgs missing;
-            IArgumentList al = optTable.ParseArgs(args, out missing);
+            IArgumentList al = optTable.ParseArgs(args, out var missing);
 
             Assert.Equal(0, missing.ArgIndex);
             Assert.Equal(0, missing.ArgCount);
@@ -425,8 +408,8 @@ namespace NOpt.Tests
                 CreatedArgs = new List<Arg>();
             }
 
-            public int ArgCount { get; private set; }
-            public List<Arg> CreatedArgs { get; private set; }
+            public int ArgCount { get; }
+            public List<Arg> CreatedArgs { get; }
 
             protected override Arg AcceptCore(IReadOnlyList<string> args, ref int argIndex, int argLen)
             {
@@ -453,8 +436,7 @@ namespace NOpt.Tests
                 .CreateTable();
             var args = Enumerable.Repeat(prefix + name, argCount).ToList();
 
-            MissingArgs missing;
-            IArgumentList al = optTable.ParseArgs(args, out missing);
+            IArgumentList al = optTable.ParseArgs(args, out var missing);
 
             Assert.Equal(new MissingArgs(), missing);
             Assert.Equal(args.Count, al.Count);

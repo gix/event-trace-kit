@@ -117,6 +117,9 @@
     <AssemblyOriginatorKeyFile>..\Common\EventTraceKit.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="NOption, Version=0.1.0.0, Culture=neutral, PublicKeyToken=2a5b04d9a08e510d, processorArchitecture=MSIL">
+      <HintPath>..\packages\NOption.0.1.0-dev20180128133238\lib\netstandard1.3\NOption.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
@@ -254,12 +257,6 @@
       <Link>Properties\EventTraceKit.snk</Link>
     </None>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\NOpt\NOpt.csproj">
-      <Project>{AD86098F-8CC9-41FF-B33C-A214AD22161F}</Project>
-      <Name>NOpt</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Strings.resx">

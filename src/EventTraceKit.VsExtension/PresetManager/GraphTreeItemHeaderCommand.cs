@@ -36,20 +36,20 @@ namespace EventTraceKit.VsExtension
 
         public ICommand Command
         {
-            get { return (ICommand)GetValue(CommandProperty); }
-            set { SetValue(CommandProperty, value); }
+            get => (ICommand)GetValue(CommandProperty);
+            set => SetValue(CommandProperty, value);
         }
 
         public object CommandParameter
         {
-            get { return GetValue(CommandParameterProperty); }
-            set { SetValue(CommandParameterProperty, value); }
+            get => GetValue(CommandParameterProperty);
+            set => SetValue(CommandParameterProperty, value);
         }
 
         public string DisplayName
         {
-            get { return (string)GetValue(DisplayNameProperty); }
-            set { SetValue(DisplayNameProperty, value); }
+            get => (string)GetValue(DisplayNameProperty);
+            set => SetValue(DisplayNameProperty, value);
         }
 
         public ICommand ExecuteCommand
@@ -65,26 +65,20 @@ namespace EventTraceKit.VsExtension
 
         public bool IsCheckable
         {
-            get { return ((bool)GetValue(IsCheckableProperty)); }
-            set
-            {
-                SetValue(IsCheckableProperty, Boxed.Bool(value));
-            }
+            get => (bool)GetValue(IsCheckableProperty);
+            set => SetValue(IsCheckableProperty, Boxed.Bool(value));
         }
 
         public bool IsChecked
         {
-            get { return ((bool)GetValue(IsCheckedProperty)); }
-            set
-            {
-                SetValue(IsCheckedProperty, Boxed.Bool(value));
-            }
+            get => (bool)GetValue(IsCheckedProperty);
+            set => SetValue(IsCheckedProperty, Boxed.Bool(value));
         }
 
         public bool IsEnabled
         {
-            get { return ((bool)GetValue(IsEnabledProperty)); }
-            set { SetValue(IsEnabledProperty, Boxed.Bool(value)); }
+            get => (bool)GetValue(IsEnabledProperty);
+            set => SetValue(IsEnabledProperty, Boxed.Bool(value));
         }
     }
 }

@@ -7,7 +7,6 @@
     using System.Linq.Expressions;
     using System.Reflection;
     using System.Reflection.Emit;
-    using System.Runtime.CompilerServices;
     using System.Runtime.InteropServices;
     using System.Threading.Tasks;
     using System.Windows.Input;
@@ -110,8 +109,8 @@
 
         public bool? DialogResult
         {
-            get { return dialogResult; }
-            set { SetProperty(ref dialogResult, value); }
+            get => dialogResult;
+            set => SetProperty(ref dialogResult, value);
         }
 
         public TraceLogFilter GetFilter()
@@ -183,7 +182,9 @@
             if (SelectedCondition != null) {
                 SelectedProperty = SelectedCondition.Property;
                 SelectedRelation = SelectedCondition.Relation;
-                ValueHolder.RawValue = SelectedCondition.Value;
+                var value = SelectedProperty.CreateValue();
+                value.RawValue = SelectedCondition.Value;
+                ValueHolder = value;
                 SelectedAction = SelectedCondition.Action;
             }
 
@@ -214,13 +215,13 @@
 
         public FilterConditionAction SelectedAction
         {
-            get { return selectedAction; }
-            set { SetProperty(ref selectedAction, value); }
+            get => selectedAction;
+            set => SetProperty(ref selectedAction, value);
         }
 
         public IModelProperty SelectedProperty
         {
-            get { return selectedProperty; }
+            get => selectedProperty;
             set
             {
                 if (SetProperty(ref selectedProperty, value))
@@ -245,20 +246,20 @@
 
         public FilterRelation SelectedRelation
         {
-            get { return selectedRelation; }
-            set { SetProperty(ref selectedRelation, value); }
+            get => selectedRelation;
+            set => SetProperty(ref selectedRelation, value);
         }
 
         public ValueHolder ValueHolder
         {
-            get { return valueHolder; }
-            set { SetProperty(ref valueHolder, value); }
+            get => valueHolder;
+            set => SetProperty(ref valueHolder, value);
         }
 
         public FilterCondition SelectedCondition
         {
-            get { return selectedCondition; }
-            set { SetProperty(ref selectedCondition, value); }
+            get => selectedCondition;
+            set => SetProperty(ref selectedCondition, value);
         }
     }
 
@@ -315,7 +316,7 @@
             return predicate;
         }
 
-        private unsafe void Warmup(TraceLogFilterPredicate predicate)
+        private static unsafe void Warmup(TraceLogFilterPredicate predicate)
         {
             var record = new EVENT_RECORD();
             var info = new TRACE_EVENT_INFO();
@@ -383,32 +384,32 @@
 
         public bool IsEnabled
         {
-            get { return isEnabled; }
-            set { SetProperty(ref isEnabled, value); }
+            get => isEnabled;
+            set => SetProperty(ref isEnabled, value);
         }
 
         public string DisplayName
         {
-            get { return displayName; }
-            set { SetProperty(ref displayName, value); }
+            get => displayName;
+            set => SetProperty(ref displayName, value);
         }
 
         public FilterRelation Relation
         {
-            get { return relation; }
-            set { SetProperty(ref relation, value); }
+            get => relation;
+            set => SetProperty(ref relation, value);
         }
 
         public object Value
         {
-            get { return value; }
-            set { SetProperty(ref this.value, value); }
+            get => value;
+            set => SetProperty(ref this.value, value);
         }
 
         public FilterConditionAction Action
         {
-            get { return action; }
-            set { SetProperty(ref action, value); }
+            get => action;
+            set => SetProperty(ref action, value);
         }
 
         public FilterCondition Clone()
@@ -550,8 +551,8 @@
         public T Value { get; set; }
         public override object RawValue
         {
-            get { return Value; }
-            set { Value = (T)value; }
+            get => Value;
+            set => Value = (T)value;
         }
     }
 

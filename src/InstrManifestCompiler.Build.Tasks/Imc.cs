@@ -3,7 +3,7 @@ namespace InstrManifestCompiler.Build.Tasks
     using System.Collections.Generic;
     using Microsoft.Build.Framework;
     using Microsoft.Build.Utilities;
-    using NOpt;
+    using NOption;
 
     /// <summary>Event Manifest Compiler task.</summary>
     public sealed class Imc : NOptTrackedToolTask

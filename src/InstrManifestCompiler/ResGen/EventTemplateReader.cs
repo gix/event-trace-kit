@@ -848,8 +848,7 @@
             if (messageId == LocalizedString.UnusedId)
                 return null;
 
-            LocalizedString ls;
-            if (strings.TryGetValue(messageId, out ls))
+            if (strings.TryGetValue(messageId, out var ls))
                 return ls;
 
             string name = string.Format(CultureInfo.InvariantCulture, "str{0:X8}", messageId);
@@ -862,8 +861,7 @@
 
         private string LookupMessage(uint messageId)
         {
-            Message message;
-            if (messageMap != null && messageMap.TryGetValue(messageId, out message))
+            if (messageMap != null && messageMap.TryGetValue(messageId, out Message message))
                 return message.Text;
             return null;
         }
@@ -878,13 +876,11 @@
             if (offset == 0)
                 return null;
 
-            object obj;
-            if (!objectMap.TryGetValue(offset, out obj))
+            if (!objectMap.TryGetValue(offset, out var obj))
                 throw new InternalException(
                     "Unread object for offset '{0}' requested.", offset);
 
-            var value = obj as T;
-            if (value == null)
+            if (!(obj is T value))
                 throw new InternalException("Null object in object map.");
 
             return value;

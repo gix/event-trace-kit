@@ -359,8 +359,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
                 int styleHash = ComputeHash(rowHeight, flowDirection, typeface, fontSize, foreground);
 
-                DrawingVisual rowVisual;
-                if (!TryGetCachedRow(row, styleHash, out rowVisual)) {
+                if (!TryGetCachedRow(row, styleHash, out var rowVisual)) {
                     var rowContext = rowVisual.RenderOpen();
 
                     for (int col = firstNonFrozenColumn; col <= lastNonFrozenColumn; ++col) {
@@ -419,8 +418,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                     rowVisual.Clip = nonFrozenAreaClip;
                     ((TranslateTransform)nonFrozenAreaClip.Transform).X = horizontalOffset;
 
-                    DrawingVisual frozenRowVisual;
-                    if (!TryGetCachedFrozenRow(row, styleHash, out frozenRowVisual)) {
+                    if (!TryGetCachedFrozenRow(row, styleHash, out var frozenRowVisual)) {
                         var rowContext = frozenRowVisual.RenderOpen();
 
                         for (int col = firstVisibleColumn; col <= lastVisibleColumn; ++col) {

@@ -51,8 +51,7 @@
             if (type.IsGenericType)
                 throw new NotSupportedException("Known types cannot be generic types.");
 
-            Dictionary<string, XamlType> typeMap;
-            if (!knownTypes.TryGetValue(ns, out typeMap))
+            if (!knownTypes.TryGetValue(ns, out var typeMap))
                 typeMap = knownTypes[ns] = new Dictionary<string, XamlType>();
 
             typeMap[name] = new XamlType(type, this);
@@ -71,10 +70,8 @@
 
         private XamlType TryGetKnownXamlType(string xamlNamespace, string name)
         {
-            Dictionary<string, XamlType> typeMap;
-            XamlType xamlType;
-            if (knownTypes.TryGetValue(xamlNamespace, out typeMap) &&
-                typeMap.TryGetValue(name, out xamlType))
+            if (knownTypes.TryGetValue(xamlNamespace, out var typeMap) &&
+                typeMap.TryGetValue(name, out var xamlType))
                 return xamlType;
 
             return null;

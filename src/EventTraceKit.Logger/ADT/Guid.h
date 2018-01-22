@@ -1,12 +1,13 @@
 #pragma once
 #include "ADT/ArrayRef.h"
-#include "ADT/StringView.h"
 #include "Support/CompilerSupport.h"
 
 #include <cstring>
 #include <iosfwd>
 #include <string>
+#include <string_view>
 #include <type_traits>
+
 #include <guiddef.h>
 
 namespace etk
@@ -14,19 +15,19 @@ namespace etk
 
 namespace details
 {
-    void CreateGuid(uint64_t& hi, uint64_t& lo);
-    void ParseGuid(std::wstring const& str, uint64_t& hi, uint64_t& lo);
-    std::wstring ToString(uint64_t const& hi, uint64_t const& lo);
-    std::wostream& StreamGuid(std::wostream& os, uint64_t const& hi, uint64_t const& lo);
-}
+void CreateGuid(uint64_t& hi, uint64_t& lo);
+void ParseGuid(std::wstring const& str, uint64_t& hi, uint64_t& lo);
+std::wstring ToString(uint64_t const& hi, uint64_t const& lo);
+std::wostream& StreamGuid(std::wostream& os, uint64_t const& hi, uint64_t const& lo);
+} // namespace details
 
 struct Guid
 {
     uint64_t hi;
     uint64_t lo;
 
-    bool operator ==(Guid const& other) const { return hi == other.hi && lo == other.lo; }
-    bool operator !=(Guid const& other) const { return hi != other.hi || lo != other.lo; }
+    bool operator==(Guid const& other) const { return hi == other.hi && lo == other.lo; }
+    bool operator!=(Guid const& other) const { return hi != other.hi || lo != other.lo; }
     bool operator < (Guid const& other) const { return hi == other.hi ? lo < other.lo : hi < other.hi; }
 
     static Guid Create();
@@ -65,7 +66,7 @@ inline Guid Guid::Construct()
 
 inline Guid Guid::Construct(uint64_t const& hi, uint64_t const& lo)
 {
-    Guid guid = { hi, lo };
+    Guid guid = {hi, lo};
     return guid;
 }
 
@@ -112,12 +113,16 @@ inline Guid Guid::Construct(std::wstring const& str)
 }
 
 template<typename T1, typename T2>
-inline int Guid::Compare(T1 const& guid1, T2 const& guid2)
+int Guid::Compare(T1 const& guid1, T2 const& guid2)
 {
-    if (guid1.hi < guid2.hi) return -1;
-    if (guid1.hi > guid2.hi) return 1;
-    if (guid1.lo < guid2.lo) return -1;
-    if (guid1.lo > guid2.lo) return 1;
+    if (guid1.hi < guid2.hi)
+        return -1;
+    if (guid1.hi > guid2.hi)
+        return 1;
+    if (guid1.lo < guid2.lo)
+        return -1;
+    if (guid1.lo > guid2.lo)
+        return 1;
     return 0;
 }
 
@@ -144,9 +149,9 @@ struct TaggedGuid
     static TaggedGuid Create();
     static std::wstring ToString(TaggedGuid const& guid);
 
-    inline Guid ToGuid() const
+    Guid ToGuid() const
     {
-        Guid guid = { hi, lo };
+        Guid guid = {hi, lo};
         return guid;
     }
 };
@@ -178,7 +183,7 @@ TaggedGuid<T> TaggedGuid<T>::Construct(uint64_t const& hi, uint64_t const& lo)
 template<typename T>
 TaggedGuid<T> TaggedGuid<T>::Construct(Guid const& source)
 {
-    TaggedGuid guid = { source.hi, source.lo };
+    TaggedGuid guid = {source.hi, source.lo};
     return guid;
 }
 
@@ -205,13 +210,13 @@ std::wstring TaggedGuid<T>::ToString(TaggedGuid<T> const& guid)
     return details::ToString(guid.hi, guid.lo);
 }
 
-inline std::wostream& operator <<(std::wostream& os, Guid const& guid)
+inline std::wostream& operator<<(std::wostream& os, Guid const& guid)
 {
     return details::StreamGuid(os, guid.hi, guid.lo);
 }
 
 template<typename T>
-std::wostream& operator <<(std::wostream& os, TaggedGuid<T> const& guid)
+std::wostream& operator<<(std::wostream& os, TaggedGuid<T> const& guid)
 {
     return details::StreamGuid(os, guid.hi, guid.lo);
 }
@@ -219,8 +224,8 @@ std::wostream& operator <<(std::wostream& os, TaggedGuid<T> const& guid)
 bool GuidToString(GUID const& guid, MutableArrayRef<wchar_t> buffer);
 
 template<size_t N>
-ETK_ALWAYS_INLINE
-void GuidToString(GUID const& guid, _Out_writes_z_(39) wchar_t (&buffer)[N])
+ETK_ALWAYS_INLINE void GuidToString(GUID const& guid,
+                                    _Out_writes_z_(39) wchar_t (&buffer)[N])
 {
     static_assert(N >= Guid::StringBufSize, "Buffer too small");
     (void)GuidToString(guid, MutableArrayRef<wchar_t>(buffer, N));
@@ -240,7 +245,8 @@ public:
     GuidString(GUID const& id) { GuidToString(id, buffer); }
     wchar_t const* get() const { return buffer; }
     operator wchar_t const*() const { return buffer; }
-    operator wstring_view() const { return buffer; }
+    operator std::wstring_view() const { return buffer; }
+
 private:
     wchar_t buffer[Guid::StringBufSize];
 };

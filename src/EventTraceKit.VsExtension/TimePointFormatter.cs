@@ -20,10 +20,7 @@ namespace EventTraceKit.VsExtension
 
         public static string ToString(long ticks, string format, IFormatProvider formatProvider)
         {
-            TimeUnit unit;
-            bool includeUnits;
-            bool includeThousandsSeparator;
-            if (!TryParseFormat(format, out unit, out includeUnits, out includeThousandsSeparator))
+            if (!TryParseFormat(format, out var unit, out var includeUnits, out var includeThousandsSeparator))
                 throw new FormatException("Invalid or unsupported format.");
 
             return ToString(ticks, formatProvider, unit, includeUnits, includeThousandsSeparator);

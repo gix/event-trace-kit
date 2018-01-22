@@ -2,6 +2,7 @@ namespace EventTraceKit.VsExtension
 {
     using System;
     using System.Collections;
+    using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
     using System.Threading.Tasks;
@@ -24,6 +25,9 @@ namespace EventTraceKit.VsExtension
         private bool includeSecurityId;
         private bool includeTerminalSessionId;
         private bool includeStackTrace;
+        private string executableName;
+        private string enableEventIds;
+        private string disableEventIds;
         private bool filterProcesses;
         private bool filterEvents;
 
@@ -48,7 +52,7 @@ namespace EventTraceKit.VsExtension
 
         public Guid Id
         {
-            get { return id; }
+            get => id;
             set
             {
                 if (SetProperty(ref id, value))
@@ -58,13 +62,13 @@ namespace EventTraceKit.VsExtension
 
         public string Manifest
         {
-            get { return manifest; }
-            set { SetProperty(ref manifest, value); }
+            get => manifest;
+            set => SetProperty(ref manifest, value);
         }
 
         public string Name
         {
-            get { return name; }
+            get => name;
             set
             {
                 if (SetProperty(ref name, value))
@@ -74,56 +78,74 @@ namespace EventTraceKit.VsExtension
 
         public bool IsEnabled
         {
-            get { return isEnabled; }
-            set { SetProperty(ref isEnabled, value); }
+            get => isEnabled;
+            set => SetProperty(ref isEnabled, value);
         }
 
         public byte Level
         {
-            get { return level; }
-            set { SetProperty(ref level, value); }
+            get => level;
+            set => SetProperty(ref level, value);
         }
 
         public ulong MatchAnyKeyword
         {
-            get { return matchAnyKeyword; }
-            set { SetProperty(ref matchAnyKeyword, value); }
+            get => matchAnyKeyword;
+            set => SetProperty(ref matchAnyKeyword, value);
         }
 
         public ulong MatchAllKeyword
         {
-            get { return matchAllKeyword; }
-            set { SetProperty(ref matchAllKeyword, value); }
+            get => matchAllKeyword;
+            set => SetProperty(ref matchAllKeyword, value);
         }
 
         public bool IncludeSecurityId
         {
-            get { return includeSecurityId; }
-            set { SetProperty(ref includeSecurityId, value); }
+            get => includeSecurityId;
+            set => SetProperty(ref includeSecurityId, value);
         }
 
         public bool IncludeTerminalSessionId
         {
-            get { return includeTerminalSessionId; }
-            set { SetProperty(ref includeTerminalSessionId, value); }
+            get => includeTerminalSessionId;
+            set => SetProperty(ref includeTerminalSessionId, value);
         }
 
         public bool IncludeStackTrace
         {
-            get { return includeStackTrace; }
-            set { SetProperty(ref includeStackTrace, value); }
+            get => includeStackTrace;
+            set => SetProperty(ref includeStackTrace, value);
+        }
+
+        public string ExecutableName
+        {
+            get => executableName;
+            set => SetProperty(ref executableName, value);
+        }
+
+        public string EnableEventIds
+        {
+            get => enableEventIds;
+            set => SetProperty(ref enableEventIds, value);
+        }
+
+        public string DisableEventIds
+        {
+            get => disableEventIds;
+            set => SetProperty(ref disableEventIds, value);
         }
 
         public bool FilterProcesses
         {
-            get { return filterProcesses; }
-            set { SetProperty(ref filterProcesses, value); }
+            get => filterProcesses;
+            set => SetProperty(ref filterProcesses, value);
         }
 
         public bool FilterEvents
         {
-            get { return filterEvents; }
-            set { SetProperty(ref filterEvents, value); }
+            get => filterEvents;
+            set => SetProperty(ref filterEvents, value);
         }
 
         public ObservableCollection<uint> ProcessIds { get; }
@@ -141,6 +163,10 @@ namespace EventTraceKit.VsExtension
             descriptor.IncludeStackTrace = IncludeStackTrace;
             if (!string.IsNullOrWhiteSpace(Manifest))
                 descriptor.Manifest = Manifest;
+            if (!string.IsNullOrWhiteSpace(ExecutableName))
+                descriptor.ExecutableName = ExecutableName;
+            if (!string.IsNullOrWhiteSpace(EnableEventIds))
+                descriptor.EventIds = SplitEventIds(EnableEventIds).ToList();
             if (FilterProcesses)
                 descriptor.ProcessIds.AddRange(ProcessIds);
             if (FilterEvents)
@@ -148,6 +174,14 @@ namespace EventTraceKit.VsExtension
                     from x in Events where x.IsEnabled select x.Id);
 
             return descriptor;
+        }
+
+        private static IEnumerable<ushort> SplitEventIds(string str)
+        {
+            foreach (var item in str.Split(',')) {
+                if (ushort.TryParse(item, out var id))
+                    yield return id;
+            }
         }
 
         public TraceProviderDescriptorViewModel DeepClone()
@@ -161,6 +195,9 @@ namespace EventTraceKit.VsExtension
             clone.IncludeSecurityId = IncludeSecurityId;
             clone.IncludeTerminalSessionId = IncludeTerminalSessionId;
             clone.IncludeStackTrace = IncludeStackTrace;
+            clone.ExecutableName = ExecutableName;
+            clone.EnableEventIds = EnableEventIds;
+            clone.DisableEventIds = DisableEventIds;
             clone.ProcessIds.AddRange(ProcessIds);
             clone.Events.AddRange(Events.Select(x => x.DeepClone()));
             return clone;

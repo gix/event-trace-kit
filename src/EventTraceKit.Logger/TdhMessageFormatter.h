@@ -12,6 +12,9 @@ public:
         EventInfo info, size_t pointerSize, wchar_t* buffer, size_t bufferSize);
 
 private:
+    bool FormatMofEvent(
+        EventInfo const& info, size_t pointerSize, wchar_t* buffer, size_t bufferSize);
+
     std::vector<wchar_t> propertyBuffer;
     std::wstring formattedProperties;
     std::vector<size_t> formattedPropertiesOffsets;

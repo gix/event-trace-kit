@@ -79,8 +79,8 @@
 
         public string DisplayName
         {
-            get { return (string)GetValue(DisplayNameProperty); }
-            set { SetValue(DisplayNameProperty, value); }
+            get => (string)GetValue(DisplayNameProperty);
+            set => SetValue(DisplayNameProperty, value);
         }
 
         #endregion
@@ -101,8 +101,8 @@
 
         public AsyncDataViewModel HdvViewModel
         {
-            get { return (AsyncDataViewModel)GetValue(HdvViewModelProperty); }
-            private set { SetValue(HdvViewModelPropertyKey, value); }
+            get => (AsyncDataViewModel)GetValue(HdvViewModelProperty);
+            private set => SetValue(HdvViewModelPropertyKey, value);
         }
 
         #endregion
@@ -121,8 +121,8 @@
 
         public ReadOnlyObservableCollection<ColumnViewModelPreset> TemplateColumns
         {
-            get { return (ReadOnlyObservableCollection<ColumnViewModelPreset>)GetValue(TemplateColumnsProperty); }
-            private set { SetValue(TemplateColumnsPropertyKey, value); }
+            get => (ReadOnlyObservableCollection<ColumnViewModelPreset>)GetValue(TemplateColumnsProperty);
+            private set => SetValue(TemplateColumnsPropertyKey, value);
         }
 
         #endregion
@@ -141,8 +141,8 @@
 
         public ReadOnlyObservableCollection<PresetManagerColumnViewModel> PresetColumns
         {
-            get { return (ReadOnlyObservableCollection<PresetManagerColumnViewModel>)GetValue(PresetColumnsProperty); }
-            private set { SetValue(PresetColumnsPropertyKey, value); }
+            get => (ReadOnlyObservableCollection<PresetManagerColumnViewModel>)GetValue(PresetColumnsProperty);
+            private set => SetValue(PresetColumnsPropertyKey, value);
         }
 
         #endregion
@@ -161,12 +161,9 @@
 
         public ReadOnlyObservableCollection<PresetManagerColumnViewModel> ConfigurablePresetColumns
         {
-            get
-            {
-                return (ReadOnlyObservableCollection<PresetManagerColumnViewModel>)
-                    GetValue(ConfigurablePresetColumnsProperty);
-            }
-            private set { SetValue(ConfigurablePresetColumnsPropertyKey, value); }
+            get => (ReadOnlyObservableCollection<PresetManagerColumnViewModel>)
+                GetValue(ConfigurablePresetColumnsProperty);
+            private set => SetValue(ConfigurablePresetColumnsPropertyKey, value);
         }
 
         #endregion
@@ -182,8 +179,8 @@
 
         public PresetManagerColumnViewModel SelectedColumn
         {
-            get { return (PresetManagerColumnViewModel)GetValue(SelectedColumnProperty); }
-            set { SetValue(SelectedColumnProperty, value); }
+            get => (PresetManagerColumnViewModel)GetValue(SelectedColumnProperty);
+            set => SetValue(SelectedColumnProperty, value);
         }
 
         #endregion
@@ -202,8 +199,8 @@
 
         public string MangledPresetName
         {
-            get { return (string)GetValue(MangledPresetNameProperty); }
-            private set { SetValue(MangledPresetNamePropertyKey, value); }
+            get => (string)GetValue(MangledPresetNameProperty);
+            private set => SetValue(MangledPresetNamePropertyKey, value);
         }
 
         private static object CoerceMangledPresetName(DependencyObject d, object newValue)
@@ -232,8 +229,8 @@
 
         public string CurrentSelectedPresetName
         {
-            get { return (string)GetValue(CurrentSelectedPresetNameProperty); }
-            set { SetValue(CurrentSelectedPresetNamePropertyKey, value); }
+            get => (string)GetValue(CurrentSelectedPresetNameProperty);
+            set => SetValue(CurrentSelectedPresetNamePropertyKey, value);
         }
 
         private static void OnIsCurrentSelectedPresetNameChanged(
@@ -258,8 +255,8 @@
 
         public bool IsDialogStateDirty
         {
-            get { return (bool)GetValue(IsDialogStateDirtyProperty); }
-            set { SetValue(IsDialogStateDirtyPropertyKey, value); }
+            get => (bool)GetValue(IsDialogStateDirtyProperty);
+            set => SetValue(IsDialogStateDirtyPropertyKey, value);
         }
 
         private static void OnIsDialogStateDirtyChanged(
@@ -284,8 +281,8 @@
 
         public bool CanApply
         {
-            get { return (bool)GetValue(CanApplyProperty); }
-            private set { SetValue(CanApplyPropertyKey, value); }
+            get => (bool)GetValue(CanApplyProperty);
+            private set => SetValue(CanApplyPropertyKey, value);
         }
 
         private static object CoerceCanApply(DependencyObject d, object newValue)
@@ -311,8 +308,8 @@
 
         public bool IsCurrentPresetModified
         {
-            get { return (bool)GetValue(IsCurrentPresetModifiedProperty); }
-            private set { SetValue(IsCurrentPresetModifiedPropertyKey, value); }
+            get => (bool)GetValue(IsCurrentPresetModifiedProperty);
+            private set => SetValue(IsCurrentPresetModifiedPropertyKey, value);
         }
 
         private static void OnIsCurrentPresetModifiedChanged(

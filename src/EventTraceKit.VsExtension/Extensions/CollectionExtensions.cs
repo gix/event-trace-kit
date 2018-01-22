@@ -86,8 +86,7 @@ namespace EventTraceKit.VsExtension.Extensions
 
         private static Type DetermineItemType(IList list)
         {
-            Type itemType;
-            if (TypeHelper.TryGetGenericListItemType(list.GetType(), out itemType) &&
+            if (TypeHelper.TryGetGenericListItemType(list.GetType(), out var itemType) &&
                 itemType != typeof(object))
                 return itemType;
 

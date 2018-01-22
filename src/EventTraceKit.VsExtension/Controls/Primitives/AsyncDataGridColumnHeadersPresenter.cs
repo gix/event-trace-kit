@@ -110,12 +110,10 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         {
             base.OnItemsSourceChanged(oldValue, newValue);
 
-            var oldCollection = oldValue as INotifyCollectionChanged;
-            if (oldCollection != null)
+            if (oldValue is INotifyCollectionChanged oldCollection)
                 oldCollection.CollectionChanged -= OnItemsSourceCollectionChanged;
 
-            var newCollection = newValue as INotifyCollectionChanged;
-            if (newCollection != null)
+            if (newValue is INotifyCollectionChanged newCollection)
                 newCollection.CollectionChanged += OnItemsSourceCollectionChanged;
 
             RefreshEnabled();
@@ -172,8 +170,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         {
             base.PrepareContainerForItemOverride(element, item);
 
-            var column = item as AsyncDataGridColumn;
-            if (column == null)
+            if (!(item is AsyncDataGridColumn column))
                 throw new InvalidOperationException("Invalid item type.");
 
             var header = (AsyncDataGridColumnHeader)element;
@@ -329,8 +326,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                     continue;
 
                 var leftEdge = header.TransformToAncestor(this).Transform(new Point()).X;
-                var translation = header.RenderTransform as TranslateTransform;
-                if (translation != null)
+                if (header.RenderTransform is TranslateTransform translation)
                     leftEdge -= translation.X;
                 var rightEdge = leftEdge + header.RenderSize.Width;
 
@@ -385,7 +381,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
             public Point CurrentPosition
             {
-                get { return currentPosition; }
+                get => currentPosition;
                 set
                 {
                     lastPosition = currentPosition;

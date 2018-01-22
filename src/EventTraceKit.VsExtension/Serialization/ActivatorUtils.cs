@@ -18,13 +18,12 @@
         public static bool TryCreateInstance<TBase>(
             Type type, out TBase result, params object[] args)
         {
-            object instance;
-            if (TryCreateInstance(type, out instance, args) && instance is TBase) {
+            if (TryCreateInstance(type, out var instance, args) && instance is TBase) {
                 result = (TBase)instance;
                 return true;
             }
 
-            result = default(TBase);
+            result = default;
             return false;
         }
     }

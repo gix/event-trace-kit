@@ -90,12 +90,10 @@ namespace NOpt.Tests
         {
             var optTable = builder.CreateTable();
 
-            MissingArgs missing;
-            IArgumentList al = optTable.ParseArgs(arguments, out missing);
+            IArgumentList al = optTable.ParseArgs(arguments, out var _);
 
             foreach (var arg in al) {
-                Tuple<Action<string>> tuple;
-                if (!actions.TryGetValue(arg.Option.Id, out tuple))
+                if (!actions.TryGetValue(arg.Option.Id, out var tuple))
                     continue;
 
                 tuple.Item1(arg.Value);

@@ -174,8 +174,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             args.CanExecute = true;
             if (args.Command == DeferScrollToHorizontalOffsetCommand ||
                 args.Command == DeferScrollToVerticalOffsetCommand) {
-                var viewer = target as ScrollViewer;
-                if (viewer != null && !viewer.IsDeferredScrollingEnabled) {
+                if (target is ScrollViewer viewer && !viewer.IsDeferredScrollingEnabled) {
                     args.CanExecute = false;
                     args.Handled = true;
                 }

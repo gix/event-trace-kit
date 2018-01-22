@@ -43,10 +43,8 @@
         private static void OnPopupAnimationChanged(
             DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var menu = d as ContextMenu;
-            if (menu != null) {
-                object value;
-                if (!SourceChangedHandlers.TryGetValue(menu, out value)) {
+            if (d is ContextMenu menu) {
+                if (!SourceChangedHandlers.TryGetValue(menu, out var _)) {
                     PresentationSource.AddSourceChangedHandler(menu, OnSourceChanged);
                     SourceChangedHandlers.Add(menu, null);
                 }
@@ -58,12 +56,10 @@
             if (e.NewSource == null)
                 return;
 
-            var menu = sender as ContextMenu;
-            if (menu == null)
+            if (!(sender is ContextMenu menu))
                 return;
 
-            var popup = LogicalTreeHelper.GetParent(menu) as Popup;
-            if (popup != null) {
+            if (LogicalTreeHelper.GetParent(menu) is Popup popup) {
                 var binding = new Binding {
                     Path = new PropertyPath(PopupAnimationProperty),
                     Source = menu

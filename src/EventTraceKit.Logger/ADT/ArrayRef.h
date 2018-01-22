@@ -33,7 +33,8 @@ public:
     ETK_ALWAYS_INLINE
     ArrayRef& operator =(ArrayRef const& source) noexcept = default;
 
-    ArrayRef(T const& elem)
+    ETK_ALWAYS_INLINE
+    constexpr ArrayRef(T const& elem)
         : data_(&elem), length_(1) {}
 
     ETK_ALWAYS_INLINE
@@ -48,6 +49,11 @@ public:
     ETK_ALWAYS_INLINE
     constexpr ArrayRef(T const (&array)[N])
         : data_(array), length_(N) {}
+
+    template<size_t N>
+    ETK_ALWAYS_INLINE
+    constexpr ArrayRef(std::array<T, N>& array)
+        : data_(array.data()), length_(N) {}
 
     ETK_ALWAYS_INLINE
     ArrayRef(std::vector<T> const& vector)
@@ -89,14 +95,14 @@ public:
     ETK_ALWAYS_INLINE
     constexpr const_pointer data() const noexcept { return data_; }
 
-    ETK_CXX14_CONSTEXPR ETK_ALWAYS_INLINE
+    ETK_ALWAYS_INLINE
     void clear() noexcept
     {
         data_ = nullptr;
         length_ = 0;
     }
 
-    ETK_CXX14_CONSTEXPR ETK_ALWAYS_INLINE
+    ETK_ALWAYS_INLINE
     void remove_prefix(size_type n)
     {
         ETK_ASSERT_MSG(n <= length(), "Cannot remove such a long prefix");
@@ -104,14 +110,14 @@ public:
         data_ += n;
     }
 
-    ETK_CXX14_CONSTEXPR ETK_ALWAYS_INLINE
+    ETK_ALWAYS_INLINE
     void remove_suffix(size_type n)
     {
         ETK_ASSERT_MSG(n <= length(), "Cannot remove such a long suffix");
         length_ -= n;
     }
 
-    ETK_CXX14_CONSTEXPR ETK_ALWAYS_INLINE
+    ETK_ALWAYS_INLINE
     void swap(ArrayRef& a) noexcept
     {
         value_type const* d = data_;
@@ -145,7 +151,7 @@ private:
 
 // operator ==
 template<typename T>
-ETK_CXX14_CONSTEXPR ETK_ALWAYS_INLINE
+ETK_ALWAYS_INLINE
 bool operator ==(ArrayRef<T> x, ArrayRef<T> y)
 {
     return x.length() == y.length() &&
@@ -154,7 +160,7 @@ bool operator ==(ArrayRef<T> x, ArrayRef<T> y)
 
 // operator !=
 template<typename T>
-ETK_CXX14_CONSTEXPR ETK_ALWAYS_INLINE
+ETK_ALWAYS_INLINE
 bool operator !=(ArrayRef<T> x, ArrayRef<T> y)
 {
     return !(x == y);
@@ -197,46 +203,50 @@ public:
     using size_type = typename ArrayRef<T>::size_type;
     using difference_type = typename ArrayRef<T>::difference_type;
 
-    constexpr MutableArrayRef() noexcept : ArrayRef<T>() {}
+    using ArrayRef<T>::ArrayRef;
 
-    constexpr MutableArrayRef(MutableArrayRef const& source) noexcept /*= default*/
-        : ArrayRef<T>(source)
-    {}
+    ETK_ALWAYS_INLINE constexpr iterator begin() const noexcept { return data(); }
+    ETK_ALWAYS_INLINE constexpr iterator end()   const noexcept { return data() + this->length(); }
 
-    MutableArrayRef(value_type const& elem)
-        : ArrayRef<T>(elem) {}
-
-    constexpr MutableArrayRef(value_type* data, size_t length)
-        : ArrayRef<T>(data, length) {}
-
-    template<size_t N>
-    constexpr MutableArrayRef(value_type (&array)[N])
-        : ArrayRef<T>(array) {}
-
-    MutableArrayRef(std::vector<T>& vector)
-        : ArrayRef<T>(vector.data(), vector.size()) {}
-
-    constexpr iterator begin() const noexcept { return data(); }
-    constexpr iterator end()   const noexcept { return data() + this->length(); }
-
+    ETK_ALWAYS_INLINE
     constexpr pointer data() const noexcept
     {
       return const_cast<pointer>(ArrayRef<T>::data());
     }
 
+    ETK_ALWAYS_INLINE
     constexpr reference operator[](size_t pos) const
     {
-        return ETK_ASSERT(pos < this->length() && "Index out or range"), data()[pos];
+        ETK_ASSERT(pos < this->length() && "Index out or range");
+        return data()[pos];
     }
 
+    ETK_ALWAYS_INLINE
     constexpr reference front() const
     {
-        return ETK_ASSERT(!this->empty()), data()[0];
+        ETK_ASSERT(!this->empty());
+        return data()[0];
     }
 
+    ETK_ALWAYS_INLINE
     constexpr reference back() const
     {
-        return ETK_ASSERT(!this->empty()), data()[this->length() - 1];
+        ETK_ASSERT(!this->empty());
+        return data()[this->length() - 1];
+    }
+
+    ETK_ALWAYS_INLINE
+    constexpr MutableArrayRef<T> slice(size_type offset) const
+    {
+        ETK_ASSERT_MSG(offset <= this->size(), "Cannot slice past end of array.");
+        return MutableArrayRef<T>(data() + offset, this->size() - offset);
+    }
+
+    ETK_ALWAYS_INLINE
+    constexpr MutableArrayRef<T> slice(size_type offset, size_type count) const
+    {
+        ETK_ASSERT_MSG(offset + count <= this->size(), "Sliced range not in array.");
+        return MutableArrayRef<T>(data() + offset, count);
     }
 };
 

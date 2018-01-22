@@ -16,19 +16,21 @@
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     public sealed class SupportedFormatAttribute : Attribute
     {
-        public SupportedFormatAttribute(int ordinal, string format, string description)
+        public SupportedFormatAttribute(int ordinal, string format, string description, string units = null)
         {
             Ordinal = ordinal;
-            SupportedFormat = new SupportedFormat(format, description);
+            Format = format;
+            Description = description;
+            Units = units;
         }
 
-        public SupportedFormatAttribute(int ordinal, string format, string description, string units)
-        {
-            Ordinal = ordinal;
-            SupportedFormat = new SupportedFormat(format, description, units);
-        }
+        public int Ordinal { get; set; }
+        public string Format { get; set; }
+        public string Description { get; set; }
+        public string Units { get; set; }
+        public string HelpText { get; set; }
 
-        public int Ordinal { get; }
-        public SupportedFormat SupportedFormat { get; }
+        public SupportedFormat GetSupportedFormat() =>
+            new SupportedFormat(Format, Description, unit: Units, helpText: HelpText);
     }
 }

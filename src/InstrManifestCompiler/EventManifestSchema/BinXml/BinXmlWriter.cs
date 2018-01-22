@@ -114,8 +114,7 @@
 
             string digits = value.Substring(startIdx, endIdx - startIdx);
 
-            int id;
-            if (!int.TryParse(digits, NumberStyles.None, null, out id))
+            if (!int.TryParse(digits, NumberStyles.None, null, out var id))
                 throw new InternalException("Invalid substitution '{0}'.", digits);
             WriteNormalSubstitution(id);
         }

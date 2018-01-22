@@ -19,10 +19,7 @@ namespace NOpt
             this.settings = settings;
         }
 
-        public WriteHelpSettings Settings
-        {
-            get { return settings; }
-        }
+        public WriteHelpSettings Settings => settings;
 
         public void WriteHelp(IEnumerable<Option> options)
         {
@@ -97,8 +94,7 @@ namespace NOpt
                     groups.Add(title, new OptionGroup(title));
 
                 string name = opt.GetHelpName(Settings.DefaultMetaVar);
-                OptionHelp help;
-                if (!helpMap.TryGetValue(mainOpt, out help)) {
+                if (!helpMap.TryGetValue(mainOpt, out OptionHelp help)) {
                     helpMap[mainOpt] = help = new OptionHelp(name, mainOpt.HelpText);
                     groups[title].Add(help);
                 } else
@@ -111,8 +107,8 @@ namespace NOpt
         private int GetMaxNameLength(IEnumerable<OptionGroup> optionGroups)
         {
             int maxLength = 0;
-            foreach (var @group in optionGroups) {
-                foreach (var entry in @group) {
+            foreach (var group in optionGroups) {
+                foreach (var entry in group) {
                     // Skip titles.
                     if (entry.HelpText == null)
                         continue;
@@ -143,7 +139,7 @@ namespace NOpt
             writer.Write(group.Title);
             writer.WriteLine(":");
 
-            foreach (OptionHelp entry in @group) {
+            foreach (OptionHelp entry in group) {
                 string helpName = entry.Name;
                 string helpText = entry.HelpText;
 

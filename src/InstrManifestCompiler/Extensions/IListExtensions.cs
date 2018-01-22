@@ -53,8 +53,7 @@ namespace InstrManifestCompiler.Extensions
 
         public static void RemoveAll<T>(this IList<T> list, Predicate<T> match)
         {
-            var listT = list as List<T>;
-            if (listT != null) {
+            if (list is List<T> listT) {
                 listT.RemoveAll(match);
                 return;
             }

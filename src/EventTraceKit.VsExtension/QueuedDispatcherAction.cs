@@ -3,28 +3,28 @@ namespace EventTraceKit.VsExtension
     using System;
     using System.Windows.Threading;
 
-    internal sealed class QueuedDispatcherAction
+    internal sealed class QueuedDispatcherAction<T>
     {
         private readonly Dispatcher dispatcher;
         private readonly Action update;
-        private readonly Action<int> action;
-        private int queuedValue;
+        private readonly Action<T> action;
+        private T queuedValue;
         private bool isQueued;
 
-        public QueuedDispatcherAction(Dispatcher dispatcher, Action<int> action)
+        public QueuedDispatcherAction(Dispatcher dispatcher, Action<T> action)
         {
             this.dispatcher = dispatcher;
             this.action = action;
             update = Update;
         }
 
-        public void Queue(int value)
+        public void Queue(T value)
         {
             queuedValue = value;
 
             if (!isQueued) {
                 isQueued = true;
-                dispatcher.BeginInvoke(update, DispatcherPriority.Input);
+                dispatcher.InvokeAsync(update, DispatcherPriority.Input);
             }
         }
 

@@ -1,6 +1,4 @@
-﻿
-
-namespace EventTraceKit.VsExtension
+﻿namespace EventTraceKit.VsExtension
 {
     using System;
     using System.Collections.Generic;
@@ -64,8 +62,8 @@ namespace EventTraceKit.VsExtension
 
         public string NewPresetName
         {
-            get { return (string)GetValue(NewPresetNameProperty); }
-            set { SetValue(NewPresetNameProperty, value); }
+            get => (string)GetValue(NewPresetNameProperty);
+            set => SetValue(NewPresetNameProperty, value);
         }
 
         public AsyncDelegateCommand SaveCommand

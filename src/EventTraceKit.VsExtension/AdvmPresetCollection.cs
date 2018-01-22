@@ -64,23 +64,23 @@ namespace EventTraceKit.VsExtension
 
         public FreezableCollection<AsyncDataViewModelPreset> BuiltInPresets
         {
-            get { return (FreezableCollection<AsyncDataViewModelPreset>)GetValue(BuiltInPresetsProperty); }
-            private set { SetValue(BuiltInPresetsPropertyKey, value); }
+            get => (FreezableCollection<AsyncDataViewModelPreset>)GetValue(BuiltInPresetsProperty);
+            private set => SetValue(BuiltInPresetsPropertyKey, value);
         }
 
         [Serialize]
         [DeserializationCallback(typeof(PersistedPresetsSerializerCallback))]
         public FreezableCollection<AsyncDataViewModelPreset> PersistedPresets
         {
-            get { return (FreezableCollection<AsyncDataViewModelPreset>)GetValue(PersistedPresetsProperty); }
-            private set { SetValue(PersistedPresetsPropertyKey, value); }
+            get => (FreezableCollection<AsyncDataViewModelPreset>)GetValue(PersistedPresetsProperty);
+            private set => SetValue(PersistedPresetsPropertyKey, value);
         }
 
         [Serialize]
         public FreezableCollection<AsyncDataViewModelPreset> UserPresets
         {
-            get { return (FreezableCollection<AsyncDataViewModelPreset>)GetValue(UserPresetsProperty); }
-            private set { SetValue(UserPresetsPropertyKey, value); }
+            get => (FreezableCollection<AsyncDataViewModelPreset>)GetValue(UserPresetsProperty);
+            private set => SetValue(UserPresetsPropertyKey, value);
         }
 
         protected override Freezable CreateInstanceCore()
@@ -291,12 +291,10 @@ namespace EventTraceKit.VsExtension
 
         private void BuiltInPresetsPropertyChanged(DependencyPropertyChangedEventArgs e)
         {
-            var oldValue = e.OldValue as FreezableCollection<AsyncDataViewModelPreset>;
-            if (oldValue != null && !oldValue.IsFrozen)
+            if (e.OldValue is FreezableCollection<AsyncDataViewModelPreset> oldValue && !oldValue.IsFrozen)
                 oldValue.Changed -= OnBuiltInPresetsChanged;
 
-            var newValue = e.NewValue as FreezableCollection<AsyncDataViewModelPreset>;
-            if (newValue != null && !newValue.IsFrozen)
+            if (e.NewValue is FreezableCollection<AsyncDataViewModelPreset> newValue && !newValue.IsFrozen)
                 newValue.Changed += OnBuiltInPresetsChanged;
 
             RaiseChangeNotificationIfNecessary();
@@ -304,12 +302,10 @@ namespace EventTraceKit.VsExtension
 
         private void UserPresetsPropertyChanged(DependencyPropertyChangedEventArgs e)
         {
-            var oldValue = e.OldValue as FreezableCollection<AsyncDataViewModelPreset>;
-            if (oldValue != null && !oldValue.IsFrozen)
+            if (e.OldValue is FreezableCollection<AsyncDataViewModelPreset> oldValue && !oldValue.IsFrozen)
                 oldValue.Changed -= OnUserPresetsChanged;
 
-            var newValue = e.NewValue as FreezableCollection<AsyncDataViewModelPreset>;
-            if (newValue != null && !newValue.IsFrozen)
+            if (e.NewValue is FreezableCollection<AsyncDataViewModelPreset> newValue && !newValue.IsFrozen)
                 newValue.Changed += OnUserPresetsChanged;
 
             RaiseChangeNotificationIfNecessary();
@@ -317,12 +313,10 @@ namespace EventTraceKit.VsExtension
 
         private void PersistedPresetsPropertyChanged(DependencyPropertyChangedEventArgs e)
         {
-            var oldValue = e.OldValue as FreezableCollection<AsyncDataViewModelPreset>;
-            if (oldValue != null && !oldValue.IsFrozen)
+            if (e.OldValue is FreezableCollection<AsyncDataViewModelPreset> oldValue && !oldValue.IsFrozen)
                 oldValue.Changed -= OnPersistedPresetsChanged;
 
-            var newValue = e.NewValue as FreezableCollection<AsyncDataViewModelPreset>;
-            if (newValue != null && !newValue.IsFrozen)
+            if (e.NewValue is FreezableCollection<AsyncDataViewModelPreset> newValue && !newValue.IsFrozen)
                 newValue.Changed += OnPersistedPresetsChanged;
 
             RaiseChangeNotificationIfNecessary();

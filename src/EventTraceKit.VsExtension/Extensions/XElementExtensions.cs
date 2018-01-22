@@ -12,32 +12,28 @@ namespace EventTraceKit.VsExtension.Extensions
 
         public static byte? AsByte(this XAttribute attribute)
         {
-            byte value;
-            if (attribute != null && byte.TryParse(attribute.Value, out value))
+            if (attribute != null && byte.TryParse(attribute.Value, out byte value))
                 return value;
             return null;
         }
 
         public static ushort? AsUShort(this XAttribute attribute)
         {
-            ushort value;
-            if (attribute != null && ushort.TryParse(attribute.Value, out value))
+            if (attribute != null && ushort.TryParse(attribute.Value, out ushort value))
                 return value;
             return null;
         }
 
         public static int? AsInt(this XAttribute attribute)
         {
-            int value;
-            if (attribute != null && int.TryParse(attribute.Value, out value))
+            if (attribute != null && int.TryParse(attribute.Value, out int value))
                 return value;
             return null;
         }
 
         public static Guid? AsGuid(this XAttribute attribute)
         {
-            Guid value;
-            if (attribute != null && Guid.TryParse(attribute.Value, out value))
+            if (attribute != null && Guid.TryParse(attribute.Value, out Guid value))
                 return value;
             return null;
         }

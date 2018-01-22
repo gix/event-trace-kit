@@ -46,9 +46,8 @@ namespace InstrManifestCompiler.EventManifestSchema
             IDiagnostics diags,
             IUniqueConstraint<T> constraint)
         {
-            var sourceItem = entity as ISourceItem;
             diags.ReportError(
-                sourceItem != null ? sourceItem.Location : new SourceLocation(),
+                entity is ISourceItem sourceItem ? sourceItem.Location : new SourceLocation(),
                 constraint.FormatMessage(entity));
         }
     }

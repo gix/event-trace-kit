@@ -1,14 +1,7 @@
 ﻿namespace EventTraceKit.VsExtension.Windows
 {
-    using System;
-    using System.Collections;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Reflection;
-    using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
-    using System.Windows.Controls.Primitives;
     using System.Windows.Input;
     using System.Windows.Interactivity;
 
@@ -24,8 +17,8 @@
 
         public ICommand ToggleSelectCommand
         {
-            get { return (ICommand)GetValue(ToggleSelectCommandProperty); }
-            set { SetValue(ToggleSelectCommandProperty, value); }
+            get => (ICommand)GetValue(ToggleSelectCommandProperty);
+            set => SetValue(ToggleSelectCommandProperty, value);
         }
 
         protected override void OnAttached()
@@ -64,7 +57,7 @@
 
         private void OnPreviewKeyUp(object sender, KeyEventArgs e)
         {
-            if (!isEditing && e.Key == Key.Space) {
+            if (!isEditing && e.Key == Key.Space && Keyboard.Modifiers == ModifierKeys.None) {
                 if (ToggleSelectCommand != null) {
                     ToggleSelectCommand.Execute(AssociatedObject.SelectedItems);
                     e.Handled = true;

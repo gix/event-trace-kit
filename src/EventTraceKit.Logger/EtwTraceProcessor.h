@@ -28,11 +28,9 @@ public:
     virtual TRACE_LOGFILE_HEADER const* GetLogFileHeader() const override;
 
 private:
-    static DWORD WINAPI ProcessTraceProc(_In_ LPVOID lpParameter);
     static VOID WINAPI EventRecordCallback(_In_ PEVENT_RECORD EventRecord);
 
-    void OnProcessTrace();
-    void OnEvent(EVENT_RECORD const& record);
+    void ProcessTraceProc();
 
     void RegisterManifests();
     void UnregisterManifests();

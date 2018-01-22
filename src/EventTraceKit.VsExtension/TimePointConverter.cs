@@ -18,8 +18,7 @@ namespace EventTraceKit.VsExtension
 
         public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
         {
-            string str = value as string;
-            if (str != null)
+            if (value is string str)
                 return TimePoint.Parse(str.Trim());
             return base.ConvertFrom(context, culture, value);
         }

@@ -82,11 +82,11 @@ private:
     std::vector<std::wstring> manifests;
     std::vector<std::wstring> providerBinaries;
 
-    using EventRecordAllocator = BumpPtrAllocator<MallocAllocator>;
+    using EventRecordAllocator = BumpPtrAllocator<MallocAllocator, 10 * 1024 * 1024>;
     EventRecordAllocator eventRecordAllocator;
 
     std::deque<EventInfo> events;
-    std::atomic<size_t> eventCount;
+    std::atomic<size_t> eventCount{};
 
     mutable std::shared_mutex mutex;
     TraceLogEventsChangedCallback* changedCallback;
@@ -153,9 +153,10 @@ public:
     {
         if (index >= eventCount) return EventInfo();
 
-        std::shared_lock<std::shared_mutex> lock(mutex);
-        if (index >= events.size()) return EventInfo();
-        return events[index];
+        std::shared_lock<decltype(mutex)> lock(mutex);
+        if (index < events.size())
+            return events[index];
+        return EventInfo();
     }
 
     virtual void SetFilter(TraceLogFilterEvent* filter) override
@@ -187,7 +188,7 @@ private:
                 break;
 
             changedEvent.Reset();
-            auto newFilter = pendingFilter.exchange(nullptr);
+            auto const newFilter = pendingFilter.exchange(nullptr);
             if (newFilter) {
                 filter = newFilter;
                 Rebuild();
@@ -200,7 +201,7 @@ private:
 
     void ProcessEvents()
     {
-        size_t newTotal = traceLog->GetEventCount();
+        size_t const newTotal = traceLog->GetEventCount();
 
         if (newTotal > prevTotal)
             ProcessLog(prevTotal, newTotal);
@@ -222,9 +223,12 @@ private:
     {
         size_t count = 0;
         for (size_t i = begin; i < end; ++i) {
-            EventInfo evt = traceLog->GetEvent(i);
+            EventInfo const evt = traceLog->GetEvent(i);
+            if (!evt.Record())
+                break;
+
             if (MatchesFilter(evt)) {
-                std::unique_lock<std::shared_mutex> lock(mutex);
+                std::unique_lock<decltype(mutex)> lock(mutex);
                 events.push_back(evt);
                 ++count;
             }
@@ -247,13 +251,14 @@ private:
     void Clear()
     {
         SetCount(0);
-        std::unique_lock<std::shared_mutex> lock(mutex);
+        std::unique_lock<decltype(mutex)> lock(mutex);
         events.clear();
+        events.shrink_to_fit();
     }
 
     void AddCount(size_t additionalCount)
     {
-        size_t total = eventCount += additionalCount;
+        size_t const total = eventCount += additionalCount;
         changedCallback(total, changedCallbackState);
     }
 
@@ -272,14 +277,14 @@ private:
     // Shared
     mutable std::shared_mutex mutex;
     std::deque<EventInfo> events;
-    std::atomic<size_t> eventCount;
-    std::atomic<TraceLogFilterEvent*> pendingFilter;
+    std::atomic<size_t> eventCount{};
+    std::atomic<TraceLogFilterEvent*> pendingFilter{};
 
-    std::atomic<bool> running;
+    std::atomic<bool> running{};
     std::thread filterThread;
 
     // Immutable
-    ITraceLog* traceLog;
+    ITraceLog* traceLog{};
     TraceLogEventsChangedCallback* changedCallback;
     void* changedCallbackState;
 };
@@ -301,7 +306,7 @@ void EtwTraceLog::ProcessEvent(EVENT_RECORD const& record)
         events.push_back(eventInfoCache.Get(*eventCopy));
     }
 
-    size_t newCount = ++eventCount;
+    size_t const newCount = ++eventCount;
     changedCallback(newCount, changedCallbackState);
 }
 
@@ -309,9 +314,11 @@ void EtwTraceLog::Clear()
 {
     eventCount = 0;
     {
-        std::unique_lock<std::shared_mutex> lock(mutex);
+        std::unique_lock<decltype(mutex)> lock(mutex);
         events.clear();
+        events.shrink_to_fit();
         eventInfoCache.Clear();
+        eventRecordAllocator.Reset();
     }
 
     changedCallback(0, changedCallbackState);
@@ -321,7 +328,7 @@ EventInfo EtwTraceLog::GetEvent(size_t index) const
 {
     if (index >= eventCount) return EventInfo();
 
-    std::shared_lock<std::shared_mutex> lock(mutex);
+    std::shared_lock<decltype(mutex)> lock(mutex);
     if (index >= events.size()) return EventInfo();
     return events[index];
 }
@@ -359,10 +366,7 @@ CreateFilteredTraceLog(TraceLogEventsChangedCallback* callback, TraceLogFilterEv
     filteredLog->SetLog(traceLog.get());
     traceLog->SetCallback(&FilteredTraceLog::Callback, filteredLog.get());
 
-    std::unique_ptr<ITraceLog> t = std::move(traceLog);
-    std::unique_ptr<IFilteredTraceLog> f = std::move(filteredLog);
-
-    return std::tuple<std::unique_ptr<ITraceLog>, std::unique_ptr<IFilteredTraceLog>>(std::move(t), std::move(f));
+    return {std::move(traceLog), std::move(filteredLog)};
 }
 
 } // namespace etk
