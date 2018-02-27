@@ -29,7 +29,7 @@
 
             string commandLine = null;
             using (var searcher = new ManagementObjectSearcher(query)) {
-                // By definition, the query returns at most 1 match, because the process 
+                // By definition, the query returns at most 1 match, because the process
                 // is looked up by ID (which is unique by definition).
                 var enumerator = searcher.Get().GetEnumerator();
                 if (enumerator.MoveNext())

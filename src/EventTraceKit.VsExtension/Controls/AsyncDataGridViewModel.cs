@@ -1,19 +1,14 @@
 namespace EventTraceKit.VsExtension.Controls
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
-    using System.Threading;
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
-    using System.Windows.Interop;
     using Microsoft.VisualStudio.Imaging;
     using Microsoft.VisualStudio.Threading;
-    using Microsoft.Windows.TaskDialogs;
-    using Microsoft.Windows.TaskDialogs.Controls;
     using Threading;
 
     public class AsyncDataGridViewModel : DependencyObject
@@ -117,7 +112,7 @@ namespace EventTraceKit.VsExtension.Controls
                 .ToList();
 
             var text = await advModel.WorkManager.BackgroundTaskFactory.RunWithProgress(
-                "Copying…",
+                "Copyingâ€¦",
                 Application.Current.MainWindow,
                 (cancel, progress) => {
                     var buffer = new StringBuilder();
