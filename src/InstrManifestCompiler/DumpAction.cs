@@ -1,12 +1,8 @@
 namespace InstrManifestCompiler
 {
     using System;
-    using System.Collections.Generic;
     using System.ComponentModel;
-    using System.Diagnostics.Contracts;
     using System.IO;
-    using System.Xml;
-    using System.Xml.Linq;
     using EventManifestSchema;
     using Extensions;
     using InstrManifestCompiler.ResGen;
@@ -19,8 +15,10 @@ namespace InstrManifestCompiler
 
         public DumpAction(IDiagnostics diags, ImcOpts opts)
         {
-            Contract.Requires<ArgumentNullException>(diags != null);
-            Contract.Requires<ArgumentNullException>(opts != null);
+            if (diags == null)
+                throw new ArgumentNullException(nameof(diags));
+            if (opts == null)
+                throw new ArgumentNullException(nameof(opts));
             this.diags = diags;
             this.opts = opts;
         }

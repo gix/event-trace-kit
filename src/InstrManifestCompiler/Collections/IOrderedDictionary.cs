@@ -1,9 +1,6 @@
 namespace InstrManifestCompiler.Collections
 {
-    using System;
-    using System.Collections;
     using System.Collections.Generic;
-    using System.Diagnostics.Contracts;
 
     /// <summary>
     ///   Represents a generic indexed collection of key/value pairs.
@@ -14,7 +11,6 @@ namespace InstrManifestCompiler.Collections
     /// <typeparam name="TValue">
     ///   The type of the values in the dictionary.
     /// </typeparam>
-    [ContractClass(typeof(IOrderedDictionaryContract<,>))]
     public interface IOrderedDictionary<TKey, TValue>
         : IDictionary<TKey, TValue>
     {
@@ -125,85 +121,5 @@ namespace InstrManifestCompiler.Collections
         ///   </para>
         /// </remarks>
         bool ContainsValue(TValue value);
-    }
-
-    /// <summary>
-    ///   Contract for <see cref="IOrderedDictionary{TKey,TValue}"/>.
-    /// </summary>
-    [ContractClassFor(typeof(IOrderedDictionary<,>))]
-    internal abstract class IOrderedDictionaryContract<TKey, TValue> : IOrderedDictionary<TKey, TValue>
-    {
-        IList<TKey> IOrderedDictionary<TKey, TValue>.Keys
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<IList<TKey>>() != null);
-                return default(IList<TKey>);
-            }
-        }
-
-        IList<TValue> IOrderedDictionary<TKey, TValue>.Values
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<IList<TValue>>() != null);
-                return default(IList<TValue>);
-            }
-        }
-
-        TValue IOrderedDictionary<TKey, TValue>.GetAt(int index)
-        {
-            Contract.Requires<ArgumentOutOfRangeException>(index >= 0 && index < Count);
-            return default(TValue);
-        }
-
-        void IOrderedDictionary<TKey, TValue>.SetAt(int index, TValue value)
-        {
-            Contract.Requires<ArgumentOutOfRangeException>(index >= 0 && index < Count);
-        }
-
-        void IOrderedDictionary<TKey, TValue>.Insert(int index, TKey key, TValue value)
-        {
-            Contract.Requires<ArgumentOutOfRangeException>(index >= 0 && index <= Count);
-        }
-
-        bool IOrderedDictionary<TKey, TValue>.ContainsValue(TValue value)
-        {
-            return default(bool);
-        }
-
-        public abstract IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator();
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        public abstract void Add(KeyValuePair<TKey, TValue> item);
-
-        public abstract void Clear();
-
-        public abstract bool Contains(KeyValuePair<TKey, TValue> item);
-
-        public abstract void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex);
-
-        public abstract bool Remove(KeyValuePair<TKey, TValue> item);
-
-        public abstract int Count { get; }
-        public abstract bool IsReadOnly { get; }
-
-        public abstract bool ContainsKey(TKey key);
-
-        public abstract void Add(TKey key, TValue value);
-
-        public abstract bool Remove(TKey key);
-
-        public abstract bool TryGetValue(TKey key, out TValue value);
-
-        public abstract TValue this[TKey key] { get; set; }
-
-        public abstract ICollection<TKey> Keys { get; }
-
-        public abstract ICollection<TValue> Values { get; }
     }
 }

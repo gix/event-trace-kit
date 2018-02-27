@@ -1,7 +1,6 @@
 namespace InstrManifestCompiler.EventManifestSchema.Base
 {
     using System;
-    using System.Diagnostics.Contracts;
     using System.Xml;
     using System.Xml.Linq;
 
@@ -141,8 +140,10 @@ namespace InstrManifestCompiler.EventManifestSchema.Base
 
         public static QName Parse(string str, IXmlNamespaceResolver xmlns)
         {
-            Contract.Requires<ArgumentNullException>(str != null);
-            Contract.Requires<ArgumentNullException>(xmlns != null);
+            if (str == null)
+                throw new ArgumentNullException(nameof(str));
+            if (xmlns == null)
+                throw new ArgumentNullException(nameof(xmlns));
 
             int index = str.IndexOf(':');
             if (index == -1)

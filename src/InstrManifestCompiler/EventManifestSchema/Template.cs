@@ -2,7 +2,6 @@ namespace InstrManifestCompiler.EventManifestSchema
 {
     using System;
     using System.Diagnostics;
-    using System.Diagnostics.Contracts;
     using System.Xml.Linq;
     using InstrManifestCompiler.Support;
 
@@ -11,7 +10,8 @@ namespace InstrManifestCompiler.EventManifestSchema
     {
         public Template(RefValue<string> id)
         {
-            Contract.Requires<ArgumentNullException>(id != null);
+            if (id == null)
+                throw new ArgumentNullException(nameof(id));
             Id = id;
             Properties = new PropertyCollection();
         }

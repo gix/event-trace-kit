@@ -2,7 +2,6 @@ namespace InstrManifestCompiler.EventManifestSchema
 {
     using System;
     using System.Diagnostics;
-    using System.Diagnostics.Contracts;
     using InstrManifestCompiler.Support;
 
     public enum ChannelType
@@ -25,7 +24,8 @@ namespace InstrManifestCompiler.EventManifestSchema
     {
         public Channel(RefValue<string> name, StructValue<ChannelType> type)
         {
-            Contract.Requires<ArgumentNullException>(name != null);
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
             Name = name;
             Type = type;
         }

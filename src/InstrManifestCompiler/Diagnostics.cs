@@ -2,7 +2,6 @@ namespace InstrManifestCompiler
 {
     using System;
     using System.ComponentModel.Composition;
-    using System.Diagnostics.Contracts;
     using System.IO;
     using InstrManifestCompiler.Support;
 
@@ -17,7 +16,6 @@ namespace InstrManifestCompiler
     }
 
     /// <summary>Allows reporting diagnostics.</summary>
-    [ContractClass(typeof(IDiagnosticsContract))]
     public interface IDiagnostics
     {
         bool ErrorOccurred { get; }
@@ -26,30 +24,6 @@ namespace InstrManifestCompiler
         void Report(
             DiagnosticSeverity severity, SourceLocation location,
             string message, params object[] args);
-    }
-
-    /// <summary>Contract for <see cref="IDiagnostics"/>.</summary>
-    [ContractClassFor(typeof(IDiagnostics))]
-    internal abstract class IDiagnosticsContract : IDiagnostics
-    {
-        public bool ErrorOccurred { get { return default(bool); } }
-
-        public int ErrorCount
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<int>() >= 0);
-                return default(int);
-            }
-        }
-
-        void IDiagnostics.Report(
-            DiagnosticSeverity severity, SourceLocation location, string message, params object[] args)
-        {
-            Contract.Requires<ArgumentException>(Enum.IsDefined(typeof(DiagnosticSeverity), severity));
-            Contract.Requires<ArgumentNullException>(location != null);
-            Contract.Requires<ArgumentNullException>(message != null);
-        }
     }
 
     /// <summary>Extensions for <see cref="IDiagnostics"/>.</summary>
@@ -139,24 +113,10 @@ namespace InstrManifestCompiler
     ///   Provides functionality to consume diagnostics reported to a <see cref="IDiagnostics"/>
     ///   engine.
     /// </summary>
-    [ContractClass(typeof(IDiagnosticConsumerContract))]
     internal interface IDiagnosticConsumer
     {
         void HandleDiagnostic(
             DiagnosticSeverity severity, SourceLocation location, string message);
-    }
-
-    /// <summary>Contract for <see cref="IDiagnosticConsumer"/>.</summary>
-    [ContractClassFor(typeof(IDiagnosticConsumer))]
-    internal abstract class IDiagnosticConsumerContract : IDiagnosticConsumer
-    {
-        void IDiagnosticConsumer.HandleDiagnostic(
-            DiagnosticSeverity severity, SourceLocation location, string message)
-        {
-            Contract.Requires<ArgumentException>(Enum.IsDefined(typeof(DiagnosticSeverity), severity));
-            Contract.Requires<ArgumentNullException>(location != null);
-            Contract.Requires<ArgumentNullException>(message != null);
-        }
     }
 
     [Export(typeof(IDiagnostics))]
@@ -171,7 +131,8 @@ namespace InstrManifestCompiler
 
         public DiagnosticsEngine(IDiagnosticConsumer consumer)
         {
-            Contract.Requires<ArgumentNullException>(consumer != null);
+            if (consumer == null)
+                throw new ArgumentNullException(nameof(consumer));
             this.consumer = consumer;
         }
 
@@ -187,6 +148,13 @@ namespace InstrManifestCompiler
         public void Report(
             DiagnosticSeverity severity, SourceLocation location, string message, params object[] args)
         {
+            if (!Enum.IsDefined(typeof(DiagnosticSeverity), severity))
+                throw new ArgumentOutOfRangeException(nameof(severity), severity, null);
+            if (location == null)
+                throw new ArgumentNullException(nameof(location));
+            if (message == null)
+                throw new ArgumentNullException(nameof(message));
+
             if (severity == DiagnosticSeverity.Error)
                 ++ErrorCount;
             if (args != null && args.Length > 0)
@@ -213,7 +181,8 @@ namespace InstrManifestCompiler
         /// </param>
         public DiagnosticErrorTrap(IDiagnostics diags)
         {
-            Contract.Requires<ArgumentNullException>(diags != null);
+            if (diags == null)
+                throw new ArgumentNullException(nameof(diags));
             this.diags = diags;
             Reset();
         }
@@ -270,13 +239,21 @@ namespace InstrManifestCompiler
 
         public ConsoleDiagnosticPrinter(TextWriter output)
         {
-            Contract.Requires<ArgumentNullException>(output != null);
+            if (output == null)
+                throw new ArgumentNullException(nameof(output));
             this.output = output;
         }
 
         public void HandleDiagnostic(
             DiagnosticSeverity severity, SourceLocation location, string message)
         {
+            if (!Enum.IsDefined(typeof(DiagnosticSeverity), severity))
+                throw new ArgumentOutOfRangeException(nameof(severity), severity, null);
+            if (location == null)
+                throw new ArgumentNullException(nameof(location));
+            if (message == null)
+                throw new ArgumentNullException(nameof(message));
+
             if (severity == DiagnosticSeverity.Ignored)
                 return;
 

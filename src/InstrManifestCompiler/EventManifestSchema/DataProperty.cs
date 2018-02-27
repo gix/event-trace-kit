@@ -1,7 +1,6 @@
 namespace InstrManifestCompiler.EventManifestSchema
 {
     using System;
-    using System.Diagnostics.Contracts;
     using InstrManifestCompiler.EventManifestSchema.Base;
     using InstrManifestCompiler.Support;
 
@@ -10,7 +9,8 @@ namespace InstrManifestCompiler.EventManifestSchema
         public DataProperty(RefValue<string> name, InType inType)
             : base(name)
         {
-            Contract.Requires<ArgumentNullException>(inType != null);
+            if (inType == null)
+                throw new ArgumentNullException(nameof(inType));
             InType = inType;
         }
 

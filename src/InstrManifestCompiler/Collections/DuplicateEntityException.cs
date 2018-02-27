@@ -1,7 +1,6 @@
 namespace InstrManifestCompiler.Collections
 {
     using System;
-    using System.Diagnostics.Contracts;
     using System.Runtime.Serialization;
     using System.Security;
 
@@ -86,7 +85,8 @@ namespace InstrManifestCompiler.Collections
         [SecurityCritical]
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            Contract.Requires<ArgumentNullException>(info != null);
+            if (info == null)
+                throw new ArgumentNullException(nameof(info));
 
             base.GetObjectData(info, context);
         }

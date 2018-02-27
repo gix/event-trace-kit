@@ -6,7 +6,6 @@ namespace InstrManifestCompiler.Collections
     using System.Collections.Specialized;
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
-    using System.Diagnostics.Contracts;
     using System.Globalization;
     using System.Runtime.InteropServices;
     using System.Runtime.Serialization;
@@ -246,6 +245,9 @@ namespace InstrManifestCompiler.Collections
         /// </exception>
         public TValue GetAt(int index)
         {
+            if (index < 0 || index >= Count)
+                throw new ArgumentOutOfRangeException(nameof(index), index, null);
+
             return objectsArray[index].Value;
         }
 
@@ -266,6 +268,9 @@ namespace InstrManifestCompiler.Collections
         /// </exception>
         public void SetAt(int index, TValue value)
         {
+            if (index < 0 || index >= Count)
+                throw new ArgumentOutOfRangeException(nameof(index), index, null);
+
             KeyValuePair<TKey, TValue> entry = objectsArray[index];
             TKey key = entry.Key;
             objectsArray[index] = new KeyValuePair<TKey, TValue>(key, value);
@@ -297,6 +302,9 @@ namespace InstrManifestCompiler.Collections
         /// </exception>
         public void Insert(int index, TKey key, TValue value)
         {
+            if (index < 0 || index >= Count)
+                throw new ArgumentOutOfRangeException(nameof(index), index, null);
+
             objectsArray.Insert(index, new KeyValuePair<TKey, TValue>(key, value));
             objectsTable.Add(key, value);
         }
@@ -448,7 +456,7 @@ namespace InstrManifestCompiler.Collections
                 throw new ArgumentNullException(nameof(key));
 
             bool ret = objectsTable.TryGetValue(key, out value);
-            Contract.Assume(ret == ContainsKey(key));
+            Debug.Assert(ret == ContainsKey(key));
             return ret;
         }
 
@@ -761,7 +769,8 @@ namespace InstrManifestCompiler.Collections
         /// </remarks>
         private OrderedDictionary(SerializationInfo info, StreamingContext context)
         {
-            Contract.Requires<ArgumentNullException>(info != null);
+            if (info == null)
+                throw new ArgumentNullException(nameof(info));
 
             comparer = info.GetValue<IEqualityComparer<TKey>>("KeyComparer");
             var objArray = info.GetValue<KeyValuePair<TKey, TValue>[]>("ArrayList");
@@ -841,12 +850,6 @@ namespace InstrManifestCompiler.Collections
             throw new ArgumentException(message, nameof(value));
         }
 
-        [ContractInvariantMethod]
-        private void ObjectInvariant()
-        {
-            Contract.Invariant(objectsArray.Count == objectsTable.Count);
-        }
-
         private sealed class Enumerator : IDictionaryEnumerator
         {
             private readonly IEnumerator<KeyValuePair<TKey, TValue>> enumerator;
@@ -918,7 +921,7 @@ namespace InstrManifestCompiler.Collections
             public void CopyTo(TKey[] array, int index)
             {
                 foreach (var entry in dictionary.objectsArray) {
-                    Contract.Assume(index < array.Length);
+                    Debug.Assert(index < array.Length);
                     array[index++] = entry.Key;
                 }
             }
@@ -1054,7 +1057,7 @@ namespace InstrManifestCompiler.Collections
             public void CopyTo(TValue[] array, int index)
             {
                 foreach (var entry in dictionary.objectsArray) {
-                    Contract.Assume(index < array.Length);
+                    Debug.Assert(index < array.Length);
                     array[index++] = entry.Value;
                 }
             }
@@ -1161,7 +1164,8 @@ namespace InstrManifestCompiler.Collections
 
             public CollectionDebuggerProxy(ICollection<T> collection)
             {
-                Contract.Requires<ArgumentNullException>(collection != null);
+                if (collection == null)
+                    throw new ArgumentNullException(nameof(collection));
                 this.collection = collection;
             }
 
@@ -1184,7 +1188,8 @@ namespace InstrManifestCompiler.Collections
 
             public DebuggerProxy(IDictionary<TKey, TValue> dictionary)
             {
-                Contract.Requires<ArgumentNullException>(dictionary != null);
+                if (dictionary == null)
+                    throw new ArgumentNullException(nameof(dictionary));
                 this.dictionary = dictionary;
             }
 

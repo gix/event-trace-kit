@@ -2,7 +2,6 @@ namespace InstrManifestCompiler.EventManifestSchema
 {
     using System;
     using System.Diagnostics;
-    using System.Diagnostics.Contracts;
     using InstrManifestCompiler.Support;
 
     public sealed class ValueMapItem : MapItem
@@ -10,7 +9,8 @@ namespace InstrManifestCompiler.EventManifestSchema
         public ValueMapItem(ValueMap map, StructValue<uint> value, LocalizedString message)
             : base(value, message)
         {
-            Contract.Requires<ArgumentNullException>(map != null);
+            if (map == null)
+                throw new ArgumentNullException(nameof(map));
             Map = map;
         }
 
@@ -19,7 +19,8 @@ namespace InstrManifestCompiler.EventManifestSchema
             LocalizedString message)
             : base(value, message, symbol)
         {
-            Contract.Requires<ArgumentNullException>(map != null);
+            if (map == null)
+                throw new ArgumentNullException(nameof(map));
             Map = map;
         }
 

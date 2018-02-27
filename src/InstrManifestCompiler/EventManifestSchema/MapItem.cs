@@ -2,7 +2,6 @@ namespace InstrManifestCompiler.EventManifestSchema
 {
     using System;
     using System.Diagnostics;
-    using System.Diagnostics.Contracts;
     using InstrManifestCompiler.Support;
 
     public interface IMapItem
@@ -19,7 +18,8 @@ namespace InstrManifestCompiler.EventManifestSchema
     {
         protected MapItem(StructValue<uint> value, LocalizedString message)
         {
-            Contract.Requires<ArgumentNullException>(message != null);
+            if (message == null)
+                throw new ArgumentNullException(nameof(message));
             Value = value;
             Message = message;
         }

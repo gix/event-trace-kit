@@ -2,7 +2,6 @@ namespace InstrManifestCompiler.EventManifestSchema
 {
     using System;
     using System.Diagnostics;
-    using System.Diagnostics.Contracts;
     using InstrManifestCompiler.EventManifestSchema.Base;
     using InstrManifestCompiler.Support;
 
@@ -11,7 +10,8 @@ namespace InstrManifestCompiler.EventManifestSchema
     {
         public Keyword(RefValue<QName> name, StructValue<ulong> mask)
         {
-            Contract.Requires<ArgumentNullException>(name != null);
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
             Name = name;
             Mask = mask;
         }

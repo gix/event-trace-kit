@@ -2,15 +2,16 @@ namespace InstrManifestCompiler.EventManifestSchema
 {
     using System;
     using System.Diagnostics;
-    using System.Diagnostics.Contracts;
     using InstrManifestCompiler.Support;
 
     public sealed class PatternMapItem : SourceItem
     {
         public PatternMapItem(PatternMap map, RefValue<string> name, RefValue<string> value)
         {
-            Contract.Requires<ArgumentNullException>(map != null);
-            Contract.Requires<ArgumentNullException>(name != null);
+            if (map == null)
+                throw new ArgumentNullException(nameof(map));
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
             Map = map;
             Name = name;
             Value = value;
@@ -26,8 +27,10 @@ namespace InstrManifestCompiler.EventManifestSchema
     {
         public PatternMap(RefValue<string> name, RefValue<string> format)
         {
-            Contract.Requires<ArgumentNullException>(name != null);
-            Contract.Requires<ArgumentNullException>(format != null);
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
+            if (format == null)
+                throw new ArgumentNullException(nameof(format));
             Name = name;
             Format = format;
             Items = new PatternMapItemCollection();

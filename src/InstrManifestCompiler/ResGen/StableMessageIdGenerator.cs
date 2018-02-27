@@ -1,7 +1,6 @@
 namespace InstrManifestCompiler.ResGen
 {
     using System;
-    using System.Diagnostics.Contracts;
     using InstrManifestCompiler.EventManifestSchema;
     using InstrManifestCompiler.Support;
 
@@ -14,7 +13,8 @@ namespace InstrManifestCompiler.ResGen
 
         public StableMessageIdGenerator(IDiagnostics diags)
         {
-            Contract.Requires<ArgumentNullException>(diags != null);
+            if (diags == null)
+                throw new ArgumentNullException(nameof(diags));
             this.diags = diags;
         }
 

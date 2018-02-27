@@ -1,7 +1,6 @@
 namespace InstrManifestCompiler.EventManifestSchema
 {
     using System;
-    using System.Diagnostics.Contracts;
     using InstrManifestCompiler.Support;
 
     public sealed class BitMapItem : MapItem
@@ -11,7 +10,8 @@ namespace InstrManifestCompiler.EventManifestSchema
         public BitMapItem(BitMap map, StructValue<uint> value, LocalizedString message)
             : base(value, message)
         {
-            Contract.Requires<ArgumentNullException>(map != null);
+            if (map == null)
+                throw new ArgumentNullException(nameof(map));
             this.map = map;
         }
 
@@ -20,7 +20,8 @@ namespace InstrManifestCompiler.EventManifestSchema
             LocalizedString message)
             : base(value, message, symbol)
         {
-            Contract.Requires<ArgumentNullException>(map != null);
+            if (map == null)
+                throw new ArgumentNullException(nameof(map));
             this.map = map;
         }
 

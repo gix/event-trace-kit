@@ -2,9 +2,7 @@ namespace InstrManifestCompiler.EventManifestSchema
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.Contracts;
     using System.Globalization;
-    using System.Linq;
     using InstrManifestCompiler.Collections;
     using InstrManifestCompiler.Support;
 
@@ -45,9 +43,10 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         public LocalizedString GetString(string stringRef, LocalizedResourceSet resourceSet)
         {
-            Contract.Requires<ArgumentNullException>(stringRef != null);
-            Contract.Requires<ArgumentNullException>(resourceSet != null);
-            Contract.Requires<ArgumentException>(Resources.Contains(resourceSet));
+            if (stringRef == null)
+                throw new ArgumentNullException(nameof(stringRef));
+            if (resourceSet == null)
+                throw new ArgumentNullException(nameof(resourceSet));
 
             if (IsStringTableRef(stringRef)) {
                 string name = stringRef.Substring(9, stringRef.Length - 10);

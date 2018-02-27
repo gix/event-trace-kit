@@ -2,7 +2,6 @@ namespace InstrManifestCompiler.Extensions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.Contracts;
     using InstrManifestCompiler.Collections;
 
     public static class SortExtensions
@@ -10,8 +9,10 @@ namespace InstrManifestCompiler.Extensions
         public static List<T> SortBy<T, TResult>(
             this List<T> list, Func<T, TResult> selector) where TResult : IComparable<TResult>
         {
-            Contract.Requires<ArgumentNullException>(list != null);
-            Contract.Requires<ArgumentNullException>(selector != null);
+            if (list == null)
+                throw new ArgumentNullException(nameof(list));
+            if (selector == null)
+                throw new ArgumentNullException(nameof(selector));
             list.Sort((x, y) => selector(x).CompareTo(selector(y)));
             return list;
         }
@@ -19,83 +20,106 @@ namespace InstrManifestCompiler.Extensions
         public static IList<T> StableSortBy<T, TResult>(
             this IList<T> list, Func<T, TResult> selector) where TResult : IComparable<TResult>
         {
-            Contract.Requires<ArgumentNullException>(list != null);
-            Contract.Requires<ArgumentNullException>(selector != null);
+            if (list == null)
+                throw new ArgumentNullException(nameof(list));
+            if (selector == null)
+                throw new ArgumentNullException(nameof(selector));
             return list.StableSort(new SelectorComparer<T, TResult>(selector));
         }
 
         public static IList<T> StableSort<T>(this IList<T> list)
         {
-            Contract.Requires<ArgumentNullException>(list != null);
+            if (list == null)
+                throw new ArgumentNullException(nameof(list));
             return UncheckedMergeSort(list, 0, list.Count, Comparer<T>.Default);
         }
 
         public static IList<T> StableSort<T>(this IList<T> list, Comparison<T> comparison)
         {
-            Contract.Requires<ArgumentNullException>(list != null);
-            Contract.Requires<ArgumentNullException>(comparison != null);
+            if (list == null)
+                throw new ArgumentNullException(nameof(list));
+            if (comparison == null)
+                throw new ArgumentNullException(nameof(comparison));
             return UncheckedMergeSort(list, 0, list.Count, new FunctorComparer<T>(comparison));
         }
 
         public static IList<T> StableSort<T>(this IList<T> list, IComparer<T> comparer)
         {
-            Contract.Requires<ArgumentNullException>(list != null);
-            Contract.Requires<ArgumentNullException>(comparer != null);
+            if (list == null)
+                throw new ArgumentNullException(nameof(list));
+            if (comparer == null)
+                throw new ArgumentNullException(nameof(comparer));
             return UncheckedMergeSort(list, 0, list.Count, comparer);
         }
 
         public static IList<T> StableSort<T>(
             this IList<T> list, int index, int count, Comparison<T> comparison)
         {
-            Contract.Requires<ArgumentNullException>(list != null);
-            Contract.Requires<ArgumentNullException>(comparison != null);
+            if (list == null)
+                throw new ArgumentNullException(nameof(list));
+            if (comparison == null)
+                throw new ArgumentNullException(nameof(comparison));
             return UncheckedMergeSort(list, index, count, new FunctorComparer<T>(comparison));
         }
 
         public static IList<T> StableSort<T>(
             this IList<T> list, int index, int count, IComparer<T> comparer)
         {
-            Contract.Requires<ArgumentNullException>(list != null);
-            Contract.Requires<ArgumentNullException>(comparer != null);
+            if (list == null)
+                throw new ArgumentNullException(nameof(list));
+            if (comparer == null)
+                throw new ArgumentNullException(nameof(comparer));
             return UncheckedMergeSort(list, index, count, comparer);
         }
 
         public static IList<T> MergeSort<T>(this IList<T> list)
         {
-            Contract.Requires<ArgumentNullException>(list != null);
+            if (list == null)
+                throw new ArgumentNullException(nameof(list));
             return UncheckedMergeSort(list, 0, list.Count, Comparer<T>.Default);
         }
 
         public static IList<T> MergeSort<T>(this IList<T> list, Comparison<T> comparison)
         {
-            Contract.Requires<ArgumentNullException>(list != null);
-            Contract.Requires<ArgumentNullException>(comparison != null);
+            if (list == null)
+                throw new ArgumentNullException(nameof(list));
+            if (comparison == null)
+                throw new ArgumentNullException(nameof(comparison));
             return UncheckedMergeSort(list, 0, list.Count, new FunctorComparer<T>(comparison));
         }
 
         public static IList<T> MergeSort<T>(this IList<T> list, IComparer<T> comparer)
         {
-            Contract.Requires<ArgumentNullException>(list != null);
-            Contract.Requires<ArgumentNullException>(comparer != null);
+            if (list == null)
+                throw new ArgumentNullException(nameof(list));
+            if (comparer == null)
+                throw new ArgumentNullException(nameof(comparer));
             return UncheckedMergeSort(list, 0, list.Count, comparer);
         }
 
         public static IList<T> MergeSort<T>(
             this IList<T> list, int index, int count, Comparison<T> comparison)
         {
-            Contract.Requires<ArgumentNullException>(list != null);
-            Contract.Requires<ArgumentNullException>(comparison != null);
+            if (list == null)
+                throw new ArgumentNullException(nameof(list));
+            if (comparison == null)
+                throw new ArgumentNullException(nameof(comparison));
             return UncheckedMergeSort(list, index, count, new FunctorComparer<T>(comparison));
         }
 
         public static IList<T> MergeSort<T>(
             this IList<T> list, int index, int count, IComparer<T> comparer)
         {
-            Contract.Requires<ArgumentNullException>(list != null);
-            Contract.Requires<ArgumentNullException>(comparer != null);
-            Contract.Requires<ArgumentOutOfRangeException>(index >= 0);
-            Contract.Requires<ArgumentOutOfRangeException>(count >= 0);
-            Contract.Requires<ArgumentException>(list.Count - index < count);
+            if (list == null)
+                throw new ArgumentNullException(nameof(list));
+            if (comparer == null)
+                throw new ArgumentNullException(nameof(comparer));
+            if (index < 0)
+                throw new ArgumentOutOfRangeException(nameof(index), index, null);
+            if (count < 0)
+                throw new ArgumentOutOfRangeException(nameof(count), count, null);
+            if (list.Count - index >= count)
+                throw new ArgumentException("Invalid range");
             return UncheckedMergeSort(list, index, count, comparer);
         }
 

@@ -2,7 +2,6 @@ namespace InstrManifestCompiler.EventManifestSchema
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.Contracts;
     using System.Linq;
     using InstrManifestCompiler.Collections;
     using InstrManifestCompiler.EventManifestSchema.Base;
@@ -58,7 +57,8 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         public ProviderCollection(EventManifest manifest)
         {
-            Contract.Requires<ArgumentNullException>(manifest != null);
+            if (manifest == null)
+                throw new ArgumentNullException(nameof(manifest));
             this.manifest = manifest;
             UniqueConstraintFor(e => e.Name)
                 .WithMessage("Duplicate provider name: '{0}'", e => e.Name)
@@ -73,7 +73,8 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         protected override void InsertItem(int index, Provider item)
         {
-            //Contract.Requires<InvalidOperationException>(item.Manifest == null);
+            //if (item.Manifest != null)
+            //    throw new InvalidOperationException();
             base.InsertItem(index, item);
             item.Manifest = manifest;
             item.Index = index;
@@ -81,7 +82,8 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         protected override void SetItem(int index, Provider newItem)
         {
-            //Contract.Requires<InvalidOperationException>(newItem.Manifest == null);
+            //if (item.Manifest != null)
+            //    throw new InvalidOperationException();
             Provider oldItem = this[index];
             base.SetItem(index, newItem);
             oldItem.Manifest = null;
@@ -106,20 +108,23 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         protected ProviderItemCollection(Provider provider)
         {
-            Contract.Requires<ArgumentNullException>(provider != null);
+            if (provider == null)
+                throw new ArgumentNullException(nameof(provider));
             this.provider = provider;
         }
 
         protected override void InsertItem(int index, T item)
         {
-            //Contract.Requires<InvalidOperationException>(item.Provider == null);
+            //if (item.Provider != null)
+            //    throw new InvalidOperationException();
             base.InsertItem(index, item);
             item.Provider = provider;
         }
 
         protected override void SetItem(int index, T newItem)
         {
-            //Contract.Requires<InvalidOperationException>(newItem.Provider == null);
+            //if (item.Provider != null)
+            //    throw new InvalidOperationException();
             T oldItem = this[index];
             base.SetItem(index, newItem);
             oldItem.Provider = null;
@@ -422,7 +427,8 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         public LocalizedString Import(LocalizedString str)
         {
-            Contract.Requires<ArgumentNullException>(str != null);
+            if (str == null)
+                throw new ArgumentNullException(nameof(str));
 
             var @string = GetByName(str.Name);
             if (@string == null) {

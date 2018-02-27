@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.Contracts;
     using System.Globalization;
     using System.IO;
     using System.Linq;
@@ -33,7 +32,8 @@
 
         public EventTemplateReader(IDiagnostics diags, IEventManifestMetadata metadata = null)
         {
-            Contract.Requires<ArgumentNullException>(diags != null);
+            if (diags == null)
+                throw new ArgumentNullException(nameof(diags));
 
             this.diags = diags;
             this.metadata = metadata;

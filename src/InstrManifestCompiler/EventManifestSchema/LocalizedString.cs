@@ -2,7 +2,6 @@ namespace InstrManifestCompiler.EventManifestSchema
 {
     using System;
     using System.Diagnostics;
-    using System.Diagnostics.Contracts;
     using InstrManifestCompiler.Support;
 
     [DebuggerDisplay("{RefId}(0x{Id,h}) = '{Value}'")]
@@ -17,8 +16,10 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         public LocalizedString(RefValue<string> name, string value, uint id)
         {
-            Contract.Requires<ArgumentNullException>(name != null);
-            Contract.Requires<ArgumentNullException>(value != null);
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
+            if (value == null)
+                throw new ArgumentNullException(nameof(value));
             Name = name;
             Value = value;
             Id = id;

@@ -1,7 +1,6 @@
 namespace InstrManifestCompiler.Build.Tasks
 {
     using System;
-    using System.Diagnostics.Contracts;
     using System.IO;
     using System.Security;
     using Microsoft.Build.Framework;
@@ -21,8 +20,10 @@ namespace InstrManifestCompiler.Build.Tasks
 
         internal static string GetTemporaryFile(string directory, string extension)
         {
-            Contract.Requires<ArgumentNullException>(directory == null || directory.Length != 0);
-            Contract.Requires<ArgumentException>(!String.IsNullOrEmpty(extension));
+            if (string.IsNullOrEmpty(directory))
+                throw new ArgumentNullException(nameof(directory));
+            if (string.IsNullOrEmpty(extension))
+                throw new ArgumentNullException(nameof(extension));
 
             if (extension[0] != '.')
                 extension = '.' + extension;

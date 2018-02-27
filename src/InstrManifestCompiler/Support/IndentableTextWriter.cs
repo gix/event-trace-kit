@@ -1,7 +1,6 @@
 namespace InstrManifestCompiler.Support
 {
     using System;
-    using System.Diagnostics.Contracts;
     using System.IO;
     using System.Text;
 
@@ -14,7 +13,8 @@ namespace InstrManifestCompiler.Support
 
         public IndentableTextWriter(TextWriter writer)
         {
-            Contract.Requires<ArgumentNullException>(writer != null);
+            if (writer == null)
+                throw new ArgumentNullException(nameof(writer));
             this.writer = writer;
 
             NewLine = "\n";
@@ -25,12 +25,12 @@ namespace InstrManifestCompiler.Support
         {
             get
             {
-                Contract.Ensures(Contract.Result<int>() >= 0);
                 return indentLevel;
             }
             set
             {
-                Contract.Requires<ArgumentOutOfRangeException>(value >= 0);
+                if (value < 0 )
+                    throw new ArgumentOutOfRangeException(nameof(value), value, null);
                 indentLevel = value;
             }
         }
@@ -39,12 +39,12 @@ namespace InstrManifestCompiler.Support
         {
             get
             {
-                Contract.Ensures(Contract.Result<string>() != null);
                 return indentChars;
             }
             set
             {
-                Contract.Requires<ArgumentNullException>(value != null);
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
                 indentChars = value;
             }
         }

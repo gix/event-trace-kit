@@ -3,7 +3,6 @@ namespace InstrManifestCompiler.Collections
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
-    using System.Diagnostics.Contracts;
     using System.Linq;
 
     public abstract class ConstrainedEntityCollection<T>
@@ -14,11 +13,19 @@ namespace InstrManifestCompiler.Collections
 
         public bool IsUnique(T entity)
         {
+            if (default(T) == null && entity == null)
+                throw new ArgumentNullException(nameof(entity));
+
             return uniqueConstraints.All(c => c.IsSatisfiedBy(entity));
         }
 
         public bool IsUnique(T entity, IDiagnostics diags)
         {
+            if (default(T) == null && entity == null)
+                throw new ArgumentNullException(nameof(entity));
+            if (diags == null)
+                throw new ArgumentNullException(nameof(diags));
+
             bool unique = true;
             foreach (var constraint in uniqueConstraints) {
                 if (!constraint.IsSatisfiedBy(entity, diags))
@@ -47,7 +54,8 @@ namespace InstrManifestCompiler.Collections
         protected IUniqueConstraintOptions<T, TProperty>
             UniqueConstraintFor<TProperty>(Func<T, TProperty> selector)
         {
-            Contract.Requires<ArgumentNullException>(selector != null);
+            if (selector == null)
+                throw new ArgumentNullException(nameof(selector));
 
             var constraint = new UniqueConstraint<T, TProperty>(selector);
             uniqueConstraints.Add(constraint);

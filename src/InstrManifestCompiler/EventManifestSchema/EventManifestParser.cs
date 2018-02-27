@@ -2,7 +2,6 @@ namespace InstrManifestCompiler.EventManifestSchema
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.Contracts;
     using System.Globalization;
     using System.IO;
     using System.Linq;
@@ -58,7 +57,8 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         public EventManifestParser(IDiagnostics diags, string schemaPath)
         {
-            Contract.Requires<ArgumentNullException>(diags != null);
+            if (diags == null)
+                throw new ArgumentNullException(nameof(diags));
             this.diags = diags;
             this.schemaPath = schemaPath ?? FindSchema();
 
@@ -68,7 +68,8 @@ namespace InstrManifestCompiler.EventManifestSchema
         public static EventManifestParser CreateWithWinmeta(
             IDiagnostics diags, string schemaPath = null, string winmetaPath = null)
         {
-            Contract.Requires<ArgumentNullException>(diags != null);
+            if (diags == null)
+                throw new ArgumentNullException(nameof(diags));
 
             string sdkPath = WindowsSdkUtils.FindSdkPath();
             if (schemaPath == null && sdkPath != null)
@@ -107,7 +108,8 @@ namespace InstrManifestCompiler.EventManifestSchema
         public static IEventManifestMetadata LoadWinmeta(
             IDiagnostics diags, string schemaPath = null, string winmetaPath = null)
         {
-            Contract.Requires<ArgumentNullException>(diags != null);
+            if (diags == null)
+                throw new ArgumentNullException(nameof(diags));
 
             string sdkPath = WindowsSdkUtils.FindSdkPath();
             if (schemaPath == null && sdkPath != null)
@@ -150,17 +152,26 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         public void AddMetadata(IEventManifestMetadata metadata)
         {
+            if (metadata == null)
+                throw new ArgumentNullException(nameof(metadata));
+
             this.metadata.Add(metadata);
         }
 
         public EventManifest ParseManifest(Stream input, string inputUri = null)
         {
+            if (input == null)
+                throw new ArgumentNullException(nameof(input));
+
             using (var reader = CreateXmlReader(input, inputUri))
                 return ParseManifest(reader);
         }
 
         public IEventManifestMetadata ParseWinmeta(Stream input, string inputUri = null)
         {
+            if (input == null)
+                throw new ArgumentNullException(nameof(input));
+
             IEventManifestSpecification userSpec = manifestSpec;
             try {
                 manifestSpec = winmetaSpec;
@@ -172,6 +183,9 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         public IEventManifestMetadata ParseMetadata(Stream input, string inputUri)
         {
+            if (input == null)
+                throw new ArgumentNullException(nameof(input));
+
             using (var reader = CreateXmlReader(input, inputUri))
                 return ParseMetadata(reader);
         }

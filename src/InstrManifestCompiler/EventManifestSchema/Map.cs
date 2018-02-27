@@ -1,7 +1,6 @@
 namespace InstrManifestCompiler.EventManifestSchema
 {
     using System;
-    using System.Diagnostics.Contracts;
     using InstrManifestCompiler.Support;
 
     public enum MapKind
@@ -23,7 +22,8 @@ namespace InstrManifestCompiler.EventManifestSchema
     {
         protected Map(RefValue<string> name)
         {
-            Contract.Requires<ArgumentNullException>(name != null);
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
             Name = name;
             Items = new MapItemCollection<IMapItem>();
         }

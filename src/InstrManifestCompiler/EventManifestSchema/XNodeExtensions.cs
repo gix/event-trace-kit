@@ -1,7 +1,6 @@
 namespace InstrManifestCompiler.EventManifestSchema
 {
     using System;
-    using System.Diagnostics.Contracts;
     using System.Globalization;
     using System.Xml.Linq;
     using InstrManifestCompiler.EventManifestSchema.Base;
@@ -12,7 +11,8 @@ namespace InstrManifestCompiler.EventManifestSchema
     {
         public static RefValue<string> GetString(this XElement elem, string name)
         {
-            Contract.Requires<ArgumentNullException>(elem != null, "elem");
+            if (elem == null)
+                throw new ArgumentNullException(nameof(elem));
 
             XAttribute attrib = elem.Attribute(name);
             if (attrib == null)
@@ -24,7 +24,8 @@ namespace InstrManifestCompiler.EventManifestSchema
         public static RefValue<string> GetOptionalString(
             this XElement elem, string name, string defaultValue = null)
         {
-            Contract.Requires<ArgumentNullException>(elem != null, "elem");
+            if (elem == null)
+                throw new ArgumentNullException(nameof(elem));
 
             XAttribute attrib = elem.Attribute(name);
             if (attrib == null)
@@ -35,8 +36,10 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         public static RefValue<QName> GetQName(this XElement elem, string name)
         {
-            Contract.Requires<ArgumentNullException>(elem != null);
-            Contract.Requires<ArgumentNullException>(name != null);
+            if (elem == null)
+                throw new ArgumentNullException(nameof(elem));
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
 
             XAttribute attrib = elem.Attribute(name);
             if (attrib == null)
@@ -50,8 +53,10 @@ namespace InstrManifestCompiler.EventManifestSchema
         public static RefValue<QName> GetOptionalQName(
             this XElement elem, string name, QName defaultValue = null)
         {
-            Contract.Requires<ArgumentNullException>(elem != null);
-            Contract.Requires<ArgumentNullException>(name != null);
+            if (elem == null)
+                throw new ArgumentNullException(nameof(elem));
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
 
             XAttribute attrib = elem.Attribute(name);
             if (attrib == null)
@@ -65,7 +70,8 @@ namespace InstrManifestCompiler.EventManifestSchema
         public static RefValue<string> GetCSymbol(
             this XElement elem, string name, string defaultValue = null)
         {
-            Contract.Requires<ArgumentNullException>(elem != null, "elem");
+            if (elem == null)
+                throw new ArgumentNullException(nameof(elem));
 
             XAttribute attrib = elem.Attribute(name);
             if (attrib == null)
@@ -76,7 +82,8 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         public static StructValue<byte> GetUInt8(this XElement elem, string name)
         {
-            Contract.Requires<ArgumentNullException>(elem != null, "elem");
+            if (elem == null)
+                throw new ArgumentNullException(nameof(elem));
 
             XAttribute attrib = elem.Attribute(name);
             if (attrib == null)
@@ -90,7 +97,8 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         public static StructValue<ushort> GetUInt16(this XElement elem, string name)
         {
-            Contract.Requires<ArgumentNullException>(elem != null, "elem");
+            if (elem == null)
+                throw new ArgumentNullException(nameof(elem));
 
             XAttribute attrib = elem.Attribute(name);
             if (attrib == null)
@@ -104,7 +112,8 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         public static StructValue<int> GetInt32(this XElement elem, string name)
         {
-            Contract.Requires<ArgumentNullException>(elem != null, "elem");
+            if (elem == null)
+                throw new ArgumentNullException(nameof(elem));
 
             XAttribute attrib = elem.Attribute(name);
             if (attrib == null)
@@ -118,7 +127,8 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         public static StructValue<uint> GetUInt32(this XElement elem, string name)
         {
-            Contract.Requires<ArgumentNullException>(elem != null, "elem");
+            if (elem == null)
+                throw new ArgumentNullException(nameof(elem));
 
             XAttribute attrib = elem.Attribute(name);
             if (attrib == null)
@@ -133,7 +143,8 @@ namespace InstrManifestCompiler.EventManifestSchema
         public static NullableValue<int> GetOptionalInt32(
             this XElement elem, string name, int? defaultValue = null)
         {
-            Contract.Requires<ArgumentNullException>(elem != null, "elem");
+            if (elem == null)
+                throw new ArgumentNullException(nameof(elem));
 
             XAttribute attrib = elem.Attribute(name);
             if (attrib == null)
@@ -148,7 +159,8 @@ namespace InstrManifestCompiler.EventManifestSchema
         public static NullableValue<byte> GetOptionalUInt8(
             this XElement elem, string name, byte? defaultValue = null)
         {
-            Contract.Requires<ArgumentNullException>(elem != null, "elem");
+            if (elem == null)
+                throw new ArgumentNullException(nameof(elem));
 
             XAttribute attrib = elem.Attribute(name);
             if (attrib == null)
@@ -163,7 +175,8 @@ namespace InstrManifestCompiler.EventManifestSchema
         public static NullableValue<ushort> GetOptionalUInt16(
             this XElement elem, string name, ushort? defaultValue = null)
         {
-            Contract.Requires<ArgumentNullException>(elem != null, "elem");
+            if (elem == null)
+                throw new ArgumentNullException(nameof(elem));
 
             XAttribute attrib = elem.Attribute(name);
             if (attrib == null)
@@ -177,7 +190,8 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         public static StructValue<uint> GetHexInt32(this XElement elem, string name)
         {
-            Contract.Requires<ArgumentNullException>(elem != null, "elem");
+            if (elem == null)
+                throw new ArgumentNullException(nameof(elem));
 
             XAttribute attrib = elem.Attribute(name);
             if (attrib == null)
@@ -191,7 +205,8 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         public static StructValue<ulong> GetHexInt64(this XElement elem, string name)
         {
-            Contract.Requires<ArgumentNullException>(elem != null, "elem");
+            if (elem == null)
+                throw new ArgumentNullException(nameof(elem));
 
             XAttribute attrib = elem.Attribute(name);
             if (attrib == null)
@@ -206,7 +221,8 @@ namespace InstrManifestCompiler.EventManifestSchema
         public static StructValue<bool> GetOptionalBool(
             this XElement elem, string name, bool defaultValue)
         {
-            Contract.Requires<ArgumentNullException>(elem != null, "elem");
+            if (elem == null)
+                throw new ArgumentNullException(nameof(elem));
 
             XAttribute attrib = elem.Attribute(name);
             if (attrib == null)
@@ -223,7 +239,8 @@ namespace InstrManifestCompiler.EventManifestSchema
         public static NullableValue<bool> GetOptionalBool(
             this XElement elem, string name, bool? defaultValue = null)
         {
-            Contract.Requires<ArgumentNullException>(elem != null, "elem");
+            if (elem == null)
+                throw new ArgumentNullException(nameof(elem));
 
             XAttribute attrib = elem.Attribute(name);
             if (attrib == null)
@@ -239,7 +256,8 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         public static StructValue<Guid> GetGuid(this XElement elem, string name)
         {
-            Contract.Requires<ArgumentNullException>(elem != null, "elem");
+            if (elem == null)
+                throw new ArgumentNullException(nameof(elem));
 
             XAttribute attrib = elem.Attribute(name);
             if (attrib == null)
@@ -254,7 +272,8 @@ namespace InstrManifestCompiler.EventManifestSchema
         public static NullableValue<Guid> GetOptionalGuid(
             this XElement elem, string name, Guid? defaultValue = null)
         {
-            Contract.Requires<ArgumentNullException>(elem != null, "elem");
+            if (elem == null)
+                throw new ArgumentNullException(nameof(elem));
 
             XAttribute attrib = elem.Attribute(name);
             if (attrib == null)

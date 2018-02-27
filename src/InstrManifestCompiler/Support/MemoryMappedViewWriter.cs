@@ -1,7 +1,6 @@
 namespace InstrManifestCompiler.Support
 {
     using System;
-    using System.Diagnostics.Contracts;
     using System.IO;
     using System.IO.MemoryMappedFiles;
     using System.Runtime.InteropServices;
@@ -19,7 +18,8 @@ namespace InstrManifestCompiler.Support
 
         public MemoryMappedViewWriter(Stream output, long initialCapacity = 0x10000)
         {
-            Contract.Requires<ArgumentNullException>(output != null);
+            if (output == null)
+                throw new ArgumentNullException(nameof(output));
             this.output = output;
 
             Allocate(initialCapacity);

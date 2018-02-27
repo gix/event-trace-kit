@@ -2,7 +2,6 @@ namespace InstrManifestCompiler.EventManifestSchema
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.Contracts;
     using System.Linq;
     using InstrManifestCompiler.EventManifestSchema.Base;
     using InstrManifestCompiler.Support;
@@ -17,8 +16,10 @@ namespace InstrManifestCompiler.EventManifestSchema
             StructValue<Guid> id,
             RefValue<string> symbol)
         {
-            Contract.Requires<ArgumentNullException>(name != null);
-            Contract.Requires<ArgumentNullException>(symbol != null);
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
+            if (symbol == null)
+                throw new ArgumentNullException(nameof(symbol));
 
             Name = name;
             Id = id;

@@ -41,6 +41,9 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         public LocalizedString GetString(string stringRef)
         {
+            if (stringRef == null)
+                throw new ArgumentNullException(nameof(stringRef));
+
             if (IsStringTableRef(stringRef)) {
                 string name = stringRef.Substring(9, stringRef.Length - 10);
                 return Strings.GetByName(name);

@@ -2,7 +2,6 @@ namespace InstrManifestCompiler.EventManifestSchema
 {
     using System;
     using System.Diagnostics;
-    using System.Diagnostics.Contracts;
     using InstrManifestCompiler.EventManifestSchema.Base;
     using InstrManifestCompiler.Support;
 
@@ -21,7 +20,8 @@ namespace InstrManifestCompiler.EventManifestSchema
             StructValue<byte> value,
             StructValue<byte> version)
         {
-            Contract.Requires<ArgumentNullException>(name != null);
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
             Name = name;
             Value = value;
             Version = version;

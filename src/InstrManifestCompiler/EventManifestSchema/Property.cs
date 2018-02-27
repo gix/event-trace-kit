@@ -1,7 +1,6 @@
 namespace InstrManifestCompiler.EventManifestSchema
 {
     using System;
-    using System.Diagnostics.Contracts;
     using InstrManifestCompiler.EventManifestSchema.Base;
     using InstrManifestCompiler.Support;
 
@@ -25,7 +24,8 @@ namespace InstrManifestCompiler.EventManifestSchema
     {
         protected Property(RefValue<string> name)
         {
-            Contract.Requires<ArgumentNullException>(name != null);
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
             Name = name;
             Count = new Count();
             Length = new Length();

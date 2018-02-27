@@ -36,6 +36,9 @@ namespace InstrManifestCompiler.Collections
 
         public bool IsSatisfiedBy(T entity, IDiagnostics diags)
         {
+            if (diags == null)
+                throw new ArgumentNullException(nameof(diags));
+
             TProperty value = selector(entity);
             if (optional && (value == null || value.Equals(null)))
                 return true;
@@ -78,6 +81,8 @@ namespace InstrManifestCompiler.Collections
         public IUniqueConstraintOptions<T, TProperty>
             Using(IEqualityComparer<TProperty> comparer)
         {
+            if (comparer == null)
+                throw new ArgumentNullException(nameof(comparer));
             if (uniqueValues != null && uniqueValues.Count != 0)
                 throw new InvalidOperationException();
             this.comparer = comparer;
@@ -94,6 +99,9 @@ namespace InstrManifestCompiler.Collections
         public IUniqueConstraintOptions<T, TProperty> WithMessage(
             string format, params Func<T, object>[] args)
         {
+            if (format == null)
+                throw new ArgumentNullException(nameof(format));
+
             customMessage = format;
             customMessageArgs = args;
             customMessageFormatter = null;
@@ -102,6 +110,9 @@ namespace InstrManifestCompiler.Collections
 
         public IUniqueConstraintOptions<T, TProperty> WithMessage(Func<T, string> formatter)
         {
+            if (formatter == null)
+                throw new ArgumentNullException(nameof(formatter));
+
             customMessage = null;
             customMessageArgs = null;
             customMessageFormatter = formatter;

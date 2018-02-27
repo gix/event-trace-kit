@@ -3,7 +3,6 @@ namespace InstrManifestCompiler.CodeGen
     using System;
     using System.Collections.Generic;
     using System.ComponentModel.Composition;
-    using System.Diagnostics.Contracts;
     using System.Globalization;
     using System.IO;
     using System.Linq;
@@ -108,7 +107,8 @@ namespace InstrManifestCompiler.CodeGen
         [ImportingConstructor]
         public MCCompatibleCodeGenerator(ICodeGenOptions options)
         {
-            Contract.Requires<ArgumentNullException>(options != null);
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
 
             this.options = options;
         }
