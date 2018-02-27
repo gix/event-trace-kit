@@ -6,16 +6,16 @@ namespace InstrManifestCompiler.Build.Tasks
     using Microsoft.Build.Utilities;
     using NOption;
 
-    /// <summary>Base class for NOpt-based tool tasks.</summary>
-    public abstract class NOptTrackedToolTask : TrackedToolTask
+    /// <summary>Base class for NOption-based tool tasks.</summary>
+    public abstract class NOptionTrackedToolTask : TrackedToolTask
     {
         private readonly OptTable optTable;
         private readonly Dictionary<int, Arg> activeArgs = new Dictionary<int, Arg>();
 
         /// <summary>
-        ///   Initializes a new instance of the <see cref="NOptTrackedToolTask"/> class.
+        ///   Initializes a new instance of the <see cref="NOptionTrackedToolTask"/> class.
         /// </summary>
-        protected NOptTrackedToolTask(OptTable optTable)
+        protected NOptionTrackedToolTask(OptTable optTable)
         {
             this.optTable = optTable;
         }

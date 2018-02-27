@@ -55,8 +55,8 @@
     <Compile Include="FileUtilities.cs" />
     <Compile Include="Imc.cs" />
     <Compile Include="InprocImc.cs" />
-    <Compile Include="NOptTrackedTask.cs" />
-    <Compile Include="NOptTrackedToolTask.cs" />
+    <Compile Include="NOptionTrackedTask.cs" />
+    <Compile Include="NOptionTrackedToolTask.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resx.cs">
       <AutoGen>True</AutoGen>

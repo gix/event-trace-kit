@@ -4,14 +4,13 @@ namespace InstrManifestCompiler.Build.Tasks
     using System.Collections.Generic;
     using System.IO;
     using System.Runtime.Serialization.Json;
-    using System.Text;
     using InstrManifestCompiler.Support;
     using Microsoft.Build.Framework;
     using Microsoft.Build.Utilities;
     using NOption;
 
     /// <summary>Event Manifest Compiler task.</summary>
-    public sealed class InprocImc : NOptTrackedTask, IDiagnosticConsumer
+    public sealed class InprocImc : NOptionTrackedTask, IDiagnosticConsumer
     {
         private readonly DiagnosticsEngine diags;
         private readonly ImcOpts opts = new ImcOpts();

@@ -6,7 +6,7 @@ namespace InstrManifestCompiler.Build.Tasks
     using NOption;
 
     /// <summary>Event Manifest Compiler task.</summary>
-    public sealed class Imc : NOptTrackedToolTask
+    public sealed class Imc : NOptionTrackedToolTask
     {
         /// <summary>
         ///   Initializes a new instance of the <see cref="Imc"/> class.
