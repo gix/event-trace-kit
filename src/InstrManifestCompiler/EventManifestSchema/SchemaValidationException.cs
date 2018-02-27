@@ -5,22 +5,26 @@ namespace InstrManifestCompiler.EventManifestSchema
     using System.Runtime.Serialization;
     using System.Security;
 
-    /// <summary>
-    ///   Indicates an invalid event manifest schema.
-    /// </summary>
+    /// <summary>Indicates an invalid event manifest schema.</summary>
     [Serializable]
     public sealed class SchemaValidationException : Exception
     {
         /// <summary>
-        ///   Initializes a new instance of the <see cref="SchemaValidationException"/> class
-        ///   with a specified error message.
+        ///   Initializes a new instance of the <see cref="SchemaValidationException"/>
+        ///   class with a specified error message.
         /// </summary>
         /// <param name="message">
         ///   The error message that explains the reason for this exception.
         /// </param>
-        /// <param name="baseUri">The optional document URI where validation failed.</param>
-        /// <param name="lineNumber">The line number where validation failed.</param>
-        /// <param name="columnNumber">The column number where validation failed.</param>
+        /// <param name="baseUri">
+        ///   The optional document URI where validation failed.
+        /// </param>
+        /// <param name="lineNumber">
+        ///   The line number where validation failed.
+        /// </param>
+        /// <param name="columnNumber">
+        ///   The column number where validation failed.
+        /// </param>
         public SchemaValidationException(
             string message, string baseUri, int lineNumber, int columnNumber)
             : base(AppendLineInfo(message, baseUri, lineNumber, columnNumber))
@@ -32,16 +36,22 @@ namespace InstrManifestCompiler.EventManifestSchema
         }
 
         /// <summary>
-        ///   Initializes a new instance of the <see cref="SchemaValidationException"/> class
-        ///   with a specified error message and the exception that is the cause
-        ///   of this exception.
+        ///   Initializes a new instance of the <see cref="SchemaValidationException"/>
+        ///   class with a specified error message and the exception that is the
+        ///   cause of this exception.
         /// </summary>
         /// <param name="message">
         ///   The error message that explains the reason for this exception.
         /// </param>
-        /// <param name="baseUri">The optional document URI where validation failed.</param>
-        /// <param name="lineNumber">The line number where validation failed.</param>
-        /// <param name="columnNumber">The column number where validation failed.</param>
+        /// <param name="baseUri">
+        ///   The optional document URI where validation failed.
+        /// </param>
+        /// <param name="lineNumber">
+        ///   The line number where validation failed.
+        /// </param>
+        /// <param name="columnNumber">
+        ///   The column number where validation failed.
+        /// </param>
         /// <param name="innerException">
         ///   The exception that is the cause of the current exception, or a
         ///   <see langword="null"/> reference (<c>Nothing</c> in Visual Basic)
@@ -58,16 +68,16 @@ namespace InstrManifestCompiler.EventManifestSchema
         }
 
         /// <summary>
-        ///   Initializes a new instance of the <see cref="SchemaValidationException"/> class
-        ///   with serialized data.
+        ///   Initializes a new instance of the <see cref="SchemaValidationException"/>
+        ///   class with serialized data.
         /// </summary>
         /// <param name="info">
-        ///   The serialization information object holding the serialized
-        ///   object data in the name-value form.
+        ///   The serialization information object holding the serialized object
+        ///   data in the name-value form.
         /// </param>
         /// <param name="context">
-        ///   The contextual information about the source or destination of
-        ///   the exception.
+        ///   The contextual information about the source or destination of the
+        ///   exception.
         /// </param>
         private SchemaValidationException(SerializationInfo info, StreamingContext context)
             : base(info, context)
@@ -78,23 +88,22 @@ namespace InstrManifestCompiler.EventManifestSchema
             ColumnNumber = info.GetInt32("LinePosition");
         }
 
-        public string OriginalMessage { get; private set; }
-        public string BaseUri { get; private set; }
-        public int LineNumber { get; private set; }
-        public int ColumnNumber { get; private set; }
+        public string OriginalMessage { get; }
+        public string BaseUri { get; }
+        public int LineNumber { get; }
+        public int ColumnNumber { get; }
 
         /// <summary>
         ///   When overridden in a derived class, sets the
-        ///   <see cref="SerializationInfo"/> with information about the
-        ///   exception.
+        ///   <see cref="SerializationInfo"/> with information about the exception.
         /// </summary>
         /// <param name="info">
-        ///   The <see cref="SerializationInfo"/> that holds the serialized
-        ///   object data about the exception being thrown.
+        ///   The <see cref="SerializationInfo"/> that holds the serialized object
+        ///   data about the exception being thrown.
         /// </param>
         /// <param name="context">
-        ///   The <see cref="StreamingContext"/> that contains contextual
-        ///   information about the source or destination.
+        ///   The <see cref="StreamingContext"/> that contains contextual information
+        ///   about the source or destination.
         /// </param>
         /// <exception cref="ArgumentNullException">
         ///   <paramref name="info"/> is <see langword="null"/>.

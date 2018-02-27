@@ -27,7 +27,7 @@ namespace InstrManifestCompiler.EventManifestSchema
         public RefValue<QName> Name { get; }
         public StructValue<ulong> Mask { get; }
 
-        public RefValue<string> Symbol { get; set; }
+        public RefValue<string> Symbol { get; }
         public LocalizedString Message { get; set; }
 
         public bool Imported { get; set; }

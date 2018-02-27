@@ -2,7 +2,6 @@ namespace InstrManifestCompiler.EventManifestSchema.Base
 {
     using System.Xml;
     using System.Xml.Linq;
-    using InstrManifestCompiler.Extensions;
 
     internal sealed class OutType
     {
@@ -12,8 +11,8 @@ namespace InstrManifestCompiler.EventManifestSchema.Base
             IsDefault = isDefault;
         }
 
-        public QName XmlType { get; set; }
-        public bool IsDefault { get; set; }
+        public QName XmlType { get; }
+        public bool IsDefault { get; }
 
         public static OutType Create(XElement elem, IXmlNamespaceResolver resolver)
         {

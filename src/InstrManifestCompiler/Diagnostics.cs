@@ -131,18 +131,16 @@ namespace InstrManifestCompiler
 
         public DiagnosticsEngine(IDiagnosticConsumer consumer)
         {
-            if (consumer == null)
-                throw new ArgumentNullException(nameof(consumer));
-            this.consumer = consumer;
+            Consumer = consumer;
         }
 
-        public bool ErrorOccurred { get { return ErrorCount > 0; } }
+        public bool ErrorOccurred => ErrorCount > 0;
         public int ErrorCount { get; private set; }
 
         public IDiagnosticConsumer Consumer
         {
-            get { return consumer; }
-            set { consumer = value ?? new IgnoringDiagnosticConsumer(); }
+            get => consumer;
+            set => consumer = value ?? new IgnoringDiagnosticConsumer();
         }
 
         public void Report(
@@ -181,9 +179,7 @@ namespace InstrManifestCompiler
         /// </param>
         public DiagnosticErrorTrap(IDiagnostics diags)
         {
-            if (diags == null)
-                throw new ArgumentNullException(nameof(diags));
-            this.diags = diags;
+            this.diags = diags ?? throw new ArgumentNullException(nameof(diags));
             Reset();
         }
 
@@ -191,10 +187,7 @@ namespace InstrManifestCompiler
         ///   Gets the number of errors that occurred since the trap was created
         ///   or reset.
         /// </summary>
-        public bool ErrorOccurred
-        {
-            get { return diags.ErrorCount > savedErrorCount; }
-        }
+        public bool ErrorOccurred => diags.ErrorCount > savedErrorCount;
 
         /// <summary>Resets the traps error count.</summary>
         public void Reset()
@@ -208,7 +201,7 @@ namespace InstrManifestCompiler
     /// </summary>
     internal sealed class NullDiagnostics : IDiagnostics
     {
-        public bool ErrorOccurred { get { return ErrorCount > 0; } }
+        public bool ErrorOccurred => ErrorCount > 0;
         public int ErrorCount { get; private set; }
 
         public void Report(
@@ -239,9 +232,7 @@ namespace InstrManifestCompiler
 
         public ConsoleDiagnosticPrinter(TextWriter output)
         {
-            if (output == null)
-                throw new ArgumentNullException(nameof(output));
-            this.output = output;
+            this.output = output ?? throw new ArgumentNullException(nameof(output));
         }
 
         public void HandleDiagnostic(
@@ -260,7 +251,7 @@ namespace InstrManifestCompiler
             using (new ConsoleColorScope()) {
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.BackgroundColor = ConsoleColor.Black;
-                if (location != null && location.FilePath != null) {
+                if (location.FilePath != null) {
                     output.Write(location.FilePath);
                     if (location.LineNumber != -1) {
                         if (location.ColumnNumber != -1)

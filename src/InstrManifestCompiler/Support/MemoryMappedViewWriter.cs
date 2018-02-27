@@ -18,21 +18,16 @@ namespace InstrManifestCompiler.Support
 
         public MemoryMappedViewWriter(Stream output, long initialCapacity = 0x10000)
         {
-            if (output == null)
-                throw new ArgumentNullException(nameof(output));
-            this.output = output;
+            this.output = output ?? throw new ArgumentNullException(nameof(output));
 
             Allocate(initialCapacity);
         }
 
-        public long Capacity
-        {
-            get { return capacity; }
-        }
+        public long Capacity => capacity;
 
         public long Position
         {
-            get { return position; }
+            get => position;
             set
             {
                 position = value;

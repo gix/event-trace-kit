@@ -11,7 +11,7 @@ namespace InstrManifestCompiler.EventManifestSchema
             Strings = new LocalizedStringCollection();
         }
 
-        public CultureInfo Culture { get; private set; }
-        public LocalizedStringCollection Strings { get; private set; }
+        public CultureInfo Culture { get; }
+        public LocalizedStringCollection Strings { get; }
     }
 }

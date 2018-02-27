@@ -1,6 +1,5 @@
 namespace InstrManifestCompiler.Collections
 {
-    using System.Collections;
     using System.Collections.Generic;
 
     public interface IUniqueEntityCollection<in T>
@@ -12,7 +11,7 @@ namespace InstrManifestCompiler.Collections
     }
 
     public interface IUniqueEntityList<T>
-        : IList<T>, IList, IReadOnlyList<T>, IUniqueEntityCollection<T>
+        : IList<T>, IReadOnlyList<T>, IUniqueEntityCollection<T>
     {
     }
 }

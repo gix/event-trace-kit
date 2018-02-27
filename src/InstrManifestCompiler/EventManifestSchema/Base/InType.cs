@@ -9,11 +9,10 @@ namespace InstrManifestCompiler.EventManifestSchema.Base
         public InType(QName name, uint value, string symbol)
             : base(name, value, symbol)
         {
-            OutTypes = new List<XmlType>();
         }
 
         public XmlType DefaultOutType { get; set; }
-        public IList<XmlType> OutTypes { get; private set; }
+        public IList<XmlType> OutTypes { get; } = new List<XmlType>();
 
         public static InType Create(XElement elem, IXmlNamespaceResolver resolver)
         {

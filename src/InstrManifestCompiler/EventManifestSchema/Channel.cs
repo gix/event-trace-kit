@@ -53,8 +53,8 @@ namespace InstrManifestCompiler.EventManifestSchema
 
         public int Index { get; set; }
 
-        public RefValue<string> Name { get; private set; }
-        public StructValue<ChannelType> Type { get; private set; }
+        public RefValue<string> Name { get; }
+        public StructValue<ChannelType> Type { get; }
 
         public RefValue<string> Id { get; set; }
         public RefValue<string> Symbol { get; set; }

@@ -39,11 +39,11 @@ namespace InstrManifestCompiler.EventManifestSchema
             Message = message;
         }
 
-        public RefValue<QName> Name { get; private set; }
-        public StructValue<byte> Value { get; private set; }
-        public StructValue<byte> Version { get; private set; }
+        public RefValue<QName> Name { get; }
+        public StructValue<byte> Value { get; }
+        public StructValue<byte> Version { get; }
 
-        public RefValue<string> Symbol { get; set; }
+        public RefValue<string> Symbol { get; }
         public Template Template { get; set; }
         public LocalizedString Message { get; set; }
 

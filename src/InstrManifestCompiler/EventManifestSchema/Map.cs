@@ -22,10 +22,7 @@ namespace InstrManifestCompiler.EventManifestSchema
     {
         protected Map(RefValue<string> name)
         {
-            if (name == null)
-                throw new ArgumentNullException(nameof(name));
-            Name = name;
-            Items = new MapItemCollection<IMapItem>();
+            Name = name ?? throw new ArgumentNullException(nameof(name));
         }
 
         protected Map(RefValue<string> name, RefValue<string> symbol)
@@ -35,10 +32,11 @@ namespace InstrManifestCompiler.EventManifestSchema
         }
 
         public abstract MapKind Kind { get; }
-        public RefValue<string> Name { get; private set; }
-        public RefValue<string> Symbol { get; set; }
+        public RefValue<string> Name { get; }
+        public RefValue<string> Symbol { get; }
 
-        public MapItemCollection<IMapItem> Items { get; private set; }
+        public MapItemCollection<IMapItem> Items { get; } =
+            new MapItemCollection<IMapItem>();
 
         public override string ToString()
         {

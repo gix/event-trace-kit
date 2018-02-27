@@ -161,7 +161,7 @@ namespace InstrManifestCompiler.Support
         public int CompareTo(object obj)
         {
             var comparable = Value as IComparable;
-            return comparable?.CompareTo(obj) ?? Comparer.Default.Compare(this, obj);
+            return comparable?.CompareTo(obj) ?? Comparer<object>.Default.Compare(this, obj);
         }
 
         public int CompareTo(RefValue<T> other)
@@ -199,7 +199,7 @@ namespace InstrManifestCompiler.Support
         , IFormattable
         where T : struct
     {
-        private T value;
+        private readonly T value;
 
         public StructValue(T value, SourceLocation location = null)
             : this()
@@ -208,15 +208,7 @@ namespace InstrManifestCompiler.Support
             Location = location;
         }
 
-        public T Value
-        {
-            get { return value; }
-            set
-            {
-                this.value = value;
-                Location = null;
-            }
-        }
+        public T Value => value;
 
         public SourceLocation Location { get; set; }
 
@@ -227,10 +219,9 @@ namespace InstrManifestCompiler.Support
 
         public string ToString(string format, IFormatProvider formatProvider)
         {
-            var f = Value as IFormattable;
-            if (f == null)
-                return string.Empty;
-            return f.ToString(format, formatProvider);
+            if (Value is IFormattable formattable)
+                return formattable.ToString(format, formatProvider);
+            return string.Empty;
         }
 
         public override string ToString()
@@ -240,10 +231,10 @@ namespace InstrManifestCompiler.Support
 
         public override bool Equals(object obj)
         {
-            if (obj is StructValue<T>)
-                return Equals((StructValue<T>)obj);
-            if (obj is T)
-                return Equals((T)obj);
+            if (obj is StructValue<T> sv)
+                return Equals(sv);
+            if (obj is T val)
+                return Equals(val);
             return false;
         }
 
@@ -261,7 +252,7 @@ namespace InstrManifestCompiler.Support
         {
             var comparable = Value as IComparable;
             return comparable?.CompareTo(obj) ??
-                   Comparer.Default.Compare(this, obj);
+                   Comparer<object>.Default.Compare(this, obj);
         }
 
         public int CompareTo(StructValue<T> other)
@@ -299,7 +290,7 @@ namespace InstrManifestCompiler.Support
         , IFormattable
         where T : struct
     {
-        private T? value;
+        private readonly T? value;
 
         public NullableValue(T? value, SourceLocation location = null)
             : this()
@@ -308,20 +299,9 @@ namespace InstrManifestCompiler.Support
             Location = location;
         }
 
-        public T Value
-        {
-            get { return value.Value; }
-            set
-            {
-                this.value = value;
-                Location = null;
-            }
-        }
+        public T Value => value.Value;
 
-        public bool HasValue
-        {
-            get { return value.HasValue; }
-        }
+        public bool HasValue => value.HasValue;
 
         public SourceLocation Location { get; set; }
 
@@ -355,8 +335,8 @@ namespace InstrManifestCompiler.Support
 
         public override bool Equals(object obj)
         {
-            if (obj is NullableValue<T>)
-                return Equals((NullableValue<T>)obj);
+            if (obj is NullableValue<T> nv)
+                return Equals(nv);
             return value.Equals(obj);
         }
 
@@ -374,7 +354,7 @@ namespace InstrManifestCompiler.Support
         {
             var comparable = Value as IComparable;
             return comparable?.CompareTo(obj) ??
-                   Comparer.Default.Compare(this, obj);
+                   Comparer<object>.Default.Compare(this, obj);
         }
 
         public int CompareTo(NullableValue<T> other)

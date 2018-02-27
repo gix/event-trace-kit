@@ -11,33 +11,17 @@ namespace InstrManifestCompiler.EventManifestSchema
         private readonly Dictionary<QName, XmlType> xmlTypeMap = new Dictionary<QName, XmlType>();
         private readonly Dictionary<QName, InType> inTypeMap = new Dictionary<QName, InType>();
 
-        public EventManifestMetadata()
-        {
-            XmlTypes = new List<XmlType>();
-            InTypes = new List<InType>();
-            OutTypes = new List<OutType>();
+        public List<XmlType> XmlTypes { get; } = new List<XmlType>();
+        public List<InType> InTypes { get; } = new List<InType>();
+        public List<OutType> OutTypes { get; } = new List<OutType>();
 
-            Channels = new ChannelCollection();
-            Levels = new LevelCollection();
-            Opcodes = new OpcodeCollection();
-            Tasks = new TaskCollection();
-            Keywords = new KeywordCollection();
-            NamedQueries = new PatternMapCollection();
-
-            Strings = new LocalizedStringCollection();
-        }
-
-        public List<XmlType> XmlTypes { get; private set; }
-        public List<InType> InTypes { get; private set; }
-        public List<OutType> OutTypes { get; private set; }
-
-        public ChannelCollection Channels { get; private set; }
-        public LevelCollection Levels { get; private set; }
-        public OpcodeCollection Opcodes { get; private set; }
-        public TaskCollection Tasks { get; private set; }
-        public KeywordCollection Keywords { get; private set; }
-        public PatternMapCollection NamedQueries { get; private set; }
-        public LocalizedStringCollection Strings { get; private set; }
+        public ChannelCollection Channels { get; } = new ChannelCollection();
+        public LevelCollection Levels { get; } = new LevelCollection();
+        public OpcodeCollection Opcodes { get; } = new OpcodeCollection();
+        public TaskCollection Tasks { get; } = new TaskCollection();
+        public KeywordCollection Keywords { get; } = new KeywordCollection();
+        public PatternMapCollection NamedQueries { get; } = new PatternMapCollection();
+        public LocalizedStringCollection Strings { get; } = new LocalizedStringCollection();
 
         public LocalizedString GetString(string stringRef)
         {

@@ -2,7 +2,7 @@ namespace InstrManifestCompiler.EventManifestSchema
 {
     using System.Diagnostics;
 
-    [DebuggerDisplay("{RefId}(0x{Id,h}) = '{Text}'")]
+    [DebuggerDisplay("{Name}(0x{Id,h}) = '{Text}'")]
     internal sealed class Message
     {
         public const uint UnusedId = uint.MaxValue;
@@ -30,9 +30,6 @@ namespace InstrManifestCompiler.EventManifestSchema
         public string Text { get; set; }
         public bool Ansi { get; set; }
 
-        public bool IsUsed
-        {
-            get { return Id != UnusedId; }
-        }
+        public bool IsUsed => Id != UnusedId;
     }
 }

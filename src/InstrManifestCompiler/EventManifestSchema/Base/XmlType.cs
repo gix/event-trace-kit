@@ -2,7 +2,6 @@ namespace InstrManifestCompiler.EventManifestSchema.Base
 {
     using System.Xml;
     using System.Xml.Linq;
-    using InstrManifestCompiler.Extensions;
 
     public sealed class XmlType : BaseType
     {

@@ -17,17 +17,16 @@ namespace InstrManifestCompiler.EventManifestSchema
         {
             Value = value;
             Version = version;
-            Keywords = new List<Keyword>();
         }
 
-        public StructValue<uint> Value { get; private set; }
-        public StructValue<byte> Version { get; private set; }
+        public StructValue<uint> Value { get; }
+        public StructValue<byte> Version { get; }
         public RefValue<string> Symbol { get; set; }
         public Channel Channel { get; set; }
         public Level Level { get; set; }
         public Task Task { get; set; }
         public Opcode Opcode { get; set; }
-        public List<Keyword> Keywords { get; private set; }
+        public List<Keyword> Keywords { get; } = new List<Keyword>();
         public Template Template { get; set; }
         public NullableValue<bool> NotLogged { get; set; }
         public LocalizedString Message { get; set; }

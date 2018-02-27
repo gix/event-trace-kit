@@ -24,9 +24,9 @@ namespace InstrManifestCompiler.Support
             ColumnNumber = columnNumber;
         }
 
-        public string FilePath { get; private set; }
-        public int LineNumber { get; private set; }
-        public int ColumnNumber { get; private set; }
+        public string FilePath { get; }
+        public int LineNumber { get; }
+        public int ColumnNumber { get; }
 
         public bool Equals(SourceLocation other)
         {
@@ -42,11 +42,7 @@ namespace InstrManifestCompiler.Support
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj))
-                return false;
-            if (ReferenceEquals(this, obj))
-                return true;
-            return obj is SourceLocation && Equals((SourceLocation)obj);
+            return obj is SourceLocation location && Equals(location);
         }
 
         public override int GetHashCode()

@@ -1,4 +1,4 @@
-﻿namespace InstrManifestCompiler.ResGen
+namespace InstrManifestCompiler.ResGen
 {
     using System;
     using System.Collections.Generic;
@@ -32,10 +32,7 @@
 
         public EventTemplateReader(IDiagnostics diags, IEventManifestMetadata metadata = null)
         {
-            if (diags == null)
-                throw new ArgumentNullException(nameof(diags));
-
-            this.diags = diags;
+            this.diags = diags ?? throw new ArgumentNullException(nameof(diags));
             this.metadata = metadata;
 
             var nsmgr = new XmlNamespaceManager(new NameTable());
@@ -45,8 +42,8 @@
 
         public TextWriter LogWriter
         {
-            get { return logWriter; }
-            set { logWriter = value ?? Console.Out; }
+            get => logWriter;
+            set => logWriter = value ?? Console.Out;
         }
 
         public void DumpMessageTable(string filename)

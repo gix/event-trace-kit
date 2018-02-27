@@ -7,15 +7,11 @@ namespace InstrManifestCompiler.EventManifestSchema
         public StructProperty(RefValue<string> name)
             : base(name)
         {
-            Properties = new PropertyCollection();
         }
 
-        public PropertyCollection Properties { get; private set; }
+        public PropertyCollection Properties { get; } = new PropertyCollection();
 
-        public override PropertyKind Kind
-        {
-            get { return PropertyKind.Struct; }
-        }
+        public override PropertyKind Kind => PropertyKind.Struct;
 
         public override uint BinXmlType
         {

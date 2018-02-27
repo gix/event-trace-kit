@@ -107,10 +107,7 @@ namespace InstrManifestCompiler.CodeGen
         public virtual string GetIdentifier(IMapItem item, IMap map)
         {
             if (string.IsNullOrWhiteSpace(item.Symbol))
-                return string.Format(
-                    "{0}{1}",
-                    map.Symbol,
-                    map.Items.IndexOf(item));
+                return $"{map.Symbol}{map.Items.IndexOf(item)}";
 
             return item.Symbol;
         }

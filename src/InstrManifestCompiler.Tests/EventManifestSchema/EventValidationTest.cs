@@ -32,7 +32,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref @event);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(@event.Attribute("value").GetLocation(), diags.Errors[0].Location);
         }
 
@@ -43,7 +43,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref @event);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(@event.GetLocation(), diags.Errors[0].Location);
         }
 
@@ -73,7 +73,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref @event);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(@event.Attribute("version").GetLocation(), diags.Errors[0].Location);
         }
 
@@ -102,7 +102,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref @event1, ref @event2);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(@event2.GetLocation(), diags.Errors[0].Location);
         }
 
@@ -125,7 +125,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref @event);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(@event.Attribute("symbol").GetLocation(), diags.Errors[0].Location);
         }
 
@@ -137,7 +137,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref @event1, ref @event2);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(@event2.Attribute("symbol").GetLocation(), diags.Errors[0].Location);
         }
 
@@ -160,7 +160,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref @event);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(@event.Attribute("message").GetLocation(), diags.Errors[0].Location);
         }
 

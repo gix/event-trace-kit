@@ -24,11 +24,7 @@ namespace InstrManifestCompiler.EventManifestSchema
     {
         protected Property(RefValue<string> name)
         {
-            if (name == null)
-                throw new ArgumentNullException(nameof(name));
-            Name = name;
-            Count = new Count();
-            Length = new Length();
+            Name = name ?? throw new ArgumentNullException(nameof(name));
         }
 
         public abstract PropertyKind Kind { get; }
@@ -50,9 +46,9 @@ namespace InstrManifestCompiler.EventManifestSchema
             return flags;
         }
 
-        public RefValue<string> Name { get; private set; }
-        public IPropertyNumber Count { get; private set; }
-        public IPropertyNumber Length { get; private set; }
+        public RefValue<string> Name { get; }
+        public IPropertyNumber Count { get; } = new Count();
+        public IPropertyNumber Length { get; } = new Length();
 
         public int Index { get; set; }
     }

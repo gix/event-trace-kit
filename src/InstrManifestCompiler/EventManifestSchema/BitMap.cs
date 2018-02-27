@@ -10,9 +10,7 @@ namespace InstrManifestCompiler.EventManifestSchema
         public BitMapItem(BitMap map, StructValue<uint> value, LocalizedString message)
             : base(value, message)
         {
-            if (map == null)
-                throw new ArgumentNullException(nameof(map));
-            this.map = map;
+            this.map = map ?? throw new ArgumentNullException(nameof(map));
         }
 
         public BitMapItem(
@@ -20,20 +18,12 @@ namespace InstrManifestCompiler.EventManifestSchema
             LocalizedString message)
             : base(value, message, symbol)
         {
-            if (map == null)
-                throw new ArgumentNullException(nameof(map));
-            this.map = map;
+            this.map = map ?? throw new ArgumentNullException(nameof(map));
         }
 
-        public override IMap Map
-        {
-            get { return map; }
-        }
+        public override IMap Map => map;
 
-        public override MapKind Kind
-        {
-            get { return MapKind.BitMap; }
-        }
+        public override MapKind Kind => MapKind.BitMap;
     }
 
     public sealed class BitMap : Map
@@ -48,10 +38,7 @@ namespace InstrManifestCompiler.EventManifestSchema
         {
         }
 
-        public override MapKind Kind
-        {
-            get { return MapKind.BitMap; }
-        }
+        public override MapKind Kind => MapKind.BitMap;
 
         public override void Accept(IProviderItemVisitor visitor)
         {

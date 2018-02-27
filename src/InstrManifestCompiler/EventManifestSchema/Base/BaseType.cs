@@ -9,9 +9,9 @@ namespace InstrManifestCompiler.EventManifestSchema.Base
             Symbol = symbol;
         }
 
-        public QName Name { get; private set; }
-        public string Symbol { get; private set; }
-        public uint Value { get; private set; }
+        public QName Name { get; }
+        public string Symbol { get; }
+        public uint Value { get; }
 
         public override string ToString()
         {

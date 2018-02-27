@@ -39,7 +39,7 @@ namespace InstrManifestCompiler.Support
     /// These notices must be retained in any copies of any part of this
     /// documentation and/or software.
     /// </remarks>
-    internal unsafe sealed class MD5Managed : HashAlgorithm
+    internal sealed unsafe class MD5Managed : HashAlgorithm
     {
         private MD5_CTX context;
         private readonly byte[] digest = new byte[16];

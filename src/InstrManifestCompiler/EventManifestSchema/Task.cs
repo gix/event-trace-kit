@@ -10,9 +10,7 @@ namespace InstrManifestCompiler.EventManifestSchema
     {
         public Task(RefValue<QName> name, StructValue<ushort> value)
         {
-            if (name == null)
-                throw new ArgumentNullException(nameof(name));
-            Name = name;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
             Value = value;
         }
 
@@ -27,8 +25,8 @@ namespace InstrManifestCompiler.EventManifestSchema
             Message = message;
         }
 
-        public RefValue<QName> Name { get; private set; }
-        public StructValue<ushort> Value { get; private set; }
+        public RefValue<QName> Name { get; }
+        public StructValue<ushort> Value { get; }
 
         public RefValue<string> Symbol { get; set; }
         public NullableValue<Guid> Guid { get; set; }

@@ -10,9 +10,7 @@ namespace InstrManifestCompiler.EventManifestSchema
     {
         public Opcode(RefValue<QName> name, StructValue<byte> value)
         {
-            if (name == null)
-                throw new ArgumentNullException(nameof(name));
-            Name = name;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
             Value = value;
         }
 
@@ -25,8 +23,8 @@ namespace InstrManifestCompiler.EventManifestSchema
             Message = message;
         }
 
-        public RefValue<QName> Name { get; private set; }
-        public StructValue<byte> Value { get; private set; }
+        public RefValue<QName> Name { get; }
+        public StructValue<byte> Value { get; }
         public RefValue<string> Symbol { get; set; }
         public LocalizedString Message { get; set; }
 

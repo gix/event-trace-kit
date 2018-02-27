@@ -13,9 +13,7 @@ namespace InstrManifestCompiler.Support
 
         public IndentableTextWriter(TextWriter writer)
         {
-            if (writer == null)
-                throw new ArgumentNullException(nameof(writer));
-            this.writer = writer;
+            this.writer = writer ?? throw new ArgumentNullException(nameof(writer));
 
             NewLine = "\n";
             IndentChars = "    ";
@@ -23,10 +21,7 @@ namespace InstrManifestCompiler.Support
 
         public int IndentLevel
         {
-            get
-            {
-                return indentLevel;
-            }
+            get => indentLevel;
             set
             {
                 if (value < 0 )
@@ -37,22 +32,14 @@ namespace InstrManifestCompiler.Support
 
         public string IndentChars
         {
-            get
-            {
-                return indentChars;
-            }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException(nameof(value));
-                indentChars = value;
-            }
+            get => indentChars;
+            set => indentChars = value ?? throw new ArgumentNullException(nameof(value));
         }
 
         public override string NewLine
         {
-            get { return writer.NewLine; }
-            set { writer.NewLine = value; }
+            get => writer.NewLine;
+            set => writer.NewLine = value;
         }
 
         public override void Write(bool value)

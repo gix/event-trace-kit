@@ -25,7 +25,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref level);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(level.Attribute("name").GetLocation(), diags.Errors[0].Location);
         }
 
@@ -36,7 +36,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref level);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(level.GetLocation(), diags.Errors[0].Location);
         }
 
@@ -48,7 +48,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref level1, ref level2);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(level2.Attribute("name").GetLocation(), diags.Errors[0].Location);
         }
 
@@ -79,7 +79,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref level);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(level.Attribute("value").GetLocation(), diags.Errors[0].Location);
         }
 
@@ -90,7 +90,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref level);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(level.GetLocation(), diags.Errors[0].Location);
         }
 
@@ -102,7 +102,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref level1, ref level2);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(level2.Attribute("value").GetLocation(), diags.Errors[0].Location);
         }
 
@@ -125,7 +125,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref level);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(level.Attribute("symbol").GetLocation(), diags.Errors[0].Location);
         }
 
@@ -137,7 +137,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref level1, ref level2);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(level2.Attribute("symbol").GetLocation(), diags.Errors[0].Location);
         }
 
@@ -160,7 +160,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref level);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(level.Attribute("message").GetLocation(), diags.Errors[0].Location);
         }
 

@@ -2,16 +2,16 @@ namespace InstrManifestCompiler.EventManifestSchema.Base
 {
     public sealed class EnableBit
     {
-        public int Bit { get; private set; }
-        public int Level { get; private set; }
-        public ulong KeywordMask { get; private set; }
-
         public EnableBit(int bit, int level, ulong keywordMask)
         {
             Bit = bit;
             Level = level;
             KeywordMask = keywordMask;
         }
+
+        public int Bit { get; }
+        public int Level { get; }
+        public ulong KeywordMask { get; }
 
         public int GetIndex(int bytesPerItem)
         {

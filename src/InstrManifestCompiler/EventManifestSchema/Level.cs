@@ -25,9 +25,9 @@ namespace InstrManifestCompiler.EventManifestSchema
             Message = message;
         }
 
-        public RefValue<QName> Name { get; private set; }
-        public StructValue<byte> Value { get; private set; }
-        public RefValue<string> Symbol { get; set; }
+        public RefValue<QName> Name { get; }
+        public StructValue<byte> Value { get; }
+        public RefValue<string> Symbol { get; }
         public LocalizedString Message { get; set; }
 
         public bool Imported { get; set; }

@@ -13,9 +13,9 @@ namespace InstrManifestCompiler.EventManifestSchema.Base
             Namespace = ns ?? XNamespace.None;
         }
 
-        public string LocalName { get; private set; }
-        public string Prefix { get; private set; }
-        public XNamespace Namespace { get; private set; }
+        public string LocalName { get; }
+        public string Prefix { get; }
+        public XNamespace Namespace { get; }
 
         /// <summary>
         ///   Indicates whether this instance and a specified <see cref="QName"/>

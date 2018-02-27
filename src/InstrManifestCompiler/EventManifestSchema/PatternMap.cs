@@ -8,32 +8,23 @@ namespace InstrManifestCompiler.EventManifestSchema
     {
         public PatternMapItem(PatternMap map, RefValue<string> name, RefValue<string> value)
         {
-            if (map == null)
-                throw new ArgumentNullException(nameof(map));
-            if (name == null)
-                throw new ArgumentNullException(nameof(name));
-            Map = map;
-            Name = name;
+            Map = map ?? throw new ArgumentNullException(nameof(map));
+            Name = name ?? throw new ArgumentNullException(nameof(name));
             Value = value;
         }
 
-        public RefValue<string> Name { get; private set; }
-        public RefValue<string> Value { get; private set; }
-        public PatternMap Map { get; private set; }
+        public RefValue<string> Name { get; }
+        public RefValue<string> Value { get; }
+        public PatternMap Map { get; }
     }
 
-    [DebuggerDisplay("{Name} ({Value})")]
+    [DebuggerDisplay("{Name} ({Format})")]
     public sealed class PatternMap : ProviderItem
     {
         public PatternMap(RefValue<string> name, RefValue<string> format)
         {
-            if (name == null)
-                throw new ArgumentNullException(nameof(name));
-            if (format == null)
-                throw new ArgumentNullException(nameof(format));
-            Name = name;
-            Format = format;
-            Items = new PatternMapItemCollection();
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+            Format = format ?? throw new ArgumentNullException(nameof(format));
         }
 
         public PatternMap(
@@ -43,10 +34,11 @@ namespace InstrManifestCompiler.EventManifestSchema
             Symbol = symbol;
         }
 
-        public RefValue<string> Name { get; private set; }
-        public RefValue<string> Format { get; private set; }
+        public RefValue<string> Name { get; }
+        public RefValue<string> Format { get; }
         public RefValue<string> Symbol { get; set; }
-        public PatternMapItemCollection Items { get; private set; }
+        public PatternMapItemCollection Items { get; } =
+            new PatternMapItemCollection();
 
         public override string ToString()
         {

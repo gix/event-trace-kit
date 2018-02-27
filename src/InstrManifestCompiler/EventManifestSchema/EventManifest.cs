@@ -8,25 +8,20 @@ namespace InstrManifestCompiler.EventManifestSchema
 
     public sealed class EventManifest : SourceItem
     {
-        private readonly List<LocalizedResourceSet> resourceSets;
+        private readonly List<LocalizedResourceSet> resourceSets =
+            new List<LocalizedResourceSet>();
 
         public EventManifest()
         {
             Providers = new ProviderCollection(this);
-            resourceSets = new List<LocalizedResourceSet>();
         }
 
-        public IUniqueEntityList<Provider> Providers { get; private set; }
+        public IUniqueEntityList<Provider> Providers { get; }
 
-        public IReadOnlyList<LocalizedResourceSet> Resources
-        {
-            get { return resourceSets; }
-        }
+        public IReadOnlyList<LocalizedResourceSet> Resources => resourceSets;
 
-        public LocalizedResourceSet PrimaryResourceSet
-        {
-            get { return resourceSets.Count >= 1 ? resourceSets[0] : null; }
-        }
+        public LocalizedResourceSet PrimaryResourceSet =>
+            resourceSets.Count >= 1 ? resourceSets[0] : null;
 
         public void AddResourceSet(LocalizedResourceSet resourceSet)
         {

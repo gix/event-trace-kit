@@ -25,7 +25,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref filter);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(filter.Attribute("name").GetLocation(), diags.Errors[0].Location);
         }
 
@@ -36,7 +36,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref filter);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(filter.GetLocation(), diags.Errors[0].Location);
         }
 
@@ -48,7 +48,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref filter1, ref filter2);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(filter2.Attribute("name").GetLocation(), diags.Errors[0].Location);
         }
 
@@ -80,7 +80,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref filter);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(filter.Attribute("value").GetLocation(), diags.Errors[0].Location);
         }
 
@@ -91,7 +91,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref filter);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(filter.GetLocation(), diags.Errors[0].Location);
         }
 
@@ -103,7 +103,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref filter1, ref filter2);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(filter2.GetLocation(), diags.Errors[0].Location);
         }
 
@@ -133,7 +133,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref filter);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(filter.Attribute("version").GetLocation(), diags.Errors[0].Location);
         }
 
@@ -162,7 +162,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref filter1, ref filter2);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(filter2.GetLocation(), diags.Errors[0].Location);
         }
 
@@ -185,7 +185,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref filter);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(filter.Attribute("symbol").GetLocation(), diags.Errors[0].Location);
         }
 
@@ -197,7 +197,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref filter1, ref filter2);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(filter2.Attribute("symbol").GetLocation(), diags.Errors[0].Location);
         }
 
@@ -223,7 +223,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref filter);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(filter.Attribute("tid").GetLocation(), diags.Errors[0].Location);
         }
 
@@ -246,7 +246,7 @@ namespace InstrManifestCompiler.Tests.EventManifestSchema
 
             ParseInput(ref filter);
 
-            Assert.Equal(1, diags.Errors.Count);
+            Assert.Single(diags.Errors);
             Assert.Equal(filter.Attribute("message").GetLocation(), diags.Errors[0].Location);
         }
 

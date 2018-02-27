@@ -18,10 +18,8 @@ namespace InstrManifestCompiler.EventManifestSchema
     {
         protected MapItem(StructValue<uint> value, LocalizedString message)
         {
-            if (message == null)
-                throw new ArgumentNullException(nameof(message));
             Value = value;
-            Message = message;
+            Message = message ?? throw new ArgumentNullException(nameof(message));
         }
 
         protected MapItem(StructValue<uint> value, LocalizedString message,
@@ -34,8 +32,8 @@ namespace InstrManifestCompiler.EventManifestSchema
         public abstract IMap Map { get; }
         public abstract MapKind Kind { get; }
 
-        public StructValue<uint> Value { get; private set; }
-        public RefValue<string> Symbol { get; set; }
-        public LocalizedString Message { get; private set; }
+        public StructValue<uint> Value { get; }
+        public LocalizedString Message { get; }
+        public RefValue<string> Symbol { get; }
     }
 }

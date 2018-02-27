@@ -73,7 +73,6 @@
     <Compile Include="ResGen\EventTemplateReader.cs" />
     <Compile Include="ResGen\EventTemplateWriterOld.cs" />
     <Compile Include="ResGen\EventTemplateWriter.cs" />
-    <Compile Include="Collections\IOrderedDictionary.cs" />
     <Compile Include="EventManifestSchema\IEventManifestMetadata.cs" />
     <Compile Include="ResGen\IMessageIdGenerator.cs" />
     <Compile Include="Extensions\IEnumerableExtensions.cs" />
@@ -90,7 +89,6 @@
     <Compile Include="Extensions\CultureInfoExtensions.cs" />
     <Compile Include="Extensions\XmlExtensions.cs" />
     <Compile Include="Collections\ConstrainedEntityCollection.cs" />
-    <Compile Include="Collections\DictionaryEnumeratorAdapter.cs" />
     <Compile Include="Collections\DuplicateEntityException.cs" />
     <Compile Include="Collections\FunctorComparer.cs" />
     <Compile Include="Collections\IConstraint.cs" />
@@ -98,7 +96,6 @@
     <Compile Include="Collections\IUniqueConstraintOptions.cs" />
     <Compile Include="Collections\IUniqueEntityCollection.cs" />
     <Compile Include="Collections\MergeSort.cs" />
-    <Compile Include="Collections\OrderedDictionary.cs" />
     <Compile Include="Collections\SelectorComparer.cs" />
     <Compile Include="Collections\UniqueConstraint.cs" />
     <Compile Include="Strings.Designer.cs">

@@ -9,17 +9,12 @@ namespace InstrManifestCompiler.EventManifestSchema
         public DataProperty(RefValue<string> name, InType inType)
             : base(name)
         {
-            if (inType == null)
-                throw new ArgumentNullException(nameof(inType));
-            InType = inType;
+            InType = inType ?? throw new ArgumentNullException(nameof(inType));
         }
 
-        public override PropertyKind Kind
-        {
-            get { return PropertyKind.Data; }
-        }
+        public override PropertyKind Kind => PropertyKind.Data;
 
-        public InType InType { get; private set; }
+        public InType InType { get; }
         public XmlType OutType { get; set; }
         public IMap Map { get; set; }
 

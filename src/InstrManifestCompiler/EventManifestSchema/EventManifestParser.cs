@@ -388,8 +388,8 @@ namespace InstrManifestCompiler.EventManifestSchema
                 Id = id;
             }
 
-            public StructValue<uint> Id { get; set; }
-            public RefValue<string> MsgRef { get; set; }
+            public StructValue<uint> Id { get; }
+            public RefValue<string> MsgRef { get; }
             public RefValue<string> Symbol { get; set; }
         }
 
@@ -1305,7 +1305,7 @@ namespace InstrManifestCompiler.EventManifestSchema
                 return metadata.GetString(msgRef);
             }
 
-            public Provider Provider { get { return null; } }
+            public Provider Provider => null;
         }
 
         private sealed class EventManifestContext : IEventManifestContext
@@ -1322,7 +1322,7 @@ namespace InstrManifestCompiler.EventManifestSchema
                 this.metadata = metadata;
             }
 
-            public Provider Provider { get { return provider; } }
+            public Provider Provider => provider;
 
             public LocalizedString GetString(RefValue<string> msgRef)
             {
