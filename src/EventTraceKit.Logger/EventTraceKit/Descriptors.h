@@ -1,13 +1,13 @@
 #pragma once
 #if __cplusplus_cli
 
-namespace EventTraceKit
+namespace EventTraceKit::Tracing
 {
 
-public ref class TraceProviderDescriptor
+public ref class EventProviderDescriptor
 {
 public:
-    TraceProviderDescriptor(System::Guid id)
+    EventProviderDescriptor(System::Guid id)
     {
         Id = id;
         Level = 0xFF;
@@ -22,7 +22,7 @@ public:
         EnableStackWalkEventIds = true;
     }
 
-    TraceProviderDescriptor(TraceProviderDescriptor^ source)
+    EventProviderDescriptor(EventProviderDescriptor^ source)
     {
         if (!source)
             throw gcnew System::ArgumentNullException("source");
@@ -45,6 +45,8 @@ public:
         EnableStackWalkEventIds = source->EnableStackWalkEventIds;
 
         Manifest = source->Manifest;
+        if (source->StartupProjects)
+            StartupProjects = gcnew List<System::String^>(source->StartupProjects);
     }
 
     property System::Guid Id;
@@ -64,17 +66,18 @@ public:
     property bool EnableStackWalkEventIds;
 
     property System::String^ Manifest;
+    property System::Collections::Generic::List<System::String^>^ StartupProjects;
 };
 
-public ref class TraceSessionDescriptor
+public ref class EventSessionDescriptor
 {
 public:
-    TraceSessionDescriptor()
+    EventSessionDescriptor()
     {
-        providers = gcnew System::Collections::Generic::List<TraceProviderDescriptor^>();
+        providers = gcnew System::Collections::Generic::List<EventProviderDescriptor^>();
     }
 
-    TraceSessionDescriptor(TraceSessionDescriptor^ source)
+    EventSessionDescriptor(EventSessionDescriptor^ source)
     {
         if (!source)
             throw gcnew System::ArgumentNullException("source");
@@ -83,24 +86,29 @@ public:
         MinimumBuffers = source->MinimumBuffers;
         MaximumBuffers = source->MaximumBuffers;
         LogFileName = source->LogFileName;
-        providers = gcnew System::Collections::Generic::List<TraceProviderDescriptor^>(source->Providers->Count);
+        providers = gcnew System::Collections::Generic::List<EventProviderDescriptor^>(source->Providers->Count);
         for each (auto provider in source->Providers)
-            providers->Add(gcnew TraceProviderDescriptor(provider));
+            providers->Add(gcnew EventProviderDescriptor(provider));
     }
 
     property System::Nullable<unsigned> BufferSize;
     property System::Nullable<unsigned> MinimumBuffers;
     property System::Nullable<unsigned> MaximumBuffers;
     property System::String^ LogFileName;
-    property System::Collections::Generic::IList<TraceProviderDescriptor^>^ Providers {
-        System::Collections::Generic::IList<TraceProviderDescriptor^>^ get() { return providers; }
+    property System::Collections::Generic::IList<EventProviderDescriptor^>^ Providers {
+        System::Collections::Generic::IList<EventProviderDescriptor^>^ get() { return providers; }
     }
 
 private:
-    System::Collections::Generic::IList<TraceProviderDescriptor^>^ providers;
+    System::Collections::Generic::IList<EventProviderDescriptor^>^ providers;
 };
 
-public value struct TraceSessionInfo
+} // namespace EventTraceKit::Tracing
+
+namespace EventTraceKit
+{
+
+public value struct EventSessionInfo
 {
     property long long StartTime;
     property long long PerfFreq;
@@ -114,6 +122,6 @@ public value struct EventInfo
     property System::UIntPtr TraceEventInfoSize;
 };
 
-} // namespace EventTraceKit
+} // namespace EventTraceKit::Tracing
 
 #endif // __cplusplus_cli

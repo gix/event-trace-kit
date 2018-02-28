@@ -6,13 +6,14 @@ namespace EventTraceKit.VsExtension
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Windows;
+    using EventTraceKit.VsExtension.Views;
+    using EventTraceKit.VsExtension.Views.PresetManager;
     using Extensions;
     using Microsoft.VisualStudio;
     using Microsoft.VisualStudio.Settings;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
     using Microsoft.VisualStudio.Shell.Settings;
-    using UI;
     using Task = System.Threading.Tasks.Task;
 
     public interface IDiagLog

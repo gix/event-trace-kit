@@ -4,8 +4,10 @@ namespace EventTraceKit.VsExtension
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
     using EnvDTE;
+    using EventTraceKit.Tracing;
     using Microsoft.VisualStudio.Threading;
     using Microsoft.VisualStudio.VCProjectEngine;
     using Native;
@@ -17,9 +19,9 @@ namespace EventTraceKit.VsExtension
         event Action<TraceLog> SessionStarting;
         event Action<TraceSession> SessionStarted;
         event Action<TraceSession> SessionStopped;
-        Task<TraceSession> StartSessionAsync(TraceSessionDescriptor descriptor);
+        Task<TraceSession> StartSessionAsync(EventSessionDescriptor descriptor);
         Task StopSessionAsync();
-        void EnableAutoLog(TraceSessionDescriptor descriptor);
+        void EnableAutoLog(EventSessionDescriptor descriptor);
         void DisableAutoLog();
     }
 
@@ -29,7 +31,8 @@ namespace EventTraceKit.VsExtension
 
         private bool autoLogEnabled;
         private bool asyncAutoLog;
-        private TraceSessionDescriptor autoLogDescriptor;
+        private EventSessionDescriptor autoLogDescriptor;
+        private CancellationTokenSource autoLogExitCts;
 
         public DefaultTraceSessionService()
         {
@@ -40,14 +43,8 @@ namespace EventTraceKit.VsExtension
         public event Action<TraceSession> SessionStopped;
         public bool IsAutoLogEnabled => autoLogEnabled;
 
-        public void EnableAutoLog(TraceSessionDescriptor descriptor)
+        public void EnableAutoLog(EventSessionDescriptor descriptor)
         {
-            if (descriptor == null)
-                throw new ArgumentNullException(nameof(descriptor));
-            if (descriptor.Providers.Count == 0)
-                throw new ArgumentException(
-                    "Descriptor has no providers specified.", nameof(descriptor));
-
             autoLogDescriptor = descriptor;
             autoLogEnabled = true;
         }
@@ -58,7 +55,7 @@ namespace EventTraceKit.VsExtension
             autoLogDescriptor = null;
         }
 
-        public TraceSession StartSession(TraceSessionDescriptor descriptor)
+        public TraceSession StartSession(EventSessionDescriptor descriptor)
         {
             if (runningSession != null)
                 throw new InvalidOperationException("Session already in progress.");
@@ -73,7 +70,7 @@ namespace EventTraceKit.VsExtension
             return session;
         }
 
-        public async Task<TraceSession> StartSessionAsync(TraceSessionDescriptor descriptor)
+        public async Task<TraceSession> StartSessionAsync(EventSessionDescriptor descriptor)
         {
             if (runningSession != null)
                 throw new InvalidOperationException("Session already in progress.");
@@ -93,6 +90,7 @@ namespace EventTraceKit.VsExtension
             if (runningSession == null)
                 return;
 
+            autoLogExitCts?.Cancel();
             using (runningSession) {
                 runningSession.Stop();
                 SessionStopped?.Invoke(runningSession);
@@ -105,6 +103,7 @@ namespace EventTraceKit.VsExtension
             if (runningSession == null)
                 return;
 
+            autoLogExitCts?.Cancel();
             using (runningSession) {
                 await Task.Run(() => runningSession.Stop());
                 SessionStopped?.Invoke(runningSession);
@@ -112,22 +111,51 @@ namespace EventTraceKit.VsExtension
             }
         }
 
+        private static bool IsUsableDescriptor(EventSessionDescriptor descriptor)
+        {
+            return descriptor != null && descriptor.Providers.Count > 0;
+        }
+
+        private EventSessionDescriptor AugmentDescriptor(
+            EventSessionDescriptor descriptor, List<TraceLaunchTarget> targets)
+        {
+            foreach (var provider in descriptor.Providers) {
+                if (provider.StartupProjects == null)
+                    continue;
+
+                foreach (var project in provider.StartupProjects) {
+                    var target = targets.FirstOrDefault(
+                        x => string.Equals(x.ProjectPath, project, StringComparison.OrdinalIgnoreCase));
+
+                    if (target != null)
+                        provider.ProcessIds.Add(target.ProcessId);
+                }
+            }
+
+            return descriptor;
+        }
+
         public void LaunchTraceTargets(List<TraceLaunchTarget> targets)
         {
-            if (!autoLogEnabled || runningSession != null)
+            if (!autoLogEnabled || runningSession != null || !IsUsableDescriptor(autoLogDescriptor))
                 return;
 
+            autoLogExitCts?.Cancel();
+            autoLogExitCts = new CancellationTokenSource();
+
+            var descriptor = AugmentDescriptor(autoLogDescriptor, targets);
+
             if (asyncAutoLog)
-                StartSessionAsync(autoLogDescriptor).Forget();
+                StartSessionAsync(descriptor).Forget();
             else
-                StartSession(autoLogDescriptor);
+                StartSession(descriptor);
 
             var processTasks = targets.Select(
                 x => Process.GetProcessById((int)x.ProcessId).WaitForExitAsync());
 
             Task.WhenAll(processTasks).ContinueWith(t => {
                 ExitTraceTargets(targets);
-            }).Forget();
+            }, autoLogExitCts.Token).Forget();
         }
 
         private void ExitTraceTargets(List<TraceLaunchTarget> targets)

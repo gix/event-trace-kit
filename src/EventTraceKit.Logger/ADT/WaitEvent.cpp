@@ -80,8 +80,8 @@ WaitEvent::WaitEvent(bool initialState, bool manualReset, std::wstring const& na
                                      initialState ? TRUE : FALSE, name.c_str()));
 
     if (!handle.IsValid()) {
-        DWORD ec = ::GetLastError();
-        if (name.size() > 0 && ec == ERROR_INVALID_HANDLE)
+        DWORD const ec = ::GetLastError();
+        if (!name.empty() && ec == ERROR_INVALID_HANDLE)
             throw Exception("Wait-handle cannot be opened.");
         throw Win32Exception(ec);
     }
@@ -132,12 +132,12 @@ WaitEvent WaitEvent::Open(std::wstring const& name, unsigned desiredAccess)
 
     WaitHandle handle(::OpenEventW(desiredAccess, false, name.c_str()));
     if (!handle.IsValid()) {
-        DWORD error = ::GetLastError();
-        if (error == ERROR_FILE_NOT_FOUND || error == ERROR_INVALID_NAME)
+        DWORD const ec = ::GetLastError();
+        if (ec == ERROR_FILE_NOT_FOUND || ec == ERROR_INVALID_NAME)
             throw Exception("Invalid wait-handle name.");
-        if (name.length() > 0 && error == ERROR_INVALID_HANDLE)
+        if (name.length() > 0 && ec == ERROR_INVALID_HANDLE)
             throw Exception("Wait-handle cannot be opened.");
-        throw Win32Exception(error);
+        throw Win32Exception(ec);
     }
 
     return WaitEvent(std::move(handle));
@@ -171,7 +171,7 @@ WaitEvent WaitEvent::OpenOrCreate(bool initialState, bool manualReset,
                                        initialState ? TRUE : FALSE, name.c_str()));
     if (!handle.IsValid()) {
         ec = ::GetLastError();
-        if (name.size() > 0 && ec == ERROR_INVALID_HANDLE)
+        if (!name.empty() && ec == ERROR_INVALID_HANDLE)
             throw Exception("Wait-handle cannot be opened.");
         throw Win32Exception(ec);
     }

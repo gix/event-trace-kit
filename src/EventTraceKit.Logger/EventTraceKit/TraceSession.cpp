@@ -17,6 +17,7 @@ using namespace System::ComponentModel;
 using namespace System::Linq;
 using namespace System::Runtime::InteropServices;
 using namespace System::Threading::Tasks;
+using namespace EventTraceKit::Tracing;
 using msclr::interop::marshal_as;
 
 namespace msclr
@@ -32,7 +33,7 @@ static bool IsProviderBinary(String^ filePath)
 }
 
 template<>
-inline etk::TraceProviderDescriptor marshal_as(EventTraceKit::TraceProviderDescriptor^ const& provider)
+inline etk::TraceProviderDescriptor marshal_as(EventProviderDescriptor^ const& provider)
 {
     etk::TraceProviderDescriptor native(
         marshal_as<GUID>(provider->Id), provider->Level, provider->MatchAnyKeyword,
@@ -80,7 +81,7 @@ public ref struct TraceStatistics
 public ref class TraceSession : public System::IDisposable
 {
 public:
-    TraceSession(TraceSessionDescriptor^ descriptor);
+    TraceSession(EventSessionDescriptor^ descriptor);
     ~TraceSession() { this->!TraceSession(); }
     !TraceSession();
 
@@ -90,7 +91,7 @@ public:
     void Flush();
     TraceStatistics^ Query();
 
-    TraceSessionInfo GetInfo() { return sessionInfo; }
+    EventSessionInfo GetInfo() { return sessionInfo; }
 
 private:
     ref struct StartAsyncHelper
@@ -104,14 +105,14 @@ private:
         TraceLog^ traceLog;
     };
 
-    TraceSessionDescriptor^ descriptor;
+    EventSessionDescriptor^ descriptor;
     std::wstring* loggerName = nullptr;
     std::vector<etk::TraceProviderDescriptor>* nativeProviders = nullptr;
     WatchDog^ watchDog;
 
     etk::ITraceSession* session = nullptr;
     etk::ITraceProcessor* processor = nullptr;
-    TraceSessionInfo sessionInfo;
+    EventSessionInfo sessionInfo;
 };
 
 static std::wstring LoggerNameBase = L"EventTraceKit_54644792-9281-48E9-B69D-E82A86F98960";
@@ -122,7 +123,7 @@ static std::wstring CreateLoggerName()
     return LoggerNameBase + L"_" + std::to_wstring(pid);
 }
 
-static etk::TraceProperties CreateTraceProperties(TraceSessionDescriptor^ descriptor)
+static etk::TraceProperties CreateTraceProperties(EventSessionDescriptor^ descriptor)
 {
     etk::TraceProperties properties(marshal_as<GUID>(System::Guid::NewGuid()));
     if (descriptor->BufferSize.HasValue)
@@ -136,17 +137,17 @@ static etk::TraceProperties CreateTraceProperties(TraceSessionDescriptor^ descri
     return properties;
 }
 
-TraceSession::TraceSession(TraceSessionDescriptor^ descriptor)
+TraceSession::TraceSession(EventSessionDescriptor^ descriptor)
     : descriptor(descriptor)
     , loggerName(new std::wstring(CreateLoggerName()))
 {
     watchDog = gcnew WatchDog(marshal_as<String^>(*loggerName));
 
-    etk::TraceProperties properties = CreateTraceProperties(descriptor);
-    auto session = etk::CreateEtwTraceSession(*loggerName, properties);
+    auto traceProperties = CreateTraceProperties(descriptor);
+    auto session = etk::CreateEtwTraceSession(*loggerName, traceProperties);
 
     nativeProviders = new std::vector<etk::TraceProviderDescriptor>();
-    for each (TraceProviderDescriptor^ provider in descriptor->Providers)
+    for each (auto provider in descriptor->Providers)
         nativeProviders->push_back(marshal_as<etk::TraceProviderDescriptor>(provider));
 
     for (auto const& provider : *nativeProviders) {

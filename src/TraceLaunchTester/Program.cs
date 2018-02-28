@@ -22,7 +22,7 @@ namespace TraceLaunchTester
             Log("[SERVER] pipe: {0}", pipeName);
 
             var client = new Process();
-            client.StartInfo.FileName = @"C:\Users\nrieck\dev\EventTraceKit\build\x86-dbg\bin\TraceLaunch.exe";
+            client.StartInfo.FileName = @"C:\Users\nrieck\dev\EventTraceKit\build\x86-dbg\bin\TraceLaunch.x86.exe";
             client.StartInfo.Arguments = pipeName + " " + launchSettings.Arguments;
             client.StartInfo.UseShellExecute = false;
 

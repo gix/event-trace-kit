@@ -35,10 +35,10 @@ int wmain(int argc, wchar_t** argv)
     }
 
     try {
-        DWORD processId = boost::lexical_cast<DWORD>(argv[1]);
-        std::wstring loggerName(argv[2]);
-        std::wstring readyEventName(argv[3]);
-        std::wstring exitEventName(argv[4]);
+        DWORD const processId = boost::lexical_cast<DWORD>(argv[1]);
+        std::wstring const loggerName(argv[2]);
+        std::wstring const readyEventName(argv[3]);
+        std::wstring const exitEventName(argv[4]);
 
         ProcessHandle process(OpenProcess(SYNCHRONIZE, FALSE, processId));
         if (!process) {
@@ -57,7 +57,7 @@ int wmain(int argc, wchar_t** argv)
         if (WaitForAny(process, exitEvent) == 0)
             CloseTraceSession(loggerName);
     } catch (std::exception const& ex) {
-        fwprintf(stderr, L"Caught exception: %s\n", ex.what());
+        fwprintf(stderr, L"Caught exception: %hs\n", ex.what());
         return -1;
     } catch (...) {
         fwprintf(stderr, L"Caught unknown exception.\n");

@@ -112,7 +112,7 @@ namespace EventTraceKit.VsExtension.Utilities
             for (int i = 0; i < items.Length; ++i) {
                 if (items[i].Value == null) {
                     // Intentionally not using interlocked here. In the worst case
-                    // two objects may be stored into same slot. This is very
+                    // two objects may be stored into the same slot. This is very
                     // unlikely to happen and will only mean that one of the objects
                     // will get collected.
                     items[i].Value = obj;

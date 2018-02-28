@@ -2,7 +2,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:vsfx="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.14.0"
                     xmlns:vsp="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
-                    xmlns:etkvs="clr-namespace:EventTraceKit.VsExtension">
+                    xmlns:etkc="clr-namespace:EventTraceKit.VsExtension.Controls">
   <!--<Style x:Key="{x:Type ToggleButton}" TargetType="{x:Type ToggleButton}"
          BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ButtonStyleKey}}"/>
 
@@ -427,7 +427,7 @@
   <Style TargetType="{x:Type ScrollBar}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ScrollBarStyleKey}}"/>
   <Style TargetType="{x:Type ScrollViewer}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ScrollViewerStyleKey}}"/>
 
-  <Style TargetType="{x:Type etkvs:ThemedDialogWindow}">
+  <Style TargetType="{x:Type etkc:ThemedDialogWindow}">
     <Setter Property="Background" Value="{DynamicResource {x:Static vsfx:VsBrushes.WindowKey}}"/>
     <Setter Property="Foreground" Value="{DynamicResource {x:Static vsfx:VsBrushes.WindowTextKey}}"/>
   </Style>

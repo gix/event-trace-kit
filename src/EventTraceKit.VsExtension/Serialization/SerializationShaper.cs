@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Serialization
+namespace EventTraceKit.VsExtension.Serialization
 {
     using System;
     using System.Collections;
@@ -7,6 +7,7 @@
     using System.Globalization;
     using System.Linq;
     using System.Reflection;
+    using EventTraceKit.VsExtension.Extensions;
 
     public class SerializationShaper<TSerializedBaseType>
     {

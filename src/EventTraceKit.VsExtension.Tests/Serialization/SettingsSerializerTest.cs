@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Tests.Serialization
+namespace EventTraceKit.VsExtension.Tests.Serialization
 {
     using System;
     using System.IO;
@@ -6,6 +6,7 @@
     using System.Windows;
     using System.Xml.Linq;
     using Controls;
+    using EventTraceKit.VsExtension.Views;
     using VsExtension.Serialization;
     using Xunit;
     using Xunit.Abstractions;
@@ -62,7 +63,7 @@
             session.MaximumBuffers = 42;
             session.LogFileName = @"z:\path\to\logfile.etl";
 
-            var provider = new TraceProviderDescriptorViewModel(
+            var provider = new EventProviderViewModel(
                 new Guid("37D34B87-80A6-44CE-90BB-1C3D6EDB0784"), "Bar");
             session.Providers.Add(provider);
 
@@ -86,7 +87,7 @@
             source.MaximumBuffers = 42;
             source.LogFileName= @"z:\path\to\logfile.etl";
 
-            var provider = new TraceProviderDescriptorViewModel(
+            var provider = new EventProviderViewModel(
                 new Guid("37D34B87-80A6-44CE-90BB-1C3D6EDB0784"), "Bar");
             source.Providers.Add(provider);
 
@@ -117,7 +118,7 @@
         [Fact]
         public void SerializeTraceProviderDescriptor()
         {
-            var source = new TraceProviderDescriptorViewModel(
+            var source = new EventProviderViewModel(
                 new Guid("EC700760-3FAE-48AD-8110-E4AE77C69F85"), "Foo");
             source.IsEnabled = true;
             source.Level = 0xFF;
@@ -130,7 +131,7 @@
             source.ProcessIds.Add(42);
             source.Manifest = @"z:\path\to\manifest.man";
             source.FilterEvents = true;
-            source.Events.Add(new TraceEventDescriptorViewModel { Id = 2 });
+            source.Events.Add(new EventViewModel { Id = 2 });
 
             var stream = new MemoryStream();
             new SettingsSerializer().Save(source, stream);
@@ -151,7 +152,7 @@
             Assert.Equal("True", doc.Root.Attribute("FilterEvents")?.Value);
 
             stream.Position = 0;
-            var deserialized = new SettingsSerializer().Load<TraceProviderDescriptorViewModel>(stream);
+            var deserialized = new SettingsSerializer().Load<EventProviderViewModel>(stream);
 
             Assert.Equal(source.Id, deserialized.Id);
             Assert.Equal(source.Name, deserialized.Name);
@@ -176,7 +177,7 @@
         [Fact]
         public void SerializeTraceEventDescriptor()
         {
-            var source = new TraceEventDescriptorViewModel {
+            var source = new EventViewModel {
                 IsEnabled = true,
                 Id = 23,
                 Version = 42,
@@ -205,7 +206,7 @@
             Assert.Equal("MyKeywords", doc.Root.Attribute("Keywords")?.Value);
 
             stream.Position = 0;
-            var deserialized = new SettingsSerializer().Load<TraceEventDescriptorViewModel>(stream);
+            var deserialized = new SettingsSerializer().Load<EventViewModel>(stream);
 
             Assert.Equal(source.IsEnabled, deserialized.IsEnabled);
             Assert.Equal(source.Id, deserialized.Id);

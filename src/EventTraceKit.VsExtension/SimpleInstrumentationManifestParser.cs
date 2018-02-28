@@ -6,6 +6,7 @@ namespace EventTraceKit.VsExtension
     using System.Xml.Linq;
     using System.Xml.XPath;
     using Collections;
+    using EventTraceKit.VsExtension.Views;
     using Extensions;
 
     public class SimpleInstrumentationManifestParser : IDisposable
@@ -40,7 +41,7 @@ namespace EventTraceKit.VsExtension
             reader.Dispose();
         }
 
-        public IEnumerable<TraceProviderDescriptorViewModel> ReadProviders()
+        public IEnumerable<EventProviderViewModel> ReadProviders()
         {
             const string providerXPath = "e:instrumentationManifest/e:instrumentation/e:events/e:provider";
             foreach (var providerElem in document.XPathSelectElements(providerXPath, xnsMgr)) {
@@ -50,7 +51,7 @@ namespace EventTraceKit.VsExtension
             }
         }
 
-        public TraceProviderDescriptorViewModel ReadProvider(XElement providerElem)
+        public EventProviderViewModel ReadProvider(XElement providerElem)
         {
             string name = providerElem.Attribute("name").AsString();
             string symbol = providerElem.Attribute("symbol").AsString();
@@ -58,7 +59,7 @@ namespace EventTraceKit.VsExtension
             if (id == null)
                 return null;
 
-            var provider = new TraceProviderDescriptorViewModel(
+            var provider = new EventProviderViewModel(
                 id.Value, name ?? symbol ?? $"<id:{id.Value}>");
 
             provider.Manifest = manifestFilePath;
@@ -67,7 +68,7 @@ namespace EventTraceKit.VsExtension
             return provider;
         }
 
-        public IEnumerable<TraceEventDescriptorViewModel> ReadEvents(
+        public IEnumerable<EventViewModel> ReadEvents(
             XElement providerElem)
         {
             foreach (var eventElem in providerElem.XPathSelectElements("e:events/e:event", xnsMgr)) {
@@ -77,7 +78,7 @@ namespace EventTraceKit.VsExtension
             }
         }
 
-        public TraceEventDescriptorViewModel ReadEvent(
+        public EventViewModel ReadEvent(
             XElement eventElem)
         {
             string symbol = eventElem.Attribute("symbol").AsString();
@@ -92,7 +93,7 @@ namespace EventTraceKit.VsExtension
             if (id == null)
                 return null;
 
-            return new TraceEventDescriptorViewModel(id.Value, version, symbol ?? $"<id:{id.Value}>") {
+            return new EventViewModel(id.Value, version, symbol ?? $"<id:{id.Value}>") {
                 Level = levelName,
                 Channel = channelToken,
                 Task = taskName,

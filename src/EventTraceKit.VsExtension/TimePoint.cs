@@ -7,9 +7,9 @@ namespace EventTraceKit.VsExtension
     [StructLayout(LayoutKind.Sequential)]
     [TypeConverter(typeof(TimePointConverter))]
     public struct TimePoint
-        : IComparable<TimePoint>
-            , IEquatable<TimePoint>
-            , IFormattable
+        : IEquatable<TimePoint>
+        , IComparable<TimePoint>
+        , IFormattable
     {
         private readonly long ns100Ticks;
 
@@ -20,7 +20,7 @@ namespace EventTraceKit.VsExtension
 
         public static TimePoint FromNanoseconds(long nanoseconds)
         {
-            return new TimePoint(nanoseconds * 100);
+            return new TimePoint(nanoseconds / 100);
         }
 
         public static TimePoint Zero => new TimePoint();
@@ -28,24 +28,29 @@ namespace EventTraceKit.VsExtension
         public static TimePoint MaxValue => new TimePoint(long.MaxValue);
 
         public long Ticks => ns100Ticks;
-        public long ToNanoseconds => ns100Ticks * 100;
-        public long ToMicroseconds => ns100Ticks / 10;
-        public long ToMilliseconds => ns100Ticks / 10000;
-        public long ToSeconds => ns100Ticks / 10000000;
+        public long TotalNanoseconds => ns100Ticks * 100;
+        public long TotalMicroseconds => ns100Ticks / 10;
+        public long TotalMilliseconds => ns100Ticks / 10000;
+        public long TotalSeconds => ns100Ticks / 10000000;
 
         public static TimePoint Abs(TimePoint value)
         {
-            return FromNanoseconds(Math.Abs(value.ns100Ticks));
+            return new TimePoint(Math.Abs(value.Ticks));
         }
 
         public static TimePoint Min(TimePoint lhs, TimePoint rhs)
         {
-            return new TimePoint(Math.Min(lhs.ToNanoseconds, rhs.ToNanoseconds));
+            return new TimePoint(Math.Min(lhs.Ticks, rhs.Ticks));
         }
 
         public static TimePoint Max(TimePoint lhs, TimePoint rhs)
         {
-            return new TimePoint(Math.Max(lhs.ToNanoseconds, rhs.ToNanoseconds));
+            return new TimePoint(Math.Max(lhs.Ticks, rhs.Ticks));
+        }
+
+        public bool Equals(TimePoint other)
+        {
+            return ns100Ticks == other.ns100Ticks;
         }
 
         public int CompareTo(TimePoint other)
@@ -54,11 +59,6 @@ namespace EventTraceKit.VsExtension
                 ns100Ticks < other.ns100Ticks ? -1 :
                 ns100Ticks <= other.ns100Ticks ? 0 :
                 1;
-        }
-
-        public bool Equals(TimePoint other)
-        {
-            return ns100Ticks == other.ns100Ticks;
         }
 
         public static bool operator ==(TimePoint lhs, TimePoint rhs)

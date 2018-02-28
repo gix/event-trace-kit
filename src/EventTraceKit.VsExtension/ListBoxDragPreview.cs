@@ -1,6 +1,5 @@
-﻿namespace EventTraceKit.VsExtension
+namespace EventTraceKit.VsExtension
 {
-    using System;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Documents;
@@ -25,11 +24,26 @@
 
         public void Hide()
         {
-            HideAdorner();
+            RemoveAdorner();
+        }
+
+        public void UpdateAdorner(ListBoxItem dropTarget, Point positionInDropTarget)
+        {
+            if (insertionAdorner == null)
+                return;
+
+            bool insertAfter;
+            if (insertionAdorner.IsHorizontal)
+                insertAfter = positionInDropTarget.Y > dropTarget.ActualHeight / 2;
+            else
+                insertAfter = positionInDropTarget.X > dropTarget.ActualWidth / 2;
+
+            UpdateAdorner(dropTarget, insertAfter);
         }
 
         private void OnPreviewDragEnter(object sender, DragEventArgs e)
         {
+            dragEntered = true;
             ShowAdorner();
         }
 
@@ -40,12 +54,12 @@
 
         private void OnPreviewDragLeave(object sender, DragEventArgs e)
         {
-            BeginHideAdorner();
+            dragEntered = false;
+            HideAdornerAsync();
         }
 
         private void ShowAdorner()
         {
-            dragEntered = true;
             if (insertionAdorner == null) {
                 insertionAdorner = new InsertionAdorner(
                     listBox,
@@ -55,16 +69,15 @@
             }
         }
 
-        private void BeginHideAdorner()
+        private void HideAdornerAsync()
         {
-            dragEntered = false;
-            listBox.Dispatcher.BeginInvoke(new Action(() => {
+            listBox.Dispatcher.InvokeAsync(() => {
                 if (!dragEntered)
-                    HideAdorner();
-            }));
+                    RemoveAdorner();
+            });
         }
 
-        private void HideAdorner()
+        private void RemoveAdorner()
         {
             if (insertionAdorner != null) {
                 insertionAdorner.Detach();
@@ -82,20 +95,6 @@
             UpdateAdorner(container, true);
         }
 
-        public void UpdateAdorner(ListBoxItem dropTarget, Point positionInDropTarget)
-        {
-            if (insertionAdorner == null)
-                return;
-
-            bool insertAfter;
-            if (insertionAdorner.IsHorizontal)
-                insertAfter = positionInDropTarget.Y > dropTarget.ActualHeight / 2;
-            else
-                insertAfter = positionInDropTarget.X > dropTarget.ActualWidth / 2;
-
-            UpdateAdorner(dropTarget, insertAfter);
-        }
-
         private void UpdateAdorner(UIElement dropTarget, bool insertAfter)
         {
             if (insertionAdorner == null)
@@ -103,11 +102,6 @@
 
             insertionAdorner.DropTarget = dropTarget;
             insertionAdorner.InsertAfter = insertAfter;
-        }
-
-        public void HideOnly()
-        {
-            Hide();
         }
     }
 }

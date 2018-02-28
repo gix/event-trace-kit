@@ -1,14 +1,11 @@
-﻿namespace EventTraceKit.VsExtension
+namespace EventTraceKit.VsExtension
 {
     using System;
     using System.ComponentModel.Design;
+    using EventTraceKit.VsExtension.Views;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
-    using UI;
 
-    /// <summary>
-    /// Command handler
-    /// </summary>
     internal sealed class TraceLogWindowCommand
     {
         /// <summary>
@@ -27,8 +24,9 @@
         private readonly Package package;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TraceLogWindowCommand"/> class.
-        /// Adds our command handlers for menu (commands must exist in the command table file)
+        ///   Initializes a new instance of the <see cref="TraceLogWindowCommand"/>
+        ///   class. Adds our command handlers for menu (commands must exist in
+        ///   the command table file)
         /// </summary>
         /// <param name="package">Owner package, not null.</param>
         private TraceLogWindowCommand(Package package)

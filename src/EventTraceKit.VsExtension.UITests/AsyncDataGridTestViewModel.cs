@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.UITests
+namespace EventTraceKit.VsExtension.UITests
 {
     using System;
     using System.Collections.Generic;
@@ -12,6 +12,8 @@
     using System.Windows.Media;
     using System.Windows.Threading;
     using Controls;
+    using EventTraceKit.VsExtension.Views;
+    using EventTraceKit.VsExtension.Views.PresetManager;
     using Formatting;
     using Native;
 

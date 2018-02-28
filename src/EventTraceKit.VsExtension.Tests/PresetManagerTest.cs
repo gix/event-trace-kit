@@ -1,8 +1,9 @@
-﻿namespace EventTraceKit.VsExtension.Tests
+namespace EventTraceKit.VsExtension.Tests
 {
     using System.Windows.Threading;
     using Controls;
-    using VsExtension.Formatting;
+    using EventTraceKit.VsExtension.Formatting;
+    using EventTraceKit.VsExtension.Views.PresetManager;
     using Xunit;
 
     public class PresetManagerTest

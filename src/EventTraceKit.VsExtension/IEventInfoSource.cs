@@ -2,7 +2,7 @@ namespace EventTraceKit.VsExtension
 {
     public interface IEventInfoSource
     {
-        TraceSessionInfo GetInfo();
+        EventSessionInfo GetInfo();
         EventInfo GetEvent(int index);
     }
 }

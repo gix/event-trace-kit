@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Serialization
+namespace EventTraceKit.VsExtension.Serialization
 {
     using System;
     using System.Collections;
@@ -9,7 +9,6 @@
     using System.Text;
     using System.Windows.Markup;
     using System.Xml;
-    using Extensions;
 
     internal interface ISerializationExclusion
     {

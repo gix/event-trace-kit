@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Controls
+namespace EventTraceKit.VsExtension.Controls
 {
     using System;
     using System.Windows;
@@ -58,26 +58,26 @@
 
         public Pen Pen
         {
-            get { return (Pen)GetValue(PenProperty); }
-            set { SetValue(PenProperty, value); }
+            get => (Pen)GetValue(PenProperty);
+            set => SetValue(PenProperty, value);
         }
 
         public UIElement DropTarget
         {
-            get { return (UIElement)GetValue(DropTargetProperty); }
-            set { SetValue(DropTargetProperty, value); }
+            get => (UIElement)GetValue(DropTargetProperty);
+            set => SetValue(DropTargetProperty, value);
         }
 
         public bool InsertAfter
         {
-            get { return (bool)GetValue(InsertAfterProperty); }
-            set { SetValue(InsertAfterProperty, Boxed.Bool(value)); }
+            get => (bool)GetValue(InsertAfterProperty);
+            set => SetValue(InsertAfterProperty, Boxed.Bool(value));
         }
 
         public bool IsHorizontal
         {
-            get { return (bool)GetValue(IsHorizontalProperty); }
-            set { SetValue(IsHorizontalProperty, Boxed.Bool(value)); }
+            get => (bool)GetValue(IsHorizontalProperty);
+            set => SetValue(IsHorizontalProperty, Boxed.Bool(value));
         }
 
         public void Detach()

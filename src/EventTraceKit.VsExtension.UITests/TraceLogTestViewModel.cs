@@ -6,7 +6,10 @@ namespace EventTraceKit.VsExtension.UITests
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Input;
+    using EventTraceKit.Tracing;
     using EventTraceKit.VsExtension;
+    using EventTraceKit.VsExtension.Views;
+    using EventTraceKit.VsExtension.Views.PresetManager;
     using Microsoft.VisualStudio.PlatformUI;
     using Task = System.Threading.Tasks.Task;
 
@@ -74,7 +77,7 @@ namespace EventTraceKit.VsExtension.UITests
             };
 
             foreach (var provider in knownProviders) {
-                session.Providers.Add(new TraceProviderDescriptorViewModel {
+                session.Providers.Add(new EventProviderViewModel {
                     Id = provider.Key,
                     Name = provider.Value,
                     IsEnabled = true
@@ -187,11 +190,25 @@ namespace EventTraceKit.VsExtension.UITests
 
         private class StubSessionService : ITraceSessionService
         {
-            public event Action<TraceLog> SessionStarting;
-            public event Action<TraceSession> SessionStarted;
-            public event Action<TraceSession> SessionStopped;
+            public event Action<TraceLog> SessionStarting
+            {
+                add { }
+                remove { }
+            }
 
-            public void EnableAutoLog(TraceSessionDescriptor descriptor)
+            public event Action<TraceSession> SessionStarted
+            {
+                add { }
+                remove { }
+            }
+
+            public event Action<TraceSession> SessionStopped
+            {
+                add { }
+                remove { }
+            }
+
+            public void EnableAutoLog(EventSessionDescriptor descriptor)
             {
             }
 
@@ -199,9 +216,9 @@ namespace EventTraceKit.VsExtension.UITests
             {
             }
 
-            public Task<TraceSession> StartSessionAsync(TraceSessionDescriptor descriptor)
+            public Task<TraceSession> StartSessionAsync(EventSessionDescriptor descriptor)
             {
-                return Task.FromResult(new TraceSession(new TraceSessionDescriptor()));
+                return Task.FromResult(new TraceSession(new EventSessionDescriptor()));
             }
 
             public Task StopSessionAsync()

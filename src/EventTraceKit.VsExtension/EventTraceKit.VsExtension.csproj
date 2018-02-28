@@ -135,10 +135,10 @@
     <Compile Include="PortableExecutableUtils.cs" />
     <Compile Include="ProvideDebuggerLaunchHookAttribute.cs" />
     <Compile Include="Extensions\StreamExtensions.cs" />
-    <Compile Include="UI\FilterDialog.xaml.cs">
+    <Compile Include="Views\FilterDialog.xaml.cs">
       <DependentUpon>FilterDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UI\FilterDialogViewModel.cs" />
+    <Compile Include="Views\FilterDialogViewModel.cs" />
     <Compile Include="FontAndColorsRegistrationAttribute.cs" />
     <Compile Include="Formatting\TimeSpanFormatProvider.cs" />
     <Compile Include="Formatting\DefaultFormatProviderSource.cs" />
@@ -159,7 +159,7 @@
     <Compile Include="Native\TraceDataHelper.cs" />
     <Compile Include="Native\UnmanagedString.cs" />
     <Compile Include="Threading\Threading.cs" />
-    <Compile Include="UI\ImportProvidersDialog.xaml.cs">
+    <Compile Include="Views\ImportProvidersDialog.xaml.cs">
       <DependentUpon>ImportProvidersDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Utilities\ObjectPool.cs" />
@@ -172,25 +172,25 @@
     <Compile Include="Native\FormatMessageFlags.cs" />
     <Compile Include="Native\MOVEFILE_FLAGS.cs" />
     <Compile Include="Native\RECT.cs" />
-    <Compile Include="PresetManager\ExceptionFilterEventArgs.cs" />
-    <Compile Include="PresetManager\PresetManagerDialog.xaml.cs">
+    <Compile Include="Views\PresetManager\ExceptionFilterEventArgs.cs" />
+    <Compile Include="Views\PresetManager\PresetManagerDialog.xaml.cs">
       <DependentUpon>PresetManagerDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PresetManager\GraphTreeItemHeaderCommand.cs" />
-    <Compile Include="PresetManager\HeaderDropDownMenu.cs" />
-    <Compile Include="PresetManager\IsEqual.cs" />
-    <Compile Include="PresetManager\PresetManagerColumnContainerStyleSelector.cs" />
-    <Compile Include="PresetManager\PresetManagerColumnDetailsTemplateSelector.cs" />
-    <Compile Include="PresetManager\PresetManagerColumnType.cs" />
-    <Compile Include="PresetManager\PresetManagerColumnViewModel.cs" />
-    <Compile Include="PresetManager\PresetManagerDesignTimeModel.cs" />
-    <Compile Include="PresetManager\PresetManagerViewModel.cs" />
-    <Compile Include="PresetManager\FileSettingsStorage.cs" />
-    <Compile Include="PresetManager\PresetSaveAsDialog.xaml.cs">
+    <Compile Include="Views\PresetManager\GraphTreeItemHeaderCommand.cs" />
+    <Compile Include="Views\PresetManager\HeaderDropDownMenu.cs" />
+    <Compile Include="Windows\IsEqualConverter.cs" />
+    <Compile Include="Views\PresetManager\PresetManagerColumnContainerStyleSelector.cs" />
+    <Compile Include="Views\PresetManager\PresetManagerColumnDetailsTemplateSelector.cs" />
+    <Compile Include="Views\PresetManager\PresetManagerColumnType.cs" />
+    <Compile Include="Views\PresetManager\PresetManagerColumnViewModel.cs" />
+    <Compile Include="Views\PresetManager\PresetManagerDesignTimeModel.cs" />
+    <Compile Include="Views\PresetManager\PresetManagerViewModel.cs" />
+    <Compile Include="Views\PresetManager\FileSettingsStorage.cs" />
+    <Compile Include="Views\PresetManager\PresetSaveAsDialog.xaml.cs">
       <DependentUpon>PresetSaveAsDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="SafeBstrHandle.cs" />
-    <Compile Include="Serialization\ActivatorUtils.cs" />
+    <Compile Include="Native\SafeBstrHandle.cs" />
+    <Compile Include="Extensions\ActivatorUtils.cs" />
     <Compile Include="Serialization\CustomXamlSerializer.cs" />
     <Compile Include="Serialization\DeserializationCallbackAttribute.cs" />
     <Compile Include="Serialization\DictionaryExtensions.cs" />
@@ -220,6 +220,8 @@
     <Compile Include="Utilities\UnboundedCache.cs" />
     <Compile Include="ValueChangedEventArgs.cs" />
     <Compile Include="ValueChangedEventHandler.cs" />
+    <Compile Include="Extensions\TaskDialogExtensions.cs" />
+    <Compile Include="Extensions\NotifyExtensions.cs" />
     <Compile Include="Windows\FreezableCustomSerializerAccessBase.cs" />
     <Compile Include="DataTable.cs" />
     <Compile Include="IDataView.cs" />
@@ -233,18 +235,18 @@
     <Compile Include="ItemEventHandler.cs" />
     <Compile Include="IWorkManager.cs" />
     <Compile Include="Settings\Persistence\Views.cs" />
-    <Compile Include="TraceEventDescriptorViewModel.cs" />
+    <Compile Include="Views\EventViewModel.cs" />
     <Compile Include="TraceLogStatsModel.cs" />
-    <Compile Include="TraceSettingsViewModel.cs" />
+    <Compile Include="Views\TraceSettingsViewModel.cs" />
     <Compile Include="UsedImplicitlyAttribute.cs" />
     <Compile Include="Windows\BindableDialogResult.cs" />
     <Compile Include="Windows\KeyDownEventTrigger.cs" />
     <Compile Include="SimpleInstrumentationManifestParser.cs" />
     <Compile Include="SolutionFileGatherer.cs" />
-    <Compile Include="UI\ThemedDialogWindow.cs" />
+    <Compile Include="Controls\ThemedDialogWindow.cs" />
     <Compile Include="Windows\ToggleSelectOnSpace.cs" />
-    <Compile Include="UI\TraceLogPaneViewModel.cs" />
-    <Compile Include="TraceProviderDescriptorViewModel.cs" />
+    <Compile Include="Views\TraceLogPaneViewModel.cs" />
+    <Compile Include="Views\EventProviderViewModel.cs" />
     <Compile Include="Windows\HexNumberConverter.cs" />
     <Compile Include="Windows\MenuPopupPositionerExtension.cs" />
     <Compile Include="Controls\VsMenuScrollViewer.cs" />
@@ -304,15 +306,15 @@
     <Compile Include="TimePoint.cs" />
     <Compile Include="TimePointConverter.cs" />
     <Compile Include="TimePointFormatter.cs" />
-    <Compile Include="UI\TraceLogToolWindow.cs" />
+    <Compile Include="Views\TraceLogToolWindow.cs" />
     <Compile Include="TraceLogWindowCommand.cs" />
-    <Compile Include="UI\TraceLogPaneContent.xaml.cs">
+    <Compile Include="Views\TraceLogPaneContent.xaml.cs">
       <DependentUpon>TraceLogPaneContent.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UI\TraceSessionSettingsWindow.xaml.cs">
+    <Compile Include="Views\TraceSessionSettingsWindow.xaml.cs">
       <DependentUpon>TraceSessionSettingsWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="UI\TraceSessionSettingsViewModel.cs" />
+    <Compile Include="Views\TraceSessionSettingsViewModel.cs" />
     <Compile Include="ViewModel.cs" />
     <Compile Include="Windows\ValueConverter.cs" />
   </ItemGroup>
@@ -342,15 +344,15 @@
     </VSCTCompile>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="UI\FilterDialog.xaml">
+    <Page Include="Views\FilterDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="PresetManager\PresetManagerDialog.xaml">
+    <Page Include="Views\PresetManager\PresetManagerDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="PresetManager\PresetSaveAsDialog.xaml">
+    <Page Include="Views\PresetManager\PresetSaveAsDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -406,15 +408,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="UI\ImportProvidersDialog.xaml">
+    <Page Include="Views\ImportProvidersDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="UI\TraceLogPaneContent.xaml">
+    <Page Include="Views\TraceLogPaneContent.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="UI\TraceSessionSettingsWindow.xaml">
+    <Page Include="Views\TraceSessionSettingsWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

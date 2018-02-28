@@ -19,6 +19,11 @@ indent_size = 2
 [*.{props,targets,ruleset,config,nuspec,resx,vsixmanifest,vsct}]
 indent_size = 2
 
+# XAML files
+[*.xaml]
+indent_size = 2
+end_of_line = lf
+
 # JSON files
 [*.json]
 indent_size = 2
