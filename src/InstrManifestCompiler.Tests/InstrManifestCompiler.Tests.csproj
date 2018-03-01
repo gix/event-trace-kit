@@ -35,7 +35,7 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>..\Common\EventTraceKit.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>..\Build\EventTraceKit.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -43,9 +43,6 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Common\CommonAssemblyInfo.cs">
-      <Link>Properties\CommonAssemblyInfo.cs</Link>
-    </Compile>
     <Compile Include="DiagnosticsCollector.cs" />
     <Compile Include="EventManifestSchema\ChannelValidationTest.cs" />
     <Compile Include="EventManifestSchema\EnableBitTest.cs" />
@@ -60,7 +57,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Common\EventTraceKit.snk">
+    <None Include="..\Build\EventTraceKit.snk">
       <Link>Properties\EventTraceKit.snk</Link>
     </None>
     <None Include="InstrManifestCompiler.Tests.xunit.runner.json">
@@ -78,6 +75,5 @@
       <Version>2.3.1</Version>
     </PackageReference>
   </ItemGroup>
-  <Import Project="..\Common\CommonProjectNet.props" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

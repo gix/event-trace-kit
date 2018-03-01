@@ -16,7 +16,6 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
@@ -25,7 +24,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <OutputPath>bin\x86\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
@@ -38,7 +36,7 @@
     <SignAssembly>false</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>..\Common\EventTraceKit.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>..\Build\EventTraceKit.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="PresentationCore" />
@@ -52,7 +50,6 @@
   <ItemGroup>
     <Compile Include="Extensions\StringBuilderExtensionsTest.cs" />
     <Compile Include="Formatting\FormatProviderTest.cs" />
-    <Compile Include="Properties\CommonAssemblyInfo.cs" />
     <Compile Include="MessageFormatterTest.cs" />
     <Compile Include="MultiRangeTest.cs" />
     <Compile Include="PresetManagerTest.cs" />
@@ -63,7 +60,7 @@
     <Compile Include="TypeHelperTest.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Common\EventTraceKit.snk">
+    <None Include="..\Build\EventTraceKit.snk">
       <Link>Properties\EventTraceKit.snk</Link>
     </None>
   </ItemGroup>
@@ -82,6 +79,5 @@
       <Version>2.3.1</Version>
     </PackageReference>
   </ItemGroup>
-  <Import Project="..\Common\CommonProjectNet.props" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

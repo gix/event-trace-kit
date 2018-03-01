@@ -36,7 +36,7 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>..\Common\EventTraceKit.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>..\Build\EventTraceKit.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Build.Framework, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -47,9 +47,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Common\CommonAssemblyInfo.cs">
-      <Link>Properties\CommonAssemblyInfo.cs</Link>
-    </Compile>
     <Compile Include="ErrorUtilities.cs" />
     <Compile Include="ExceptionHandling.cs" />
     <Compile Include="FileUtilities.cs" />
@@ -67,7 +64,7 @@
     <Compile Include="TrackedToolTask.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Common\EventTraceKit.snk">
+    <None Include="..\Build\EventTraceKit.snk">
       <Link>Properties\EventTraceKit.snk</Link>
     </None>
     <None Include="Resources\MSBuild\imc.props" />
@@ -100,10 +97,6 @@
       <Version>0.2.0-ci-62627-01</Version>
     </PackageReference>
   </ItemGroup>
-  <Import Project="..\Common\CommonProjectNet.props" />
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
-  </PropertyGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="CopyMSBuildFiles" AfterTargets="Build">
     <ItemGroup>
