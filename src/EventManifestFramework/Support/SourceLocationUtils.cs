@@ -15,5 +15,21 @@ namespace EventManifestFramework.Support
                 return new SourceLocation(lineInfo.LineNumber, lineInfo.LinePosition);
             return new SourceLocation(obj.BaseUri, lineInfo.LineNumber, lineInfo.LinePosition);
         }
+
+        public static SourceLocation GetLocation(this XAttribute attribute)
+        {
+            var lineInfo = (IXmlLineInfo)attribute;
+            if (!lineInfo.HasLineInfo())
+                return new SourceLocation();
+
+            var linePosition = lineInfo.LinePosition;
+            if (!string.IsNullOrEmpty(attribute.Name.NamespaceName))
+                linePosition += attribute.Name.NamespaceName.Length + 1/*:*/;
+            linePosition += attribute.Name.LocalName.Length + 2/*="*/;
+
+            if (string.IsNullOrEmpty(attribute.BaseUri))
+                return new SourceLocation(lineInfo.LineNumber, linePosition);
+            return new SourceLocation(attribute.BaseUri, lineInfo.LineNumber, linePosition);
+        }
     }
 }
