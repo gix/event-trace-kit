@@ -191,7 +191,7 @@ namespace EventManifestCompiler.CodeGen
             if (property.Kind == PropertyKind.Data)
                 return MangleProperty((DataProperty)property, properties);
             string t = "n";
-            if (property.Count.IsFixed) {
+            if (property.Count.IsFixedMultiple) {
                 t = t.ToUpperInvariant();
                 t += property.Count.Value.Value;
             } else if (property.Count.DataPropertyRef != null) {
@@ -213,7 +213,7 @@ namespace EventManifestCompiler.CodeGen
 
             if (data.InType.Name != WinEventSchema.UnicodeString &&
                 data.InType.Name != WinEventSchema.AnsiString) {
-                if (data.Count.IsFixed) {
+                if (data.Count.IsFixedMultiple) {
                     t = t.ToUpperInvariant();
                     t += data.Count.Value.Value;
                 } else if (data.Count.DataPropertyRef != null) {
@@ -225,7 +225,7 @@ namespace EventManifestCompiler.CodeGen
 
             string len = string.Empty;
 
-            bool hasFixedCount = data.Count.IsFixed;
+            bool hasFixedCount = data.Count.IsFixedMultiple;
             bool hasFixedLength = data.Length.IsFixed;
             bool hasVarCount = data.Count.IsVariable;
             bool hasVarLength = data.Length.IsVariable;

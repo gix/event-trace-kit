@@ -12,8 +12,10 @@ namespace EventManifestFramework.Schema.Base
         void SetVariable(int? refPropertyIndex = null, string refPropertyName = null, DataProperty refProperty = null);
 
         bool IsFixed { get; }
+        bool IsFixedMultiple { get; }
         bool IsVariable { get; }
         bool IsSpecified { get; }
+        bool IsMultiple { get; }
     }
 
     internal abstract class PropertyNumber : IPropertyNumber
@@ -25,8 +27,10 @@ namespace EventManifestFramework.Schema.Base
         public abstract string Name { get; }
 
         public virtual bool IsFixed => Value.HasValue;
+        public virtual bool IsFixedMultiple => IsFixed;
         public bool IsVariable => DataPropertyRef != null || DataPropertyIndex != -1;
         public bool IsSpecified => IsFixed || IsVariable;
+        public bool IsMultiple => IsFixedMultiple || IsVariable;
 
         public void SetFixed(ushort value)
         {
@@ -64,13 +68,14 @@ namespace EventManifestFramework.Schema.Base
     {
         public override string Name => "count";
 
-        public override bool IsFixed => base.IsFixed && Value.GetValueOrDefault(1) > 1;
+        public override bool IsFixed => base.IsFixed && Value > 0;
+        public override bool IsFixedMultiple => base.IsFixed && Value > 1;
     }
 
     internal sealed class Length : PropertyNumber
     {
         public override string Name => "length";
 
-        public override bool IsFixed => base.IsFixed && Value.GetValueOrDefault() > 0;
+        public override bool IsFixed => base.IsFixed && Value > 0;
     }
 }

@@ -371,7 +371,7 @@ namespace EventManifestCompiler.CodeGen
                     if (item.Symbol == null)
                         continue;
                     string symbol = naming.GetIdentifier(item, map);
-                    ow.WriteLine("{0} = {1},", symbol, item.Value);
+                    ow.WriteLine("{0} = {1},", symbol, unchecked((int)item.Value.Value));
                 }
             }
             ow.WriteLine("}}{0};", naming.GetIdentifier(map));
@@ -543,7 +543,7 @@ namespace EventManifestCompiler.CodeGen
 
         private void WriteMessages(LocalizedResourceSet resourceSet)
         {
-            var messages = resourceSet.Strings.Used().ToList();
+            var messages = resourceSet.Strings.Used().Where(x => !x.Imported).ToList();
             messages.StableSortBy(m => m.Id);
             foreach (var message in messages) {
                 ow.WriteLine("#define {0,-24} 0x{1:X8}L", naming.GetIdentifier(message), message.Id);
@@ -595,7 +595,7 @@ namespace EventManifestCompiler.CodeGen
 
         private void AppendDataDesc(Property property, IList<Property> properties, TextWriter writer)
         {
-            if (IsStringData(property) && !property.Count.IsSpecified && !property.Length.IsSpecified) {
+            if (IsStringData(property) && !property.Count.IsMultiple && !property.Length.IsSpecified) {
                 var data = (DataProperty)property;
                 string argName = naming.GetNumberedArgId(property.Index);
 
@@ -640,7 +640,7 @@ namespace EventManifestCompiler.CodeGen
             var data = (DataProperty)property;
             bool isStr = data.InType.Name == WinEventSchema.UnicodeString ||
                          data.InType.Name == WinEventSchema.AnsiString;
-            if (isStr && data.Count.IsSpecified && !data.Length.IsSpecified)
+            if (isStr && data.Count.IsMultiple && !data.Length.IsSpecified)
                 return true;
 
             return false;
@@ -673,18 +673,18 @@ namespace EventManifestCompiler.CodeGen
                 case "FILETIME":
                 case "SYSTEMTIME":
                 case "SID":
-                    if (data.Count.IsSpecified)
+                    if (data.Count.IsMultiple)
                         return string.Format("_In_reads_({0})", GetCountExpr(data, properties, string.Empty));
                     return "_In_";
 
                 case "Pointer":
-                    if (data.Count.IsSpecified)
+                    if (data.Count.IsMultiple)
                         return string.Format("_In_reads_({0})", GetCountExpr(data, properties, string.Empty));
                     return "_In_opt_";
 
                 case "UnicodeString":
                 case "AnsiString":
-                    if (!data.Count.IsSpecified && !data.Length.IsSpecified)
+                    if (!data.Count.IsMultiple && !data.Length.IsSpecified)
                         return "_In_opt_";
 
                     string expr;
@@ -779,14 +779,14 @@ namespace EventManifestCompiler.CodeGen
         {
             if (IsPtrLike(property))
                 return string.Empty;
-            return property.Count.IsSpecified ? "*" : string.Empty;
+            return property.Count.IsMultiple ? "*" : string.Empty;
         }
 
         private string GetDataPtrQualifier(Property property)
         {
             if (IsPtrLike(property))
                 return string.Empty;
-            return property.Count.IsSpecified ? string.Empty : "&";
+            return property.Count.IsMultiple ? string.Empty : "&";
         }
 
         private string GetDataSizeExpr(Property property, IList<Property> properties)
@@ -794,7 +794,7 @@ namespace EventManifestCompiler.CodeGen
             if (property.Kind == PropertyKind.Struct) {
                 string lengthExpr = naming.GetLengthArgumentId(property, false);
                 string countExpr = null;
-                if (property.Count.IsSpecified)
+                if (property.Count.IsMultiple)
                     countExpr = GetCountExpr(property, properties, string.Empty) + " * ";
                 return string.Format(CultureInfo.InvariantCulture, "{0}{1}", countExpr, lengthExpr);
             }
@@ -883,7 +883,7 @@ namespace EventManifestCompiler.CodeGen
                 int idx = properties.FindIndex(f => f.Name == number.DataPropertyRef);
                 return prefix + naming.GetNumberedArgId(idx);
             }
-            if (number.IsFixed)
+            if (number.IsFixedMultiple)
                 return prefix + number.Value;
             return string.Empty;
         }

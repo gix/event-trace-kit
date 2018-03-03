@@ -346,6 +346,7 @@ namespace EventManifestFramework.Schema
             var @string = this.GetByName(str.Name);
             if (@string == null) {
                 @string = new LocalizedString(str.Name, str.Value);
+                @string.Imported = true;
                 Add(@string);
             }
 

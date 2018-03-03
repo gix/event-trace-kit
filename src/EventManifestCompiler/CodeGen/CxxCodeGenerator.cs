@@ -953,7 +953,7 @@ namespace EventManifestCompiler.CodeGen
                 int idx = properties.FindIndex(f => f.Name == number.DataPropertyRef);
                 return prefix + naming.GetNumberedArgId(idx);
             }
-            if (number.IsFixed)
+            if (number.IsFixedMultiple)
                 return prefix + number.Value;
             return string.Empty;
         }
