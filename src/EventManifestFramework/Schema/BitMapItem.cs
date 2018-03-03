@@ -22,6 +22,6 @@ namespace EventManifestFramework.Schema
         }
 
         public override MapKind Kind => MapKind.BitMap;
-        public override IMap Map => map;
+        public override Map Map => map;
     }
 }

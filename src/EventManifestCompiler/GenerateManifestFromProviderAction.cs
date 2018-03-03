@@ -8,13 +8,13 @@ namespace EventManifestCompiler
     using System.Linq;
     using System.Xml;
     using System.Xml.Linq;
+    using EventManifestCompiler.Extensions;
+    using EventManifestCompiler.Native;
+    using EventManifestCompiler.ResGen;
     using EventManifestFramework;
     using EventManifestFramework.Schema;
     using EventManifestFramework.Schema.Base;
     using EventManifestFramework.Support;
-    using EventManifestCompiler.Extensions;
-    using EventManifestCompiler.Native;
-    using EventManifestCompiler.ResGen;
 
     internal sealed class GenerateManifestFromProviderAction : IAction
     {
@@ -423,7 +423,7 @@ namespace EventManifestCompiler
             return elem;
         }
 
-        private XElement ToXml(IMap map)
+        private XElement ToXml(Map map)
         {
             if (map.Kind == MapKind.BitMap)
                 return ToXml((BitMap)map);

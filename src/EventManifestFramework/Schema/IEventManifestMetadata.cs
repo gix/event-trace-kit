@@ -1,14 +1,17 @@
 namespace EventManifestFramework.Schema
 {
+    using System.Collections.Generic;
     using EventManifestFramework.Schema.Base;
 
     public interface IEventManifestMetadata
     {
-        ChannelCollection Channels { get; }
-        LevelCollection Levels { get; }
-        OpcodeCollection Opcodes { get; }
-        TaskCollection Tasks { get; }
-        KeywordCollection Keywords { get; }
+        IReadOnlyList<Channel> Channels { get; }
+        IReadOnlyList<Level> Levels { get; }
+        IReadOnlyList<Opcode> Opcodes { get; }
+        IReadOnlyList<Task> Tasks { get; }
+        IReadOnlyList<Keyword> Keywords { get; }
+        IReadOnlyList<PatternMap> NamedQueries { get; }
+        IReadOnlyList<LocalizedString> Strings { get; }
 
         XmlType GetXmlType(QName name);
         XmlType GetXmlType(byte value);

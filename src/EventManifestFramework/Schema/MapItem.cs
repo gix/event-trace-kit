@@ -4,17 +4,8 @@ namespace EventManifestFramework.Schema
     using System.Diagnostics;
     using EventManifestFramework.Support;
 
-    public interface IMapItem : ISourceItem
-    {
-        IMap Map { get; }
-        MapKind Kind { get; }
-        LocatedRef<string> Symbol { get; }
-        LocatedVal<uint> Value { get; }
-        LocalizedString Message { get; }
-    }
-
     [DebuggerDisplay("{Symbol}: {Value}")]
-    public abstract class MapItem : SourceItem, IMapItem
+    public abstract class MapItem : SourceItem
     {
         protected MapItem(LocatedVal<uint> value, LocalizedString message)
         {
@@ -29,7 +20,7 @@ namespace EventManifestFramework.Schema
             Symbol = symbol;
         }
 
-        public abstract IMap Map { get; }
+        public abstract Map Map { get; }
         public abstract MapKind Kind { get; }
 
         public LocatedVal<uint> Value { get; }

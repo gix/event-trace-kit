@@ -6,34 +6,34 @@ namespace EventManifestFramework.Collections
 
     /// <summary>Duplicate entry.</summary>
     [Serializable]
-    public sealed class DuplicateEntityException : Exception
+    public sealed class DuplicateItemException : Exception
     {
         /// <overloads>
-        ///   Initializes a new instance of the <see cref="DuplicateEntityException"/>
+        ///   Initializes a new instance of the <see cref="DuplicateItemException"/>
         ///   class.
         /// </overloads>
         /// <summary>
-        ///   Initializes a new instance of the <see cref="DuplicateEntityException"/>
+        ///   Initializes a new instance of the <see cref="DuplicateItemException"/>
         ///   class with default properties.
         /// </summary>
-        public DuplicateEntityException()
+        public DuplicateItemException()
         {
         }
 
         /// <summary>
-        ///   Initializes a new instance of the <see cref="DuplicateEntityException"/>
+        ///   Initializes a new instance of the <see cref="DuplicateItemException"/>
         ///   class with a specified error message.
         /// </summary>
         /// <param name="message">
         ///   The error message that explains the reason for this exception.
         /// </param>
-        public DuplicateEntityException(string message)
+        public DuplicateItemException(string message)
             : base(message)
         {
         }
 
         /// <summary>
-        ///   Initializes a new instance of the <see cref="DuplicateEntityException"/>
+        ///   Initializes a new instance of the <see cref="DuplicateItemException"/>
         ///   class with a specified error message and the exception that is the
         ///   cause of this exception.
         /// </summary>
@@ -45,13 +45,13 @@ namespace EventManifestFramework.Collections
         ///   <see langword="null"/> reference (<c>Nothing</c> in Visual Basic)
         ///   if no inner exception is specified.
         /// </param>
-        public DuplicateEntityException(string message, Exception innerException)
+        public DuplicateItemException(string message, Exception innerException)
             : base(message, innerException)
         {
         }
 
         /// <summary>
-        ///   Initializes a new instance of the <see cref="DuplicateEntityException"/>
+        ///   Initializes a new instance of the <see cref="DuplicateItemException"/>
         ///   class with serialized data.
         /// </summary>
         /// <param name="info">
@@ -62,7 +62,7 @@ namespace EventManifestFramework.Collections
         ///   The contextual information about the source or destination of the
         ///   exception.
         /// </param>
-        private DuplicateEntityException(SerializationInfo info, StreamingContext context)
+        private DuplicateItemException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
         }

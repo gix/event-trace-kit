@@ -3,11 +3,11 @@ namespace EventManifestCompiler
     using System;
     using System.ComponentModel;
     using System.IO;
+    using EventManifestCompiler.Extensions;
+    using EventManifestCompiler.Native;
+    using EventManifestCompiler.ResGen;
     using EventManifestFramework;
     using EventManifestFramework.Support;
-    using Extensions;
-    using EventManifestCompiler.ResGen;
-    using Native;
 
     internal sealed class DumpAction : IAction
     {

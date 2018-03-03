@@ -11,7 +11,7 @@ namespace EventManifestFramework.Schema
         bool IsSatisfiedBy(Keyword keyword);
         bool IsSatisfiedBy(Filter filter);
         bool IsSatisfiedBy(Template template);
-        bool IsSatisfiedBy(IMap map);
+        bool IsSatisfiedBy(Map map);
         bool IsSatisfiedBy(DataProperty property);
         bool IsSatisfiedBy(StructProperty property);
         bool IsSatisfiedBy(LocalizedString @string);

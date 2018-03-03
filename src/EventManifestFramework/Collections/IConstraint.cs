@@ -1,11 +1,12 @@
 namespace EventManifestFramework.Collections
 {
+    using System.Collections.Generic;
     using EventManifestFramework.Support;
 
     public interface IConstraint<in T>
     {
-        bool IsSatisfiedBy(T entity);
-        bool IsSatisfiedBy(T entity, IDiagnostics diags);
-        string FormatMessage(T entity);
+        bool IsSatisfiedBy(IReadOnlyList<T> collection, T item);
+        bool IsSatisfiedBy(IReadOnlyList<T> collection, T item, IDiagnostics diags);
+        string FormatMessage(T item);
     }
 }

@@ -5,7 +5,7 @@ namespace EventManifestFramework.Collections
     using System.Linq;
     using EventManifestFramework.Support;
 
-    internal sealed class UniqueConstraint<T, TProperty>
+    internal sealed class CachingUniqueConstraint<T, TProperty>
         : IUniqueConstraint<T>
         , IUniqueConstraintOptions<T, TProperty>
     {
@@ -19,33 +19,31 @@ namespace EventManifestFramework.Collections
         private Func<T, string> customMessageFormatter;
         private Action<T, TProperty, IDiagnostics, IUniqueConstraint<T>> reportDiagnostic;
 
-        public UniqueConstraint(Func<T, TProperty> selector)
+        public CachingUniqueConstraint(Func<T, TProperty> selector)
         {
             this.selector = selector;
             uniqueValues = new HashSet<TProperty>(comparer);
             reportDiagnostic = DefaultReportDiagnostic;
         }
 
-        public bool IsSatisfiedBy(T entity)
+        public bool IsSatisfiedBy(IReadOnlyList<T> collection, T item)
         {
-            TProperty value = selector(entity);
+            TProperty value = selector(item);
             if (optional && (value == null || value.Equals(null)))
                 return true;
             return !uniqueValues.Contains(value);
         }
 
-        public bool IsSatisfiedBy(T entity, IDiagnostics diags)
+        public bool IsSatisfiedBy(IReadOnlyList<T> collection, T item, IDiagnostics diags)
         {
-            if (diags == null)
-                throw new ArgumentNullException(nameof(diags));
-
-            TProperty value = selector(entity);
+            TProperty value = selector(item);
             if (optional && (value == null || value.Equals(null)))
                 return true;
             if (!uniqueValues.Contains(value))
                 return true;
 
-            reportDiagnostic(entity, value, diags, this);
+            if (diags != null)
+                reportDiagnostic(item, value, diags, this);
             return false;
         }
 
@@ -130,6 +128,20 @@ namespace EventManifestFramework.Collections
             T entity, TProperty value, IDiagnostics diags, IUniqueConstraint<T> constraint)
         {
             diags.ReportError(new SourceLocation(), constraint.FormatMessage(entity));
+        }
+    }
+
+    internal static partial class UniqueCollectionExtenions
+    {
+        public static IUniqueConstraintOptions<T, TProperty>
+            UniqueConstraintFor<T, TProperty>(this UniqueCollection<T> list, Func<T, TProperty> selector)
+        {
+            if (selector == null)
+                throw new ArgumentNullException(nameof(selector));
+
+            var constraint = new CachingUniqueConstraint<T, TProperty>(selector);
+            list.AddConstraint(constraint);
+            return constraint;
         }
     }
 }

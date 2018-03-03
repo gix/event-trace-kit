@@ -9,12 +9,12 @@ namespace EventManifestCompiler.ResGen
     using System.Xml;
     using System.Xml.Linq;
     using EventManifestCompiler.BinXml;
-    using EventManifestFramework.Schema;
-    using EventManifestFramework.Schema.Base;
-    using EventManifestFramework.Support;
     using EventManifestCompiler.Extensions;
     using EventManifestCompiler.Native;
     using EventManifestCompiler.Support;
+    using EventManifestFramework.Schema;
+    using EventManifestFramework.Schema.Base;
+    using EventManifestFramework.Support;
 
     internal sealed class EventTemplateReader
     {
@@ -523,9 +523,9 @@ namespace EventManifestCompiler.ResGen
             return keywords;
         }
 
-        private List<IMap> ReadMaps(BinaryReader r)
+        private List<Map> ReadMaps(BinaryReader r)
         {
-            var maps = new List<IMap>();
+            var maps = new List<Map>();
             var mapEntries = new List<MapEntry>();
 
             ReadMagic(r, CrimsonTags.MAPS);
@@ -549,7 +549,7 @@ namespace EventManifestCompiler.ResGen
             return maps;
         }
 
-        private Tuple<IMap, MapEntry> ReadMap(BinaryReader r)
+        private Tuple<Map, MapEntry> ReadMap(BinaryReader r)
         {
             long offset = r.BaseStream.Position;
 
@@ -578,7 +578,7 @@ namespace EventManifestCompiler.ResGen
                 Name = name,
                 Items = itemEntries
             };
-            var map = magic == CrimsonTags.VMAP ? new ValueMap(name) : (IMap)new BitMap(name);
+            var map = magic == CrimsonTags.VMAP ? new ValueMap(name) : (Map)new BitMap(name);
             foreach (var itemEntry in itemEntries) {
                 var value = Located.Create(itemEntry.Value);
                 var ls = ResolveMessage(itemEntry.MessageId);
@@ -756,7 +756,7 @@ namespace EventManifestCompiler.ResGen
                     property = new DataProperty(name, new InType(new QName("Dummy"), 0, null));
                 }
 
-                property.Map = GetObject<IMap>(mapOffset);
+                property.Map = GetObject<Map>(mapOffset);
 
                 if ((flags & PropertyFlags.VarLength) != 0)
                     property.Length.SetVariable(refPropertyIndex: length);

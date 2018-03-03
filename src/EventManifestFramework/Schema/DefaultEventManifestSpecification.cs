@@ -219,7 +219,7 @@ namespace EventManifestFramework.Schema
             return result;
         }
 
-        public bool IsSatisfiedBy(IMap map)
+        public bool IsSatisfiedBy(Map map)
         {
             return true;
         }

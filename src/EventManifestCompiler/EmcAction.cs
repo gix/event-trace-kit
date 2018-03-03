@@ -264,7 +264,7 @@ namespace EventManifestCompiler
                     if (resourceSet == manifest.PrimaryResourceSet)
                         continue;
 
-                    if (resourceSet.Strings.GetByName(@string.Name) == null)
+                    if (!resourceSet.ContainsName(@string.Name))
                         diags.Report(
                             DiagnosticSeverity.Warning,
                             resourceSet.Location,

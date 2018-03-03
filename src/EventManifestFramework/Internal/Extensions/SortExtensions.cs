@@ -2,7 +2,6 @@ namespace EventManifestFramework.Internal.Extensions
 {
     using System;
     using System.Collections.Generic;
-    using EventManifestFramework.Collections;
 
     public static class SortExtensions
     {
@@ -129,7 +128,7 @@ namespace EventManifestFramework.Internal.Extensions
             if (count == 0)
                 return list;
 
-            List<T> sorted = Collections.MergeSort.Sort(list, index, index + count, comparer);
+            List<T> sorted = Internal.MergeSort.Sort(list, index, index + count, comparer);
             for (int i = 0; i < sorted.Count; ++i)
                 list[i] = sorted[i];
             return list;

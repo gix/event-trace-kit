@@ -10,15 +10,7 @@ namespace EventManifestFramework.Schema
         ValueMap = 2,
     }
 
-    public interface IMap
-    {
-        MapKind Kind { get; }
-        LocatedRef<string> Name { get; }
-        LocatedRef<string> Symbol { get; }
-        MapItemCollection<IMapItem> Items { get; }
-    }
-
-    public abstract class Map : ProviderItem, IMap
+    public abstract class Map : ProviderItem
     {
         protected Map(LocatedRef<string> name)
         {
@@ -35,8 +27,8 @@ namespace EventManifestFramework.Schema
         public LocatedRef<string> Name { get; }
         public LocatedRef<string> Symbol { get; }
 
-        public MapItemCollection<IMapItem> Items { get; } =
-            new MapItemCollection<IMapItem>();
+        public MapItemCollection<MapItem> Items { get; } =
+            new MapItemCollection<MapItem>();
 
         public override string ToString()
         {

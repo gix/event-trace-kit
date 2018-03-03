@@ -6,11 +6,11 @@ namespace EventManifestCompiler.ResGen
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Text;
+    using EventManifestCompiler.Extensions;
+    using EventManifestCompiler.Native;
     using EventManifestFramework.Internal.Extensions;
     using EventManifestFramework.Schema;
     using EventManifestFramework.Support;
-    using EventManifestCompiler.Extensions;
-    using EventManifestCompiler.Native;
 
     internal class MessageTableWriter : IDisposable
     {

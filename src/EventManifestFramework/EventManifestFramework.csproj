@@ -19,6 +19,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -26,6 +27,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
@@ -41,22 +43,21 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Collections\ConstrainedEntityCollection.cs" />
-    <Compile Include="Collections\DuplicateEntityException.cs" />
-    <Compile Include="Collections\FunctorComparer.cs" />
+    <Compile Include="Collections\UniqueCollection.cs" />
+    <Compile Include="Collections\DuplicateItemException.cs" />
+    <Compile Include="Internal\FunctorComparer.cs" />
     <Compile Include="Collections\IConstraint.cs" />
     <Compile Include="Collections\IUniqueConstraint.cs" />
     <Compile Include="Collections\IUniqueConstraintOptions.cs" />
-    <Compile Include="Collections\IUniqueEntityCollection.cs" />
-    <Compile Include="Collections\MergeSort.cs" />
-    <Compile Include="Collections\SelectorComparer.cs" />
-    <Compile Include="Collections\UniqueConstraint.cs" />
+    <Compile Include="Collections\IUniqueCollection.cs" />
+    <Compile Include="Internal\MergeSort.cs" />
+    <Compile Include="Internal\SelectorComparer.cs" />
+    <Compile Include="Collections\CachingUniqueConstraint.cs" />
     <Compile Include="EventManifestParser.cs" />
     <Compile Include="IEventManifestParser.cs" />
     <Compile Include="Internal\Extensions\BinaryReaderExtensions.cs" />
     <Compile Include="Internal\Extensions\BinaryWriterExtensions.cs" />
-    <Compile Include="Internal\Extensions\IEnumerableExtensions.cs" />
-    <Compile Include="Internal\Extensions\IListExtensions.cs" />
+    <Compile Include="Internal\Extensions\CollectionExtensions.cs" />
     <Compile Include="Internal\Extensions\SortExtensions.cs" />
     <Compile Include="Internal\Extensions\XmlExtensions.cs" />
     <Compile Include="Internal\Native\NativeMethods.cs" />
@@ -77,7 +78,8 @@
     <Compile Include="Schema\Channel.cs" />
     <Compile Include="Schema\DataProperty.cs" />
     <Compile Include="Schema\DefaultEventManifestSpecification.cs" />
-    <Compile Include="Schema\EntityCollections.cs" />
+    <Compile Include="Internal\DiagUtils.cs" />
+    <Compile Include="Schema\Collections.cs" />
     <Compile Include="Schema\Event.cs" />
     <Compile Include="Schema\EventManifest.cs" />
     <Compile Include="Schema\EventManifestMetadata.cs" />

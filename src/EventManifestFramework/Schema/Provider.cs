@@ -24,6 +24,17 @@ namespace EventManifestFramework.Schema
             Name = name;
             Id = id;
             Symbol = symbol;
+
+            Channels = new ChannelCollection(this);
+            Levels = new LevelCollection(this);
+            Opcodes = new OpcodeCollection(this);
+            Tasks = new TaskCollection(this);
+            Keywords = new KeywordCollection(this);
+            Maps = new MapCollection(this);
+            NamedQueries = new PatternMapCollection(this);
+            Filters = new FilterCollection(this);
+            Templates = new TemplateCollection(this);
+            Events = new EventCollection(this);
         }
 
         public Provider(
@@ -46,16 +57,16 @@ namespace EventManifestFramework.Schema
         public LocatedRef<string> ParameterFileName { get; set; }
         public LocalizedString Message { get; set; }
 
-        public ChannelCollection Channels { get; } = new ChannelCollection();
-        public LevelCollection Levels { get; } = new LevelCollection();
-        public OpcodeCollection Opcodes { get; } = new OpcodeCollection();
-        public TaskCollection Tasks { get; } = new TaskCollection();
-        public KeywordCollection Keywords { get; } = new KeywordCollection();
-        public MapCollection Maps { get; } = new MapCollection();
-        public PatternMapCollection NamedQueries { get; } = new PatternMapCollection();
-        public FilterCollection Filters { get; } = new FilterCollection();
-        public TemplateCollection Templates { get; } = new TemplateCollection();
-        public EventCollection Events { get; } = new EventCollection();
+        public ChannelCollection Channels { get; }
+        public LevelCollection Levels { get; }
+        public OpcodeCollection Opcodes { get; }
+        public TaskCollection Tasks { get; }
+        public KeywordCollection Keywords { get; }
+        public MapCollection Maps { get; }
+        public PatternMapCollection NamedQueries { get; }
+        public FilterCollection Filters { get; }
+        public TemplateCollection Templates { get; }
+        public EventCollection Events { get; }
 
         public IReadOnlyList<EnableBit> EnableBits => enableBits;
 

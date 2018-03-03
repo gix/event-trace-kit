@@ -3,7 +3,6 @@ namespace EventManifestFramework.Schema
     using System;
     using System.Collections.Generic;
     using System.Globalization;
-    using EventManifestFramework.Collections;
     using EventManifestFramework.Support;
 
     public sealed class EventManifest : SourceItem
@@ -16,7 +15,7 @@ namespace EventManifestFramework.Schema
             Providers = new ProviderCollection(this);
         }
 
-        public IUniqueEntityList<Provider> Providers { get; }
+        public ProviderCollection Providers { get; }
 
         public IReadOnlyList<LocalizedResourceSet> Resources => resourceSets;
 

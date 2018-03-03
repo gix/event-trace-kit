@@ -3,10 +3,10 @@ namespace EventManifestCompiler.CodeGen
     using System.Collections.Generic;
     using System.Globalization;
     using System.Text;
-    using EventManifestFramework.Schema;
-    using EventManifestFramework.Schema.Base;
     using EventManifestCompiler.Extensions;
     using EventManifestCompiler.Support;
+    using EventManifestFramework.Schema;
+    using EventManifestFramework.Schema.Base;
 
     internal abstract class BaseCodeGenNomenclature : ICodeGenNomenclature
     {
@@ -99,12 +99,12 @@ namespace EventManifestCompiler.CodeGen
             return evt.Symbol;
         }
 
-        public string GetIdentifier(IMap map)
+        public string GetIdentifier(Map map)
         {
             return map.Symbol;
         }
 
-        public virtual string GetIdentifier(IMapItem item, IMap map)
+        public virtual string GetIdentifier(MapItem item, Map map)
         {
             if (string.IsNullOrWhiteSpace(item.Symbol))
                 return $"{map.Symbol}{map.Items.IndexOf(item)}";

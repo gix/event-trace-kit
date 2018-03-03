@@ -20,6 +20,6 @@ namespace EventManifestFramework.Schema
         }
 
         public override MapKind Kind => MapKind.ValueMap;
-        public override IMap Map { get; }
+        public override Map Map { get; }
     }
 }

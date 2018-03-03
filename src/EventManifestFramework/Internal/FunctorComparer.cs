@@ -1,4 +1,4 @@
-namespace EventManifestFramework.Collections
+namespace EventManifestFramework.Internal
 {
     using System;
     using System.Collections.Generic;

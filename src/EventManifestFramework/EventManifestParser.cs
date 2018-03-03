@@ -485,7 +485,6 @@ namespace EventManifestFramework
 
             var level = new Level(name, value, symbol, message) {
                 Location = elem.GetLocation(),
-                Provider = ctx.Provider
             };
 
             manifestSpec.IsSatisfiedBy(level);
@@ -519,7 +518,6 @@ namespace EventManifestFramework
                 Enabled = enabled,
                 Message = message,
                 Location = elem.GetLocation(),
-                Provider = ctx.Provider
             };
 
             manifestSpec.IsSatisfiedBy(channel);
@@ -558,7 +556,6 @@ namespace EventManifestFramework
                 Message = ctx.ImportString(imported.Message),
                 Imported = true,
                 Location = elem.GetLocation(),
-                Provider = ctx.Provider
             };
 
             return channel;
@@ -581,7 +578,6 @@ namespace EventManifestFramework
 
             var task = new Task(name, value, symbol, guid, message) {
                 Location = elem.GetLocation(),
-                Provider = ctx.Provider
             };
 
             manifestSpec.IsSatisfiedBy(task);
@@ -602,7 +598,6 @@ namespace EventManifestFramework
 
             var opcode = new Opcode(name, value, symbol, message) {
                 Location = elem.GetLocation(),
-                Provider = ctx.Provider
             };
 
             manifestSpec.IsSatisfiedBy(opcode);
@@ -623,7 +618,6 @@ namespace EventManifestFramework
 
             var keyword = new Keyword(name, mask, symbol, message) {
                 Location = elem.GetLocation(),
-                Provider = ctx.Provider
             };
 
             manifestSpec.IsSatisfiedBy(keyword);
@@ -638,7 +632,6 @@ namespace EventManifestFramework
 
             var map = new ValueMap(name, symbol) {
                 Location = elem.GetLocation(),
-                Provider = ctx.Provider
             };
 
             foreach (XElement child in elem.XPathSelectElements("e:map", nsResolver)) {
@@ -679,7 +672,6 @@ namespace EventManifestFramework
 
             var map = new BitMap(name, symbol) {
                 Location = elem.GetLocation(),
-                Provider = ctx.Provider
             };
 
             foreach (XElement child in elem.XPathSelectElements("e:map", nsResolver)) {
@@ -719,7 +711,6 @@ namespace EventManifestFramework
 
             var map = new PatternMap(name, format, symbol) {
                 Location = elem.GetLocation(),
-                Provider = ctx.Provider
             };
 
             foreach (XElement child in elem.XPathSelectElements("e:map", nsResolver)) {
@@ -749,7 +740,6 @@ namespace EventManifestFramework
             var template = new Template(id) {
                 Name = name,
                 Location = elem.GetLocation(),
-                Provider = ctx.Provider
             };
 
             var userData = elem.XPathSelectElement("e:UserData", nsResolver);
@@ -913,7 +903,6 @@ namespace EventManifestFramework
             var filter = new Filter(name, value, version.GetValueOrDefault(), symbol, message) {
                 Location = elem.GetLocation(),
                 Template = template,
-                Provider = ctx.Provider
             };
 
             manifestSpec.IsSatisfiedBy(filter);
@@ -946,7 +935,6 @@ namespace EventManifestFramework
                 Task = ctx.GetTask(taskName),
                 Template = ctx.GetTemplate(templateToken),
                 Location = elem.GetLocation(),
-                Provider = ctx.Provider
             };
 
             if (msgRef != null && evt.Message == null)
@@ -1239,7 +1227,6 @@ namespace EventManifestFramework
         private interface IEventManifestContext
         {
             LocalizedString GetString(LocatedRef<string> msgRef);
-            Provider Provider { get; }
         }
 
         private sealed class EventManifestMetadataContext : IEventManifestContext
@@ -1258,8 +1245,6 @@ namespace EventManifestFramework
 
                 return metadata.GetString(msgRef);
             }
-
-            public Provider Provider => null;
         }
 
         private sealed class EventManifestContext : IEventManifestContext
@@ -1275,8 +1260,6 @@ namespace EventManifestFramework
                 this.manifest = manifest;
                 this.metadata = metadata;
             }
-
-            public Provider Provider => provider;
 
             public LocalizedString GetString(LocatedRef<string> msgRef)
             {
@@ -1329,7 +1312,6 @@ namespace EventManifestFramework
                     meta.Isolation,
                     meta.Enabled,
                     ImportString(meta.Message));
-                imported.Provider = provider;
                 provider.Channels.Add(imported);
 
                 return imported;
@@ -1353,7 +1335,6 @@ namespace EventManifestFramework
                     meta.Value,
                     null,
                     ImportString(meta.Message));
-                imported.Provider = provider;
                 imported.Imported = true;
                 provider.Levels.Add(imported);
 
@@ -1374,7 +1355,6 @@ namespace EventManifestFramework
                     return null;
 
                 var imported = new Opcode(meta.Name, meta.Value, meta.Symbol, meta.Message);
-                imported.Provider = provider;
                 imported.Imported = true;
                 provider.Opcodes.Add(imported);
 
@@ -1400,7 +1380,6 @@ namespace EventManifestFramework
                     meta.Symbol,
                     meta.Guid,
                     ImportString(meta.Message));
-                imported.Provider = provider;
                 imported.Imported = true;
                 provider.Tasks.Add(imported);
 
@@ -1425,7 +1404,6 @@ namespace EventManifestFramework
                     meta.Mask,
                     meta.Symbol,
                     ImportString(meta.Message));
-                imported.Provider = provider;
                 imported.Imported = true;
                 provider.Keywords.Add(imported);
 
@@ -1439,7 +1417,7 @@ namespace EventManifestFramework
                 return provider.Templates.GetById(id);
             }
 
-            public IMap GetMap(string name)
+            public Map GetMap(string name)
             {
                 return provider.Maps.GetByName(name);
             }
@@ -1492,7 +1470,7 @@ namespace EventManifestFramework
                 return true;
             }
 
-            public bool IsSatisfiedBy(IMap map)
+            public bool IsSatisfiedBy(Map map)
             {
                 return true;
             }
@@ -1513,17 +1491,17 @@ namespace EventManifestFramework
             }
         }
 
-        private sealed class MessageCollection : ConstrainedEntityCollection<MessageEntry>
+        private sealed class MessageCollection : UniqueCollection<MessageEntry>
         {
             public MessageCollection()
             {
-                UniqueConstraintFor(e => e.Id)
+                this.UniqueConstraintFor(e => e.Id)
                     .WithMessage("Duplicate message id: '{0}'", e => e.Id)
                     .DiagnoseUsing(DiagUtils.ReportError);
-                UniqueConstraintFor(e => e.MsgRef)
+                this.UniqueConstraintFor(e => e.MsgRef)
                     .WithMessage("Duplicate string reference: '{0}'", e => e.MsgRef)
                     .DiagnoseUsing(DiagUtils.ReportError);
-                UniqueConstraintFor(e => e.Symbol)
+                this.UniqueConstraintFor(e => e.Symbol)
                     .IfNotNull()
                     .WithMessage("Duplicate message symbol: '{0}'", e => e.Symbol)
                     .DiagnoseUsing(DiagUtils.ReportError);

@@ -6,8 +6,6 @@ namespace EventManifestFramework.Internal.Native
 
     public static class NativeMethods
     {
-        public const int MESSAGE_RESOURCE_UNICODE = 1;
-
         [DllImport("kernel32.dll")]
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
         public static extern IntPtr LocalFree(IntPtr hMem);

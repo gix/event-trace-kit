@@ -7,12 +7,12 @@ namespace EventManifestCompiler.CodeGen
     using System.IO;
     using System.Linq;
     using System.Text;
+    using EventManifestCompiler.Extensions;
+    using EventManifestCompiler.Support;
     using EventManifestFramework.Internal.Extensions;
     using EventManifestFramework.Schema;
     using EventManifestFramework.Schema.Base;
     using EventManifestFramework.Support;
-    using EventManifestCompiler.Extensions;
-    using EventManifestCompiler.Support;
 
     [Export(typeof(ICodeGenerator))]
     [ExportMetadata("Name", "mc")]
@@ -41,7 +41,7 @@ namespace EventManifestCompiler.CodeGen
                 return GetIdentifierFromName(provider.Name);
             }
 
-            public override string GetIdentifier(IMapItem item, IMap map)
+            public override string GetIdentifier(MapItem item, Map map)
             {
                 return map.Symbol + item.Symbol;
             }
@@ -359,7 +359,7 @@ namespace EventManifestCompiler.CodeGen
                     WriteMap(map);
         }
 
-        private void WriteMap(IMap map)
+        private void WriteMap(Map map)
         {
             string guard = string.Format("_{0}_def", naming.GetIdentifier(map));
             ow.WriteLine("#ifndef {0} ", guard);

@@ -70,7 +70,7 @@ namespace EventManifestCompiler.ResGen
             return CreateId(evt, 0xB, provider.Index, version, evt.Value);
         }
 
-        public uint CreateId(IMapItem item, IMap map, Provider provider)
+        public uint CreateId(MapItem item, Map map, Provider provider)
         {
             switch (map.Kind) {
                 case MapKind.BitMap:

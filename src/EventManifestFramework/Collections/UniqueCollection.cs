@@ -6,68 +6,70 @@ namespace EventManifestFramework.Collections
     using System.Linq;
     using EventManifestFramework.Support;
 
-    public abstract class ConstrainedEntityCollection<T>
-        : Collection<T>, IUniqueEntityList<T>
+    public abstract class UniqueCollection<T>
+        : Collection<T>, IUniqueList<T>
     {
         private readonly List<IUniqueConstraint<T>> uniqueConstraints =
             new List<IUniqueConstraint<T>>();
 
-        public bool IsUnique(T entity)
+        public bool IsUnique(T item)
         {
-            if (default(T) == null && entity == null)
-                throw new ArgumentNullException(nameof(entity));
+            if (default(T) == null && item == null)
+                throw new ArgumentNullException(nameof(item));
 
-            return uniqueConstraints.All(c => c.IsSatisfiedBy(entity));
+            return uniqueConstraints.All(c => c.IsSatisfiedBy(this, item));
         }
 
-        public bool IsUnique(T entity, IDiagnostics diags)
+        public bool IsUnique(T item, IDiagnostics diags)
         {
-            if (default(T) == null && entity == null)
-                throw new ArgumentNullException(nameof(entity));
+            if (default(T) == null && item == null)
+                throw new ArgumentNullException(nameof(item));
             if (diags == null)
                 throw new ArgumentNullException(nameof(diags));
 
             bool unique = true;
             foreach (var constraint in uniqueConstraints) {
-                if (!constraint.IsSatisfiedBy(entity, diags))
+                if (!constraint.IsSatisfiedBy(this, item, diags))
                     unique = false;
             }
 
             return unique;
         }
 
-        public bool TryAdd(T entity)
+        public bool TryAdd(T item)
         {
-            if (!IsUnique(entity))
+            if (!IsUnique(item))
                 return false;
-            Add(entity);
+            Add(item);
             return true;
         }
 
-        public bool TryAdd(T entity, IDiagnostics diags)
+        public bool TryAdd(T item, IDiagnostics diags)
         {
-            if (!IsUnique(entity, diags))
+            if (!IsUnique(item, diags))
                 return false;
-            Add(entity);
+            Add(item);
             return true;
         }
 
-        protected IUniqueConstraintOptions<T, TProperty>
-            UniqueConstraintFor<TProperty>(Func<T, TProperty> selector)
+        public void AddConstraint(IUniqueConstraint<T> constraint, IDiagnostics diags = null)
         {
-            if (selector == null)
-                throw new ArgumentNullException(nameof(selector));
+            if (constraint == null)
+                throw new ArgumentNullException(nameof(constraint));
 
-            var constraint = new UniqueConstraint<T, TProperty>(selector);
+            if (Count != 0 && !Items.All(x => constraint.IsSatisfiedBy(this, x, diags))) {
+                throw new InvalidOperationException(
+                    "Cannot add new constraint because it is violated by existing items.");
+            }
+
             uniqueConstraints.Add(constraint);
-            return constraint;
         }
 
         protected override void InsertItem(int index, T item)
         {
             foreach (var constraint in uniqueConstraints) {
-                if (!constraint.IsSatisfiedBy(item))
-                    throw CreateDuplicateEntityException(item, constraint);
+                if (!constraint.IsSatisfiedBy(this, item))
+                    throw CreateDuplicateItemException(item, constraint);
             }
 
             foreach (var constraint in uniqueConstraints)
@@ -81,8 +83,8 @@ namespace EventManifestFramework.Collections
             T oldEntity = this[index];
             foreach (var constraint in uniqueConstraints) {
                 if (constraint.Changed(oldEntity, newEntity) &&
-                    !constraint.IsSatisfiedBy(newEntity))
-                    throw CreateDuplicateEntityException(newEntity, constraint);
+                    !constraint.IsSatisfiedBy(this, newEntity))
+                    throw CreateDuplicateItemException(newEntity, constraint);
             }
 
             foreach (var constraint in uniqueConstraints)
@@ -100,10 +102,11 @@ namespace EventManifestFramework.Collections
             base.RemoveItem(index);
         }
 
-        private Exception CreateDuplicateEntityException(T entity, IUniqueConstraint<T> constraint)
+        private Exception CreateDuplicateItemException(
+            T entity, IUniqueConstraint<T> constraint)
         {
             string message = constraint.FormatMessage(entity);
-            return new DuplicateEntityException(message);
+            return new DuplicateItemException(message);
         }
     }
 }

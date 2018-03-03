@@ -3,8 +3,8 @@ namespace EventManifestCompiler.X
     using System;
     using System.ComponentModel.Composition;
     using System.IO;
-    using EventManifestFramework.Support;
     using EventManifestCompiler.Support;
+    using EventManifestFramework.Support;
 
     [Export(typeof(IDiagnostics))]
     public sealed class DiagnosticsEngine2 : IDiagnosticsEngine

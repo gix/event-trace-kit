@@ -13,5 +13,10 @@ namespace EventManifestFramework.Schema
         public CultureInfo Culture { get; }
         public LocalizedStringCollection Strings { get; } =
             new LocalizedStringCollection();
+
+        public bool ContainsName(string name)
+        {
+            return Strings.GetByName(name) != null;
+        }
     }
 }

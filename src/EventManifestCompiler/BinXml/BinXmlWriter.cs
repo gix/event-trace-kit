@@ -10,7 +10,6 @@ namespace EventManifestCompiler.BinXml
     using System.Xml.Linq;
     using EventManifestCompiler.Extensions;
     using EventManifestCompiler.Support;
-    using EventManifestFramework.Schema;
 
     public sealed class BinXmlWriter
     {

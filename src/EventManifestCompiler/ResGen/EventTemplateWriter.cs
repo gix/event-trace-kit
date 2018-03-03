@@ -9,10 +9,10 @@ namespace EventManifestCompiler.ResGen
     using System.Xml;
     using System.Xml.Linq;
     using EventManifestCompiler.BinXml;
-    using EventManifestFramework.Internal.Extensions;
-    using EventManifestFramework.Schema;
     using EventManifestCompiler.Extensions;
     using EventManifestCompiler.Support;
+    using EventManifestFramework.Internal.Extensions;
+    using EventManifestFramework.Schema;
 
     internal class EventTemplateWriter : IDisposable
     {
@@ -298,9 +298,9 @@ namespace EventManifestCompiler.ResGen
             writer.WriteResource(ref startPos, ref b);
         }
 
-        private void WriteMaps(IList<IMap> maps)
+        private void WriteMaps(IList<Map> maps)
         {
-            var sortedMaps = new List<IMap>(maps);
+            var sortedMaps = new List<Map>(maps);
             sortedMaps.StableSortBy(m => m.Name);
 
             long startPos = writer.Position;
@@ -310,16 +310,16 @@ namespace EventManifestCompiler.ResGen
             writer.Position += maps.Count * Marshal.SizeOf<uint>();
 
             long stringOffset = writer.Position;
-            foreach (IMap map in maps)
+            foreach (var map in maps)
                 stringOffset += CalcMapSize(map);
 
             var offsets = new SortedDictionary<string, long>();
-            foreach (IMap map in sortedMaps) {
+            foreach (var map in sortedMaps) {
                 offsets[map.Name] = stringOffset;
                 writer.WriteString(ref stringOffset, map.Name);
             }
 
-            foreach (IMap map in maps) {
+            foreach (var map in maps) {
                 long offset = writer.Position;
                 WriteMap(map, (uint)offsets[map.Name]);
                 offsets[map.Name] = offset;
@@ -336,13 +336,13 @@ namespace EventManifestCompiler.ResGen
             writer.WriteResource(ref startPos, ref b);
         }
 
-        private static int CalcMapSize(IMap map)
+        private static int CalcMapSize(Map map)
         {
             return Marshal.SizeOf<MapEntry>() +
                    (map.Items.Count * Marshal.SizeOf<MapItem>());
         }
 
-        private void WriteMap(IMap map, uint nameOffset)
+        private void WriteMap(Map map, uint nameOffset)
         {
             var items = map.Items.ToList().StableSortBy(i => i.Value.Value);
 

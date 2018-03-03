@@ -15,8 +15,8 @@ namespace EventManifestCompiler.CodeGen
         string GetIdentifier(Opcode opcode);
         string GetIdentifier(Keyword keyword);
         string GetIdentifier(Event evt);
-        string GetIdentifier(IMap map);
-        string GetIdentifier(IMapItem item, IMap map);
+        string GetIdentifier(Map map);
+        string GetIdentifier(MapItem item, Map map);
         string GetIdentifier(LocalizedString @string);
 
         string GetTemplateSuffix(Template template);

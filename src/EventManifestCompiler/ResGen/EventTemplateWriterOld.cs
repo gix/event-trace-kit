@@ -8,11 +8,11 @@ namespace EventManifestCompiler.ResGen
     using System.Xml;
     using System.Xml.Linq;
     using EventManifestCompiler.BinXml;
+    using EventManifestCompiler.Extensions;
+    using EventManifestCompiler.Support;
     using EventManifestFramework.Internal.Extensions;
     using EventManifestFramework.Schema;
     using EventManifestFramework.Schema.Base;
-    using EventManifestCompiler.Extensions;
-    using EventManifestCompiler.Support;
 
     internal class EventTemplateWriterOld : IDisposable
     {
@@ -383,9 +383,9 @@ namespace EventManifestCompiler.ResGen
         ///   ulittle32_t Value;
         ///   ulittle32_t MessageId;
         /// };
-        private void WriteMaps(IList<IMap> maps)
+        private void WriteMaps(IList<Map> maps)
         {
-            var sortedMaps = new List<IMap>(maps);
+            var sortedMaps = new List<Map>(maps);
             sortedMaps.StableSortBy(m => m.Name);
 
             long startPos = writer.BaseStream.Position;
@@ -421,7 +421,7 @@ namespace EventManifestCompiler.ResGen
             WriteLengthAt(startPos);
         }
 
-        private void WriteMap(IMap map, uint nameOffset)
+        private void WriteMap(Map map, uint nameOffset)
         {
             var items = map.Items.ToList().StableSortBy(i => i.Value);
 

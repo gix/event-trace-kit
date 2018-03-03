@@ -16,7 +16,7 @@ namespace EventManifestFramework.Schema
 
         public InType InType { get; }
         public XmlType OutType { get; set; }
-        public IMap Map { get; set; }
+        public Map Map { get; set; }
 
         public override uint BinXmlType
         {

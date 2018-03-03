@@ -4,7 +4,6 @@ namespace EventManifestCompiler.Build.Tasks
     using System.Collections.Generic;
     using System.IO;
     using System.Runtime.Serialization.Json;
-    using EventManifestCompiler;
     using EventManifestFramework.Support;
     using Microsoft.Build.Framework;
     using Microsoft.Build.Utilities;

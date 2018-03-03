@@ -15,12 +15,20 @@ namespace EventManifestFramework.Schema
         public List<InType> InTypes { get; } = new List<InType>();
         public List<OutType> OutTypes { get; } = new List<OutType>();
 
-        public ChannelCollection Channels { get; } = new ChannelCollection();
-        public LevelCollection Levels { get; } = new LevelCollection();
-        public OpcodeCollection Opcodes { get; } = new OpcodeCollection();
-        public TaskCollection Tasks { get; } = new TaskCollection();
-        public KeywordCollection Keywords { get; } = new KeywordCollection();
-        public PatternMapCollection NamedQueries { get; } = new PatternMapCollection();
+        IReadOnlyList<Channel> IEventManifestMetadata.Channels => Channels;
+        IReadOnlyList<Level> IEventManifestMetadata.Levels => Levels;
+        IReadOnlyList<Opcode> IEventManifestMetadata.Opcodes => Opcodes;
+        IReadOnlyList<Task> IEventManifestMetadata.Tasks => Tasks;
+        IReadOnlyList<Keyword> IEventManifestMetadata.Keywords => Keywords;
+        IReadOnlyList<PatternMap> IEventManifestMetadata.NamedQueries => NamedQueries;
+        IReadOnlyList<LocalizedString> IEventManifestMetadata.Strings => Strings;
+
+        public ChannelCollection Channels { get; } = new ChannelCollection(null);
+        public LevelCollection Levels { get; } = new LevelCollection(null);
+        public OpcodeCollection Opcodes { get; } = new OpcodeCollection(null);
+        public TaskCollection Tasks { get; } = new TaskCollection(null);
+        public KeywordCollection Keywords { get; } = new KeywordCollection(null);
+        public PatternMapCollection NamedQueries { get; } = new PatternMapCollection(null);
         public LocalizedStringCollection Strings { get; } = new LocalizedStringCollection();
 
         public LocalizedString GetString(string stringRef)
