@@ -9,7 +9,7 @@ namespace EventTraceKit.VsExtension.Serialization
     using System.Reflection;
     using EventTraceKit.VsExtension.Extensions;
 
-    public class SerializationShaper<TSerializedBaseType>
+    public class SerializationMapper<TSerializedBaseType>
     {
         public bool TrySerialize<TTarget>(object source, out TTarget target)
             where TTarget : class, TSerializedBaseType
@@ -35,7 +35,6 @@ namespace EventTraceKit.VsExtension.Serialization
             target = default;
             return false;
         }
-
 
         public bool TryDeserialize<T>(TSerializedBaseType element, out T result)
         {
@@ -91,14 +90,33 @@ namespace EventTraceKit.VsExtension.Serialization
             return true;
         }
 
+        private bool TryDeserialize2(object source, Type sourceType, Type targetType, out object target)
+        {
+            if (TryDeserialize(source, targetType, out target))
+                return true;
+            if (CanReuse(sourceType, targetType)) {
+                target = source;
+                return true;
+            }
+
+            return false;
+        }
+
         private bool TryDeserialize(object source, Type targetType, out object result)
         {
             result = null;
-            if (!TryGetSerializedType(targetType, out Type serializedType) || source == null ||
+            if (source == null)
+                return false;
+
+            if (!TryGetSerializedType(targetType, out Type serializedType) ||
                 serializedType != source.GetType())
                 return false;
 
+            if (!TryGetDeserializedType(targetType, source.GetType(), out Type deserializedType))
+                return false;
+
             if (!ActivatorUtils.TryCreateInstance(targetType, out result))
+            //if (!ActivatorUtils.TryCreateInstance(deserializedType, out result))
                 return false;
 
             return TryPopulateObject(source, result);
@@ -182,7 +200,7 @@ namespace EventTraceKit.VsExtension.Serialization
             object source, object target, PropertyInfo sourceProperty, PropertyInfo targetProperty)
         {
             object sourceValue = sourceProperty.GetValue(source);
-            if (sourceValue == null || IsDefaultValue(sourceProperty, sourceValue))
+            if (sourceValue == null || IsDefaultValue(targetProperty, sourceValue))
                 return;
 
             Type sourcePropertyType = sourceProperty.PropertyType.IsInterface ? sourceValue.GetType() : sourceProperty.PropertyType;
@@ -270,15 +288,13 @@ namespace EventTraceKit.VsExtension.Serialization
 
             if (targetPropertyType.IsArray) {
                 for (int i = 0; i < sourceList.Count; ++i) {
-                    if (TryDeserialize(sourceList[i], targetItemType, out object value))
+                    if (TryDeserialize2(sourceList[i], sourceItemType, targetItemType, out object value))
                         targetList[i] = value;
                 }
             } else {
                 foreach (var item in sourceList) {
-                    if (TryDeserialize(item, targetItemType, out object value))
+                    if (TryDeserialize2(item, sourceItemType, targetItemType, out object value))
                         targetList.Add(value);
-                    else if (sourceItemType.IsValueType && sourceItemType == targetItemType)
-                        targetList.Add(item);
                 }
             }
 
@@ -335,7 +351,18 @@ namespace EventTraceKit.VsExtension.Serialization
             if (isSerializedAsCustomType)
                 return true;
 
-            return sourceItemType.IsValueType && sourceItemType == targetItemType;
+            return CanReuse(sourceItemType, targetItemType);
+        }
+
+        private static bool CanReuse(Type sourceType, Type targetType)
+        {
+            return sourceType == targetType &&
+                   (sourceType.IsValueType || IsImmutableType(sourceType));
+        }
+
+        private static bool IsImmutableType(Type type)
+        {
+            return type == typeof(string);
         }
 
         private object GetDefaultValue(Type type)
@@ -374,7 +401,6 @@ namespace EventTraceKit.VsExtension.Serialization
             return false;
         }
 
-
         private IEnumerable<Tuple<PropertyInfo, PropertyInfo>> GetSerializedProperties(
             Type sourceType, Type targetType)
         {
@@ -408,6 +434,55 @@ namespace EventTraceKit.VsExtension.Serialization
 
             serializedName = attribute.SerializedName;
             return !string.IsNullOrEmpty(serializedName);
+        }
+
+        private readonly Dictionary<Type, Type> typeToShapeMap =
+            new Dictionary<Type, Type>();
+        private readonly HashSet<Assembly> typeToShapeMapScannedAssemblies =
+            new HashSet<Assembly>();
+
+        private void UpdateShapeMap(Assembly assembly)
+        {
+            if (!typeToShapeMapScannedAssemblies.Add(assembly))
+                return;
+
+            foreach (var type in assembly.GetTypes()) {
+                var attribute = type.GetCustomAttributes<SerializedShapeAttribute>(true)
+                    .TryGetSingleOrDefault();
+                if (attribute != null)
+                    typeToShapeMap.Add(type, attribute.Shape);
+            }
+
+            typeToShapeMapScannedAssemblies.Add(assembly);
+        }
+
+        private bool TryGetDeserializedType(Type targetType, Type sourceType, out Type deserializedType)
+        {
+            if (!TryGetSerializedType(targetType, out deserializedType) ||
+                deserializedType != sourceType)
+                return false;
+            return true;
+
+            if (sourceType == targetType && !targetType.IsAbstract) {
+                deserializedType = targetType;
+                return true;
+            }
+
+            if (TryGetSerializedType(targetType, out deserializedType) &&
+                deserializedType == sourceType)
+                return true;
+
+            if (!targetType.IsAbstract)
+                return false;
+
+            UpdateShapeMap(targetType.Assembly);
+            return typeToShapeMap.TryGetValue(targetType, out deserializedType);
+        }
+
+        private static bool TryGetShape2(Type type, out Type serializedType)
+        {
+            serializedType = type?.GetCustomAttribute<SerializedShapeAttribute>(true)?.Shape;
+            return serializedType != null;
         }
 
         private bool TryGetSerializedType(Type sourceType, out Type serializedType)

@@ -6,12 +6,17 @@ namespace EventTraceKit.VsExtension.Views
     using System.Collections.ObjectModel;
     using System.Linq;
     using System.Threading.Tasks;
+    using System.Windows;
+    using System.Windows.Controls;
     using System.Windows.Input;
-    using Collections;
+    using EventManifestFramework.Schema;
     using EventTraceKit.Tracing;
-    using Serialization;
+    using EventTraceKit.VsExtension.Collections;
+    using EventTraceKit.VsExtension.Serialization;
+    using Microsoft.Win32;
+    using Task = System.Threading.Tasks.Task;
 
-    [SerializedShape(typeof(Settings.Persistence.TraceProvider))]
+    [SerializedShape(typeof(Settings.Persistence.EventProvider))]
     public class EventProviderViewModel : ViewModel
     {
         private Guid id;
@@ -26,17 +31,23 @@ namespace EventTraceKit.VsExtension.Views
         private bool includeSecurityId;
         private bool includeTerminalSessionId;
         private bool includeStackTrace;
-        private string executableName;
-        private string enableEventIds;
-        private string disableEventIds;
-        private bool filterProcesses;
-        private bool filterEvents;
+
+        private bool filterExecutableNames;
+        private string executableNames;
+        private bool filterProcessIds;
+        private string processIds;
+        private bool filterEventIds;
+        private string eventIds;
+        private bool enableEvents;
+        private string startupProject;
+
+        private bool isSelected;
 
         public EventProviderViewModel()
         {
-            ProcessIds = new ObservableCollection<uint>();
-            Events = new ObservableCollection<EventViewModel>();
             ToggleSelectedEventsCommand = new AsyncDelegateCommand<IList>(ToggleSelectedEvents);
+            BrowseManifestCommand = new AsyncDelegateCommand(BrowseManifest);
+            keywordSelector = new KeywordListBox(this);
         }
 
         public EventProviderViewModel(Guid id, string name)
@@ -46,6 +57,22 @@ namespace EventTraceKit.VsExtension.Views
             Name = name;
             Level = 0xFF;
         }
+
+        public EventProviderViewModel(
+            Guid id, string name, string manifest, IEnumerable<EventViewModel> events)
+            : this(id, name)
+        {
+            this.manifest = manifest;
+            Events.AddRange(events);
+        }
+
+        public EventProviderViewModel(EventProviderViewModel source)
+            : this()
+        {
+            Copy(source, this);
+        }
+
+        public ITraceSettingsContext Context { get; set; }
 
         public string DisplayName => !string.IsNullOrWhiteSpace(Name) ? Name : Id.ToString();
 
@@ -66,6 +93,10 @@ namespace EventTraceKit.VsExtension.Views
             get => manifest;
             set => SetProperty(ref manifest, value);
         }
+
+        public ICommand BrowseManifestCommand { get; }
+        public IEnumerable<string> Manifests => Context.ManifestsInSolution.Value;
+        public IEnumerable<ProjectInfo> Projects => Context.ProjectsInSolution.Value;
 
         public string Name
         {
@@ -101,6 +132,20 @@ namespace EventTraceKit.VsExtension.Views
             set => SetProperty(ref matchAllKeyword, value);
         }
 
+        private bool manifestLoaded;
+        public bool ManifestLoaded
+        {
+            get => manifestLoaded;
+            set => SetProperty(ref manifestLoaded, value);
+        }
+
+        private LazyListBox keywordSelector;
+        public LazyListBox KeywordSelector
+        {
+            get => keywordSelector;
+            set => SetProperty(ref keywordSelector, value);
+        }
+
         public bool IncludeSecurityId
         {
             get => includeSecurityId;
@@ -119,39 +164,62 @@ namespace EventTraceKit.VsExtension.Views
             set => SetProperty(ref includeStackTrace, value);
         }
 
-        public string ExecutableName
+        public bool FilterExecutableNames
         {
-            get => executableName;
-            set => SetProperty(ref executableName, value);
+            get => filterExecutableNames;
+            set => SetProperty(ref filterExecutableNames, value);
         }
 
-        public string EnableEventIds
+        public string ExecutableNames
         {
-            get => enableEventIds;
-            set => SetProperty(ref enableEventIds, value);
+            get => executableNames;
+            set => SetProperty(ref executableNames, value);
         }
 
-        public string DisableEventIds
+        public bool FilterProcessIds
         {
-            get => disableEventIds;
-            set => SetProperty(ref disableEventIds, value);
+            get => filterProcessIds;
+            set => SetProperty(ref filterProcessIds, value);
         }
 
-        public bool FilterProcesses
+        public string ProcessIds
         {
-            get => filterProcesses;
-            set => SetProperty(ref filterProcesses, value);
+            get => processIds;
+            set => SetProperty(ref processIds, value);
         }
 
-        public bool FilterEvents
+        public string StartupProject
         {
-            get => filterEvents;
-            set => SetProperty(ref filterEvents, value);
+            get => startupProject;
+            set => SetProperty(ref startupProject, value);
         }
 
-        public ObservableCollection<uint> ProcessIds { get; }
+        public bool FilterEventIds
+        {
+            get => filterEventIds;
+            set => SetProperty(ref filterEventIds, value);
+        }
 
-        public ObservableCollection<EventViewModel> Events { get; }
+        public string EventIds
+        {
+            get => eventIds;
+            set => SetProperty(ref eventIds, value);
+        }
+
+        public bool EnableEvents
+        {
+            get => enableEvents;
+            set => SetProperty(ref enableEvents, value);
+        }
+
+        public ObservableCollection<EventViewModel> Events { get; } =
+            new ObservableCollection<EventViewModel>();
+
+        public bool IsSelected
+        {
+            get => isSelected;
+            set => SetProperty(ref isSelected, value);
+        }
 
         public EventProviderDescriptor CreateDescriptor()
         {
@@ -166,27 +234,24 @@ namespace EventTraceKit.VsExtension.Views
             if (!string.IsNullOrWhiteSpace(Manifest))
                 descriptor.Manifest = Manifest;
 
-            if (!string.IsNullOrWhiteSpace(ExecutableName))
-                descriptor.ExecutableName = ExecutableName;
+            if (FilterExecutableNames && !string.IsNullOrWhiteSpace(ExecutableNames))
+                descriptor.ExecutableName = ExecutableNames;
 
-            if (!string.IsNullOrWhiteSpace(EnableEventIds)) {
-                descriptor.EventIds = SplitEventIds(EnableEventIds).ToList();
-                descriptor.EnableEventIds = true;
-            } else if (!string.IsNullOrWhiteSpace(DisableEventIds)) {
-                descriptor.EventIds = SplitEventIds(DisableEventIds).ToList();
-                descriptor.EnableEventIds = false;
+            if (FilterProcessIds && !string.IsNullOrWhiteSpace(ProcessIds))
+                descriptor.ProcessIds.AddRange(ParseUInt32List(ProcessIds).Distinct().OrderBySelf());
+
+            if (FilterEventIds && !string.IsNullOrWhiteSpace(EventIds)) {
+                descriptor.EventIds.AddRange(ParseUInt16List(EventIds).Distinct().OrderBySelf());
+                descriptor.EnableEventIds = EnableEvents;
             }
 
-            if (FilterProcesses)
-                descriptor.ProcessIds.AddRange(ProcessIds);
-            if (FilterEvents)
-                descriptor.EventIds.AddRange(
-                    from x in Events where x.IsEnabled select x.Id);
+            if (!string.IsNullOrWhiteSpace(StartupProject))
+                descriptor.StartupProjects = new List<string> { StartupProject };
 
             return descriptor;
         }
 
-        private static IEnumerable<ushort> SplitEventIds(string str)
+        private static IEnumerable<ushort> ParseUInt16List(string str)
         {
             foreach (var item in str.Split(',')) {
                 if (ushort.TryParse(item, out var id))
@@ -194,23 +259,38 @@ namespace EventTraceKit.VsExtension.Views
             }
         }
 
+        private static IEnumerable<uint> ParseUInt32List(string str)
+        {
+            foreach (var item in str.Split(',')) {
+                if (uint.TryParse(item, out var id))
+                    yield return id;
+            }
+        }
+
         public EventProviderViewModel DeepClone()
         {
             var clone = new EventProviderViewModel();
-            clone.Id = Id;
-            clone.Manifest = Manifest;
-            clone.Level = Level;
-            clone.MatchAnyKeyword = MatchAnyKeyword;
-            clone.MatchAllKeyword = MatchAllKeyword;
-            clone.IncludeSecurityId = IncludeSecurityId;
-            clone.IncludeTerminalSessionId = IncludeTerminalSessionId;
-            clone.IncludeStackTrace = IncludeStackTrace;
-            clone.ExecutableName = ExecutableName;
-            clone.EnableEventIds = EnableEventIds;
-            clone.DisableEventIds = DisableEventIds;
-            clone.ProcessIds.AddRange(ProcessIds);
-            clone.Events.AddRange(Events.Select(x => x.DeepClone()));
+            Copy(this, clone);
             return clone;
+        }
+
+        private static void Copy(EventProviderViewModel source, EventProviderViewModel target)
+        {
+            target.Id = source.Id;
+            target.Manifest = source.Manifest;
+            target.Level = source.Level;
+            target.MatchAnyKeyword = source.MatchAnyKeyword;
+            target.MatchAllKeyword = source.MatchAllKeyword;
+            target.IncludeSecurityId = source.IncludeSecurityId;
+            target.IncludeTerminalSessionId = source.IncludeTerminalSessionId;
+            target.IncludeStackTrace = source.IncludeStackTrace;
+            target.ExecutableNames = source.ExecutableNames;
+            target.ProcessIds = source.ProcessIds;
+            target.StartupProject = source.StartupProject;
+            target.EventIds = source.EventIds;
+            target.EnableEvents = source.EnableEvents;
+            target.Events.Clear();
+            target.Events.AddRange(source.Events.Select(x => x.DeepClone()));
         }
 
         private Task ToggleSelectedEvents(IList selectedObjects)
@@ -221,6 +301,115 @@ namespace EventTraceKit.VsExtension.Views
                 evt.IsEnabled = enabled;
 
             return Task.CompletedTask;
+        }
+
+        private Task BrowseManifest()
+        {
+            var dialog = new OpenFileDialog();
+            dialog.Title = "Select Manifest";
+            dialog.Filter = "Manifest Files (*.man)|*.man|" +
+                            "All Files (*.*)|*.*";
+            dialog.DefaultExt = ".man";
+            if (dialog.ShowDialog(Context.DialogOwner) != true)
+                return Task.CompletedTask;
+
+            Manifest = dialog.FileName;
+            return Task.CompletedTask;
+        }
+    }
+
+
+    public abstract class SelectorItemModel : ViewModel
+    {
+        private bool isEnabled;
+        private bool isSelected;
+
+        public bool IsEnabled
+        {
+            get => isEnabled;
+            set => SetProperty(ref isEnabled, value);
+        }
+
+        public bool IsSelected
+        {
+            get => isSelected;
+            set => SetProperty(ref isSelected, value);
+        }
+    }
+
+    public class KeywordInfo : SelectorItemModel
+    {
+        public KeywordInfo(Keyword keyword)
+        {
+            Name = keyword.Name.Value.ToPrefixedString();
+            Mask = keyword.Mask.Value;
+        }
+
+        public string Name { get; }
+        public ulong Mask { get; }
+    }
+
+    public class LazyListBox : ListBox
+    {
+        public LazyListBox()
+        {
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
+        }
+
+        protected virtual Task<IEnumerable> LoadItems()
+        {
+            return Task.FromResult((IEnumerable)Enumerable.Empty<object>());
+        }
+
+        private async void OnLoaded(object sender, RoutedEventArgs args)
+        {
+            foreach (var keyword in await LoadItems())
+                Items.Add(keyword);
+        }
+
+        private void OnUnloaded(object sender, RoutedEventArgs args)
+        {
+            Items.Clear();
+        }
+    }
+
+    public class KeywordListBox : LazyListBox
+    {
+        private readonly EventProviderViewModel provider;
+
+        public KeywordListBox(EventProviderViewModel provider)
+        {
+            this.provider = provider;
+        }
+
+        protected override async Task<IEnumerable> LoadItems()
+        {
+            provider.ManifestLoaded = true;
+            return await LoadKeywords();
+        }
+
+        private Task<EventManifest> EventManifest => provider.Context.GetManifest(provider.Manifest);
+
+        private async Task<IEnumerable<KeywordInfo>> LoadKeywords()
+        {
+            var eventManifest = await EventManifest;
+            if (eventManifest == null)
+                return Enumerable.Empty<KeywordInfo>();
+
+            var providerItem = eventManifest.Providers
+                .FirstOrDefault(x => x.Id.Value == provider.Id);
+
+            return GetKeywords(providerItem).ToList();
+        }
+
+        private static IEnumerable<KeywordInfo> GetKeywords(Provider providerItem)
+        {
+            if (providerItem == null)
+                yield break;
+
+            foreach (var keyword in providerItem.Keywords)
+                yield return new KeywordInfo(keyword);
         }
     }
 }

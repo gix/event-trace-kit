@@ -30,6 +30,17 @@ namespace EventTraceKit.VsExtension
             }
         }
 
+        public IEnumerable<string> FindFiles(string extension)
+        {
+            var solution = dte.Solution;
+            foreach (Project project in Projects(solution)) {
+                foreach (var fileName in Files(project)) {
+                    if (fileName.EndsWith(extension, StringComparison.OrdinalIgnoreCase))
+                        yield return fileName;
+                }
+            }
+        }
+
         public static IEnumerable<Project> Projects(Solution solution)
         {
             return solution.Projects.Cast<Project>().SelectMany(EnumerateProject);
@@ -47,7 +58,7 @@ namespace EventTraceKit.VsExtension
         {
             if (Guid.Parse(item.Kind) == VSConstants.GUID_ItemType_PhysicalFile) {
                 for (short i = 0; i < item.FileCount; ++i)
-                    yield return item.FileNames[i] + " " + item.Kind;
+                    yield return item.FileNames[i];
             }
 
             if (item.ProjectItems != null) {

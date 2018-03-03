@@ -52,14 +52,12 @@
         <Setter Property="Padding" Value="1"/>
       </Style>
 
-      <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
-        <Setter Property="VerticalAlignment" Value="Center"/>
-      </Style>
-
       <DataTemplate DataType="{x:Type etkv:EventProviderViewModel}">
         <DataTemplate.Resources>
+          <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Margin" Value="3"/>
+          </Style>
           <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
-            <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Margin" Value="3"/>
             <Setter Property="Padding" Value="2"/>
           </Style>
@@ -67,6 +65,9 @@
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Margin" Value="3"/>
             <Setter Property="Padding" Value="1"/>
+          </Style>
+          <Style TargetType="{x:Type ComboBox}" BasedOn="{StaticResource {x:Type ComboBox}}">
+            <Setter Property="Margin" Value="3"/>
           </Style>
         </DataTemplate.Resources>
         <Grid>
@@ -93,11 +94,12 @@
               <RowDefinition/>
               <RowDefinition/>
               <RowDefinition/>
+              <RowDefinition/>
             </Grid.RowDefinitions>
             <Label Grid.Row="0" Grid.Column="0"
                    Content="Name (Display only)" Target="{Binding ElementName=name}"/>
             <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" x:Name="name"
-                     Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
+                     Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" MaxWidth="Infinity"/>
 
             <Label Grid.Row="1" Grid.Column="0"
                    Content="Provider Id" Target="{Binding ElementName=id}"/>
@@ -106,8 +108,18 @@
 
             <Label Grid.Row="2" Grid.Column="0"
                    Content="Manifest" Target="{Binding ElementName=manifest}"/>
-            <TextBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" x:Name="manifest"
-                     Text="{Binding Manifest, UpdateSourceTrigger=PropertyChanged}"/>
+            <Grid Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="Auto"/>
+              </Grid.ColumnDefinitions>
+              <ComboBox x:Name="manifest"
+                        ItemsSource="{Binding Manifests}"
+                        Text="{Binding Manifest, UpdateSourceTrigger=PropertyChanged}"
+                        IsEditable="True"/>
+              <Button Grid.Column="1" Content="…" MinWidth="0" Padding="10,0"
+                      Command="{Binding BrowseManifestCommand}"/>
+            </Grid>
 
             <Label Grid.Row="3" Grid.Column="0"
                    Content="Level" Target="{Binding ElementName=level}"/>
@@ -121,30 +133,68 @@
 
             <Label Grid.Row="5" Grid.Column="0"
                    Content="Match All Keywords" Target="{Binding ElementName=matchAllKeyword}"/>
-            <TextBox Grid.Row="5" Grid.Column="1" x:Name="matchAllKeyword"
-                     Text="{Binding MatchAllKeyword, Converter={x:Static etkw:HexNumberConverter.Instance}, ConverterParameter='16'}"/>
+            <Grid Grid.Row="5" Grid.Column="1">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+              </Grid.ColumnDefinitions>
+              <TextBox x:Name="matchAllKeyword"
+                       Text="{Binding MatchAllKeyword, Converter={x:Static etkw:HexNumberConverter.Instance}, ConverterParameter='16'}"/>
+              <CheckBox Grid.Column="1" IsChecked="{Binding ManifestLoaded}" Content="ManifestLoaded"/>
+              <ToggleButton Grid.Column="2" Content="V" x:Name="DropButton"/>
+              <Popup PlacementTarget="{Binding ElementName=DropButton}"
+                     IsOpen="{Binding IsChecked, ElementName=DropButton}"
+                     MinWidth="200" MinHeight="200">
+                <Border Background="White" BorderBrush="DarkGray" BorderThickness="1">
+                  <ContentControl Content="{Binding KeywordSelector}"/>
+                </Border>
+              </Popup>
+            </Grid>
 
-            <CheckBox Grid.Row="3" Grid.Column="3" IsChecked="{Binding IncludeStackTrace, UpdateSourceTrigger=PropertyChanged}">Include Stacktrace</CheckBox>
-            <CheckBox Grid.Row="4" Grid.Column="3" IsChecked="{Binding IncludeSecurityId, UpdateSourceTrigger=PropertyChanged}">Include Security Id</CheckBox>
-            <CheckBox Grid.Row="5" Grid.Column="3" IsChecked="{Binding IncludeTerminalSessionId, UpdateSourceTrigger=PropertyChanged}">Include Terminal Session Id</CheckBox>
+            <CheckBox Grid.Row="3" Grid.Column="3" Content="Include Stacktrace"
+                      HorizontalAlignment="Left"
+                      IsChecked="{Binding IncludeStackTrace, UpdateSourceTrigger=PropertyChanged}"/>
+            <CheckBox Grid.Row="4" Grid.Column="3" Content="Include Security Id"
+                      HorizontalAlignment="Left"
+                      IsChecked="{Binding IncludeSecurityId, UpdateSourceTrigger=PropertyChanged}"/>
+            <CheckBox Grid.Row="5" Grid.Column="3" Content="Include Terminal Session Id"
+                      HorizontalAlignment="Left"
+                      IsChecked="{Binding IncludeTerminalSessionId, UpdateSourceTrigger=PropertyChanged}"/>
 
-            <Label Grid.Row="6" Grid.Column="0"
-                   Content="Executable Name" Target="{Binding ElementName=ExecutableName}"/>
+            <CheckBox Grid.Row="6" Grid.Column="0"
+                      Content="Executable Name" IsChecked="{Binding FilterExecutableNames}"/>
             <TextBox Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3" x:Name="ExecutableName"
-                     Text="{Binding ExecutableName, UpdateSourceTrigger=PropertyChanged}"/>
+                     Text="{Binding ExecutableNames, UpdateSourceTrigger=PropertyChanged}"/>
 
-            <Label Grid.Row="7" Grid.Column="0"
-                   Content="Enable Event Ids" Target="{Binding ElementName=EnableEventIds}"/>
-            <TextBox Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="3" x:Name="EnableEventIds"
-                     Text="{Binding EnableEventIds, UpdateSourceTrigger=PropertyChanged}"/>
+            <CheckBox Grid.Row="7" Grid.Column="0"
+                      Content="Process Ids" IsChecked="{Binding FilterProcessIds}"/>
+            <TextBox Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="3" x:Name="ProcessIds"
+                     Text="{Binding ProcessIds, UpdateSourceTrigger=PropertyChanged}"/>
 
             <Label Grid.Row="8" Grid.Column="0"
-                   Content="Disable Event Ids" Target="{Binding ElementName=DisableEventIds}"/>
-            <TextBox Grid.Row="8" Grid.Column="1" Grid.ColumnSpan="3" x:Name="DisableEventIds"
-                     Text="{Binding DisableEventIds, UpdateSourceTrigger=PropertyChanged}"/>
+                   Content="Project" Target="{Binding ElementName=StartupProject}"/>
+            <ComboBox Grid.Row="8" Grid.Column="1" Grid.ColumnSpan="3"
+                      x:Name="StartupProject"
+                      ItemsSource="{Binding Projects}"
+                      SelectedValue="{Binding StartupProject, UpdateSourceTrigger=PropertyChanged}"
+                      DisplayMemberPath="Name"
+                      SelectedValuePath="FullName"/>
+
+            <CheckBox Grid.Row="9" Grid.Column="0"
+                      Content="Event Ids" IsChecked="{Binding FilterEventIds}"/>
+            <Grid Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="3">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition/>
+              </Grid.ColumnDefinitions>
+              <CheckBox Content="Enable" IsChecked="{Binding EnableEvents}"/>
+              <TextBox x:Name="EventIds" Grid.Column="1"
+                       Text="{Binding EventIds, UpdateSourceTrigger=PropertyChanged}"/>
+            </Grid>
           </Grid>
           <Separator Grid.Row="1" Style="{StaticResource UnrelatedControlsSeparator}"/>
-          <CheckBox Grid.Row="2" Grid.Column="0" IsChecked="{Binding FilterEvents, UpdateSourceTrigger=PropertyChanged}">Filter Events</CheckBox>
+          <CheckBox Grid.Row="2" Grid.Column="0" IsChecked="{Binding FilterEventIds, UpdateSourceTrigger=PropertyChanged}">Filter Events</CheckBox>
           <DataGrid Grid.Row="3"
                     ItemsSource="{Binding Events}"
                     AutoGenerateColumns="False"
@@ -181,7 +231,38 @@
         </Grid>
       </DataTemplate>
 
-      <DataTemplate DataType="{x:Type etkv:TraceSessionSettingsViewModel}">
+      <DataTemplate DataType="{x:Type etkv:TraceProfileViewModel}">
+        <DockPanel>
+          <Border DockPanel.Dock="Top"
+                  Background="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarGradientBrushKey}}">
+            <StackPanel Margin="8" Orientation="Horizontal">
+              <StackPanel.Resources>
+                <CollectionViewSource x:Key="SortedCollectors" Source="{Binding Collectors}"
+                                      IsLiveSortingRequested="True">
+                  <CollectionViewSource.SortDescriptions>
+                    <cm:SortDescription PropertyName="Name"/>
+                  </CollectionViewSource.SortDescriptions>
+                  <CollectionViewSource.LiveSortingProperties>
+                    <system:String>Name</system:String>
+                  </CollectionViewSource.LiveSortingProperties>
+                </CollectionViewSource>
+              </StackPanel.Resources>
+              <TextBlock VerticalAlignment="Center" FontWeight="Bold">Collectors</TextBlock>
+              <ComboBox Margin="7,1,1,1" ItemsSource="{Binding Source={StaticResource SortedCollectors}}"
+                        SelectedValue="{Binding SelectedCollector}" MinWidth="250">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate DataType="{x:Type etkv:TraceProfileViewModel}">
+                    <TextBlock Text="{Binding Name}"/>
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+            </StackPanel>
+          </Border>
+          <ContentControl Content="{Binding SelectedCollector}" Focusable="False"/>
+        </DockPanel>
+      </DataTemplate>
+
+      <DataTemplate DataType="{x:Type etkv:EventCollectorViewModel}">
         <DockPanel>
           <DockPanel.Resources>
             <CollectionViewSource x:Key="SortedProviders" Source="{Binding Providers}"
@@ -263,24 +344,38 @@
                      BorderThickness="1"
                      SelectionMode="Extended"
                      SelectedItem="{Binding SelectedProvider}">
-              <i:Interaction.Triggers>
-                <etkw:KeyDownEventTrigger Key="Delete" Modifiers="{x:Static ModifierKeys.None}">
-                  <i:InvokeCommandAction Command="{Binding RemoveProviderCommand}"
-                                         CommandParameter="{Binding SelectedItems, ElementName=Providers}"/>
-                </etkw:KeyDownEventTrigger>
-                <etkw:KeyDownEventTrigger Key="T" Modifiers="{x:Static ModifierKeys.None}">
-                  <i:InvokeCommandAction Command="{Binding ToggleSelectedProvidersCommand}"
-                                         CommandParameter="{Binding SelectedItems, ElementName=Providers}"/>
-                </etkw:KeyDownEventTrigger>
-              </i:Interaction.Triggers>
+              <i:Interaction.Behaviors>
+                <etkv:CommandBridge SourceCommand="ApplicationCommands.Copy"
+                                    TargetCommand="{Binding CopyProvidersCommand}"/>
+                <etkv:CommandBridge SourceCommand="ApplicationCommands.Paste"
+                                    TargetCommand="{Binding PasteProvidersCommand}"/>
+                <etkv:CommandBridge SourceCommand="ApplicationCommands.Delete"
+                                    TargetCommand="{Binding RemoveProvidersCommand}"/>
+                <etkv:CommandBridge SourceCommand="etkv:ExtensionCommands.Toggle"
+                                    TargetCommand="{Binding ToggleProvidersCommand}"/>
+              </i:Interaction.Behaviors>
               <ListBox.ItemTemplate>
                 <DataTemplate DataType="{x:Type etkv:EventProviderViewModel}">
                   <StackPanel Orientation="Horizontal">
+                    <StackPanel.ContextMenu>
+                      <ContextMenu>
+                        <MenuItem Command="etkv:ExtensionCommands.Toggle"/>
+                        <Separator/>
+                        <MenuItem Command="ApplicationCommands.Copy"/>
+                        <MenuItem Command="ApplicationCommands.Paste"/>
+                        <MenuItem Command="ApplicationCommands.Delete"/>
+                      </ContextMenu>
+                    </StackPanel.ContextMenu>
                     <CheckBox IsChecked="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
                     <TextBlock Text="{Binding DisplayName}" Margin="3,1,1,1" VerticalAlignment="Center"/>
                   </StackPanel>
                 </DataTemplate>
               </ListBox.ItemTemplate>
+              <ListBox.ItemContainerStyle>
+                <Style TargetType="{x:Type ListBoxItem}" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                  <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
+                </Style>
+              </ListBox.ItemContainerStyle>
             </ListBox>
             <GridSplitter Grid.Column="1" Width="7"
                           HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
@@ -298,7 +393,7 @@
               Background="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarGradientBrushKey}}">
         <StackPanel Margin="8" Orientation="Horizontal">
           <StackPanel.Resources>
-            <CollectionViewSource x:Key="SortedSessionPresets" Source="{Binding Sessions}"
+            <CollectionViewSource x:Key="SortedProfiles" Source="{Binding Profiles}"
                                   IsLiveSortingRequested="True">
               <CollectionViewSource.SortDescriptions>
                 <cm:SortDescription PropertyName="Name"/>
@@ -308,21 +403,21 @@
               </CollectionViewSource.LiveSortingProperties>
             </CollectionViewSource>
           </StackPanel.Resources>
-          <TextBlock VerticalAlignment="Center" FontWeight="Bold">Presets</TextBlock>
-          <ComboBox Margin="7,1,1,1" ItemsSource="{Binding Source={StaticResource SortedSessionPresets}}"
-                    SelectedValue="{Binding ActiveSession}" MinWidth="250">
+          <TextBlock VerticalAlignment="Center" FontWeight="Bold">Profiles</TextBlock>
+          <ComboBox Margin="7,1,1,1" ItemsSource="{Binding Source={StaticResource SortedProfiles}}"
+                    SelectedValue="{Binding ActiveProfile}" MinWidth="250">
             <ComboBox.ItemTemplate>
-              <DataTemplate DataType="{x:Type etkv:TraceSessionSettingsViewModel}">
+              <DataTemplate DataType="{x:Type etkv:TraceProfileViewModel}">
                 <TextBlock Text="{Binding Name}"/>
               </DataTemplate>
             </ComboBox.ItemTemplate>
           </ComboBox>
-          <Button Margin="7,1,1,1" Content="New" Command="{Binding NewPresetCommand}"/>
-          <Button Margin="7,1,1,1" Content="Copy" Command="{Binding CopyPresetCommand}"/>
-          <Button Margin="7,1,1,1" Content="Delete" Command="{Binding DeletePresetCommand}"/>
+          <Button Margin="7,1,1,1" Content="New" Command="{Binding NewProfileCommand}"/>
+          <Button Margin="7,1,1,1" Content="Copy" Command="{Binding CopyProfileCommand}"/>
+          <Button Margin="7,1,1,1" Content="Delete" Command="{Binding DeleteProfileCommand}"/>
         </StackPanel>
       </Border>
-      <ContentControl Content="{Binding ActiveSession}" Focusable="False"/>
+      <ContentControl Content="{Binding ActiveProfile}" Focusable="False"/>
     </DockPanel>
     <Border Grid.Row="1" Background="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarGradientBrushKey}}">
       <StackPanel Margin="7" Orientation="Horizontal" HorizontalAlignment="Right">

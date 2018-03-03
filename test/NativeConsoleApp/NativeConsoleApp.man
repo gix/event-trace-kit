@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<instrumentationManifest
+    xsi:schemaLocation="http://schemas.microsoft.com/win/2004/08/events eventman.xsd"
+    xmlns="http://schemas.microsoft.com/win/2004/08/events"
+    xmlns:win="http://manifests.microsoft.com/win/2004/08/windows/events"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:trace="http://schemas.microsoft.com/win/2004/08/events/trace">
+  <instrumentation>
+    <events>
+      <provider
+          name="ETK-Test-NativeConsoleApp"
+          guid="{5AB0948E-C045-411A-AC12-AC455AFA8DF2}"
+          symbol="EtkNativeConsole"
+          resourceFileName="NativeConsoleApp.exe"
+          messageFileName="NativeConsoleApp.exe"
+          parameterFileName="NativeConsoleApp.exe">
+        <events>
+          <event symbol="Info"
+                 value="1" version="0"
+                 channel="Analytic"
+                 level="win:Informational"
+                 template="Message"
+                 message="$(string.event.Info)"/>
+
+          <event symbol="Warning"
+                 value="2" version="0"
+                 channel="Analytic"
+                 level="win:Warning"
+                 template="Message"
+                 message="$(string.event.Warning)"/>
+
+          <event symbol="Error"
+                 value="3" version="0"
+                 channel="Analytic"
+                 level="win:Error"
+                 template="Message"
+                 message="$(string.event.Error)"/>
+        </events>
+
+        <channels>
+          <channel name="ETK-Test-NativeConsoleApp/Analytic" chid="Analytic"
+                   symbol="AnalyticChannel" type="Analytic" enabled="false"
+                   message="$(string.channel.Analytic)"/>
+          <importChannel name="Application" chid="GlobalApplication"/>
+        </channels>
+
+        <keywords>
+          <keyword name="KW1" symbol="KW1" mask="0x1" message="$(string.keyword.KW1)"/>
+          <keyword name="KW2" symbol="KW2" mask="0x2" message="$(string.keyword.KW2)"/>
+          <keyword name="KW3" symbol="KW3" mask="0x4" message="$(string.keyword.KW3)"/>
+          <keyword name="KW4" symbol="KW4" mask="0x8" message="$(string.keyword.KW4)"/>
+        </keywords>
+
+        <templates>
+          <template tid="Message">
+            <data name="Message" inType="win:UnicodeString" outType="xs:string"/>
+          </template>
+        </templates>
+      </provider>
+    </events>
+  </instrumentation>
+  <localization>
+    <resources culture="en-US">
+      <stringTable>
+        <!-- Events -->
+        <string id="event.Info" value="Info: %1"/>
+        <string id="event.Warning" value="Warning: %1"/>
+        <string id="event.Error" value="Error: %1"/>
+
+        <!-- Channels -->
+        <string id="channel.Analytic" value="Analytic"/>
+
+        <!-- Levels -->
+        <string id="level.Error" value="Error"/>
+        <string id="level.Warning" value="Warning"/>
+        <string id="level.Informational" value="Information"/>
+        <string id="level.Verbose" value="Verbose"/>
+
+        <!-- Tasks -->
+
+        <!-- Opcodes -->
+
+        <!-- Keywords -->
+        <string id="keyword.KW1" value="Keyword1"/>
+        <string id="keyword.KW2" value="Keyword2"/>
+        <string id="keyword.KW3" value="Keyword3"/>
+        <string id="keyword.KW4" value="Keyword4"/>
+
+        <!-- ValueMaps -->
+
+        <!-- Events -->
+        <string id="event.Message" value="%1"/>
+      </stringTable>
+    </resources>
+  </localization>
+</instrumentationManifest>

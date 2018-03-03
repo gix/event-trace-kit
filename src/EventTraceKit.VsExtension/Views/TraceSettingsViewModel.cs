@@ -3,32 +3,147 @@ namespace EventTraceKit.VsExtension.Views
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
-    using System.Collections.Specialized;
+    using System.IO;
+    using System.Linq;
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Input;
+    using EventManifestFramework;
+    using EventManifestFramework.Schema;
+    using EventManifestFramework.Support;
     using EventTraceKit.Tracing;
     using EventTraceKit.VsExtension.Extensions;
+    using Microsoft.VisualStudio.Shell;
     using Serialization;
+    using Task = System.Threading.Tasks.Task;
+
+    public interface ITraceSettingsContext
+    {
+        Window DialogOwner { get; }
+        Lazy<IReadOnlyList<ProjectInfo>> ProjectsInSolution { get; }
+        Lazy<IReadOnlyList<string>> ManifestsInSolution { get; }
+        Task<EventManifest> GetManifest(string manifestFile);
+    }
+
+    internal sealed class DiagnosticCollector : IDiagnosticConsumer
+    {
+        private readonly List<DiagnosticInfo> diagnostics = new List<DiagnosticInfo>();
+
+        public void HandleDiagnostic(
+            DiagnosticSeverity severity, SourceLocation location, string message)
+        {
+            if (!Enum.IsDefined(typeof(DiagnosticSeverity), severity))
+                throw new ArgumentOutOfRangeException(nameof(severity), severity, null);
+            if (location == null)
+                throw new ArgumentNullException(nameof(location));
+            if (message == null)
+                throw new ArgumentNullException(nameof(message));
+
+            if (severity == DiagnosticSeverity.Ignored)
+                return;
+
+            diagnostics.Add(new DiagnosticInfo(severity, location, message));
+        }
+
+        public IReadOnlyList<DiagnosticInfo> Diagnostics => diagnostics;
+
+        public sealed class DiagnosticInfo
+        {
+            public DiagnosticInfo(DiagnosticSeverity severity, SourceLocation location, string message)
+            {
+                Severity = severity;
+                Location = location;
+                Message = message;
+            }
+
+            public DiagnosticSeverity Severity { get; }
+
+            public SourceLocation Location { get; }
+
+            public string Message { get; }
+        }
+    }
 
     [SerializedShape(typeof(Settings.Persistence.TraceSettings))]
-    public class TraceSettingsViewModel : ViewModel, IDialogService
+    public class TraceSettingsViewModel : ViewModel, ITraceSettingsContext
     {
         private bool? dialogResult;
-        private TraceSessionSettingsViewModel activeSession;
-        private ICommand newPresetCommand;
-        private ICommand copyPresetCommand;
-        private ICommand deletePresetCommand;
+        private TraceProfileViewModel activeProfile;
+        private ICommand newProfileCommand;
+        private ICommand copyProfileCommand;
+        private ICommand deleteProfileCommand;
+        private readonly Lazy<IReadOnlyList<ProjectInfo>> projectsInSolution;
+        private readonly Lazy<IReadOnlyList<string>> manifestsInSolution;
+        private Window dialogOwner;
 
         public TraceSettingsViewModel()
         {
             AcceptCommand = new AsyncDelegateCommand(Accept);
-            Sessions.CollectionChanged += OnSessionsChanged;
+            Profiles = new AcqRelObservableCollection<TraceProfileViewModel>(
+                x => x.Context = null, x => x.Context = this);
+            projectsInSolution = new Lazy<IReadOnlyList<ProjectInfo>>(FindProjects);
+            manifestsInSolution = new Lazy<IReadOnlyList<string>>(FindManifests);
+
+            manifestCache = new FileCache<EventManifest>(
+                10, path => {
+                    var diagCollector = new DiagnosticCollector();
+                    var diags = new DiagnosticsEngine(diagCollector);
+
+                    var parser = EventManifestParser.CreateWithWinmeta(diags);
+                    var manifest = parser.ParseManifest(path);
+                    if (manifest == null || diagCollector.Diagnostics.Count != 0)
+                        throw new Exception(
+                            string.Join("\r\n", diagCollector.Diagnostics.Select(x => x.Message)));
+
+                    return manifest;
+                });
         }
 
-        private void OnSessionsChanged(object sender, NotifyCollectionChangedEventArgs args)
+        Window ITraceSettingsContext.DialogOwner => dialogOwner;
+        Lazy<IReadOnlyList<ProjectInfo>> ITraceSettingsContext.ProjectsInSolution => projectsInSolution;
+        Lazy<IReadOnlyList<string>> ITraceSettingsContext.ManifestsInSolution => manifestsInSolution;
+
+        private readonly FileCache<EventManifest> manifestCache;
+
+        Task<EventManifest> ITraceSettingsContext.GetManifest(string manifestFile)
         {
-            Sessions.HandleChanges(args, x => x.DialogService = null, x => x.DialogService = this);
+            if (string.IsNullOrEmpty(manifestFile) || !File.Exists(manifestFile))
+                return Task.FromResult(new EventManifest());
+
+            return Task.Run(() => manifestCache.Get(manifestFile));
+        }
+
+        private static EnvDTE.DTE GetDte()
+        {
+            return ServiceProvider.GlobalProvider.GetService<Microsoft.VisualStudio.Shell.Interop.SDTE, EnvDTE.DTE>();
+        }
+
+        private static IReadOnlyList<ProjectInfo> FindProjects()
+        {
+            var dte = GetDte();
+            if (dte == null)
+                return new ProjectInfo[0];
+
+            try {
+                var projectProvider = new DefaultProjectProvider(GetDte());
+                return projectProvider.EnumerateProjects().OrderBy(x => x.Name).ToList();
+            } catch (Exception) {
+                return new ProjectInfo[0];
+            }
+        }
+
+        private static IReadOnlyList<string> FindManifests()
+        {
+            var dte = GetDte();
+            if (dte == null)
+                return new string[0];
+
+            try {
+                var gatherer = new SolutionFileGatherer(dte);
+                return gatherer.FindFiles(".man").ToList();
+            } catch (Exception) {
+                return new string[0];
+            }
         }
 
         public ICommand AcceptCommand { get; }
@@ -39,48 +154,71 @@ namespace EventTraceKit.VsExtension.Views
             set => SetProperty(ref dialogResult, value);
         }
 
-        public ICommand NewPresetCommand =>
-            newPresetCommand ?? (newPresetCommand = new AsyncDelegateCommand(NewPreset));
+        public ICommand NewProfileCommand =>
+            newProfileCommand ?? (newProfileCommand = new AsyncDelegateCommand(NewProfile));
 
-        public ICommand CopyPresetCommand =>
-            copyPresetCommand ?? (copyPresetCommand = new AsyncDelegateCommand(CopyPreset, CanCopyPreset));
+        public ICommand CopyProfileCommand =>
+            copyProfileCommand ?? (copyProfileCommand = new AsyncDelegateCommand(CopyPreset, CanCopyPreset));
 
-        public ICommand DeletePresetCommand =>
-            deletePresetCommand ?? (deletePresetCommand = new AsyncDelegateCommand(DeletePreset, CanDeletePreset));
+        public ICommand DeleteProfileCommand =>
+            deleteProfileCommand ?? (deleteProfileCommand = new AsyncDelegateCommand(DeletePreset, CanDeletePreset));
 
-        public TraceSessionSettingsViewModel ActiveSession
+        public TraceProfileViewModel ActiveProfile
         {
-            get => activeSession;
-            set => SetProperty(ref activeSession, value);
+            get => activeProfile;
+            set => SetProperty(ref activeProfile, value);
         }
 
-        public ObservableCollection<TraceSessionSettingsViewModel> Sessions { get; }
-            = new ObservableCollection<TraceSessionSettingsViewModel>();
+        public ObservableCollection<TraceProfileViewModel> Profiles { get; }
 
-        Window IDialogService.Owner => Window;
-        public Window Window { get; set; }
-
-        private Task NewPreset()
+        public void Attach(Window window)
         {
-            var newPreset = new TraceSessionSettingsViewModel();
-            newPreset.Name = "Unnamed";
-            Sessions.Add(newPreset);
-            ActiveSession = newPreset;
+            dialogOwner = window;
+            foreach (var session in Profiles) {
+                session.Context = this;
+                foreach (var collector in session.Collectors) {
+                    collector.Context = this;
+                    if (collector is EventCollectorViewModel ec) {
+                        foreach (var provider in ec.Providers)
+                            provider.Context = this;
+                    }
+                }
+            }
+        }
+
+        public void Detach()
+        {
+            dialogOwner = null;
+        }
+
+        private Task NewProfile()
+        {
+            var newProfile = new TraceProfileViewModel {
+                Name = "Unnamed",
+                Collectors = {
+                    new EventCollectorViewModel {
+                        Name = "Default"
+                    }
+                }
+            };
+
+            Profiles.Add(newProfile);
+            ActiveProfile = newProfile;
             return Task.CompletedTask;
         }
 
         private bool CanCopyPreset()
         {
-            return ActiveSession != null;
+            return ActiveProfile != null;
         }
 
         private Task CopyPreset()
         {
-            if (ActiveSession != null) {
-                var newPreset = ActiveSession.DeepClone();
-                newPreset.Name = "Copy of " + ActiveSession.Name;
-                Sessions.Add(newPreset);
-                ActiveSession = newPreset;
+            if (ActiveProfile != null) {
+                var newPreset = ActiveProfile.DeepClone();
+                newPreset.Name = "Copy of " + ActiveProfile.Name;
+                Profiles.Add(newPreset);
+                ActiveProfile = newPreset;
             }
 
             return Task.CompletedTask;
@@ -88,14 +226,14 @@ namespace EventTraceKit.VsExtension.Views
 
         private bool CanDeletePreset()
         {
-            return ActiveSession != null;
+            return ActiveProfile != null;
         }
 
         private Task DeletePreset()
         {
-            if (ActiveSession != null) {
-                Sessions.Remove(ActiveSession);
-                ActiveSession = null;
+            if (ActiveProfile != null) {
+                Profiles.Remove(ActiveProfile);
+                ActiveProfile = null;
             }
 
             return Task.CompletedTask;
@@ -107,14 +245,14 @@ namespace EventTraceKit.VsExtension.Views
             return Task.CompletedTask;
         }
 
-        public EventSessionDescriptor GetDescriptor()
+        public TraceProfileDescriptor GetDescriptor()
         {
-            return ActiveSession?.CreateDescriptor();
+            return ActiveProfile?.CreateDescriptor();
         }
 
         public Dictionary<EventKey, string> GetEventSymbols()
         {
-            return ActiveSession?.GetEventSymbols() ?? new Dictionary<EventKey, string>();
+            return ActiveProfile?.GetEventSymbols() ?? new Dictionary<EventKey, string>();
         }
     }
 
@@ -138,14 +276,19 @@ namespace EventTraceKit.VsExtension.Views
                 IsEnabled = true
             });
 
-            var preset = new TraceSessionSettingsViewModel();
+            var collector = new EventCollectorViewModel();
+            collector.Id = new Guid("381F7EC1-AE97-41F9-8C48-727C49D3E210");
+            collector.Name = "Design Collector";
+            collector.Providers.Add(provider);
+
+            var preset = new TraceProfileViewModel();
             preset.Name = "Design Preset";
             preset.Id = new Guid("7DB6B9B1-9ACF-42C8-B6B1-CEEB6F783689");
-            preset.Providers.Add(provider);
-            preset.SelectedProvider = provider;
+            preset.Collectors.Add(collector);
+            preset.SelectedCollector = collector;
 
-            Sessions.Add(preset);
-            ActiveSession = preset;
+            Profiles.Add(preset);
+            ActiveProfile = preset;
         }
     }
 }

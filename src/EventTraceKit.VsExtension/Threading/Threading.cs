@@ -1,6 +1,7 @@
-﻿namespace EventTraceKit.VsExtension.Threading
+namespace EventTraceKit.VsExtension.Threading
 {
     using System;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows;
@@ -22,7 +23,8 @@
                 Content = string.Empty
             };
             if (owner != null)
-                dialog.OwnerWindow = new WindowInteropHelper(owner).Handle;
+                dialog.OwnerWindow = new HandleRef(
+                    owner, new WindowInteropHelper(owner).Handle);
 
             dialog.Controls.Add(new TaskDialogButton(
                 TaskDialogButtonId.Cancel, "Cancel", (s, e) => cts.Cancel()));

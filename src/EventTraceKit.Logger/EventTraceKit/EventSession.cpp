@@ -64,7 +64,7 @@ inline etk::TraceProviderDescriptor marshal_as(EventProviderDescriptor^ const& p
 } // namespace interop
 } // namespace msclr
 
-namespace EventTraceKit
+namespace EventTraceKit::Tracing
 {
 
 public ref struct TraceStatistics
@@ -78,12 +78,12 @@ public ref struct TraceStatistics
     property unsigned LoggerThreadId;
 };
 
-public ref class TraceSession : public System::IDisposable
+public ref class EventSession : public System::IDisposable
 {
 public:
-    TraceSession(EventSessionDescriptor^ descriptor);
-    ~TraceSession() { this->!TraceSession(); }
-    !TraceSession();
+    EventSession(TraceProfileDescriptor^ descriptor);
+    ~EventSession() { this->!EventSession(); }
+    !EventSession();
 
     void Start(TraceLog^ traceLog);
     Task^ StartAsync(TraceLog^ traceLog);
@@ -96,16 +96,16 @@ public:
 private:
     ref struct StartAsyncHelper
     {
-        StartAsyncHelper(TraceSession^ parent, TraceLog^ traceLog)
+        StartAsyncHelper(EventSession^ parent, TraceLog^ traceLog)
             : parent(parent), traceLog(traceLog) {}
 
         void Run();
 
-        TraceSession^ parent;
+        EventSession^ parent;
         TraceLog^ traceLog;
     };
 
-    EventSessionDescriptor^ descriptor;
+    TraceProfileDescriptor^ descriptor;
     std::wstring* loggerName = nullptr;
     std::vector<etk::TraceProviderDescriptor>* nativeProviders = nullptr;
     WatchDog^ watchDog;
@@ -123,7 +123,7 @@ static std::wstring CreateLoggerName()
     return LoggerNameBase + L"_" + std::to_wstring(pid);
 }
 
-static etk::TraceProperties CreateTraceProperties(EventSessionDescriptor^ descriptor)
+static etk::TraceProperties CreateTraceProperties(EventCollectorDescriptor^ descriptor)
 {
     etk::TraceProperties properties(marshal_as<GUID>(System::Guid::NewGuid()));
     if (descriptor->BufferSize.HasValue)
@@ -137,17 +137,18 @@ static etk::TraceProperties CreateTraceProperties(EventSessionDescriptor^ descri
     return properties;
 }
 
-TraceSession::TraceSession(EventSessionDescriptor^ descriptor)
+EventSession::EventSession(TraceProfileDescriptor^ descriptor)
     : descriptor(descriptor)
     , loggerName(new std::wstring(CreateLoggerName()))
 {
     watchDog = gcnew WatchDog(marshal_as<String^>(*loggerName));
 
-    auto traceProperties = CreateTraceProperties(descriptor);
+    auto collector = static_cast<EventCollectorDescriptor^>(descriptor->Collectors[0]);
+    auto traceProperties = CreateTraceProperties(collector);
     auto session = etk::CreateEtwTraceSession(*loggerName, traceProperties);
 
     nativeProviders = new std::vector<etk::TraceProviderDescriptor>();
-    for each (auto provider in descriptor->Providers)
+    for each (auto provider in collector->Providers)
         nativeProviders->push_back(marshal_as<etk::TraceProviderDescriptor>(provider));
 
     for (auto const& provider : *nativeProviders) {
@@ -158,7 +159,7 @@ TraceSession::TraceSession(EventSessionDescriptor^ descriptor)
     this->session = session.release();
 }
 
-TraceSession::!TraceSession()
+EventSession::!EventSession()
 {
     Stop();
     delete session;
@@ -167,7 +168,7 @@ TraceSession::!TraceSession()
     delete loggerName;
 }
 
-void TraceSession::Start(TraceLog^ traceLog)
+void EventSession::Start(TraceLog^ traceLog)
 {
     if (!traceLog)
         throw gcnew ArgumentNullException("traceLog");
@@ -189,7 +190,7 @@ void TraceSession::Start(TraceLog^ traceLog)
     sessionInfo.PointerSize = logFileHeader->PointerSize;
 }
 
-Task^ TraceSession::StartAsync(TraceLog^ traceLog)
+Task^ EventSession::StartAsync(TraceLog^ traceLog)
 {
     if (!traceLog)
         throw gcnew ArgumentNullException("traceLog");
@@ -198,12 +199,12 @@ Task^ TraceSession::StartAsync(TraceLog^ traceLog)
     return Task::Run(gcnew Action(helper, &StartAsyncHelper::Run));
 }
 
-void TraceSession::StartAsyncHelper::Run()
+void EventSession::StartAsyncHelper::Run()
 {
     parent->Start(traceLog);
 }
 
-void TraceSession::Stop()
+void EventSession::Stop()
 {
     if (!processor)
         return;
@@ -216,7 +217,7 @@ void TraceSession::Stop()
     processor = nullptr;
 }
 
-void TraceSession::Flush()
+void EventSession::Flush()
 {
     if (!processor)
         return;
@@ -224,7 +225,7 @@ void TraceSession::Flush()
     session->Flush();
 }
 
-TraceStatistics^ TraceSession::Query()
+TraceStatistics^ EventSession::Query()
 {
     if (!session)
         return gcnew TraceStatistics();
@@ -244,4 +245,4 @@ TraceStatistics^ TraceSession::Query()
     return stats;
 }
 
-} // namespace EventTraceKit
+} // namespace EventTraceKit::Tracing

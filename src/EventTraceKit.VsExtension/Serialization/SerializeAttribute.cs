@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Serialization
+namespace EventTraceKit.VsExtension.Serialization
 {
     using System;
     using System.Runtime.CompilerServices;

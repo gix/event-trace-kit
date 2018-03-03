@@ -8,7 +8,7 @@ namespace EventTraceKit.VsExtension.Settings.Persistence
     {
         private Collection<ViewPreset> userPresets;
         private Collection<ViewPreset> persistedPresets;
-        private Collection<TraceSession> sessions;
+        private Collection<TraceProfile> profiles;
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public Collection<ViewPreset> UserPresets =>
@@ -18,10 +18,10 @@ namespace EventTraceKit.VsExtension.Settings.Persistence
         public Collection<ViewPreset> PersistedPresets =>
             persistedPresets ?? (persistedPresets = new Collection<ViewPreset>());
 
-        public Guid ActiveSession { get; set; }
+        public Guid ActiveProfile { get; set; }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        public Collection<TraceSession> Sessions =>
-            sessions ?? (sessions = new Collection<TraceSession>());
+        public Collection<TraceProfile> Profiles =>
+            profiles ?? (profiles = new Collection<TraceProfile>());
     }
 }

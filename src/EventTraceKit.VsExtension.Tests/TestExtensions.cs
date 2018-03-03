@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Tests
+namespace EventTraceKit.VsExtension.Tests
 {
     using System.Collections.Generic;
     using System.IO;
@@ -19,8 +19,13 @@
 
         public static string ReadFullyAsString(this MemoryStream stream)
         {
-            stream = new MemoryStream(stream.ToArray());
-            return new StreamReader(stream).ReadToEnd();
+            var position = stream.Position;
+            try {
+                stream.Position = 0;
+                return new StreamReader(stream).ReadToEnd();
+            } finally {
+                stream.Position = position;
+            }
         }
     }
 }

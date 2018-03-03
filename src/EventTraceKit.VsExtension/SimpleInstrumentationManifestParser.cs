@@ -2,12 +2,17 @@ namespace EventTraceKit.VsExtension
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Xml;
     using System.Xml.Linq;
     using System.Xml.XPath;
-    using Collections;
     using EventTraceKit.VsExtension.Views;
     using Extensions;
+
+    public class SimpleInstrumentationManifest
+    {
+        public IReadOnlyList<EventProviderViewModel> Providers { get; set; }
+    }
 
     public class SimpleInstrumentationManifestParser : IDisposable
     {
@@ -41,6 +46,13 @@ namespace EventTraceKit.VsExtension
             reader.Dispose();
         }
 
+        public SimpleInstrumentationManifest Read()
+        {
+            var manifest = new SimpleInstrumentationManifest();
+            manifest.Providers = ReadProviders().ToList();
+            return manifest;
+        }
+
         public IEnumerable<EventProviderViewModel> ReadProviders()
         {
             const string providerXPath = "e:instrumentationManifest/e:instrumentation/e:events/e:provider";
@@ -60,10 +72,8 @@ namespace EventTraceKit.VsExtension
                 return null;
 
             var provider = new EventProviderViewModel(
-                id.Value, name ?? symbol ?? $"<id:{id.Value}>");
-
-            provider.Manifest = manifestFilePath;
-            provider.Events.AddRange(ReadEvents(providerElem));
+                id.Value, name ?? symbol ?? $"<id:{id.Value}>",
+                manifestFilePath, ReadEvents(providerElem));
 
             return provider;
         }

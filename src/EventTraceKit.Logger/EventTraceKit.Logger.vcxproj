@@ -122,7 +122,7 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(AdditionalOptions) -Zc:twoPhase-</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(AdditionalOptions) -Zc:twoPhase-</AdditionalOptions>
     </ClCompile>
-    <ClCompile Include="EventTraceKit\TraceSession.cpp">
+    <ClCompile Include="EventTraceKit\EventSession.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
       <MinimalRebuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</MinimalRebuild>

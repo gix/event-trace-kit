@@ -20,7 +20,7 @@ namespace EventTraceKit.VsExtension.UITests
 
         public TraceLogTestViewModel()
             : base(new StubGlobalSettings(),
-                   new StubSessionService(),
+                   new StubTraceController(),
                    new StubViewPresetService(),
                    new StubTraceSettingsService())
         {
@@ -37,7 +37,7 @@ namespace EventTraceKit.VsExtension.UITests
             SelectedTheme = App.Current.ActiveTheme;
 
             viewModel = new TraceSettingsViewModel();
-            var session = new TraceSessionSettingsViewModel();
+            var session = new TraceProfileViewModel();
 
             var knownProviders = new Dictionary<Guid, string> {
                 {new Guid("A0386E75-F70C-464C-A9CE-33C44E091623"), "DXVA2"},
@@ -76,17 +76,20 @@ namespace EventTraceKit.VsExtension.UITests
                 {new Guid("712909C0-6E57-4121-B639-87C8BF9004E0"), "D2DSCENARIOS"},
             };
 
+            var collector = new EventCollectorViewModel();
+            session.Collectors.Add(collector);
+
             foreach (var provider in knownProviders) {
-                session.Providers.Add(new EventProviderViewModel {
+                collector.Providers.Add(new EventProviderViewModel {
                     Id = provider.Key,
                     Name = provider.Value,
                     IsEnabled = true
                 });
             }
 
-            viewModel.Sessions.Add(session);
-            viewModel.ActiveSession = session;
-            sessionDescriptor = viewModel.GetDescriptor();
+            viewModel.Profiles.Add(session);
+            viewModel.ActiveProfile = session;
+            traceProfile = viewModel.GetDescriptor();
         }
 
         public ObservableCollection<string> Themes { get; } =
@@ -120,7 +123,7 @@ namespace EventTraceKit.VsExtension.UITests
 
         private bool CanStart()
         {
-            return !IsRunning && sessionDescriptor != null;
+            return !IsRunning && traceProfile != null;
         }
 
         private async Task Start()
@@ -162,13 +165,13 @@ namespace EventTraceKit.VsExtension.UITests
                 if (dialog.ShowDialog() != true)
                     return;
             } finally {
-                var selectedSession = viewModel.ActiveSession;
+                var selectedSession = viewModel.ActiveProfile;
                 dialog.DataContext = null;
-                viewModel.ActiveSession = selectedSession;
+                viewModel.ActiveProfile = selectedSession;
                 viewModel.DialogResult = null;
             }
 
-            sessionDescriptor = viewModel.GetDescriptor();
+            traceProfile = viewModel.GetDescriptor();
         }
 
         private void OpenViewEditor(object obj)
@@ -180,15 +183,15 @@ namespace EventTraceKit.VsExtension.UITests
 
         private class StubTraceSettingsService : ITraceSettingsService
         {
-            public IReadOnlyCollection<TraceSessionSettingsViewModel> Sessions { get; } =
-                new List<TraceSessionSettingsViewModel>();
+            public IReadOnlyCollection<TraceProfileViewModel> Profiles { get; } =
+                new List<TraceProfileViewModel>();
 
             public void Save(TraceSettingsViewModel sessions)
             {
             }
         }
 
-        private class StubSessionService : ITraceSessionService
+        private class StubTraceController : ITraceController
         {
             public event Action<TraceLog> SessionStarting
             {
@@ -196,19 +199,19 @@ namespace EventTraceKit.VsExtension.UITests
                 remove { }
             }
 
-            public event Action<TraceSession> SessionStarted
+            public event Action<EventSession> SessionStarted
             {
                 add { }
                 remove { }
             }
 
-            public event Action<TraceSession> SessionStopped
+            public event Action<EventSession> SessionStopped
             {
                 add { }
                 remove { }
             }
 
-            public void EnableAutoLog(EventSessionDescriptor descriptor)
+            public void EnableAutoLog(TraceProfileDescriptor descriptor)
             {
             }
 
@@ -216,9 +219,9 @@ namespace EventTraceKit.VsExtension.UITests
             {
             }
 
-            public Task<TraceSession> StartSessionAsync(EventSessionDescriptor descriptor)
+            public Task<EventSession> StartSessionAsync(TraceProfileDescriptor descriptor)
             {
-                return Task.FromResult(new TraceSession(new EventSessionDescriptor()));
+                return Task.FromResult(new EventSession(new TraceProfileDescriptor()));
             }
 
             public Task StopSessionAsync()

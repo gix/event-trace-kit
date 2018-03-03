@@ -1,31 +1,32 @@
 namespace EventTraceKit.VsExtension.Views
 {
     using System;
-    using System.Collections;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Windows.Input;
-    using Collections;
     using EventTraceKit.Tracing;
+    using EventTraceKit.VsExtension.Collections;
     using EventTraceKit.VsExtension.Extensions;
+    using EventTraceKit.VsExtension.Serialization;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
     using Microsoft.Win32;
     using Microsoft.Windows.TaskDialogs;
     using Microsoft.Windows.TaskDialogs.Controls;
-    using Serialization;
     using Task = System.Threading.Tasks.Task;
 
-    [SerializedShape(typeof(Settings.Persistence.TraceSession))]
-    public class TraceSessionSettingsViewModel : ViewModel
+    [SerializedShape(typeof(Settings.Persistence.EventCollector))]
+    public class EventCollectorViewModel : CollectorViewModel
     {
         private ICommand newProviderCommand;
         private ICommand importProvidersCommand;
         private ICommand removeProviderCommand;
-        private ICommand toggleSelectedProvidersCommand;
+        private ICommand toggleProvidersCommand;
+        private ICommand copyProvidersCommand;
+        private ICommand pasteProvidersCommand;
         private ICommand addManifestCommand;
         private ICommand browseLogFileCommand;
 
@@ -37,11 +38,15 @@ namespace EventTraceKit.VsExtension.Views
         private uint? maximumBuffers;
         private EventProviderViewModel selectedProvider;
 
-        public IDialogService DialogService { get; set; }
-
-        public TraceSessionSettingsViewModel DeepClone()
+        public EventCollectorViewModel()
         {
-            var clone = new TraceSessionSettingsViewModel();
+            Providers = new AcqRelObservableCollection<EventProviderViewModel>(
+                x => x.Context = null, x => x.Context = Context);
+        }
+
+        public override CollectorViewModel DeepClone()
+        {
+            var clone = new EventCollectorViewModel();
             clone.Name = Name;
             clone.LogFileName = LogFileName;
             clone.BufferSize = BufferSize;
@@ -59,13 +64,21 @@ namespace EventTraceKit.VsExtension.Views
             importProvidersCommand ??
             (importProvidersCommand = new AsyncDelegateCommand(ImportProviders));
 
-        public ICommand RemoveProviderCommand =>
+        public ICommand RemoveProvidersCommand =>
             removeProviderCommand ??
-            (removeProviderCommand = new AsyncDelegateCommand<IList>(RemoveProviders));
+            (removeProviderCommand = new AsyncDelegateCommand(RemoveProviders));
 
-        public ICommand ToggleSelectedProvidersCommand =>
-            toggleSelectedProvidersCommand ??
-            (toggleSelectedProvidersCommand = new AsyncDelegateCommand<IList>(ToggleSelectedProviders));
+        public ICommand ToggleProvidersCommand =>
+            toggleProvidersCommand ??
+            (toggleProvidersCommand = new AsyncDelegateCommand(ToggleProviders));
+
+        public ICommand CopyProvidersCommand =>
+            copyProvidersCommand ??
+            (copyProvidersCommand = new AsyncDelegateCommand(CopyProviders));
+
+        public ICommand PasteProvidersCommand =>
+            pasteProvidersCommand ??
+            (pasteProvidersCommand = new AsyncDelegateCommand(PasteProviders));
 
         public ICommand AddManifestCommand =>
             addManifestCommand ??
@@ -76,7 +89,6 @@ namespace EventTraceKit.VsExtension.Views
             (browseLogFileCommand = new AsyncDelegateCommand(BrowseLogFile));
 
         public ObservableCollection<EventProviderViewModel> Providers { get; }
-            = new ObservableCollection<EventProviderViewModel>();
 
         public Guid Id
         {
@@ -120,8 +132,8 @@ namespace EventTraceKit.VsExtension.Views
             set => SetProperty(ref selectedProvider, value);
         }
 
-        public ObservableCollection<EventProviderViewModel> SelectedProviders { get; } =
-            new ObservableCollection<EventProviderViewModel>();
+        public IEnumerable<EventProviderViewModel> SelectedProviders =>
+            Providers.Where(x => x.IsSelected);
 
         private Task NewProvider()
         {
@@ -131,20 +143,72 @@ namespace EventTraceKit.VsExtension.Views
             return Task.CompletedTask;
         }
 
-        private Task RemoveProviders(IList providers)
+        private Task RemoveProviders()
         {
-            Providers.RemoveRange(providers.OfType<EventProviderViewModel>().ToList());
+            Providers.RemoveRange(SelectedProviders.ToList());
             return Task.CompletedTask;
         }
 
-        private static Task ToggleSelectedProviders(IList selectedObjects)
+        private Task ToggleProviders()
         {
-            var selectedEvents = selectedObjects.Cast<EventProviderViewModel>().ToList();
-            bool enabled = !selectedEvents.All(x => x.IsEnabled);
-            foreach (var evt in selectedEvents)
-                evt.IsEnabled = enabled;
+            var providers = SelectedProviders.ToList();
+            bool enabled = !providers.All(x => x.IsEnabled);
+            foreach (var provider in providers)
+                provider.IsEnabled = enabled;
 
             return Task.CompletedTask;
+        }
+
+        private Task CopyProviders()
+        {
+            var providers = SelectedProviders.ToList();
+            var serializer = new SettingsSerializer();
+            try {
+                var text = serializer.SaveToString(providers);
+                ClipboardUtils.SetText(text);
+            } catch (Exception ex) {
+                ErrorUtils.ReportException(Context.DialogOwner, ex, "Failed to copy provider.");
+            }
+
+            return Task.CompletedTask;
+        }
+
+        private Task PasteProviders()
+        {
+            if (!ClipboardUtils.TryGetText(out var text))
+                return Task.CompletedTask;
+
+            IReadOnlyList<EventProviderViewModel> newProviders;
+            var serializer = new SettingsSerializer();
+            try {
+                newProviders = serializer.LoadFromStringMultiple<EventProviderViewModel>(text);
+            } catch (Exception ex) {
+                ErrorUtils.ReportDebugException(Context.DialogOwner, ex, "Failed to paste provider.");
+                return Task.CompletedTask;
+            }
+
+            if (newProviders.Count != 0) {
+                foreach (var newProvider in newProviders) {
+                    newProvider.Name = MakeNumberedCopy(
+                        string.IsNullOrEmpty(newProvider.Name) ? newProvider.Id.ToString() : newProvider.Name);
+                    Providers.Add(newProvider);
+                }
+
+                SelectedProvider = newProviders[0];
+            }
+
+            return Task.CompletedTask;
+        }
+
+        private static string MakeNumberedCopy(string fullString)
+        {
+            var match = Regex.Match(fullString, @"\A(?<str>.*) \(Copy(?: (?<num>\d+))?\)\z");
+            if (!match.Success)
+                return fullString + " (Copy)";
+
+            var str = match.Groups["str"].Value;
+            int num = match.Groups["num"].Success ? int.Parse(match.Groups["num"].Value) : 1;
+            return str + $" (Copy {num + 1})";
         }
 
         private async Task Foo()
@@ -179,7 +243,7 @@ namespace EventTraceKit.VsExtension.Views
 
         private Task ImportProviders()
         {
-            string declarations = ImportProvidersDialog.Prompt(DialogService.Owner);
+            string declarations = ImportProvidersDialog.Prompt(Context.DialogOwner);
             if (string.IsNullOrWhiteSpace(declarations))
                 return Task.CompletedTask;
 
@@ -260,7 +324,7 @@ namespace EventTraceKit.VsExtension.Views
             dialog.DefaultExt = ".etl";
             dialog.OverwritePrompt = true;
             dialog.AddExtension = true;
-            if (dialog.ShowDialog(DialogService.Owner) != true)
+            if (dialog.ShowDialog(Context.DialogOwner) != true)
                 return Task.CompletedTask;
 
             LogFileName = dialog.FileName;
@@ -275,7 +339,7 @@ namespace EventTraceKit.VsExtension.Views
                             "Binary Providers (*.dll, *.exe)|*.dll, *.exe|" +
                             "All Files (*.*)|*.*";
             dialog.DefaultExt = ".man";
-            if (dialog.ShowDialog(DialogService.Owner) != true)
+            if (dialog.ShowDialog(Context.DialogOwner) != true)
                 return null;
 
             return dialog.FileName;
@@ -289,7 +353,7 @@ namespace EventTraceKit.VsExtension.Views
             dialog.ExpandedInfo = exception.Message;
             dialog.ExpandedInfoLocation = TaskDialogExpandedInfoLocation.Footer;
             dialog.ExpandedButtonLabel = "Details";
-            dialog.Show(DialogService.Owner);
+            dialog.Show(Context.DialogOwner);
         }
 
         private enum MergeStrategy
@@ -300,7 +364,7 @@ namespace EventTraceKit.VsExtension.Views
         }
 
         private TaskDialogResult PromptConflictResolution(
-                EventProviderViewModel duplicateProvider)
+            EventProviderViewModel duplicateProvider)
         {
             var dialog = new TaskDialog();
             dialog.Caption = "Provider Conflict";
@@ -309,7 +373,7 @@ namespace EventTraceKit.VsExtension.Views
             dialog.Controls.Add(new TaskDialogCommandLink((int)MergeStrategy.Keep, "Keep existing provider"));
             dialog.Controls.Add(new TaskDialogCommandLink((int)MergeStrategy.Overwrite, "Overwrite existing provider"));
             dialog.VerificationText = "Do this for the next conflicts";
-            return dialog.Show(DialogService.Owner);
+            return dialog.Show(Context.DialogOwner);
         }
 
         private void MergeProviders(
@@ -350,9 +414,9 @@ namespace EventTraceKit.VsExtension.Views
             target.Keywords = target.Keywords ?? source.Keywords;
         }
 
-        public EventSessionDescriptor CreateDescriptor()
+        public override CollectorDescriptor CreateDescriptor()
         {
-            var descriptor = new EventSessionDescriptor();
+            var descriptor = new EventCollectorDescriptor();
             descriptor.LogFileName = LogFileName;
             descriptor.BufferSize = BufferSize;
             descriptor.MinimumBuffers = MinimumBuffers;

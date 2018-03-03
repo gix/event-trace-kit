@@ -3,30 +3,33 @@
                     xmlns:vsfx="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.14.0"
                     xmlns:vsp="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
                     xmlns:etkc="clr-namespace:EventTraceKit.VsExtension.Controls">
-  <!--<Style x:Key="{x:Type ToggleButton}" TargetType="{x:Type ToggleButton}"
-         BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ButtonStyleKey}}"/>
+  <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.TextBoxStyleKey}}">
+    <Setter Property="Padding" Value="2"/>
+  </Style>
 
-  <Style x:Key="{x:Type RepeatButton}" TargetType="{x:Type RepeatButton}"
-         BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ButtonStyleKey}}"/>-->
-
-  <Style x:Key="{x:Type Button}" TargetType="{x:Type Button}"
-         BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ButtonStyleKey}}">
+  <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ButtonStyleKey}}">
     <Setter Property="MinWidth" Value="73"/>
     <Setter Property="MinHeight" Value="21"/>
     <Setter Property="Margin" Value="1"/>
     <Setter Property="Padding" Value="15,0"/>
   </Style>
 
-  <Style TargetType="{x:Type CheckBox}"
-         BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.CheckBoxStyleKey}}"/>
+  <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.CheckBoxStyleKey}}"/>
 
-  <Style x:Key="{x:Type TextBox}" TargetType="{x:Type TextBox}"
-         BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.TextBoxStyleKey}}">
-    <Setter Property="Padding" Value="2"/>
+  <Style TargetType="{x:Type ComboBox}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ComboBoxStyleKey}}">
+    <Setter Property="MinHeight" Value="21"/>
+    <Setter Property="Margin" Value="1"/>
   </Style>
 
-  <Style TargetType="{x:Type Label}"
-         BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogLabelStyleKey}}"/>
+  <Style TargetType="{x:Type ProgressBar}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ProgressBarStyleKey}}"/>
+  <Style TargetType="{x:Type ScrollBar}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ScrollBarStyleKey}}"/>
+  <Style TargetType="{x:Type ScrollViewer}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ScrollViewerStyleKey}}"/>
+
+  <Style TargetType="{x:Type Label}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogLabelStyleKey}}"/>
+  <Style TargetType="{x:Type RadioButton}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogRadioButtonStyleKey}}"/>
+  <Style TargetType="{x:Type Hyperlink}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogHyperlinkStyleKey}}"/>
+  <Style TargetType="{x:Type TreeView}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogTreeViewStyleKey}}"/>
+  <Style TargetType="{x:Type TreeViewItem}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogTreeViewItemStyleKey}}"/>
 
   <!--<Style x:Key="{x:Type TextBox}" TargetType="{x:Type TextBox}">
     <Style.Setters>
@@ -417,15 +420,6 @@
       </Setter.Value>
     </Setter>
   </Style>
-
-  <Style TargetType="{x:Type ComboBox}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogComboBoxStyleKey}}"/>
-  <Style TargetType="{x:Type RadioButton}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogRadioButtonStyleKey}}"/>
-  <Style TargetType="{x:Type Hyperlink}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogHyperlinkStyleKey}}"/>
-  <Style TargetType="{x:Type TreeView}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogTreeViewStyleKey}}"/>
-  <Style TargetType="{x:Type TreeViewItem}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogTreeViewItemStyleKey}}"/>
-
-  <Style TargetType="{x:Type ScrollBar}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ScrollBarStyleKey}}"/>
-  <Style TargetType="{x:Type ScrollViewer}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ScrollViewerStyleKey}}"/>
 
   <Style TargetType="{x:Type etkc:ThemedDialogWindow}">
     <Setter Property="Background" Value="{DynamicResource {x:Static vsfx:VsBrushes.WindowKey}}"/>

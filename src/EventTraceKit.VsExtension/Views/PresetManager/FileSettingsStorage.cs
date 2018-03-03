@@ -106,16 +106,16 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
 
     public interface ITraceSettingsService
     {
-        IReadOnlyCollection<TraceSessionSettingsViewModel> Sessions { get; }
-        void Save(TraceSettingsViewModel sessions);
+        IReadOnlyCollection<TraceProfileViewModel> Profiles { get; }
+        void Save(TraceSettingsViewModel settings);
     }
 
     public sealed class TraceSettingsService : ITraceSettingsService
     {
         private readonly string fileName = "TraceSettings.xml";
         private readonly SettingsSerializer serializer = new SettingsSerializer();
-        private readonly List<TraceSessionSettingsViewModel> sessions =
-            new List<TraceSessionSettingsViewModel>();
+        private readonly List<TraceProfileViewModel> profiles =
+            new List<TraceProfileViewModel>();
 
         public TraceSettingsService(string rootDirectory)
         {
@@ -124,7 +124,7 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
 
         private string RootDirectory { get; }
 
-        public IReadOnlyCollection<TraceSessionSettingsViewModel> Sessions => sessions;
+        public IReadOnlyCollection<TraceProfileViewModel> Profiles => profiles;
 
         public void Load()
         {
@@ -132,7 +132,7 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
                 return;
             var settings = LoadFromLocalStorage();
             if (settings != null)
-                sessions.AddRange(settings.Sessions);
+                profiles.AddRange(settings.Profiles);
         }
 
         public void Save(TraceSettingsViewModel settings)
@@ -265,7 +265,7 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
 
         private ViewPresets Serialize(AdvmPresetCollection presetCollection)
         {
-            var shaper = new SerializationShaper<SettingsElement>();
+            var shaper = new SerializationMapper<SettingsElement>();
 
             if (!shaper.TrySerialize(presetCollection, out ViewPresets viewPresets))
                 return null;
@@ -275,7 +275,7 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
 
         private static AdvmPresetCollection Deserialize(ViewPresets viewPresets)
         {
-            var shaper = new SerializationShaper<SettingsElement>();
+            var shaper = new SerializationMapper<SettingsElement>();
 
             if (viewPresets != null && shaper.TryDeserialize(viewPresets, out AdvmPresetCollection presets)
                                     && presets != null)

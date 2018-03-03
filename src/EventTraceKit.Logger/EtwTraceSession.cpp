@@ -29,7 +29,7 @@ namespace
 
 using FilterPtr = std::unique_ptr<std::byte[]>;
 
-void AddProcessIdFilter(std::vector<EVENT_FILTER_DESCRIPTOR>& filters,
+void AddProcessIdFilter(SmallVectorBase<EVENT_FILTER_DESCRIPTOR>& filters,
                         ArrayRef<unsigned> processIds)
 {
     auto& descriptor = filters.emplace_back();
@@ -38,7 +38,7 @@ void AddProcessIdFilter(std::vector<EVENT_FILTER_DESCRIPTOR>& filters,
     descriptor.Type = EVENT_FILTER_TYPE_PID;
 }
 
-void AddExecutableNameFilter(std::vector<EVENT_FILTER_DESCRIPTOR>& filters,
+void AddExecutableNameFilter(SmallVectorBase<EVENT_FILTER_DESCRIPTOR>& filters,
                              std::wstring const& executableName)
 {
     auto& descriptor = filters.emplace_back();
@@ -54,7 +54,7 @@ size_t ComputeEventIdFilterSize(uint16_t eventCount)
            (sizeof(EVENT_FILTER_EVENT_ID::Events[0]) * extraCount);
 }
 
-void AddEventIdFilter(std::vector<EVENT_FILTER_DESCRIPTOR>& filters,
+void AddEventIdFilter(SmallVectorBase<EVENT_FILTER_DESCRIPTOR>& filters,
                       SmallVectorBase<FilterPtr>& buffers, ArrayRef<uint16_t> eventIds,
                       bool enable, ULONG type)
 {
@@ -73,14 +73,14 @@ void AddEventIdFilter(std::vector<EVENT_FILTER_DESCRIPTOR>& filters,
     descriptor.Type = type;
 }
 
-void AddEventFilter(std::vector<EVENT_FILTER_DESCRIPTOR>& filters,
+void AddEventFilter(SmallVectorBase<EVENT_FILTER_DESCRIPTOR>& filters,
                     SmallVectorBase<FilterPtr>& buffers, ArrayRef<uint16_t> eventIds,
                     bool enable)
 {
     AddEventIdFilter(filters, buffers, eventIds, enable, EVENT_FILTER_TYPE_EVENT_ID);
 }
 
-void AddStackWalkFilter(std::vector<EVENT_FILTER_DESCRIPTOR>& filters,
+void AddStackWalkFilter(SmallVectorBase<EVENT_FILTER_DESCRIPTOR>& filters,
                         SmallVectorBase<FilterPtr>& buffers, ArrayRef<uint16_t> eventIds,
                         bool enable)
 {
@@ -344,7 +344,7 @@ void EtwTraceSession::DisableAllProviders()
 HRESULT
 EtwTraceSession::StartEventProvider(TraceProviderDescriptor const& provider) const
 {
-    std::vector<EVENT_FILTER_DESCRIPTOR> filters;
+    SmallVector<EVENT_FILTER_DESCRIPTOR, 4> filters;
     SmallVector<std::unique_ptr<std::byte[]>, 3> buffers;
 
     if (!provider.ExecutableName.empty())

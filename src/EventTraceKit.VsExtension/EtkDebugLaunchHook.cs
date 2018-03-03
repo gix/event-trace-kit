@@ -54,7 +54,7 @@ namespace EventTraceKit.VsExtension
         private EventTraceKitPackage package;
         private IDiagLog log = new NullDiagLog();
         private IProjectProvider projectProvider;
-        private DefaultTraceSessionService sessionService;
+        private DefaultTraceController sessionService;
 
         private bool EnsureInitialized()
         {

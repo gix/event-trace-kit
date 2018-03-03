@@ -69,15 +69,19 @@ public:
     property System::Collections::Generic::List<System::String^>^ StartupProjects;
 };
 
-public ref class EventSessionDescriptor
+public ref class CollectorDescriptor abstract
+{
+};
+
+public ref class EventCollectorDescriptor : public CollectorDescriptor
 {
 public:
-    EventSessionDescriptor()
+    EventCollectorDescriptor()
     {
         providers = gcnew System::Collections::Generic::List<EventProviderDescriptor^>();
     }
 
-    EventSessionDescriptor(EventSessionDescriptor^ source)
+    EventCollectorDescriptor(EventCollectorDescriptor^ source)
     {
         if (!source)
             throw gcnew System::ArgumentNullException("source");
@@ -101,6 +105,34 @@ public:
 
 private:
     System::Collections::Generic::IList<EventProviderDescriptor^>^ providers;
+};
+
+public ref class TraceProfileDescriptor
+{
+public:
+    TraceProfileDescriptor()
+    {
+        collectors = gcnew System::Collections::Generic::List<CollectorDescriptor^>();
+    }
+
+    TraceProfileDescriptor(TraceProfileDescriptor^ source)
+    {
+        if (!source)
+            throw gcnew System::ArgumentNullException("source");
+
+        collectors = gcnew System::Collections::Generic::List<CollectorDescriptor^>(source->Collectors->Count);
+        for each (auto collector in source->Collectors) {
+            if (auto eventCollector = dynamic_cast<EventCollectorDescriptor^>(collector))
+                collectors->Add(gcnew EventCollectorDescriptor(eventCollector));
+        }
+    }
+
+    property System::Collections::Generic::IList<CollectorDescriptor^>^ Collectors {
+        System::Collections::Generic::IList<CollectorDescriptor^>^ get() { return collectors; }
+    }
+
+private:
+    System::Collections::Generic::IList<CollectorDescriptor^>^ collectors;
 };
 
 } // namespace EventTraceKit::Tracing

@@ -21,7 +21,7 @@ namespace EventTraceKit.VsExtension.Views
     {
         private readonly IGlobalSettings settings;
         private readonly IViewPresetService viewPresetService;
-        private readonly ITraceSessionService sessionService;
+        private readonly ITraceController traceController;
         private readonly ITraceSettingsService traceSettingsService;
         private readonly IVsUIShell uiShell;
 
@@ -29,7 +29,7 @@ namespace EventTraceKit.VsExtension.Views
         private readonly EventSymbolSource eventSymbolSource = new EventSymbolSource();
 
         private readonly DispatcherTimer updateStatsTimer;
-        protected EventSessionDescriptor sessionDescriptor = new EventSessionDescriptor();
+        protected TraceProfileDescriptor traceProfile = new TraceProfileDescriptor();
 
         public enum LoggerState
         {
@@ -48,7 +48,7 @@ namespace EventTraceKit.VsExtension.Views
         private string formattedBufferStatistics;
 
         private TraceLog traceLog;
-        private TraceSession session;
+        private EventSession session;
 
         private TraceSettingsViewModel settingsViewModel;
         private TraceLogFilter currentFilter;
@@ -56,22 +56,22 @@ namespace EventTraceKit.VsExtension.Views
 
         public TraceLogPaneViewModel(
             IGlobalSettings settings,
-            ITraceSessionService sessionService,
+            ITraceController traceController,
             IViewPresetService viewPresetService,
             ITraceSettingsService traceSettingsService,
             IVsUIShell uiShell = null)
         {
-            this.sessionService = sessionService ??
-                throw new ArgumentNullException(nameof(sessionService));
+            this.traceController = traceController ??
+                throw new ArgumentNullException(nameof(traceController));
 
             this.settings = settings;
             this.viewPresetService = viewPresetService;
             this.traceSettingsService = traceSettingsService;
             this.uiShell = uiShell;
 
-            sessionService.SessionStarting += OnSessionStarting;
-            sessionService.SessionStarted += OnSessionStarted;
-            sessionService.SessionStopped += OnSessionStopped;
+            traceController.SessionStarting += OnSessionStarting;
+            traceController.SessionStarted += OnSessionStarted;
+            traceController.SessionStopped += OnSessionStopped;
 
             AutoLog = settings.AutoLog;
             ShowStatusBar = settings.ShowStatusBar;
@@ -155,10 +155,10 @@ namespace EventTraceKit.VsExtension.Views
                     return;
 
                 if (AutoLog)
-                    sessionService.EnableAutoLog(
-                        new EventSessionDescriptor(sessionDescriptor));
+                    traceController.EnableAutoLog(
+                        new TraceProfileDescriptor(traceProfile));
                 else
-                    sessionService.DisableAutoLog();
+                    traceController.DisableAutoLog();
             }
         }
 
@@ -182,7 +182,11 @@ namespace EventTraceKit.VsExtension.Views
 
         private bool CanStartCapture()
         {
-            return sessionDescriptor != null && sessionDescriptor.Providers.Count > 0;
+            return
+                traceProfile != null &&
+                traceProfile.Collectors.Count == 1 &&
+                traceProfile.Collectors[0] is EventCollectorDescriptor collector &&
+                collector.Providers.Count > 0;
         }
 
         private async void ToggleCapture()
@@ -232,7 +236,7 @@ namespace EventTraceKit.VsExtension.Views
             RefreshFilter();
         }
 
-        private void OnSessionStarted(TraceSession newSession)
+        private void OnSessionStarted(EventSession newSession)
         {
             session = newSession;
             Status = null;
@@ -240,7 +244,7 @@ namespace EventTraceKit.VsExtension.Views
             updateStatsTimer.Start();
         }
 
-        private void OnSessionStopped(TraceSession _)
+        private void OnSessionStopped(EventSession _)
         {
             updateStatsTimer.Stop();
             UpdateStats();
@@ -260,9 +264,9 @@ namespace EventTraceKit.VsExtension.Views
 
             try {
                 ChangeState(LoggerState.Starting);
-                await sessionService.StartSessionAsync(sessionDescriptor);
+                await traceController.StartSessionAsync(traceProfile);
             } catch (Exception ex) {
-                await sessionService.StopSessionAsync();
+                await traceController.StopSessionAsync();
                 updateStatsTimer.Stop();
                 UpdateStats();
                 ChangeState(LoggerState.Stopped);
@@ -287,7 +291,7 @@ namespace EventTraceKit.VsExtension.Views
 
             try {
                 ChangeState(LoggerState.Stopping);
-                await sessionService.StopSessionAsync();
+                await traceController.StopSessionAsync();
             } catch (Exception ex) {
                 Status = ex.ToString();
             }
@@ -297,27 +301,29 @@ namespace EventTraceKit.VsExtension.Views
         {
             if (settingsViewModel == null) {
                 settingsViewModel = new TraceSettingsViewModel();
-                settingsViewModel.Sessions.AddRange(traceSettingsService.Sessions);
+                settingsViewModel.Profiles.AddRange(traceSettingsService.Profiles);
             }
 
             var window = new TraceSessionSettingsWindow();
             try {
                 window.DataContext = settingsViewModel;
-                settingsViewModel.Window = window;
+                settingsViewModel.Attach(window);
                 if (window.ShowModal() != true)
                     return;
             } finally {
-                var selectedPreset = settingsViewModel.ActiveSession;
-                settingsViewModel.Window = null;
+                var selectedPreset = settingsViewModel.ActiveProfile;
+                settingsViewModel.Detach();
                 window.DataContext = null;
-                settingsViewModel.ActiveSession = selectedPreset;
+                settingsViewModel.ActiveProfile = selectedPreset;
                 settingsViewModel.DialogResult = null;
             }
 
-            sessionDescriptor = settingsViewModel.GetDescriptor();
+            traceProfile = settingsViewModel.GetDescriptor();
             eventSymbolSource.Update(settingsViewModel.GetEventSymbols());
 
             traceSettingsService.Save(settingsViewModel);
+            if (AutoLog)
+                traceController.EnableAutoLog(traceProfile);
         }
 
         private void OpenViewEditor()

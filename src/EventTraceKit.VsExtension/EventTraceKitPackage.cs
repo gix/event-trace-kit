@@ -53,7 +53,7 @@ namespace EventTraceKit.VsExtension
         private ViewPresetService viewPresetService;
         private TraceSettingsService traceSettingsService;
 
-        private DefaultTraceSessionService sessionService;
+        private DefaultTraceController sessionService;
         private SolutionMonitor solutionMonitor;
         private IVsOutputWindow outputWindow;
 
@@ -64,7 +64,7 @@ namespace EventTraceKit.VsExtension
             AddOptionKey(EventTraceKitOptionKey);
         }
 
-        internal DefaultTraceSessionService SessionService => sessionService;
+        internal DefaultTraceController SessionService => sessionService;
 
         protected override async Task InitializeAsync(
             CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
@@ -98,17 +98,15 @@ namespace EventTraceKit.VsExtension
             string appDataDirectory = GetAppDataDirectory(shell);
             var storage = new FileSettingsStorage(appDataDirectory);
             viewPresetService = new ViewPresetService(storage);
-
-            viewPresetService.LoadFromStorage();
             viewPresetService.ExceptionFilter += OnExceptionFilter;
 
             traceSettingsService = new TraceSettingsService(appDataDirectory);
-            traceSettingsService.Load();
+            traceSettingsService.ExceptionFilter += OnExceptionFilter;
 
             traceLogPane = new Lazy<TraceLogToolWindow>(
                 () => new TraceLogToolWindow(TraceLogWindowFactory, TraceLogWindowClose));
 
-            sessionService = new DefaultTraceSessionService();
+            sessionService = new DefaultTraceController();
         }
 
         //private object CreateService(IServiceContainer container, Type service)
@@ -128,6 +126,9 @@ namespace EventTraceKit.VsExtension
 
         private TraceLogPaneContent TraceLogWindowFactory(IServiceProvider sp)
         {
+            viewPresetService.LoadFromStorage();
+            traceSettingsService.Load();
+
             var traceLog = new TraceLogPaneViewModel(
                 globalSettings,
                 sessionService,
@@ -157,9 +158,12 @@ namespace EventTraceKit.VsExtension
         private void OnExceptionFilter(
             object sender, ExceptionFilterEventArgs args)
         {
-            vsUiShell?.ShowMessageBox(
-                0, Guid.Empty, "Error", args.Message, null, 0, OLEMSGBUTTON.OLEMSGBUTTON_OK,
-                OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST, OLEMSGICON.OLEMSGICON_CRITICAL, 0, out int _);
+            //vsUiShell?.ShowMessageBox(
+            //    0, Guid.Empty, "Error", args.Message, null, 0, OLEMSGBUTTON.OLEMSGBUTTON_OK,
+            //    OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST, OLEMSGICON.OLEMSGICON_CRITICAL, 0, out int _);
+
+            vsUiShell.GetDialogOwnerHwnd(out var ownerWindow);
+            ErrorUtils.ReportException(new HandleRef(null, ownerWindow), args.Exception, args.Message);
         }
 
         private WritableSettingsStore CreateSettingsStore()

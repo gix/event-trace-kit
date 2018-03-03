@@ -98,7 +98,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ActionThrottler.cs" />
-    <Compile Include="DefaultTraceSessionService.cs" />
+    <Compile Include="DefaultTraceController.cs" />
     <Compile Include="EtkDebugLaunchHook.cs" />
     <Compile Include="EventSymbolSource.cs" />
     <Compile Include="AsyncDelegateCommand.cs" />
@@ -128,10 +128,16 @@
     <Compile Include="Extensions\VsSdkExtensions.cs" />
     <Compile Include="Extensions\Extensions.cs" />
     <Compile Include="Extensions\XElementExtensions.cs" />
-    <Compile Include="IDialogService.cs" />
     <Compile Include="PortableExecutableUtils.cs" />
     <Compile Include="ProvideDebuggerLaunchHookAttribute.cs" />
     <Compile Include="Extensions\StreamExtensions.cs" />
+    <Compile Include="Views\AcqRelObservableCollection.cs" />
+    <Compile Include="Views\CollectorViewModel.cs" />
+    <Compile Include="Views\CommandBridge.cs" />
+    <Compile Include="Views\ErrorUtils.cs" />
+    <Compile Include="Views\EventCollectorViewModel.cs" />
+    <Compile Include="Views\ExtensionCommands.cs" />
+    <Compile Include="FileCache.cs" />
     <Compile Include="Views\FilterDialog.xaml.cs">
       <DependentUpon>FilterDialog.xaml</DependentUpon>
     </Compile>
@@ -195,7 +201,7 @@
     <Compile Include="Serialization\EnumUtils.cs" />
     <Compile Include="Serialization\IXamlSerializer.cs" />
     <Compile Include="Serialization\SafeXamlSerializer.cs" />
-    <Compile Include="Serialization\SerializationShaper.cs" />
+    <Compile Include="Serialization\SerializationMapper.cs" />
     <Compile Include="Serialization\SerializableElementHelperOld.cs" />
     <Compile Include="Serialization\SerializeAttribute.cs" />
     <Compile Include="Serialization\SerializedShapeAttribute.cs" />
@@ -308,10 +314,10 @@
     <Compile Include="Views\TraceLogPaneContent.xaml.cs">
       <DependentUpon>TraceLogPaneContent.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\TraceSessionSettingsWindow.xaml.cs">
-      <DependentUpon>TraceSessionSettingsWindow.xaml</DependentUpon>
+    <Compile Include="Views\EventSessionSettingsDialog.xaml.cs">
+      <DependentUpon>EventSessionSettingsDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\TraceSessionSettingsViewModel.cs" />
+    <Compile Include="Views\TraceProfileViewModel.cs" />
     <Compile Include="ViewModel.cs" />
     <Compile Include="Windows\ValueConverter.cs" />
   </ItemGroup>
@@ -412,7 +418,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Views\TraceSessionSettingsWindow.xaml">
+    <Page Include="Views\EventSessionSettingsDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -447,6 +453,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\EventManifestFramework\EventManifestFramework.csproj">
+      <Project>{7595ad97-5122-4569-a087-910fbbcb2ddc}</Project>
+      <Name>EventManifestFramework</Name>
+    </ProjectReference>
     <ProjectReference Include="..\EventTraceKit.Logger\EventTraceKit.Logger.vcxproj">
       <Project>{3EDE8E61-F8E3-4645-A940-337F91A9DF65}</Project>
       <Name>EventTraceKit.Logger</Name>
@@ -460,6 +470,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="AutoMapper">
+      <Version>6.2.2</Version>
+    </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.ImageCatalog">
       <Version>14.3.25407</Version>
     </PackageReference>
@@ -488,7 +501,7 @@
       <Version>15.5.100</Version>
     </PackageReference>
     <PackageReference Include="WinApi.Core">
-      <Version>0.1.0-ci-62626-01</Version>
+      <Version>0.1.0-ci-62701-02</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
@@ -499,6 +512,7 @@
   <Target Name="IncludeNuGetResolvedAssets" DependsOnTargets="ResolveNuGetPackageAssets">
     <ItemGroup>
       <VSIXCopyLocalReferenceSourceItem Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.NuGetPackageId)' == 'WinApi.Core'" />
+      <VSIXCopyLocalReferenceSourceItem Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.NuGetPackageId)' == 'AutoMapper'" />
     </ItemGroup>
   </Target>
   <Target Name="IncludeCustomVsixSourceItems">

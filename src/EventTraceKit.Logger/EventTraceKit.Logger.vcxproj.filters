@@ -12,12 +12,12 @@
     <ClCompile Include="EtwTraceLog.cpp" />
     <ClCompile Include="TdhMessageFormatter.cpp" />
     <ClCompile Include="EventTraceKit\IMessageFormatter.h" />
-    <ClCompile Include="EventTraceKit\TraceSession.cpp" />
     <ClCompile Include="EventTraceKit\NativeTdhFormatter.cpp" />
     <ClCompile Include="EventTraceKit\ParseTdhContext.cpp" />
     <ClCompile Include="EventTraceKit\TraceLog.cpp" />
     <ClCompile Include="EventTraceKit\WatchDog.cpp" />
     <ClCompile Include="EventTraceKit\ManifestInfo.cpp" />
+    <ClCompile Include="EventTraceKit\EventSession.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EtwTraceProcessor.h" />
