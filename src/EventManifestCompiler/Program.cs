@@ -106,6 +106,8 @@ namespace EventManifestCompiler
             opts.AlwaysInlineAttribute = args.GetLastArgValue(Opt.Galways_inline_attr_eq, opts.AlwaysInlineAttribute);
             opts.NoInlineAttribute = args.GetLastArgValue(Opt.Gnoinline_attr_eq, opts.NoInlineAttribute);
 
+            opts.CompatibilityLevel = args.GetLastArgValue(Opt.Gcompat_eq, "10.0");
+
             opts.InferUnspecifiedOutputFiles();
 
             return success;

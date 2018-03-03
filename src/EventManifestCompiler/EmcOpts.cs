@@ -1,5 +1,6 @@
 namespace EventManifestCompiler
 {
+    using System;
     using System.Collections.Generic;
     using System.ComponentModel.Composition;
     using System.IO;
@@ -60,6 +61,8 @@ namespace EventManifestCompiler
         public bool GenerateStubs { get; set; }
         public string AlwaysInlineAttribute { get; set; }
         public string NoInlineAttribute { get; set; }
+
+        public string CompatibilityLevel { get; set; }
 
         public void InferUnspecifiedOutputFiles(string baseName = null)
         {

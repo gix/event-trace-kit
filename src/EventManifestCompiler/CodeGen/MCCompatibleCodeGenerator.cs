@@ -893,6 +893,8 @@ namespace EventManifestCompiler.CodeGen
             string code = @"
 #if !defined(McGenEventRegisterUnregister)
 #define McGenEventRegisterUnregister
+#pragma warning(push)
+#pragma warning(disable:6103)
 DECLSPEC_NOINLINE __inline
 ULONG __stdcall
 McGenEventRegister(
@@ -936,6 +938,7 @@ Remarks:
 
     return Error;
 }
+#pragma warning(pop)
 
 
 DECLSPEC_NOINLINE __inline

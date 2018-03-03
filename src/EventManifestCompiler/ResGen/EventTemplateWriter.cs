@@ -5,6 +5,7 @@ namespace EventManifestCompiler.ResGen
     using System.IO;
     using System.Linq;
     using System.Runtime.InteropServices;
+    using System.Security.Cryptography;
     using System.Text;
     using System.Xml;
     using System.Xml.Linq;
@@ -25,6 +26,8 @@ namespace EventManifestCompiler.ResGen
             nsmgr.AddNamespace("win", WinEventSchema.Namespace.NamespaceName);
             writer = new MemoryMappedViewWriter(output);
         }
+
+        public bool UseLegacyTemplateIds { get; set; }
 
         public void Dispose()
         {
@@ -583,20 +586,49 @@ namespace EventManifestCompiler.ResGen
             writer.WriteResource(ref startPos, ref b);
         }
 
-        private static Guid CreateTemplateId(XDocument doc, byte[] types)
+        private Guid CreateTemplateId(XDocument doc, byte[] types)
+        {
+            if (UseLegacyTemplateIds)
+                return CreateMd5TemplateId(doc, types);
+            return CreateSha256TemplateId(doc, types);
+        }
+
+        private static Guid CreateMd5TemplateId(XDocument doc, byte[] types)
         {
             string templateXml = doc.ToString(SaveOptions.DisableFormatting);
             var xmlBytes = Encoding.Unicode.GetBytes(templateXml);
             var typeBytes = new byte[types.Length * 4];
             for (int i = 0; i < types.Length; ++i)
-                Support.BitConverterEx.FromUInt32(types[i], typeBytes, i * 4);
+                BitConverterEx.FromUInt32(types[i], typeBytes, i * 4);
 
-            var md5 = new Support.MD5Managed();
+            var md5 = new MD5Managed();
             md5.TransformFinalBlock(xmlBytes, 0, xmlBytes.Length);
             md5.Initialize(md5.Hash);
             md5.TransformFinalBlock(typeBytes, 0, typeBytes.Length);
-
             return new Guid(md5.Hash);
+        }
+
+        private static Guid CreateSha256TemplateId(XDocument doc, byte[] types)
+        {
+            var templateXml = doc.ToString(SaveOptions.DisableFormatting);
+            var xmlBytes = Encoding.Unicode.GetBytes(templateXml);
+
+            var magic = Encoding.ASCII.GetBytes("MS-WEVT\0");
+            var bytes = new byte[xmlBytes.Length + (types.Length * 4)];
+            Buffer.BlockCopy(xmlBytes, 0, bytes, 0, xmlBytes.Length);
+            for (int i = 0; i < types.Length; ++i)
+                BitConverterEx.FromUInt32(types[i], bytes, xmlBytes.Length + i * 4);
+
+            var sha = SHA256.Create();
+            sha.TransformBlock(magic, 0, magic.Length, null, 0);
+            sha.TransformFinalBlock(bytes, 0, bytes.Length);
+
+            var finalHash = new byte[16];
+            Buffer.BlockCopy(sha.Hash, 0, finalHash, 0, finalHash.Length);
+            finalHash[7] &= 0xF;
+            finalHash[7] |= 0x50;
+
+            return new Guid(finalHash);
         }
 
         private XDocument CreateXmlTemplate(Template template)

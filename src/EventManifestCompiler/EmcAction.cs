@@ -109,8 +109,11 @@ namespace EventManifestCompiler
                 return;
 
             using (output)
-            using (var writer = new EventTemplateWriter(output))
+            using (var writer = new EventTemplateWriter(output)) {
+                if (opts.CompatibilityLevel == "8.1")
+                    writer.UseLegacyTemplateIds = true;
                 writer.Write(manifest.Providers);
+            }
         }
 
         private void WriteCode(EventManifest manifest)

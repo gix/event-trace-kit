@@ -48,6 +48,7 @@ namespace EventManifestCompiler
         Gno_stubs,
         Glog_ns_eq,
         Getw_ns_eq,
+        Gcompat_eq
     }
 
     internal sealed class EmcOptTable : OptTable
@@ -99,6 +100,7 @@ namespace EventManifestCompiler
                 .AddFlag(Opt.Gno_stubs, "-", "Gno-stubs", groupId: Opt.G_group)
                 .AddJoined(Opt.Galways_inline_attr_eq, "-", "Galways-inline-attr=", "String used to mark always-inline functions", groupId: Opt.G_group)
                 .AddJoined(Opt.Gnoinline_attr_eq, "-", "Gnoinline-attr=", "String used to mark no-inline functions", groupId: Opt.G_group)
+                .AddJoined(Opt.Gcompat_eq, "-", "Gcompat=", "Binary compatibility with specified mc.exe version (Supported values: 8.1)", groupId: Opt.G_group, metaVar: "<version>")
                 .GetList();
         }
     }
