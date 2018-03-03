@@ -1,0 +1,202 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Rule xmlns="http://schemas.microsoft.com/build/2009/properties"
+      Name="Emc"
+      PageTemplate="tool"
+      DisplayName="Event Manifest Compiler"
+      Order="170">
+  <Rule.Categories>
+    <Category Name="General" DisplayName="General"/>
+    <Category Name="ResGen" DisplayName="Resource Generation"/>
+    <Category Name="CodeGen" DisplayName="Code Generation"/>
+    <Category Name="All Options" DisplayName="All Options" Subtype="Search"/>
+    <Category Name="Command Line" DisplayName="Command Line" Subtype="CommandLine"/>
+  </Rule.Categories>
+  <Rule.DataSource>
+    <DataSource ItemType="EventManifestCompile" Persistence="ProjectFile"/>
+  </Rule.DataSource>
+
+  <!-- General properties -->
+  <StringProperty
+    Category="General"
+    Name="OutputBaseName"
+    DisplayName="Generated Files Base Name"
+    Description="Specifies the default base name of all generated files. If unspecified, the base name is inferred from the input file name."
+    IsRequired="false"
+    SwitchPrefix="-"
+    Switch="out"
+    Separator="="/>
+  <StringProperty
+    Category="General"
+    Name="WinmetaPath"
+    DisplayName="Winmeta Path"
+    Description="Specifies the path to winmeta.xml."
+    IsRequired="false"
+    SwitchPrefix="-"
+    Switch="winmeta"
+    Separator="="/>
+  <StringProperty
+    Category="General"
+    Name="EventmanPath"
+    DisplayName="Eventman Schema Path"
+    Description="Specifies the path to the event manifest schema (eventman.xsd)."
+    IsRequired="false"
+    SwitchPrefix="-"
+    Switch="schema"
+    Separator="="/>
+
+  <!-- Resource properties -->
+  <BoolProperty
+    Category="ResGen"
+    Name="GenerateResources"
+    DisplayName="Generate resources"
+    Description="Specifies whether resources are generated. These include the ETW template, associated message tables and a resource include file."
+    SwitchPrefix="-"
+    Switch="res"
+    ReverseSwitch="no-res"/>
+  <StringProperty
+    Category="ResGen"
+    Name="MessageTableFile"
+    DisplayName="Message Table File Name"
+    Description="Specifies the path for generated message table files. The culture of the contained messages is automatically added to the file name."
+    IsRequired="false"
+    Subtype="file"
+    SwitchPrefix="-"
+    Switch="msg-file"
+    Separator="="/>
+  <StringProperty
+    Category="ResGen"
+    Name="EventTemplateFile"
+    DisplayName="Event Template File Name"
+    Description="Specifies the path to the generated ETW binary template."
+    IsRequired="false"
+    Subtype="file"
+    SwitchPrefix="-"
+    Switch="etwbin-file"
+    Separator="="/>
+  <StringProperty
+    Category="ResGen"
+    Name="ResourceFile"
+    DisplayName="Resource File Name"
+    Description="Specifies the path to the generated resource include file."
+    IsRequired="false"
+    Subtype="file"
+    SwitchPrefix="-"
+    Switch="rc-file"
+    Separator="="/>
+
+  <!-- CodeGen properties -->
+  <BoolProperty
+    Category="CodeGen"
+    Name="GenerateCode"
+    DisplayName="Generate code"
+    Description="Specifies whether logging code is generated."
+    SwitchPrefix="-"
+    Switch="code"
+    ReverseSwitch="no-code"/>
+  <StringProperty
+    Category="CodeGen"
+    Name="HeaderFile"
+    DisplayName="Header File Name"
+    Description="Specifies the path to the generated header file."
+    IsRequired="false"
+    Subtype="file"
+    SwitchPrefix="-"
+    Switch="header-file"
+    Separator="="/>
+  <StringProperty
+    Category="CodeGen"
+    Name="CodeGenerator"
+    DisplayName="Code Generator"
+    Description="Which code generator should be used (e.g. 'cxx', 'mc')."
+    IsRequired="false"
+    SwitchPrefix="-"
+    Switch="Ggenerator"
+    Separator="="/>
+  <StringProperty
+    Category="CodeGen"
+    Name="LogNamespace"
+    DisplayName="Log Namespace"
+    Description="Namespace where generated code is placed. Use '.' as separator (e.g. Company.Product.Tracing)."
+    IsRequired="false"
+    SwitchPrefix="-"
+    Switch="Gnamespace"
+    Separator="="/>
+  <StringProperty
+    Category="CodeGen"
+    Name="EtwNamespace"
+    DisplayName="ETW Namespace"
+    Description="Namespace where common ETW code is placed. Use '.' as separator (e.g. Company.Product.ETW)."
+    IsRequired="false"
+    SwitchPrefix="-"
+    Switch="Getw-namespace"
+    Separator="="/>
+  <StringProperty
+    Category="CodeGen"
+    Name="LogCallPrefix"
+    DisplayName="Log call prefix"
+    Description=""
+    IsRequired="false"
+    SwitchPrefix="-"
+    Switch="Glog-prefix"
+    Separator="="
+    Default="EventWrite"/>
+  <BoolProperty
+    Category="CodeGen"
+    Name="UseCustomEnabledChecks"
+    DisplayName="Use custom enabled checks"
+    Description="Specifies whether custom checks are used to check if events are enabled."
+    SwitchPrefix="-"
+    Switch="Gcustom-checks"
+    ReverseSwitch="Gno-custom-checks"/>
+  <BoolProperty
+    Category="CodeGen"
+    Name="SkipDefines"
+    DisplayName="Skip definitions"
+    Description="Skip code definitions for non-essential resources."
+    SwitchPrefix="-"
+    Switch="Gskip-defines"
+    ReverseSwitch="Gno-skip-defines"/>
+  <BoolProperty
+    Category="CodeGen"
+    Name="GenerateStubs"
+    DisplayName="Generate stubs"
+    Description="Generate logging functions as stubs."
+    SwitchPrefix="-"
+    Switch="Gstubs"
+    ReverseSwitch="Gno-stubs"/>
+  <StringProperty
+    Category="CodeGen"
+    Name="AlwaysInlineAttribute"
+    DisplayName="always-inline Attribute"
+    Description="String used to mark always-inline functions, usually a macro name (e.g. FOO_ALWAYS_INLINE)."
+    IsRequired="false"
+    SwitchPrefix="-"
+    Switch="Galways-inline-attr"
+    Separator="="/>
+  <StringProperty
+    Category="CodeGen"
+    Name="NoinlineAttribute"
+    DisplayName="noinline Attribute"
+    Description="String used to mark noinline functions, usually a macro name (e.g. FOO_NOINLINE)."
+    IsRequired="false"
+    SwitchPrefix="-"
+    Switch="Gnoinline-attr"
+    Separator="="/>
+
+  <!-- Additional Options -->
+  <StringProperty
+    Category="Command Line"
+    Name="AdditionalOptions"
+    DisplayName="Additional Options"
+    Description="Additional Options"
+    F1Keyword="vc.project.AdditionalOptionsPage"/>
+
+  <StringProperty
+    Category="Output"
+    Subtype="folder"
+    Name="TrackerLogDirectory"
+    DisplayName="Tracker Log Directory"
+    Description="Tracker Log Directory."
+    IncludeInCommandLine="false"
+    Visible="false"/>
+</Rule>

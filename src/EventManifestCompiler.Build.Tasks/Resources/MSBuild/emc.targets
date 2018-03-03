@@ -1,0 +1,77 @@
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <EmcBuildTasksPath>$(MSBuildThisFileDirectory)EventManifestCompiler.Build.Tasks.dll</EmcBuildTasksPath>
+    <EmcToolPath>$(MSBuildThisFileDirectory)emc.exe</EmcToolPath>
+  </PropertyGroup>
+
+  <UsingTask TaskName="EventManifestCompiler.Build.Tasks.Emc" AssemblyFile="$(EmcBuildTasksPath)"/>
+  <UsingTask TaskName="EventManifestCompiler.Build.Tasks.InprocEmc" AssemblyFile="$(EmcBuildTasksPath)"/>
+
+  <!-- Property pages -->
+  <ItemGroup Condition="'$(UseDefaultPropertyPageSchemas)' != 'false'">
+    <!-- Property pages that always apply -->
+    <PropertyPageSchema Include="$(MSBuildThisFileDirectory)$(LangID)\ProjectItemsSchema.xml"/>
+
+    <PropertyPageSchema
+        Condition="'$(ConfigurationType)' != 'Utility'"
+        Include="$(MSBuildThisFileDirectory)$(LangID)\emc.xml"/>
+
+    <AvailableItemName Include="EventManifestCompile">
+      <Targets>EventManifestCompile</Targets>
+    </AvailableItemName>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(UseDefaultProjectTools)' != 'false'">
+    <ProjectTools Include="EventManifestCompile"/>
+  </ItemGroup>
+
+  <!-- Selective Build: Remove unselected build items from the project. -->
+  <Target Name="SelectEventManifestCompile" DependsOnTargets="_SelectedFiles;SelectCustomBuild">
+    <ItemGroup Condition="'@(SelectedFiles)'!=''">
+      <EventManifestCompile Remove="@(EventManifestCompile)" Condition="'%(Identity)'!='@(SelectedFiles)'"/>
+      <EventManifestCompile>
+        <MinimalRebuildFromTracking>false</MinimalRebuildFromTracking>
+      </EventManifestCompile>
+    </ItemGroup>
+  </Target>
+
+  <!-- EventManifestCompile -->
+  <Target
+      Name             = "EventManifestCompile"
+      Condition        = "'@(EventManifestCompile)' != ''"
+      BeforeTargets    = "BeforeClCompile"
+      DependsOnTargets = "SelectEventManifestCompile">
+    <ItemGroup>
+      <EventManifestCompile>
+        <MinimalRebuildFromTracking Condition="'$(BuildType)' != 'Build' or '$(ForceRebuild)' == 'true'">false</MinimalRebuildFromTracking>
+      </EventManifestCompile>
+    </ItemGroup>
+
+    <Emc Condition="'%(EventManifestCompile.ExcludedFromBuild)' != 'true'"
+        EmcToolPath                = "$(EmcToolPath)"
+        Source                     = "%(Identity)"
+        OutputBaseName             = "%(EventManifestCompile.OutputBaseName)"
+
+        GenerateResources          = "%(EventManifestCompile.GenerateResources)"
+        MessageTableFile           = "%(EventManifestCompile.MessageTableFile)"
+        EventTemplateFile          = "%(EventManifestCompile.EventTemplateFile)"
+
+        GenerateCode               = "%(EventManifestCompile.GenerateCode)"
+        HeaderFile                 = "%(EventManifestCompile.HeaderFile)"
+        SourceFile                 = "%(EventManifestCompile.SourceFile)"
+        CodeGenerator              = "%(EventManifestCompile.CodeGenerator)"
+        LogNamespace               = "%(EventManifestCompile.LogNamespace)"
+        EtwNamespace               = "%(EventManifestCompile.EtwNamespace)"
+        LogCallPrefix              = "%(EventManifestCompile.LogCallPrefix)"
+        UseCustomEnabledChecks     = "%(EventManifestCompile.UseCustomEnabledChecks)"
+        SkipDefines                = "%(EventManifestCompile.SkipDefines)"
+        GenerateStubs              = "%(EventManifestCompile.GenerateStubs)"
+        AlwaysInlineAttribute      = "%(EventManifestCompile.AlwaysInlineAttribute)"
+        NoinlineAttribute          = "%(EventManifestCompile.NoinlineAttribute)"
+
+        TrackerLogDirectory        = "%(EventManifestCompile.TrackerLogDirectory)"
+        TrackFileAccess            = "$(TrackFileAccess)"
+        MinimalRebuildFromTracking = "%(EventManifestCompile.MinimalRebuildFromTracking)"
+    />
+  </Target>
+</Project>
