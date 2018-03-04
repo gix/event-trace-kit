@@ -1354,7 +1354,11 @@ namespace EventManifestFramework
                 if (meta == null)
                     return null;
 
-                var imported = new Opcode(meta.Name, meta.Value, meta.Symbol, meta.Message);
+                var imported = new Opcode(
+                    meta.Name,
+                    meta.Value,
+                    meta.Symbol,
+                    ImportString(meta.Message));
                 imported.Imported = true;
                 provider.Opcodes.Add(imported);
 
