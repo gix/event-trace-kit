@@ -422,16 +422,16 @@ namespace EventManifestCompiler.ResGen
             long propOffset = writer.Position;
             long nameOffset = writer.Position + (totalPropertyCount * Marshal.SizeOf<PropertyEntry>());
 
-            int propIndex = properties.Count;
-            foreach (var property in properties) {
-                WriteProperty(property, ref nameOffset, propIndex);
-                if (property.Kind == PropertyKind.Struct)
-                    propIndex += ((StructProperty)property).Properties.Count;
-            }
-            foreach (var property in properties) {
-                if (property.Kind == PropertyKind.Struct)
-                    foreach (var prop in ((StructProperty)property).Properties)
-                        WriteProperty(prop, ref nameOffset);
+            int structStartIndex = properties.Count;
+            foreach (var property in properties)
+                WriteProperty(property, ref nameOffset, ref structStartIndex);
+
+            int indexRefOffset = properties.Count;
+            foreach (var property in properties.OfType<StructProperty>()) {
+                int dummy = 0;
+                foreach (var prop in property.Properties)
+                    WriteProperty(prop, ref nameOffset, ref dummy, indexRefOffset);
+                indexRefOffset += property.Properties.Count;
             }
 
             writer.Position = nameOffset;
@@ -461,23 +461,25 @@ namespace EventManifestCompiler.ResGen
             }
         }
 
-        private void WriteProperty(Property property, ref long nameOffset, int propIndex = 0)
+        private void WriteProperty(
+            Property property, ref long nameOffset, ref int structStartIndex, int indexRefOffset = 0)
         {
             PropertyFlags flags = property.GetFlags();
 
             ushort count = property.Count.Value.GetValueOrDefault();
             ushort length = property.Length.Value.GetValueOrDefault();
             if (property.Count.IsVariable)
-                count = (ushort)property.Count.DataPropertyIndex;
+                count = (ushort)(property.Count.DataPropertyIndex + indexRefOffset);
             if (property.Length.IsVariable)
-                length = (ushort)property.Length.DataPropertyIndex;
+                length = (ushort)(property.Length.DataPropertyIndex + indexRefOffset);
 
             var p = new PropertyEntry();
             p.Flags = (uint)flags;
             if (property.Kind == PropertyKind.Struct) {
                 var sp = (StructProperty)property;
-                p.structType.StructStartIndex = (ushort)propIndex;
+                p.structType.StructStartIndex = (ushort)structStartIndex;
                 p.structType.NumStructMembers = (ushort)sp.Properties.Count;
+                structStartIndex += sp.Properties.Count;
             } else {
                 var dp = (DataProperty)property;
                 p.nonStructType.InputType = (byte)dp.InType.Value;
@@ -871,7 +873,7 @@ namespace EventManifestCompiler.ResGen
         }
 
         [StructLayout(LayoutKind.Explicit)]
-        private struct PropertyEntry
+        internal struct PropertyEntry
         {
             [StructLayout(LayoutKind.Sequential)]
             public struct NonStructType

@@ -5,6 +5,7 @@ namespace EventManifestCompiler.ResGen
     using System.Globalization;
     using System.IO;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Text;
     using System.Xml;
     using System.Xml.Linq;
@@ -634,24 +635,13 @@ namespace EventManifestCompiler.ResGen
             LogMessage(doc);
             LogMessage("Template({0}-{1}, {2}, Flags={3})", paramCount, dataCount, guid, flags);
 
-            var structRanges = new List<Tuple<StructProperty, ushort, ushort>>();
-            for (uint i = 0; i < paramCount; ++i)
-                template.Properties.Add(ReadProperty(r, structRanges, true));
-
-            ResolvePropertyRefs(template.Properties);
-
-            var structProperties = new List<Property>();
-            for (uint i = paramCount; i < dataCount; ++i)
-                structProperties.Add(ReadProperty(r, structRanges, false));
-
-            ResolvePropertyRefs(structProperties);
-
-            foreach (var range in structRanges) {
-                var @struct = range.Item1;
-                int firstIdx = range.Item2;
-                int count = range.Item3;
-                @struct.Properties.AddRange(structProperties.Skip(firstIdx).Take(count));
+            long structPropertyOffset = propertyOffset + paramCount * Marshal.SizeOf<EventTemplateWriter.PropertyEntry>();
+            for (uint i = 0; i < paramCount; ++i) {
+                r.BaseStream.Position = propertyOffset + i * Marshal.SizeOf<EventTemplateWriter.PropertyEntry>();
+                template.Properties.Add(ReadProperty(r, ref structPropertyOffset, true));
             }
+
+            ResolvePropertyRefs(in guid, template.Properties);
 
             r.BaseStream.Position = offset + length;
 
@@ -659,25 +649,38 @@ namespace EventManifestCompiler.ResGen
             return template;
         }
 
-        private void ResolvePropertyRefs(IReadOnlyList<Property> properties)
+        private void ResolvePropertyRefs(
+            in Guid templateId, IReadOnlyList<Property> properties)
         {
             foreach (var property in properties) {
-                ResolvePropertyRef(property.Length, properties);
-                ResolvePropertyRef(property.Count, properties);
+                ResolvePropertyRef(in templateId, property, property.Length, properties);
+                ResolvePropertyRef(in templateId, property, property.Count, properties);
+
+                if (property.Kind == PropertyKind.Struct)
+                    ResolvePropertyRefs(in templateId, ((StructProperty)property).Properties);
             }
         }
 
-        private void ResolvePropertyRef(IPropertyNumber number, IReadOnlyList<Property> properties)
+        private void ResolvePropertyRef(
+            in Guid templateId, Property property, IPropertyNumber number,
+            IReadOnlyList<Property> properties)
         {
             if (number.DataPropertyIndex == -1)
                 return;
 
             int index = number.DataPropertyIndex;
-            if (index < 0 || index >= properties.Count || !(properties[index] is DataProperty)) {
+            if (index < 0 || index >= properties.Count) {
                 diags.Report(
                     DiagnosticSeverity.Warning,
-                    "Property references invalid property {0}. Template has only {1} properties.",
-                    number.DataPropertyIndex, properties.Count);
+                    "Property {0}:{1} ({2}) references invalid property {3}. Template has only {4} properties.",
+                    templateId, property.Index, property.Name, number.DataPropertyIndex, properties.Count);
+                return;
+            }
+            if (!(properties[index] is DataProperty)) {
+                diags.Report(
+                    DiagnosticSeverity.Warning,
+                    "Property {0}:{1} ({2}) references invalid property {3}. Property is not a data property.",
+                    templateId, property.Index, property.Name, number.DataPropertyIndex);
                 return;
             }
 
@@ -686,7 +689,7 @@ namespace EventManifestCompiler.ResGen
         }
 
         private Property ReadProperty(
-            BinaryReader r, List<Tuple<StructProperty, ushort, ushort>> structRanges, bool print)
+            BinaryReader r, ref long structPropertyOffset, bool isNested)
         {
             var flags = (PropertyFlags)r.ReadUInt32();
             if ((flags & PropertyFlags.Struct) != 0) {
@@ -699,30 +702,34 @@ namespace EventManifestCompiler.ResGen
                 uint nameOffset = r.ReadUInt32();
                 string name = ReadStringAt(r, nameOffset).TrimEnd('\0');
 
-                if (print) {
-                    LogMessage(
-                        "  Struct({0}, flags={6} (0x{6:X}), props={1}@{2}, count={3}, length={4}, map=0x{5:X})",
-                        name,
-                        propertyCount,
-                        firstPropertyIndex,
-                        count,
-                        length,
-                        mapOffset,
-                        flags);
-                }
+                LogMessage(
+                    "  Struct({0}, flags={6} (0x{6:X}), props={1}@{2}, count={3}, length={4}, map=0x{5:X})",
+                    name,
+                    propertyCount,
+                    firstPropertyIndex,
+                    count,
+                    length,
+                    mapOffset,
+                    flags);
 
                 var property = new StructProperty(name);
-                structRanges.Add(Tuple.Create(property, firstPropertyIndex, propertyCount));
+                //structRanges.Add(Tuple.Create(property, firstPropertyIndex, propertyCount));
 
                 if ((flags & PropertyFlags.VarLength) != 0)
                     property.Length.SetVariable(refPropertyIndex: length);
                 if ((flags & PropertyFlags.VarCount) != 0)
-                    property.Count.SetVariable(refPropertyIndex: length);
+                    property.Count.SetVariable(refPropertyIndex: count);
 
                 if ((flags & PropertyFlags.FixedLength) != 0)
                     property.Length.SetFixed(length);
                 if ((flags & PropertyFlags.FixedCount) != 0)
-                    property.Count.SetFixed(length);
+                    property.Count.SetFixed(count);
+
+                r.BaseStream.Position = structPropertyOffset;
+                long dummy = -1;
+                for (int i = 0; i < propertyCount; ++i)
+                    property.Properties.Add(ReadProperty(r, ref dummy, true));
+                structPropertyOffset = r.BaseStream.Position;
 
                 return property;
             } else {
@@ -736,17 +743,16 @@ namespace EventManifestCompiler.ResGen
                 uint nameOffset = r.ReadUInt32();
                 string name = ReadStringAt(r, nameOffset).TrimEnd('\0');
 
-                if (print) {
-                    LogMessage(
-                        "  Data({0}, flags={6} (0x{6:X}), in={1:D} ({1}), out={2:D} ({2}), count={3}, length={4}, map=0x{5:X})",
-                        name,
-                        (InTypeKind)inputType,
-                        (OutTypeKind)outputType,
-                        count,
-                        length,
-                        mapOffset,
-                        flags);
-                }
+                LogMessage(
+                    "{7}  Data({0}, flags={6} (0x{6:X}), in={1:D} ({1}), out={2:D} ({2}), count={3}, length={4}, map=0x{5:X})",
+                    name,
+                    (InTypeKind)inputType,
+                    (OutTypeKind)outputType,
+                    count,
+                    length,
+                    mapOffset,
+                    flags,
+                    isNested ? "  " : "");
 
                 DataProperty property;
                 if (metadata != null) {
