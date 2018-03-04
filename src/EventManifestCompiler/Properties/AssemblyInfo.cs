@@ -1,8 +1,5 @@
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-
-[assembly: AssemblyDescription("Event Manifest Compiler")]
 
 [assembly: ComVisible(false)]
 [assembly: Guid("17BCCEF0-8967-4E09-9959-30BAE17884E3")]
