@@ -8,7 +8,7 @@ namespace EventManifestCompiler.Support
 
     internal sealed class MemoryMappedViewWriter : IDisposable
     {
-        private readonly Stream output;
+        private readonly FileStream output;
 
         private MemoryMappedFile mappedFile;
         private MemoryMappedViewAccessor accessor;
@@ -16,7 +16,7 @@ namespace EventManifestCompiler.Support
         private long capacity;
         private long position;
 
-        public MemoryMappedViewWriter(Stream output, long initialCapacity = 0x10000)
+        public MemoryMappedViewWriter(FileStream output, long initialCapacity = 0x10000)
         {
             this.output = output ?? throw new ArgumentNullException(nameof(output));
 
@@ -51,16 +51,18 @@ namespace EventManifestCompiler.Support
 
         public void WriteResource<T>(ref long offset, ref T resource) where T : struct
         {
-            EnsureSpace(offset, Marshal.SizeOf<T>());
+            var size = Marshal.SizeOf<T>();
+            EnsureSpace(offset, size);
             accessor.Write(offset, ref resource);
-            offset += Marshal.SizeOf<T>();
+            offset += size;
         }
 
         public void WriteResource<T>(ref T resource) where T : struct
         {
-            EnsureSpace(Marshal.SizeOf<T>());
+            var size = Marshal.SizeOf<T>();
+            EnsureSpace(size);
             accessor.Write(position, ref resource);
-            position += Marshal.SizeOf<T>();
+            position += size;
         }
 
         private int GetByteCount(string name)
@@ -157,18 +159,14 @@ namespace EventManifestCompiler.Support
                 mappedFile.Dispose();
             }
 
-            if (output is FileStream fileOutput) {
-                mappedFile = MemoryMappedFile.CreateFromFile(
-                    fileOutput,
-                    null,
-                    newCapacity,
-                    MemoryMappedFileAccess.ReadWrite,
-                    null,
-                    HandleInheritability.None,
-                    true);
-            } else {
-                throw new NotImplementedException();
-            }
+            mappedFile = MemoryMappedFile.CreateFromFile(
+                output,
+                null,
+                newCapacity,
+                MemoryMappedFileAccess.ReadWrite,
+                null,
+                HandleInheritability.None,
+                true);
 
             accessor = mappedFile.CreateViewAccessor();
             capacity = newCapacity;

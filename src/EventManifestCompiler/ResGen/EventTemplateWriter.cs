@@ -21,7 +21,7 @@ namespace EventManifestCompiler.ResGen
         private readonly Dictionary<object, long> offsetMap = new Dictionary<object, long>();
         private readonly MemoryMappedViewWriter writer;
 
-        public EventTemplateWriter(Stream output)
+        public EventTemplateWriter(FileStream output)
         {
             nsmgr.AddNamespace("win", WinEventSchema.Namespace.NamespaceName);
             writer = new MemoryMappedViewWriter(output);
