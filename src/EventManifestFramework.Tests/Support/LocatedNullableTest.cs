@@ -5,7 +5,7 @@ namespace EventManifestFramework.Tests.Support
     using EventManifestFramework.Support;
     using Xunit;
 
-    public class LocatedValTest
+    public class LocatedNullableTest
     {
         private struct X
         {
@@ -28,7 +28,7 @@ namespace EventManifestFramework.Tests.Support
             var value = new X();
             var location = new SourceLocation("z:\\foo", 23, 42);
 
-            var located = new LocatedVal<X>(value, location);
+            var located = new LocatedNullable<X>(value, location);
 
             Assert.Equal(value, located.Value);
             Assert.Equal(location, located.Location);
@@ -39,12 +39,12 @@ namespace EventManifestFramework.Tests.Support
         {
             var value = new X();
 
-            X convertedValue = new LocatedVal<X>(value, new SourceLocation());
-            LocatedVal<X> convertedVal = convertedValue;
+            X? convertedValue = new LocatedNullable<X>(value, new SourceLocation());
+            LocatedNullable<X> convertedNullable = convertedValue;
 
             Assert.Equal(value, convertedValue);
-            Assert.Equal(value, convertedVal.Value);
-            Assert.Null(convertedVal.Location);
+            Assert.Equal(value, convertedNullable.Value);
+            Assert.Null(convertedNullable.Location);
         }
 
         private struct EquatableX : IEquatable<EquatableX>
@@ -83,15 +83,15 @@ namespace EventManifestFramework.Tests.Support
             var location = new SourceLocation("a", 1, 1);
             var otherLocation = new SourceLocation("b", 2, 2);
 
-            var located = new LocatedVal<EquatableX>(sameValue, location);
+            var located = new LocatedNullable<EquatableX>(sameValue, location);
 
-            var same = new LocatedVal<EquatableX>(sameValue);
-            var equal = new LocatedVal<EquatableX>(equalValue);
-            var notEqual = new LocatedVal<EquatableX>(notEqualValue);
+            var same = new LocatedNullable<EquatableX>(sameValue);
+            var equal = new LocatedNullable<EquatableX>(equalValue);
+            var notEqual = new LocatedNullable<EquatableX>(notEqualValue);
 
-            var sameWithLoc = new LocatedVal<EquatableX>(sameValue, otherLocation);
-            var equalWithLoc = new LocatedVal<EquatableX>(equalValue, otherLocation);
-            var notEqualWithLoc = new LocatedVal<EquatableX>(notEqualValue, otherLocation);
+            var sameWithLoc = new LocatedNullable<EquatableX>(sameValue, otherLocation);
+            var equalWithLoc = new LocatedNullable<EquatableX>(equalValue, otherLocation);
+            var notEqualWithLoc = new LocatedNullable<EquatableX>(notEqualValue, otherLocation);
 
             Assert.True(located.Equals(located));
             Assert.True(located.Equals(same));
@@ -150,17 +150,17 @@ namespace EventManifestFramework.Tests.Support
             var location = new SourceLocation("a", 1, 1);
             var otherLocation = new SourceLocation("b", 2, 2);
 
-            var located = new LocatedVal<ComparableX>(sameValue, location);
+            var located = new LocatedNullable<ComparableX>(sameValue, location);
 
-            var same = new LocatedVal<ComparableX>(sameValue);
-            var equal = new LocatedVal<ComparableX>(equalValue);
-            var smaller = new LocatedVal<ComparableX>(smallerValue);
-            var larger = new LocatedVal<ComparableX>(largerValue);
+            var same = new LocatedNullable<ComparableX>(sameValue);
+            var equal = new LocatedNullable<ComparableX>(equalValue);
+            var smaller = new LocatedNullable<ComparableX>(smallerValue);
+            var larger = new LocatedNullable<ComparableX>(largerValue);
 
-            var sameWithLoc = new LocatedVal<ComparableX>(sameValue, otherLocation);
-            var equalWithLoc = new LocatedVal<ComparableX>(equalValue, otherLocation);
-            var smallerWithLoc = new LocatedVal<ComparableX>(smallerValue, otherLocation);
-            var largerWithLoc = new LocatedVal<ComparableX>(largerValue, otherLocation);
+            var sameWithLoc = new LocatedNullable<ComparableX>(sameValue, otherLocation);
+            var equalWithLoc = new LocatedNullable<ComparableX>(equalValue, otherLocation);
+            var smallerWithLoc = new LocatedNullable<ComparableX>(smallerValue, otherLocation);
+            var largerWithLoc = new LocatedNullable<ComparableX>(largerValue, otherLocation);
 
             Assert.Equal(0, located.CompareTo(located));
             Assert.Equal(0, located.CompareTo(same));
@@ -211,17 +211,17 @@ namespace EventManifestFramework.Tests.Support
             var location = new SourceLocation("a", 1, 1);
             var otherLocation = new SourceLocation("b", 2, 2);
 
-            var located = new LocatedVal<UntypedComparableX>(sameValue, location);
+            var located = new LocatedNullable<UntypedComparableX>(sameValue, location);
 
-            var same = new LocatedVal<UntypedComparableX>(sameValue);
-            var equal = new LocatedVal<UntypedComparableX>(equalValue);
-            var smaller = new LocatedVal<UntypedComparableX>(smallerValue);
-            var larger = new LocatedVal<UntypedComparableX>(largerValue);
+            var same = new LocatedNullable<UntypedComparableX>(sameValue);
+            var equal = new LocatedNullable<UntypedComparableX>(equalValue);
+            var smaller = new LocatedNullable<UntypedComparableX>(smallerValue);
+            var larger = new LocatedNullable<UntypedComparableX>(largerValue);
 
-            var sameWithLoc = new LocatedVal<UntypedComparableX>(sameValue, otherLocation);
-            var equalWithLoc = new LocatedVal<UntypedComparableX>(equalValue, otherLocation);
-            var smallerWithLoc = new LocatedVal<UntypedComparableX>(smallerValue, otherLocation);
-            var largerWithLoc = new LocatedVal<UntypedComparableX>(largerValue, otherLocation);
+            var sameWithLoc = new LocatedNullable<UntypedComparableX>(sameValue, otherLocation);
+            var equalWithLoc = new LocatedNullable<UntypedComparableX>(equalValue, otherLocation);
+            var smallerWithLoc = new LocatedNullable<UntypedComparableX>(smallerValue, otherLocation);
+            var largerWithLoc = new LocatedNullable<UntypedComparableX>(largerValue, otherLocation);
 
             Assert.Equal(0, located.CompareTo((object)located));
             Assert.Equal(0, located.CompareTo((object)same));
@@ -264,8 +264,8 @@ namespace EventManifestFramework.Tests.Support
         public void Formattable()
         {
             var location = new SourceLocation("a", 1, 1);
-            var located = new LocatedVal<FormattableX>(new FormattableX(10), location);
-            var located2 = new LocatedVal<X>(new X(10), location);
+            var located = new LocatedNullable<FormattableX>(new FormattableX(10), location);
+            var located2 = new LocatedNullable<X>(new X(10), location);
 
             Assert.Equal("FormattableX(A)", located.ToString("X", CultureInfo.InvariantCulture));
             Assert.Equal("X(10)", located2.ToString("X", CultureInfo.InvariantCulture));

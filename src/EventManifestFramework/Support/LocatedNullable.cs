@@ -2,9 +2,11 @@ namespace EventManifestFramework.Support
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
 
     /// <summary>Nullable value with a <see cref="SourceLocation"/>.</summary>
     /// <typeparam name="T">The underlying value type.</typeparam>
+    [DebuggerDisplay("{" + nameof(value) + "}")]
     public struct LocatedNullable<T>
         : ISourceItem
         , IEquatable<LocatedNullable<T>>
@@ -49,12 +51,12 @@ namespace EventManifestFramework.Support
         {
             if (value is IFormattable f)
                 return f.ToString(format, formatProvider);
-            return string.Empty;
+            return value.ToString();
         }
 
         public override string ToString()
         {
-            return Value.ToString();
+            return value.ToString();
         }
 
         public override bool Equals(object obj)
@@ -76,9 +78,14 @@ namespace EventManifestFramework.Support
 
         public int CompareTo(object obj)
         {
-            var comparable = Value as IComparable;
-            return comparable?.CompareTo(obj) ??
-                   Comparer<object>.Default.Compare(this, obj);
+            switch (obj) {
+                case LocatedNullable<T> other:
+                    return (Value as IComparable)?.CompareTo(other.Value) ??
+                           Comparer<T?>.Default.Compare(this, other.Value);
+                default:
+                    return (Value as IComparable)?.CompareTo(obj) ??
+                           Comparer<object>.Default.Compare(this, obj);
+            }
         }
 
         public int CompareTo(LocatedNullable<T> other)
@@ -92,17 +99,12 @@ namespace EventManifestFramework.Support
         {
             var comparable = Value as IComparable<T>;
             return comparable?.CompareTo(other) ??
-                   Comparer<T>.Default.Compare(this, other);
+                   Comparer<T?>.Default.Compare(this, other);
         }
 
         public static implicit operator T?(LocatedNullable<T> value)
         {
             return value.value;
-        }
-
-        public static implicit operator T(LocatedNullable<T> value)
-        {
-            return value.Value;
         }
 
         public static implicit operator LocatedNullable<T>(T? value)

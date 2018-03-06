@@ -55,6 +55,7 @@
     <Compile Include="Schema\ValidationTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SpecificationTest.cs" />
+    <Compile Include="Support\LocatedNullableTest.cs" />
     <Compile Include="Support\LocatedValTest.cs" />
     <Compile Include="Support\LocatedRefTest.cs" />
   </ItemGroup>

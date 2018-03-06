@@ -2,10 +2,12 @@ namespace EventManifestFramework.Support
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
 
     /// <summary>Value with a <see cref="SourceLocation"/>.</summary>
     /// <typeparam name="T">The value type of the value.</typeparam>
     /// <see cref="Located.CreateStruct{T}(T,SourceLocation)"/>
+    [DebuggerDisplay(nameof(Value))]
     public struct LocatedVal<T>
         : ISourceItem
         , IEquatable<LocatedVal<T>>
@@ -90,10 +92,10 @@ namespace EventManifestFramework.Support
                    Comparer<T>.Default.Compare(this, other);
         }
 
-        //public static implicit operator LocatedVal<T>(T value)
-        //{
-        //    return new LocatedVal<T>(value);
-        //}
+        public static implicit operator LocatedVal<T>(T value)
+        {
+            return new LocatedVal<T>(value);
+        }
 
         public static implicit operator T(LocatedVal<T> value)
         {
