@@ -817,9 +817,9 @@ namespace EventManifestCompiler.CodeGen
                 case "Pointer": return "void const*";
                 case "Binary": return "uint8_t const*";
                 case "GUID": return "GUID const&";
-                case "FILETIME": return "FILETIME const*";
-                case "SYSTEMTIME": return "SYSTEMTIME const*";
-                case "SID": return "SID const*";
+                case "FILETIME": return "FILETIME const&";
+                case "SYSTEMTIME": return "SYSTEMTIME const&";
+                case "SID": return "SID const&";
                 case "HexInt32": return "int32_t const";
                 case "HexInt64": return "int64_t const";
                 default:
@@ -836,9 +836,6 @@ namespace EventManifestCompiler.CodeGen
                 case "UnicodeString":
                 case "AnsiString":
                 case "Binary":
-                case "FILETIME":
-                case "SYSTEMTIME":
-                case "SID":
                     return true;
 
                 default:
