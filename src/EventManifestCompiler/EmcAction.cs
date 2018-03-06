@@ -43,6 +43,7 @@ namespace EventManifestCompiler
                 Program.ShowBriefHelp();
                 return ExitCode.UserError;
             }
+
             if (opts.Inputs.Count > 1) {
                 diags.ReportError("Too many input manifests specified.");
                 Program.ShowBriefHelp();
@@ -84,7 +85,7 @@ namespace EventManifestCompiler
 
         private bool Generate(EventManifest manifest)
         {
-            AssignMessageIds(manifest);
+            MessageHelpers.AssignMessageIds(diags, manifest, msgIdGenFactory);
 
             if (diags.ErrorOccurred)
                 return false;
@@ -231,11 +232,16 @@ namespace EventManifestCompiler
             string ext = Path.GetExtension(fileName);
             return Path.ChangeExtension(fileName, "." + culture.Name + ext);
         }
+    }
 
-        private void AssignMessageIds(EventManifest manifest)
+    internal static class MessageHelpers
+    {
+        public static void AssignMessageIds(
+            IDiagnostics diags, EventManifest manifest,
+            Func<IMessageIdGenerator> generatorFactory)
         {
             foreach (var provider in manifest.Providers) {
-                var msgIdGen = msgIdGenFactory();
+                var msgIdGen = generatorFactory();
                 if (NeedsId(provider.Message))
                     provider.Message.Id = msgIdGen.CreateId(provider);
 

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<instrumentationManifest
+    xsi:schemaLocation="http://schemas.microsoft.com/win/2004/08/events eventman.xsd"
+    xmlns="http://schemas.microsoft.com/win/2004/08/events"
+    xmlns:win="http://manifests.microsoft.com/win/2004/08/windows/events"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:trace="http://schemas.microsoft.com/win/2004/08/events/trace">
+  <instrumentation>
+    <events>
+      <provider name="ProviderName2" guid="{00000000-0000-0000-0000-000000000002}" symbol="ProviderSym2" resourceFileName="p2.dll" messageFileName="p2.dll">
+        <events>
+          <event value="1" channel="P2/MyChannel" message="$(string.event.2.1)"/>
+        </events>
+        <channels>
+          <importChannel name="P2/MyChannel" chid="MainChannelId" symbol="MyChannelSym"/>
+          <importChannel name="P2/MyChannel2" chid="P1/MainChannel" symbol="MyChannel2Sym"/>
+        </channels>
+      </provider>
+
+      <provider name="ProviderName1" guid="{00000000-0000-0000-0000-000000000001}" symbol="ProviderSym1" message="$(string.provider.1)" resourceFileName="p1.dll" messageFileName="p1.dll">
+        <events>
+          <event value="1" channel="P1/MainChannel" level="win:Error" message="$(string.event.1.1)"/>
+        </events>
+        <channels>
+          <channel name="P1/MainChannel" type="Admin" value="23" chid="MainChannelId"
+                   isolation="Application" access="O:BAG:SYD:" enabled="false"
+                   symbol="MainChannelSym" message="$(string.channel.1.1)">
+            <logging>
+              <autoBackup>true</autoBackup>
+              <retention>true</retention>
+              <maxSize>12345</maxSize>
+            </logging>
+            <publishing>
+              <level>1</level>
+              <controlGuid>{D0883FA6-F3FD-43C3-A0E4-1FCECC87AF8B}</controlGuid>
+            </publishing>
+          </channel>
+        </channels>
+      </provider>
+    </events>
+  </instrumentation>
+  <localization>
+    <resources culture="en-US">
+      <stringTable>
+        <string id="provider.1" value="Provider.1"/>
+        <string id="provider.2" value="Provider.2"/>
+        <string id="channel.1.1" value="Channel.1.1"/>
+        <string id="event.1.1" value="Event.1.1"/>
+        <string id="event.2.1" value="Event.2.1"/>
+      </stringTable>
+    </resources>
+  </localization>
+</instrumentationManifest>

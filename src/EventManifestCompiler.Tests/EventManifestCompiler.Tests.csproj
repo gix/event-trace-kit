@@ -45,12 +45,36 @@
   <ItemGroup>
     <Compile Include="BinXml\BinXmlReaderTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ResGen\EventTemplateWriterTest.cs" />
+    <Compile Include="ResGen\MessageTableWriterTest.cs" />
+    <Compile Include="ResGen\ResGenTestProviderAttribute.cs" />
+    <Compile Include="ResGen\TestCases\ResGenTestCases.cs" />
+    <Compile Include="TestSupport\AssertingDiagnostics.cs" />
+    <Compile Include="TestSupport\DiagnosticSink.cs" />
+    <Compile Include="TestSupport\StreamAssert.cs" />
+    <Compile Include="TestSupport\StreamExtensions.cs" />
+    <Compile Include="TestSupport\TempFile.cs" />
+    <Compile Include="TestSupport\TestHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Build\EventTraceKit.snk">
       <Link>Properties\EventTraceKit.snk</Link>
     </None>
     <None Include="EventManifestCompiler.Tests.xunit.runner.json" />
+    <EmbeddedResource Include="ResGen\TestCases\Empty.wevt.bin" />
+    <EmbeddedResource Include="ResGen\TestCases\ImportChannelFromProvider.man" />
+    <EmbeddedResource Include="ResGen\TestCases\ImportChannelFromProvider.msg.bin" />
+    <EmbeddedResource Include="ResGen\TestCases\ImportChannelFromProvider.wevt.bin" />
+    <EmbeddedResource Include="ResGen\TestCases\TaskOpcodes.man" />
+    <EmbeddedResource Include="ResGen\TestCases\TaskOpcodes.msg.bin" />
+    <EmbeddedResource Include="ResGen\TestCases\TaskOpcodes.wevt.bin" />
+    <EmbeddedResource Include="ResGen\TestCases\wpf-etw.man" />
+    <EmbeddedResource Include="ResGen\TestCases\wpf-etw.msg.bin" />
+    <EmbeddedResource Include="ResGen\TestCases\wpf-etw.wevt.bin" />
+    <EmbeddedResource Include="ResGen\TestCases\Empty.man" />
+    <EmbeddedResource Include="ResGen\TestCases\ImportChannels.man" />
+    <EmbeddedResource Include="ResGen\TestCases\ImportChannels.msg.bin" />
+    <EmbeddedResource Include="ResGen\TestCases\ImportChannels.wevt.bin" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\EventManifestCompiler\EventManifestCompiler.csproj">
@@ -67,5 +91,11 @@
       <Version>2.3.1</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="ResGen\TestCases\ImportChannelFromProvider.rc" />
+    <EmbeddedResource Include="ResGen\TestCases\TaskOpcodes.rc" />
+    <EmbeddedResource Include="ResGen\TestCases\wpf-etw.mc.rc" />
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<instrumentationManifest
+    xsi:schemaLocation="http://schemas.microsoft.com/win/2004/08/events eventman.xsd"
+    xmlns="http://schemas.microsoft.com/win/2004/08/events"
+    xmlns:win="http://manifests.microsoft.com/win/2004/08/windows/events"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:trace="http://schemas.microsoft.com/win/2004/08/events/trace">
+  <instrumentation>
+    <events>
+      <provider name="ProviderName1" guid="{00000000-0000-0000-0000-000000000001}" symbol="ProviderSym1" message="$(string.provider.1)" resourceFileName="p1.dll" messageFileName="p1.dll">
+        <events>
+          <event value="1" channel="Channel" level="win:Error" task="Task1" opcode="Opcode2"/>
+          <event value="2" channel="Channel" level="win:Error" task="Task1" opcode="Opcode3"/>
+        </events>
+        <channels>
+          <channel name="Channel" type="Analytic" message="$(string.channel.1.1)"/>
+        </channels>
+        <tasks>
+          <task name="Task1" value="0x11" symbol="TaskSym1" eventGUID="{D0883FA6-F3FD-43C3-A0E4-000000000001}" message="$(string.task.1.1)">
+            <opcodes>
+              <opcode name="Opcode1" value="101" symbol="OpcodeSym11" message="$(string.opcode.1.1)"/>
+              <opcode name="Opcode2" value="102" symbol="OpcodeSym12" message="$(string.opcode.1.2)"/>
+            </opcodes>
+          </task>
+          <task name="Task2" value="0x12" symbol="TaskSym2" message="$(string.task.1.2)">
+            <opcodes>
+              <opcode name="Opcode1" value="201" symbol="OpcodeSym21" message="$(string.opcode.2.1)"/>
+              <opcode name="Opcode2" value="202" symbol="OpcodeSym22" message="$(string.opcode.2.2)"/>
+            </opcodes>
+          </task>
+        </tasks>
+        <opcodes>
+          <opcode name="Opcode1" value="11" symbol="OpcodeSym01" message="$(string.opcode.0.1)"/>
+          <opcode name="Opcode2" value="12" symbol="OpcodeSym02" message="$(string.opcode.0.2)"/>
+          <opcode name="Opcode3" value="13" symbol="OpcodeSym03" message="$(string.opcode.0.3)"/>
+        </opcodes>
+      </provider>
+    </events>
+  </instrumentation>
+  <localization>
+    <resources culture="en-US">
+      <stringTable>
+        <string id="provider.1" value="Provider.1"/>
+        <string id="channel.1.1" value="Channel.1.1"/>
+        <string id="task.1.1" value="Task.1.1"/>
+        <string id="task.1.2" value="Task.1.2"/>
+        <string id="opcode.0.1" value="Opcode.0.1"/>
+        <string id="opcode.0.2" value="Opcode.0.2"/>
+        <string id="opcode.0.3" value="Opcode.0.3"/>
+        <string id="opcode.1.1" value="Opcode.1.1"/>
+        <string id="opcode.1.2" value="Opcode.1.2"/>
+        <string id="opcode.2.1" value="Opcode.2.1"/>
+        <string id="opcode.2.2" value="Opcode.2.2"/>
+        <string id="event.1.1" value="Event.1.1"/>
+        <string id="event.1.2" value="Event.1.2"/>
+      </stringTable>
+    </resources>
+  </localization>
+</instrumentationManifest>

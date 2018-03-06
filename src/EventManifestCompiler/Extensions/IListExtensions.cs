@@ -106,16 +106,23 @@ namespace EventManifestCompiler.Extensions
             return -1;
         }
 
-        public static void RemoveAll<T>(this IList<T> list, Predicate<T> match)
+        public static void RemoveAll<T>(this ICollection<T> collection, Predicate<T> match)
         {
-            if (list is List<T> listT) {
+            if (collection is List<T> listT) {
                 listT.RemoveAll(match);
                 return;
             }
 
-            var matches = list.Where(new Func<T, bool>(match)).ToList();
+            if (collection is IList<T> list) {
+                for (int i = collection.Count - 1; i >= 0; --i) {
+                    if (match(list[i]))
+                        list.RemoveAt(i);
+                }
+            }
+
+            var matches = collection.Where(new Func<T, bool>(match)).ToList();
             foreach (var item in matches)
-                list.Remove(item);
+                collection.Remove(item);
         }
     }
 }
