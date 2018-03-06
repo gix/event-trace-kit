@@ -68,7 +68,10 @@ namespace EventManifestCompiler.ResGen
             if (evt == null)
                 return Message.UnusedId;
             var version = evt.Version;
-            return CreateId(evt, 0xB, provider.Index, version, evt.Value);
+            byte tag = 0xB;
+            if (evt.Channel.IsGlobal())
+                tag = 0;
+            return CreateId(evt, tag, provider.Index, version, evt.Value);
         }
 
         public uint CreateId(MapItem item, Map map, Provider provider)

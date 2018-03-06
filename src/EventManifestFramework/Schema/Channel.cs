@@ -54,5 +54,20 @@ namespace EventManifestFramework.Schema
         {
             visitor.VisitChannel(this);
         }
+
+        public bool IsTraceClassic()
+        {
+            return Imported && Name == "TraceClassic" && Value == 0;
+        }
+
+        public bool IsTraceLogging()
+        {
+            return Imported && Name == "TraceLogging" && Value == 11;
+        }
+
+        public bool IsGlobal()
+        {
+            return Imported && (Value == 8 /*System*/ || Value == 9 /*Application*/ || Value == 10 /*Security*/);
+        }
     }
 }
