@@ -16,8 +16,12 @@ namespace EventManifestFramework.Support
             return new SourceLocation(obj.BaseUri, lineInfo.LineNumber, lineInfo.LinePosition);
         }
 
-        public static SourceLocation GetLocation(this XAttribute attribute)
+        public static SourceLocation GetValueLocation(this XAttribute attribute)
         {
+            // Disable advanced location for now because the schema validation
+            // only reports the location of the attribute name.
+            return attribute.GetLocation();
+
             var lineInfo = (IXmlLineInfo)attribute;
             if (!lineInfo.HasLineInfo())
                 return new SourceLocation();

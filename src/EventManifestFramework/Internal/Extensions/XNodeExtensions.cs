@@ -19,7 +19,7 @@ namespace EventManifestFramework.Internal.Extensions
             if (attrib == null)
                 throw CreateMissingAttributeException(elem, name);
 
-            return Located.Create(attrib.Value, attrib.GetLocation());
+            return Located.Create(attrib.Value, attrib.GetValueLocation());
         }
 
         public static LocatedRef<string> GetOptionalString(
@@ -32,7 +32,7 @@ namespace EventManifestFramework.Internal.Extensions
             if (attrib == null)
                 return Located.Create(defaultValue);
 
-            return Located.Create(attrib.Value, attrib.GetLocation());
+            return Located.Create(attrib.Value, attrib.GetValueLocation());
         }
 
         public static LocatedRef<QName> GetQName(this XElement elem, string name)
@@ -48,7 +48,7 @@ namespace EventManifestFramework.Internal.Extensions
 
             return Located.Create(
                 QName.Parse(attrib.Value, new XElementNamespaceResolver(elem)),
-                attrib.GetLocation());
+                attrib.GetValueLocation());
         }
 
         public static LocatedRef<QName> GetOptionalQName(
@@ -65,7 +65,7 @@ namespace EventManifestFramework.Internal.Extensions
 
             return Located.Create(
                 QName.Parse(attrib.Value, new XElementNamespaceResolver(elem)),
-                attrib.GetLocation());
+                attrib.GetValueLocation());
         }
 
         public static LocatedRef<string> GetCSymbol(
@@ -78,7 +78,7 @@ namespace EventManifestFramework.Internal.Extensions
             if (attrib == null)
                 return Located.Create(defaultValue);
 
-            return Located.Create(attrib.Value, attrib.GetLocation());
+            return Located.Create(attrib.Value, attrib.GetValueLocation());
         }
 
         public static LocatedVal<byte> GetUInt8(this XElement elem, string name)
@@ -93,7 +93,7 @@ namespace EventManifestFramework.Internal.Extensions
             if (!TryParse(attrib.Value, NumberFormat.HexDec, out byte value))
                 throw CreateInvalidNumberValueException<byte>(attrib);
 
-            return Located.Create(value, attrib.GetLocation());
+            return Located.Create(value, attrib.GetValueLocation());
         }
 
         public static LocatedVal<ushort> GetUInt16(this XElement elem, string name)
@@ -108,7 +108,7 @@ namespace EventManifestFramework.Internal.Extensions
             if (!TryParse(attrib.Value, NumberFormat.HexDec, out ushort value))
                 throw CreateInvalidNumberValueException<ushort>(attrib);
 
-            return Located.Create(value, attrib.GetLocation());
+            return Located.Create(value, attrib.GetValueLocation());
         }
 
         public static LocatedVal<int> GetInt32(this XElement elem, string name)
@@ -123,7 +123,7 @@ namespace EventManifestFramework.Internal.Extensions
             if (!TryParse(attrib.Value, NumberFormat.HexDec, out int value))
                 throw CreateInvalidNumberValueException<int>(attrib);
 
-            return Located.Create(value, attrib.GetLocation());
+            return Located.Create(value, attrib.GetValueLocation());
         }
 
         public static LocatedVal<uint> GetUInt32(this XElement elem, string name)
@@ -138,7 +138,7 @@ namespace EventManifestFramework.Internal.Extensions
             if (!TryParse(attrib.Value, NumberFormat.HexDec, out uint value))
                 throw CreateInvalidNumberValueException<uint>(attrib);
 
-            return Located.Create(value, attrib.GetLocation());
+            return Located.Create(value, attrib.GetValueLocation());
         }
 
         public static LocatedNullable<int> GetOptionalInt32(
@@ -154,7 +154,7 @@ namespace EventManifestFramework.Internal.Extensions
             if (!TryParse(attrib.Value, NumberFormat.HexDec, out int value))
                 throw CreateInvalidNumberValueException<int>(attrib);
 
-            return Located.Create((int?)value, attrib.GetLocation());
+            return Located.Create((int?)value, attrib.GetValueLocation());
         }
 
         public static LocatedNullable<byte> GetOptionalUInt8(
@@ -170,7 +170,7 @@ namespace EventManifestFramework.Internal.Extensions
             if (!TryParse(attrib.Value, NumberFormat.HexDec, out byte value))
                 throw CreateInvalidNumberValueException<byte>(attrib);
 
-            return Located.Create((byte?)value, attrib.GetLocation());
+            return Located.Create((byte?)value, attrib.GetValueLocation());
         }
 
         public static LocatedNullable<ushort> GetOptionalUInt16(
@@ -186,7 +186,7 @@ namespace EventManifestFramework.Internal.Extensions
             if (!TryParse(attrib.Value, NumberFormat.HexDec, out ushort value))
                 throw CreateInvalidNumberValueException<ushort>(attrib);
 
-            return Located.Create((ushort?)value, attrib.GetLocation());
+            return Located.Create((ushort?)value, attrib.GetValueLocation());
         }
 
         public static LocatedVal<uint> GetHexInt32(this XElement elem, string name)
@@ -201,7 +201,7 @@ namespace EventManifestFramework.Internal.Extensions
             if (!TryParse(attrib.Value, NumberFormat.PrefixedHex, out uint value))
                 throw CreateInvalidHexNumberValueException<uint>(attrib);
 
-            return Located.Create(value, attrib.GetLocation());
+            return Located.Create(value, attrib.GetValueLocation());
         }
 
         public static LocatedVal<ulong> GetHexInt64(this XElement elem, string name)
@@ -216,7 +216,7 @@ namespace EventManifestFramework.Internal.Extensions
             if (!TryParse(attrib.Value, NumberFormat.PrefixedHex, out ulong value))
                 throw CreateInvalidHexNumberValueException<ulong>(attrib);
 
-            return Located.Create(value, attrib.GetLocation());
+            return Located.Create(value, attrib.GetValueLocation());
         }
 
         public static LocatedVal<bool> GetOptionalBool(
@@ -230,9 +230,9 @@ namespace EventManifestFramework.Internal.Extensions
                 return Located.Create(defaultValue);
 
             if (attrib.Value == "true" || attrib.Value == "1")
-                return Located.Create(true, attrib.GetLocation());
+                return Located.Create(true, attrib.GetValueLocation());
             if (attrib.Value == "false" || attrib.Value == "0")
-                return Located.Create(false, attrib.GetLocation());
+                return Located.Create(false, attrib.GetValueLocation());
 
             throw CreateInvalidBoolValueException(attrib);
         }
@@ -248,9 +248,9 @@ namespace EventManifestFramework.Internal.Extensions
                 return Located.Create(defaultValue);
 
             if (attrib.Value == "true" || attrib.Value == "1")
-                return Located.Create((bool?)true, attrib.GetLocation());
+                return Located.Create((bool?)true, attrib.GetValueLocation());
             if (attrib.Value == "false" || attrib.Value == "0")
-                return Located.Create((bool?)false, attrib.GetLocation());
+                return Located.Create((bool?)false, attrib.GetValueLocation());
 
             throw CreateInvalidBoolValueException(attrib);
         }
@@ -267,7 +267,7 @@ namespace EventManifestFramework.Internal.Extensions
             if (!Guid.TryParseExact(attrib.Value, "B", out var value))
                 throw CreateInvalidNumberValueException<byte>(attrib);
 
-            return Located.Create(value, attrib.GetLocation());
+            return Located.Create(value, attrib.GetValueLocation());
         }
 
         public static LocatedNullable<Guid> GetOptionalGuid(
@@ -283,7 +283,7 @@ namespace EventManifestFramework.Internal.Extensions
             if (!Guid.TryParseExact(attrib.Value, "B", out var value))
                 throw CreateInvalidNumberValueException<byte>(attrib);
 
-            return Located.Create((Guid?)value, attrib.GetLocation());
+            return Located.Create((Guid?)value, attrib.GetValueLocation());
         }
 
         [Flags]

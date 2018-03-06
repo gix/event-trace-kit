@@ -1012,7 +1012,7 @@ namespace EventManifestFramework
                         attrib, "Unknown channel type '{0}'.", attrib.Value);
             }
 
-            return Located.CreateStruct(type, attrib.GetLocation());
+            return Located.CreateStruct(type, attrib.GetValueLocation());
         }
 
         private LocatedNullable<ChannelIsolationType> MapIsolationType(XAttribute attrib)
@@ -1030,7 +1030,7 @@ namespace EventManifestFramework
                         attrib, "Unknown channel isolation type '{0}'.", attrib.Value);
             }
 
-            return Located.Create(type, attrib.GetLocation());
+            return Located.Create(type, attrib.GetValueLocation());
         }
 
         private Exception CreateSchemaException(
