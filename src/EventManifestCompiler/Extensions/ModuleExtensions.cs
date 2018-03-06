@@ -55,7 +55,7 @@ namespace EventManifestCompiler.Extensions
         private sealed class SafeResourceBuffer : SafeBuffer
         {
             public SafeResourceBuffer(IntPtr handle, long size)
-                : base(true)
+                : base(false)
             {
                 SetHandle(handle);
                 Initialize((ulong)size);
