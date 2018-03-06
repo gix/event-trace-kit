@@ -7,7 +7,7 @@ namespace EventManifestFramework.Support
     /// <summary>Value with a <see cref="SourceLocation"/>.</summary>
     /// <typeparam name="T">The value type of the value.</typeparam>
     /// <see cref="Located.CreateStruct{T}(T,SourceLocation)"/>
-    [DebuggerDisplay(nameof(Value))]
+    [DebuggerDisplay("{" + nameof(Value) + "}")]
     public struct LocatedVal<T>
         : ISourceItem
         , IEquatable<LocatedVal<T>>

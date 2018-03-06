@@ -7,7 +7,7 @@ namespace EventManifestFramework.Support
     /// <summary>Value with a <see cref="SourceLocation"/>.</summary>
     /// <typeparam name="T">The reference type of the value.</typeparam>
     /// <see cref="Located.Create{T}(T,SourceLocation)"/>
-    [DebuggerDisplay(nameof(Value))]
+    [DebuggerDisplay("{" + nameof(Value) + "}")]
     public sealed class LocatedRef<T>
         : ISourceItem
         , IEquatable<LocatedRef<T>>
