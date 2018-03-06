@@ -435,7 +435,7 @@ namespace EventManifestFramework
 
                 channel.Index = provider.Channels.Count;
                 if (channel.Value == null)
-                    channel.Value = (byte)provider.CreateChannelValue();
+                    channel.Value = provider.CreateChannelValue();
 
                 provider.Channels.TryAdd(channel, diags);
             }

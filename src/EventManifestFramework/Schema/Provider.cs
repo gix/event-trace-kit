@@ -9,7 +9,7 @@ namespace EventManifestFramework.Schema
     public sealed class Provider : SourceItem
     {
         private readonly List<EnableBit> enableBits = new List<EnableBit>();
-        private uint channelValue = 17;
+        private uint channelValue = 16;
 
         public Provider(
             LocatedRef<string> name,
@@ -89,12 +89,15 @@ namespace EventManifestFramework.Schema
             }
         }
 
-        public uint CreateChannelValue()
+        public byte CreateChannelValue()
         {
+            if (channelValue >= byte.MaxValue)
+                throw new NotSupportedException("Too many channels specified.");
+
             while (Channels.Any(c => c.Value == channelValue))
                 ++channelValue;
 
-            return channelValue;
+            return (byte)channelValue;
         }
     }
 }
