@@ -93,7 +93,7 @@ namespace EventManifestCompiler
 
                 var messageSet = new HashSet<LocalizedString>();
                 messageSet.UnionWith(from x in provider.Channels
-                                     where x.Message != null && channelIds.Contains(x.Value)
+                                     where x.Message != null && channelIds.Contains(x.Value.Value)
                                      select x.Message);
                 messageSet.UnionWith(from x in provider.Levels
                                      where x.Message != null && levelNames.Contains(x.Name)
