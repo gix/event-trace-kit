@@ -132,6 +132,7 @@ namespace EventManifestCompiler.CodeGen
         private void GenerateCore(EventManifest manifest)
         {
             WriteHeader();
+
             foreach (var provider in manifest.Providers) {
                 ow.WriteLine("//+");
                 ow.WriteLine("// Provider {0} Event Count {1}", provider.Name, provider.Events.Count);

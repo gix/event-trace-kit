@@ -322,11 +322,11 @@ namespace EventManifestCompiler.CodeGen
 
         private void WriteLevels(Provider provider)
         {
-            if (provider.Levels.Count == 0)
+            if (provider.Levels.Count == 0 || provider.Levels.All(t => t.Imported))
                 return;
 
             ow.WriteLine("// Levels");
-            foreach (var level in provider.Levels)
+            foreach (var level in provider.Levels.Where(t => !t.Imported))
                 ow.WriteLine("uint8_t const {0} = 0x{1:X};",
                              naming.GetIdentifier(level), level.Value);
             ow.WriteLine();
@@ -347,11 +347,11 @@ namespace EventManifestCompiler.CodeGen
 
         private void WriteTasks(Provider provider)
         {
-            if (provider.Tasks.Count == 0)
+            if (provider.Tasks.Count == 0 || provider.Tasks.All(t => t.Imported))
                 return;
 
             ow.WriteLine("// Tasks");
-            foreach (var task in provider.Tasks) {
+            foreach (var task in provider.Tasks.Where(t => !t.Imported)) {
                 ow.WriteLine("uint16_t const {0} = 0x{1:X};", naming.GetIdentifier(task), task.Value);
                 if (task.Guid.GetValueOrDefault() != Guid.Empty)
                     ow.WriteLine("EXTERN_C __declspec(selectany) GUID const {0} = {1};",
@@ -362,11 +362,11 @@ namespace EventManifestCompiler.CodeGen
 
         private void WriteKeywords(Provider provider)
         {
-            if (provider.Keywords.Count == 0)
+            if (provider.Keywords.Count == 0 || provider.Keywords.All(t => t.Imported))
                 return;
 
             ow.WriteLine("// Keywords");
-            foreach (var keyword in provider.Keywords)
+            foreach (var keyword in provider.Keywords.Where(t => !t.Imported))
                 ow.WriteLine("uint64_t const {0} = 0x{1:X8};",
                              naming.GetIdentifier(keyword), keyword.Mask);
             ow.WriteLine();
@@ -760,7 +760,7 @@ namespace EventManifestCompiler.CodeGen
 
                     string expr;
                     if (data.Count.IsSpecified && !data.Length.IsSpecified) {
-                        if (data.Count.DataPropertyRef != null)
+                        if (data.Count.IsVariable)
                             expr = naming.GetNumberedArgId(properties.FindIndex(f => f.Name == data.Count.DataPropertyRef));
                         else
                             expr = naming.GetLengthArgumentId(data, usePropertyName);
