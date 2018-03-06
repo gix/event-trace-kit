@@ -76,7 +76,6 @@
     <Compile Include="ResGen\EventTemplateReader.cs" />
     <Compile Include="ResGen\EventTemplateWriter.cs" />
     <Compile Include="ResGen\IMessageIdGenerator.cs" />
-    <Compile Include="Extensions\IEnumerableExtensions.cs" />
     <Compile Include="EmcAction.cs" />
     <Compile Include="Support\MemoryMappedViewWriter.cs" />
     <Compile Include="ResGen\MessageTableWriter.cs" />
@@ -89,26 +88,21 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="Support\ConsoleColorScope.cs" />
-    <Compile Include="Diagnostics.cs" />
+    <Compile Include="ConsoleDiagnosticPrinter.cs" />
     <Compile Include="Extensions\BinaryReaderExtensions.cs" />
     <Compile Include="Extensions\BinaryWriterExtensions.cs" />
     <Compile Include="Extensions\IListExtensions.cs" />
-    <Compile Include="Extensions\ReflectionExtensions.cs" />
-    <Compile Include="Extensions\SerializationInfoExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
-    <Compile Include="Extensions\XObjectExtensions.cs" />
     <Compile Include="EmcOpts.cs" />
     <Compile Include="EmcOptTable.cs" />
     <Compile Include="Support\InternalException.cs" />
     <Compile Include="Native\MessageResources.cs" />
     <Compile Include="Native\NativeMethods.cs" />
-    <Compile Include="Native\SafeLocalMemHandle.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Support\IO.cs" />
     <Compile Include="Support\BitConverterEx.cs" />
     <Compile Include="Support\MD5Managed.cs" />
-    <Compile Include="Support\XElementNamespaceResolver.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
