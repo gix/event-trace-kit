@@ -74,7 +74,6 @@
     <Compile Include="ResGen\CrimsonTags.cs" />
     <Compile Include="ResGen\EventFieldKind.cs" />
     <Compile Include="ResGen\EventTemplateReader.cs" />
-    <Compile Include="ResGen\EventTemplateWriterOld.cs" />
     <Compile Include="ResGen\EventTemplateWriter.cs" />
     <Compile Include="ResGen\IMessageIdGenerator.cs" />
     <Compile Include="Extensions\IEnumerableExtensions.cs" />
