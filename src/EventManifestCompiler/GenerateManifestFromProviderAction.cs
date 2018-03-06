@@ -102,7 +102,7 @@ namespace EventManifestCompiler
                                      where x.Message != null && taskNames.Contains(x.Name)
                                      select x.Message);
                 messageSet.UnionWith(from x in provider.Opcodes
-                                     where x.Message != null && opcodeNames.Contains(x.Name)
+                                     where x.Task == null && x.Message != null && opcodeNames.Contains(x.Name)
                                      select x.Message);
                 messageSet.UnionWith(from x in provider.Keywords
                                      where x.Message != null && keywordNames.Contains(x.Name)
@@ -396,6 +396,7 @@ namespace EventManifestCompiler
             if (task.Symbol != null)
                 elem.Add(new XAttribute("symbol", task.Symbol));
             AddOptionalMessage(elem, task.Message);
+            elem.Add(task.Opcodes.Select(ToXml));
             return elem;
         }
 

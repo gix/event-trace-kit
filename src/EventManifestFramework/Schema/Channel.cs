@@ -19,7 +19,7 @@ namespace EventManifestFramework.Schema
         Custom,
     }
 
-    [DebuggerDisplay("{Name} ({Type})")]
+    [DebuggerDisplay("{" + nameof(Name) + "} ({" + nameof(Type) + "})")]
     public sealed class Channel : ProviderItem
     {
         public Channel(LocatedRef<string> name, LocatedVal<ChannelType> type)
@@ -30,31 +30,10 @@ namespace EventManifestFramework.Schema
             Type = type;
         }
 
-        public Channel(
-            LocatedRef<string> name,
-            LocatedVal<ChannelType> type,
-            LocatedRef<string> id,
-            LocatedRef<string> symbol,
-            LocatedNullable<byte> value,
-            LocatedRef<string> access,
-            LocatedNullable<ChannelIsolationType> isolation,
-            LocatedNullable<bool> enabled,
-            LocalizedString message)
-            : this(name, type)
-        {
-            Id = id;
-            Symbol = symbol;
-            Value = value;
-            Access = access;
-            Isolation = isolation;
-            Enabled = enabled;
-            Message = message;
-        }
-
         public int Index { get; set; }
 
         public LocatedRef<string> Name { get; }
-        public LocatedVal<ChannelType> Type { get; }
+        public LocatedVal<ChannelType> Type { get; set; }
 
         public LocatedRef<string> Id { get; set; }
         public LocatedRef<string> Symbol { get; set; }

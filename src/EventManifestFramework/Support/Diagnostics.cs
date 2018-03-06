@@ -107,8 +107,8 @@ namespace EventManifestFramework.Support
     }
 
     /// <summary>
-    ///   Provides functionality to consume diagnostics reported to a <see cref="IDiagnostics"/>
-    ///   engine.
+    ///   Provides functionality to consume diagnostics reported to a
+    ///   <see cref="IDiagnostics"/> engine.
     /// </summary>
     public interface IDiagnosticConsumer
     {

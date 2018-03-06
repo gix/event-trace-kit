@@ -235,6 +235,8 @@ namespace EventManifestCompiler.ResGen
             var provider = new Provider(name, Located.Create(providerId), name);
             provider.Message = ResolveMessage(messageId);
 
+            var allOpcodes = new List<Tuple<ushort, Opcode>>();
+
             foreach (var pair in offsets) {
                 uint type = pair.Item1;
                 uint offset = pair.Item2;
@@ -247,7 +249,7 @@ namespace EventManifestCompiler.ResGen
                         provider.Tasks.AddRange(ReadTasks(r));
                         break;
                     case EventFieldKind.Opcode:
-                        provider.Opcodes.AddRange(ReadOpcodes(r));
+                        allOpcodes.AddRange(ReadOpcodes(r));
                         break;
                     case EventFieldKind.Keyword:
                         provider.Keywords.AddRange(ReadKeywords(r));
@@ -271,6 +273,12 @@ namespace EventManifestCompiler.ResGen
                         LogMessage("Unknown item type {0} at offset {1}.", type, offset);
                         break;
                 }
+            }
+
+            provider.Opcodes.AddRange(allOpcodes.Where(x => x.Item1 == 0).Select(x => x.Item2));
+            foreach (var taskSpecificOpcode in allOpcodes.Where(x => x.Item1 != 0)) {
+                var task = provider.Tasks.First(x => x.Value == taskSpecificOpcode.Item1);
+                task.Opcodes.Add(taskSpecificOpcode.Item2);
             }
 
             return provider;
@@ -454,9 +462,9 @@ namespace EventManifestCompiler.ResGen
             return tasks;
         }
 
-        private List<Opcode> ReadOpcodes(BinaryReader r)
+        private List<Tuple<ushort, Opcode>> ReadOpcodes(BinaryReader r)
         {
-            var opcodes = new List<Opcode>();
+            var opcodes = new List<Tuple<ushort, Opcode>>();
             var opcodeEntries = new List<OpcodeEntry>();
 
             ReadMagic(r, CrimsonTags.OPCO);
@@ -465,14 +473,14 @@ namespace EventManifestCompiler.ResGen
 
             for (uint i = 0; i < count; ++i) {
                 long offset = r.BaseStream.Position;
-                var unk1 = r.ReadUInt16();
+                var taskId = r.ReadUInt16();
                 var value = r.ReadUInt16();
                 var messageId = r.ReadUInt32();
                 var nameOffset = r.ReadUInt32();
                 string name = ReadStringAt(r, nameOffset);
                 opcodeEntries.Add(
                     new OpcodeEntry {
-                        Unk1 = unk1,
+                        TaskId = taskId,
                         Value = value,
                         MessageId = messageId,
                         Name = name,
@@ -481,7 +489,7 @@ namespace EventManifestCompiler.ResGen
                 var opcode = new Opcode(QName.Parse(name, nsr), Located.Create((byte)value));
                 opcode.Message = ResolveMessage(messageId);
                 MarkObject(offset, opcode);
-                opcodes.Add(opcode);
+                opcodes.Add(Tuple.Create(taskId, opcode));
             }
 
             foreach (var opcode in opcodeEntries)
@@ -931,7 +939,7 @@ namespace EventManifestCompiler.ResGen
 
         private class OpcodeEntry
         {
-            public ushort Unk1;
+            public ushort TaskId;
             public ushort Value;
             public uint MessageId;
             public string Name;
@@ -940,8 +948,8 @@ namespace EventManifestCompiler.ResGen
             {
                 return string.Format(
                     CultureInfo.InvariantCulture,
-                    "Opcode({0}, Value={1}, Message=0x{2:X}, Unk1={3})",
-                    Name, Value, MessageId, Unk1);
+                    "Opcode({0}, Value={1}, Message=0x{2:X}, TaskId={3})",
+                    Name, Value, MessageId, TaskId);
             }
         }
 

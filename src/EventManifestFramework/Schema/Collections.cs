@@ -172,6 +172,23 @@ namespace EventManifestFramework.Schema
         }
     }
 
+    public sealed class TaskOpcodeCollection : UniqueCollection<Opcode>
+    {
+        public TaskOpcodeCollection()
+        {
+            this.UniqueConstraintFor(e => e.Name)
+                .WithMessage("Duplicate opcode name: '{0}'", e => e.Name)
+                .DiagnoseUsing(DiagUtils.ReportError);
+            this.UniqueConstraintFor(e => e.Value)
+                .WithMessage("Duplicate opcode value: {0} (0x{0:X})", e => e.Value)
+                .DiagnoseUsing(DiagUtils.ReportError);
+            this.UniqueConstraintFor(e => e.Symbol)
+                .IfNotNull()
+                .WithMessage("Duplicate opcode symbol: '{0}'", e => e.Symbol)
+                .DiagnoseUsing(DiagUtils.ReportError);
+        }
+    }
+
     public sealed class TaskCollection : ProviderItemCollection<Task>
     {
         public TaskCollection(Provider provider)

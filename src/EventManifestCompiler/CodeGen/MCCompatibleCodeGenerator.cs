@@ -302,15 +302,17 @@ namespace EventManifestCompiler.CodeGen
 
         private void WriteOpcodes(Provider provider)
         {
-            if (provider.Opcodes.Count == 0 || provider.Opcodes.All(t => t.Imported))
+            var allOpcodes = provider.GetAllOpcodes();
+            if (!allOpcodes.Any() || allOpcodes.All(t => t.Imported))
                 return;
 
             ow.WriteLine("//");
             ow.WriteLine("// Opcodes");
             ow.WriteLine("//");
-            foreach (var opcode in provider.Opcodes.Where(t => !t.Imported))
+            foreach (var opcode in allOpcodes.Where(t => !t.Imported))
                 ow.WriteLine("#define {0} 0x{1:x}",
                              naming.GetIdentifier(opcode), opcode.Value);
+
             ow.WriteLine();
         }
 
@@ -646,7 +648,8 @@ namespace EventManifestCompiler.CodeGen
             return false;
         }
 
-        private string GetArgSalSpec(Property property, IList<Property> properties, bool usePropertyName)
+        private string GetArgSalSpec(
+            Property property, IList<Property> properties, bool usePropertyName)
         {
             if (property.Kind == PropertyKind.Struct)
                 return "_In_";
@@ -742,6 +745,7 @@ namespace EventManifestCompiler.CodeGen
                     if (data.Length.IsSpecified)
                         return "LPCCH";
                     return "LPCSTR";
+
                 case "Pointer": return "const void *";
                 case "Binary": return "const BYTE*";
                 case "GUID": return "LPCGUID";

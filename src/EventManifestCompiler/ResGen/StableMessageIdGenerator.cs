@@ -48,7 +48,8 @@ namespace EventManifestCompiler.ResGen
         {
             if (opcode == null)
                 return Message.UnusedId;
-            return CreateId(opcode, 0x3, provider.Index, 0, opcode.Value);
+            var taskId = opcode.Task != null ? (byte)opcode.Task.Value.Value : (byte)0;
+            return CreateId(opcode, 0x3, provider.Index, taskId, opcode.Value);
         }
 
         public uint CreateId(Keyword keyword, Provider provider)

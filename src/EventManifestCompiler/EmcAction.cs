@@ -245,7 +245,7 @@ namespace EventManifestCompiler
                     obj.Message.Id = msgIdGen.CreateId(obj, provider);
                 foreach (var obj in provider.Tasks.Where(e => NeedsId(e.Message)))
                     obj.Message.Id = msgIdGen.CreateId(obj, provider);
-                foreach (var obj in provider.Opcodes.Where(e => NeedsId(e.Message)))
+                foreach (var obj in provider.GetAllOpcodes().Where(e => NeedsId(e.Message)))
                     obj.Message.Id = msgIdGen.CreateId(obj, provider);
                 foreach (var obj in provider.Keywords.Where(e => NeedsId(e.Message)))
                     obj.Message.Id = msgIdGen.CreateId(obj, provider);

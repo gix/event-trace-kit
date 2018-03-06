@@ -24,8 +24,8 @@ namespace EventManifestCompiler.CodeGen
             Located.Create(string.Empty));
 
         private readonly ICodeGenOptions options;
-        private readonly string etwNamespace = string.Empty;
         private readonly ICodeGenNomenclature naming;
+        private readonly string etwNamespace = string.Empty;
 
         private IndentableTextWriter ow;
 
@@ -334,11 +334,12 @@ namespace EventManifestCompiler.CodeGen
 
         private void WriteOpcodes(Provider provider)
         {
-            if (provider.Opcodes.Count == 0)
+            var allOpcodes = provider.GetAllOpcodes();
+            if (!allOpcodes.Any() || allOpcodes.All(t => t.Imported))
                 return;
 
             ow.WriteLine("// Opcodes");
-            foreach (var opcode in provider.Opcodes)
+            foreach (var opcode in allOpcodes.Where(t => !t.Imported))
                 ow.WriteLine("uint8_t const {0} = 0x{1:X};",
                              naming.GetIdentifier(opcode), opcode.Value);
             ow.WriteLine();

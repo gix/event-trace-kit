@@ -151,6 +151,17 @@ namespace EventManifestFramework.Schema
                     task.Symbol ?? "<no symbol>");
             }
 
+            foreach (var opcode in task.Opcodes) {
+                if (opcode.Name.Value.Namespace == WinEventSchema.Namespace) {
+                    result = false;
+                    diags.ReportError(
+                        opcode.Name.Location ?? task.Location,
+                        "Invalid opcode '{0}' for task '{1}'. Task-specific opcodes cannot use opcode values defined in winmeta.xml.",
+                        opcode.Name,
+                        task.Symbol ?? "<no symbol>");
+                }
+            }
+
             return result;
         }
 

@@ -99,5 +99,10 @@ namespace EventManifestFramework.Schema
 
             return (byte)channelValue;
         }
+
+        public IEnumerable<Opcode> GetAllOpcodes()
+        {
+            return Opcodes.Concat(Tasks.SelectMany(x => x.Opcodes));
+        }
     }
 }

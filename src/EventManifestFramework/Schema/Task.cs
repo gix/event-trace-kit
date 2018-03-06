@@ -34,6 +34,8 @@ namespace EventManifestFramework.Schema
 
         public bool Imported { get; set; }
 
+        public TaskOpcodeCollection Opcodes { get; } = new TaskOpcodeCollection();
+
         public override string ToString()
         {
             return Name.ToString();

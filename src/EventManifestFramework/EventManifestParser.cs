@@ -201,6 +201,8 @@ namespace EventManifestFramework
                 manifest.Providers.Add(provider);
             }
 
+            ResolveImportedChannels(manifest);
+
             if (trap.ErrorOccurred)
                 return null;
 
@@ -419,18 +421,16 @@ namespace EventManifestFramework
                 ParameterFileName = parameterFileName,
             };
 
-            var ctx = new EventManifestContext(provider, manifest, metadata);
+            var ctx = new ProviderContext(provider, manifest, metadata);
 
             var importChannelName = EventManifestSchema.Namespace + "importChannel";
             var valueMapName = EventManifestSchema.Namespace + "valueMap";
 
             foreach (XElement child in elem.XPathSelectElements("e:channels/e:channel | e:channels/e:importChannel", nsResolver)) {
                 Channel channel;
-                if (child.Name == importChannelName) {
-                    channel = ImportChannel(child, ctx);
-                    if (channel == null)
-                        continue;
-                } else
+                if (child.Name == importChannelName)
+                    channel = ReadImportChannel(child);
+                else
                     channel = ReadChannel(child, ctx);
 
                 channel.Index = provider.Channels.Count;
@@ -525,40 +525,66 @@ namespace EventManifestFramework
             return channel;
         }
 
-        private Channel ImportChannel(XElement elem, EventManifestContext ctx)
+        private Channel ReadImportChannel(XElement elem)
         {
             var name = elem.GetString("name");
             var id = elem.GetOptionalString("chid");
             var symbol = elem.GetCSymbol("symbol");
 
-            Channel imported = metadata.Coalesce(m => m.Channels.GetByName(name));
-            if (imported == null) {
-                var importableChannels = metadata.Coalesce(m => m.Channels.Select(c => c.Name.Value));
-                diags.ReportError(name.Location, "Unable to import unknown channel '{0}'", name);
-                if (importableChannels == null)
-                    diags.Report(
-                        DiagnosticSeverity.Note,
-                        name.Location,
-                        "No known importable channels.");
-                else
-                    diags.Report(
-                        DiagnosticSeverity.Note,
-                        name.Location,
-                        "Known importable channels: {0}",
-                        string.Join(", ", importableChannels));
-                return null;
-            }
-
-            var channel = new Channel(imported.Name, imported.Type) {
+            return new Channel(name, (ChannelType)0) {
                 Id = id,
                 Symbol = symbol,
-                Value = imported.Value,
-                Message = ctx.ImportString(imported.Message),
-                Imported = true,
-                Location = elem.GetLocation(),
+                Imported = true
             };
+        }
 
-            return channel;
+        private void ResolveImportedChannels(EventManifest manifest)
+        {
+            foreach (var provider in manifest.Providers) {
+                var importableChannels =
+                    manifest.Providers.SelectMany(x => x.Channels)
+                        .Concat(metadata.SelectMany(m => m.Channels))
+                        .Where(x => !x.Imported).ToList();
+
+                foreach (var channel in provider.Channels) {
+                    if (!channel.Imported)
+                        continue;
+
+                    var id = channel.Id?.Value ?? channel.Name?.Value;
+                    var name = channel.Name;
+
+                    Channel imported =
+                        importableChannels.Where(x => x != channel)
+                            .FirstOrDefault(x => x.Id == id || x.Name == id);
+
+                    if (imported == null) {
+                        diags.ReportError(name.Location, "Unable to import unknown channel '{0}'", name);
+                        if (importableChannels.Count == 0)
+                            diags.Report(
+                                DiagnosticSeverity.Note,
+                                name.Location,
+                                "No known importable channels.");
+                        else
+                            diags.Report(
+                                DiagnosticSeverity.Note,
+                                name.Location,
+                                "Known importable channels: {0}",
+                                string.Join(", ", importableChannels.Select(x => x.Name)));
+                        continue;
+                    }
+
+                    channel.Type = imported.Type;
+                    channel.Id = imported.Id;
+                    channel.Access = imported.Access;
+                    channel.Isolation = imported.Isolation;
+                    channel.Enabled = imported.Enabled;
+
+                    if (imported.Value < 16) {
+                        channel.Value = imported.Value;
+                        channel.Message = manifest.ImportString(imported.Message);
+                    }
+                }
+            }
         }
 
         private Task ReadTask(XElement elem, IEventManifestContext ctx)
@@ -580,12 +606,18 @@ namespace EventManifestFramework
                 Location = elem.GetLocation(),
             };
 
+            foreach (XElement child in elem.XPathSelectElements("e:opcodes/e:opcode", nsResolver)) {
+                var opcode = ReadOpcode(child, ctx, task);
+                if (opcode != null)
+                    task.Opcodes.TryAdd(opcode, diags);
+            }
+
             manifestSpec.IsSatisfiedBy(task);
 
             return task;
         }
 
-        private Opcode ReadOpcode(XElement elem, IEventManifestContext ctx)
+        private Opcode ReadOpcode(XElement elem, IEventManifestContext ctx, Task task = null)
         {
             var name = elem.GetQName("name");
             var symbol = elem.GetCSymbol("symbol");
@@ -597,6 +629,7 @@ namespace EventManifestFramework
                 ReportMissingMessage(msgRef, new OpcodeName(name));
 
             var opcode = new Opcode(name, value, symbol, message) {
+                Task = task,
                 Location = elem.GetLocation(),
             };
 
@@ -732,7 +765,7 @@ namespace EventManifestFramework
             return item;
         }
 
-        private Template ReadTemplate(XElement elem, EventManifestContext ctx)
+        private Template ReadTemplate(XElement elem, ProviderContext ctx)
         {
             var id = elem.GetString("tid");
             var name = elem.GetOptionalString("name");
@@ -832,7 +865,7 @@ namespace EventManifestFramework
             return elem;
         }
 
-        private DataProperty ReadDataProperty(XElement elem, EventManifestContext ctx)
+        private DataProperty ReadDataProperty(XElement elem, ProviderContext ctx)
         {
             var name = elem.GetString("name");
             InType inType = metadata.Coalesce(m => m.GetInType(elem.GetQName("inType")));
@@ -860,7 +893,7 @@ namespace EventManifestFramework
             return data;
         }
 
-        private StructProperty ReadStructProperty(XElement elem, EventManifestContext ctx)
+        private StructProperty ReadStructProperty(XElement elem, ProviderContext ctx)
         {
             var name = elem.GetString("name");
             var count = elem.GetOptionalString("count");
@@ -883,7 +916,7 @@ namespace EventManifestFramework
             return prop;
         }
 
-        private Filter ReadFilter(XElement elem, EventManifestContext ctx)
+        private Filter ReadFilter(XElement elem, ProviderContext ctx)
         {
             var name = elem.GetQName("name");
             var symbol = elem.GetCSymbol("symbol");
@@ -910,7 +943,7 @@ namespace EventManifestFramework
             return filter;
         }
 
-        private Event ReadEvent(XElement elem, EventManifestContext ctx)
+        private Event ReadEvent(XElement elem, ProviderContext ctx)
         {
             var symbol = elem.GetCSymbol("symbol");
 
@@ -925,14 +958,15 @@ namespace EventManifestFramework
             var msgRef = elem.GetOptionalString("message");
             var notLogged = elem.GetOptionalBool("notLogged");
 
+            var task = ctx.GetTask(taskName);
             var evt = new Event(value, version.GetValueOrDefault()) {
                 Symbol = symbol,
                 NotLogged = notLogged,
                 Message = ctx.GetString(msgRef),
                 Channel = ctx.GetChannel(channelToken),
                 Level = ctx.GetLevel(levelName),
-                Opcode = ctx.GetOpcode(opcodeName),
-                Task = ctx.GetTask(taskName),
+                Opcode = ctx.GetOpcode(opcodeName, task),
+                Task = task,
                 Template = ctx.GetTemplate(templateToken),
                 Location = elem.GetLocation(),
             };
@@ -1247,13 +1281,13 @@ namespace EventManifestFramework
             }
         }
 
-        private sealed class EventManifestContext : IEventManifestContext
+        private sealed class ProviderContext : IEventManifestContext
         {
             private readonly Provider provider;
             private readonly EventManifest manifest;
             private readonly List<IEventManifestMetadata> metadata;
 
-            public EventManifestContext(
+            public ProviderContext(
                 Provider provider, EventManifest manifest, List<IEventManifestMetadata> metadata)
             {
                 this.provider = provider;
@@ -1302,16 +1336,16 @@ namespace EventManifestFramework
                 if (meta == null)
                     return null;
 
-                var imported = new Channel(
-                    meta.Name,
-                    meta.Type,
-                    meta.Id,
-                    meta.Symbol,
-                    meta.Value,
-                    meta.Access,
-                    meta.Isolation,
-                    meta.Enabled,
-                    ImportString(meta.Message));
+                var imported = new Channel(meta.Name, meta.Type) {
+                    Id = meta.Id,
+                    Value = meta.Value,
+                    Access = meta.Access,
+                    Isolation = meta.Isolation,
+                    Enabled = meta.Enabled,
+                    Message = ImportString(meta.Message),
+                    Imported = true
+                };
+
                 provider.Channels.Add(imported);
 
                 return imported;
@@ -1341,12 +1375,34 @@ namespace EventManifestFramework
                 return imported;
             }
 
-            public Opcode GetOpcode(QName name)
+            private static Opcode FindTaskOpcode(Provider provider, QName name, Task task)
+            {
+                Opcode providerOpcode = null;
+                foreach (var opcode in provider.Opcodes) {
+                    if (opcode.Name != name)
+                        continue;
+
+                    if (opcode.Task == task)
+                        return opcode;
+
+                    if (opcode.Task == null)
+                        providerOpcode = opcode;
+                }
+
+                return providerOpcode;
+            }
+
+            public Opcode GetOpcode(QName name, Task task = null)
             {
                 if (name == null)
                     return null;
 
-                Opcode opcode = provider.Opcodes.GetByName(name);
+                Opcode opcode;
+                if (task == null)
+                    opcode = provider.Opcodes.Where(x => x.Task == null).FirstOrDefault(e => e.Name == name);
+                else
+                    opcode = task.Opcodes.GetByName(name) ?? FindTaskOpcode(provider, name, task);
+
                 if (opcode != null)
                     return opcode;
 

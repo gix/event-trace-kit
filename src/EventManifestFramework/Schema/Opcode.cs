@@ -8,6 +8,8 @@ namespace EventManifestFramework.Schema
     [DebuggerDisplay("{Name} ({Value})")]
     public sealed class Opcode : ProviderItem
     {
+        private Task task;
+
         public Opcode(LocatedRef<QName> name, LocatedVal<byte> value)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
@@ -29,6 +31,16 @@ namespace EventManifestFramework.Schema
         public LocalizedString Message { get; set; }
 
         public bool Imported { get; set; }
+
+        public Task Task
+        {
+            get => task;
+            set
+            {
+                task = value;
+                Provider = value?.Provider;
+            }
+        }
 
         public override string ToString()
         {

@@ -37,7 +37,7 @@ namespace EventManifestCompiler.ResGen
         public void Write(IList<Provider> providers)
         {
             WriteCrimBlock(providers);
-            // FIXME: Why are there too zero-bytes at the end?
+            // FIXME: Why are there two zero-bytes at the end?
             writer.WriteUInt16(0);
         }
 
@@ -108,7 +108,7 @@ namespace EventManifestCompiler.ResGen
                         WriteTasks(provider.Tasks);
                         break;
                     case EventFieldKind.Opcode:
-                        WriteOpcodes(provider.Opcodes);
+                        WriteOpcodes(provider.GetAllOpcodes());
                         break;
                     case EventFieldKind.Keyword:
                         WriteKeywords(provider.Keywords);
@@ -185,9 +185,9 @@ namespace EventManifestCompiler.ResGen
             writer.WriteResource(ref startPos, ref b);
         }
 
-        private void WriteOpcodes(IList<Opcode> opcodes)
+        private void WriteOpcodes(IEnumerable<Opcode> opcodesRange)
         {
-            opcodes = opcodes.ToList().StableSortBy(i => i.Value);
+            var opcodes = opcodesRange.ToList().StableSortBy(i => (i.Value.Value << 16) | (i.Task?.Value.Value ?? 0));
 
             long startPos = writer.Position;
             writer.Position += Marshal.SizeOf<ListBlock>();
@@ -197,7 +197,7 @@ namespace EventManifestCompiler.ResGen
                 MarkObjectOffset(opcode, writer.Position);
 
                 var op = new OpcodeEntry();
-                op.Unknown1 = 0;
+                op.TaskId = opcode.Task?.Value.Value ?? 0;
                 op.Value = opcode.Value;
                 op.MessageId = GetMessageId(opcode.Message);
                 op.NameOffset = (uint)offset;
@@ -549,7 +549,7 @@ namespace EventManifestCompiler.ResGen
             PatternMapEntry m;
             m.Magic = CrimsonTags.QUER;
             // Length seems to span until the end of the strings, even though
-            // Other maps interleave this. Bug in MC?
+            // other maps interleave this. Bug in MC?
             m.Length = (uint)(dataOffset - startPos);
             m.NameOffset = (uint)nameOffset;
             m.FormatOffset = (uint)formatOffset;
