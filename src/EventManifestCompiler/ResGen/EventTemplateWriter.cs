@@ -452,11 +452,7 @@ namespace EventManifestCompiler.ResGen
         private static byte[] ConvertToBinXml(XDocument doc, byte[] propTypes)
         {
             using (var buffer = new MemoryStream()) {
-                using (var w = IO.CreateBinaryWriter(buffer)) {
-                    var binXmlWriter = new BinXmlWriter(w, propTypes);
-                    binXmlWriter.WriteFragment(doc);
-                    w.FillAlignment(4);
-                }
+                BinXmlWriter.Write(buffer, doc, propTypes);
                 return buffer.ToArray();
             }
         }

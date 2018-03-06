@@ -1,4 +1,4 @@
-﻿namespace EventManifestCompiler.Support
+namespace EventManifestCompiler.Support
 {
     using System.IO;
     using System.Text;
@@ -35,19 +35,19 @@
             }
         }
 
-        public static StreamWriter CreateStreamWriter(Stream stream, bool bom = false)
+        public static StreamWriter CreateStreamWriter(Stream output, bool bom = false)
         {
-            return new StreamWriter(stream, bom ? UTF8BOM : UTF8NoBOM, 0x400, true);
+            return new StreamWriter(output, bom ? UTF8BOM : UTF8NoBOM, 0x400, true);
         }
 
-        public static BinaryReader CreateBinaryReader(Stream stream)
+        public static BinaryReader CreateBinaryReader(Stream input)
         {
-            return new BinaryReader(stream, UTF8NoBOM, false);
+            return new BinaryReader(input, UTF8NoBOM, true);
         }
 
-        public static BinaryWriter CreateBinaryWriter(Stream stream)
+        public static BinaryWriter CreateBinaryWriter(Stream output)
         {
-            return new BinaryWriter(stream, UTF8NoBOM, false);
+            return new BinaryWriter(output, UTF8NoBOM, true);
         }
     }
 }

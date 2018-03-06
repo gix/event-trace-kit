@@ -26,8 +26,8 @@ namespace EventManifestFramework.Tests
             Diagnostics.Add(diag);
         }
 
-        public List<Diagnostic> Errors { get; private set; }
-        public List<Diagnostic> Diagnostics { get; private set; }
+        public List<Diagnostic> Errors { get; }
+        public List<Diagnostic> Diagnostics { get; }
 
         public sealed class Diagnostic
         {
@@ -41,10 +41,10 @@ namespace EventManifestFramework.Tests
                 Args = args;
             }
 
-            public DiagnosticSeverity Severity { get; private set; }
-            public SourceLocation Location { get; private set; }
-            public string Message { get; private set; }
-            public object[] Args { get; private set; }
+            public DiagnosticSeverity Severity { get; }
+            public SourceLocation Location { get; }
+            public string Message { get; }
+            public object[] Args { get; }
 
             public string FormattedMessage =>
                 string.Format(CultureInfo.InvariantCulture, Message, Args);

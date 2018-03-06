@@ -11,15 +11,27 @@ namespace EventManifestCompiler.BinXml
     using EventManifestCompiler.Extensions;
     using EventManifestCompiler.Support;
 
-    public sealed class BinXmlWriter
+    public sealed class BinXmlWriter : IDisposable
     {
         private readonly BinaryWriter w;
-        private readonly IList<byte> types;
+        private readonly IList<byte> substitutionTypes;
+        private bool useEmptyElements = false;
 
-        public BinXmlWriter(BinaryWriter writer, IList<byte> types)
+        public BinXmlWriter(Stream output, IList<byte> substitutionTypes)
         {
-            w = writer;
-            this.types = types;
+            this.substitutionTypes = substitutionTypes;
+            w = IO.CreateBinaryWriter(output);
+        }
+
+        public static void Write(Stream output, XDocument doc, IList<byte> types)
+        {
+            using (var writer = new BinXmlWriter(output, types))
+                writer.WriteFragment(doc);
+        }
+
+        public void Dispose()
+        {
+            w.Dispose();
         }
 
         public void WriteFragment(XDocument doc)
@@ -27,19 +39,20 @@ namespace EventManifestCompiler.BinXml
             WriteFragmentHeader();
             WriteElement(doc.Root);
             w.WriteUInt8(Token.EndOfFragmentToken);
+            w.FillAlignment(4);
         }
 
         private void WriteFragmentHeader()
         {
-            const byte Token = BinXml.Token.FragmentHeaderToken;
-            const byte Major = Constants.MajorVersion;
-            const byte Minor = Constants.MinorVersion;
-            const byte Flags = 0;
+            const byte token = Token.FragmentHeaderToken;
+            const byte major = Constants.MajorVersion;
+            const byte minor = Constants.MinorVersion;
+            const byte flags = 0;
 
-            w.WriteUInt8(Token);
-            w.WriteUInt8(Major);
-            w.WriteUInt8(Minor);
-            w.WriteUInt8(Flags);
+            w.WriteUInt8(token);
+            w.WriteUInt8(major);
+            w.WriteUInt8(minor);
+            w.WriteUInt8(flags);
         }
 
         private void WriteElement(XElement elem)
@@ -57,7 +70,7 @@ namespace EventManifestCompiler.BinXml
             if (elem.HasAttributes)
                 WriteAttributeList(elem);
 
-            if (elem.IsEmpty) {
+            if (elem.IsEmpty && useEmptyElements) {
                 w.WriteUInt8(Token.CloseEmptyElementToken);
                 return;
             }
@@ -121,10 +134,10 @@ namespace EventManifestCompiler.BinXml
 
         private void WriteNormalSubstitution(int id)
         {
-            if (id == 0 || id > types.Count)
+            if (id == 0 || id > substitutionTypes.Count)
                 throw new InternalException("SubstitutionId out of range.");
             --id;
-            byte valueType = types[id];
+            byte valueType = substitutionTypes[id];
             w.WriteUInt8(Token.NormalSubstitutionToken);
             w.WriteUInt16((ushort)id);
             w.WriteUInt8(valueType);

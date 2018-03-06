@@ -253,10 +253,7 @@ namespace EventManifestCompiler.Support
             indentationPending = true;
         }
 
-        public override Encoding Encoding
-        {
-            get { return writer.Encoding; }
-        }
+        public override Encoding Encoding => writer.Encoding;
 
         private sealed class InternalIndentScope : IDisposable
         {

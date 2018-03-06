@@ -15,15 +15,16 @@ namespace EventManifestCompiler.BinXml
         private readonly IList<BinXmlType> substitutionTypes;
         private readonly BinaryReader r;
 
-        public BinXmlReader(Stream input, IList<BinXmlType> substitutionTypes)
+        public BinXmlReader(Stream input, IList<BinXmlType> substitutionTypes = null)
         {
-            this.substitutionTypes = substitutionTypes;
+            this.substitutionTypes = substitutionTypes ?? new List<BinXmlType>();
             r = new BinaryReader(input, Encoding.ASCII, true);
         }
 
-        public static XDocument Read(Stream input, IList<BinXmlType> substitutionTypes)
+        public static XDocument Read(Stream input, IList<BinXmlType> substitutionTypes = null)
         {
-            return new BinXmlReader(input, substitutionTypes).Read();
+            using (var reader = new BinXmlReader(input, substitutionTypes))
+                return reader.Read();
         }
 
         public void Dispose()
@@ -43,14 +44,16 @@ namespace EventManifestCompiler.BinXml
             while (!eof) {
                 byte token = r.ReadByte();
                 switch (token & 0xF) {
-                    case Token.EndOfFragmentToken:
-                        eof = true;
-                        break;
                     case Token.OpenStartElementToken:
                         doc.Add(ReadElement((token & Constants.HasMoreFlag) != 0));
                         break;
+                    case Token.EndOfFragmentToken:
+                        eof = true;
+                        break;
                     default:
-                        throw new InternalException("Unexpected BinXml tag 0x{0:X}", token);
+                        throw UnexpectedToken(
+                            r.BaseStream.Position - 1,
+                            token, Token.OpenStartElementToken, Token.EndOfFragmentToken);
                 }
             }
 
@@ -63,6 +66,23 @@ namespace EventManifestCompiler.BinXml
             byte major = r.ReadByte();
             byte minor = r.ReadByte();
             byte flags = r.ReadByte();
+
+            if (token != Token.FragmentHeaderToken)
+                throw ParseError(
+                    r.BaseStream.Position - 4,
+                    "Unexpected token 0x{0:X} ({0}), expected 0x{1:X} ({1})",
+                    token, Token.FragmentHeaderToken);
+
+            if (major != Constants.MajorVersion || minor != Constants.MinorVersion)
+                throw ParseError(
+                    r.BaseStream.Position - 3,
+                    "Unsupported version {0}.{1}, expected {2}.{3}",
+                    major, minor, Constants.MajorVersion, Constants.MinorVersion);
+
+            if (flags != 0)
+                throw ParseError(
+                    r.BaseStream.Position - 1,
+                    "Unsupported flags 0x{0:X}, must be zero.", flags);
         }
 
         private void ReadNormalSubstitution(XElement parent)
@@ -93,9 +113,9 @@ namespace EventManifestCompiler.BinXml
             byte token = r.ReadByte();
             if (token != Token.CloseStartElementToken &&
                 token != Token.CloseEmptyElementToken)
-                Console.WriteLine(
-                    "Unexpected BinXml tag 0x{0:X}, expected 0x{1:X} or 0x{2:X}",
-                    token, Token.CloseStartElementToken, Token.CloseEmptyElementToken);
+                throw UnexpectedToken(
+                    r.BaseStream.Position - 1, token,
+                    Token.CloseStartElementToken, Token.CloseEmptyElementToken);
 
             if (token != Token.CloseEmptyElementToken)
                 ReadElementContent(element);
@@ -127,13 +147,13 @@ namespace EventManifestCompiler.BinXml
             return null;
         }
 
-        private XElement ReadElementContent(XElement parent)
+        private void ReadElementContent(XElement parent)
         {
             while (true) {
                 byte token = r.ReadByte();
                 switch (token & 0xF) {
                     case Token.EndElementToken:
-                        return parent;
+                        return;
 
                     case Token.OpenStartElementToken:
                         parent.Add(ReadElement((token & Constants.HasMoreFlag) != 0));
@@ -143,7 +163,8 @@ namespace EventManifestCompiler.BinXml
                         break;
 
                     default:
-                        throw new InternalException("Unexpected BinXml tag 0x{0:X}", token);
+                        throw ParseError(
+                            r.BaseStream.Position - 1, "Unexpected BinXml tag 0x{0:X}", token);
                 }
             }
         }
@@ -152,7 +173,7 @@ namespace EventManifestCompiler.BinXml
         {
             ushort hash = r.ReadUInt16();
             ushort nameLength = r.ReadUInt16();
-            string name = r.ReadPaddedString(Encoding.Unicode, nameLength * 2);
+            string name = r.ReadPaddedString(Encoding.Unicode, (uint)nameLength * 2);
             ushort nul = r.ReadUInt16();
             return name;
         }
@@ -165,30 +186,33 @@ namespace EventManifestCompiler.BinXml
             byte token;
             do {
                 if (r.BaseStream.Position > endOffset)
-                    throw new InternalException(
-                        "Unexpected eof while reading attributes");
+                    throw ParseError(
+                        r.BaseStream.Position,
+                        "Read past the end (at offset 0x{0:X}) of AttributeList block",
+                        endOffset);
 
                 token = r.ReadByte();
                 if ((token & 0xF) != Token.AttributeToken)
-                    throw new InternalException(
-                        "Invalid attribute token 0x{0} at byte offset {1}",
-                        token & 0xF,
-                        r.BaseStream.Position - 1);
+                    throw ParseError(
+                        r.BaseStream.Position - 1,
+                        "Invalid attribute token 0x{0}.",
+                        token & 0xF);
 
                 string name = ReadName();
 
                 byte dataToken = r.ReadByte();
                 byte valueType = r.ReadByte();
+
                 if (dataToken != 0x5)
-                    throw new InternalException(
-                        "Unhandled attribute data token {0} at byte offset {1}",
-                        dataToken,
-                        r.BaseStream.Position - 1);
+                    throw ParseError(
+                        r.BaseStream.Position - 1,
+                        "Unexpected attribute data token {0}, expected 5.",
+                        dataToken);
                 if (valueType != 0x1)
-                    throw new InternalException(
-                        "Unexpected attribute value type {0} at byte offset {1}",
-                        valueType,
-                        r.BaseStream.Position - 1);
+                    throw ParseError(
+                        r.BaseStream.Position - 2,
+                        "Unexpected attribute value type {0}, expected 1.",
+                        valueType);
 
                 string value = ReadUnicodeString();
 
@@ -196,17 +220,41 @@ namespace EventManifestCompiler.BinXml
             } while ((token & Constants.HasMoreFlag) != 0);
 
             if (r.BaseStream.Position != endOffset)
-                throw new InternalException(
-                    "AttribList read error: curr offset: {0}, expected: {1})",
+                throw ParseError(
                     r.BaseStream.Position,
+                    "Read past the end (at offset 0x{0:X}) of AttributeList block",
                     endOffset);
+
             r.BaseStream.Position = endOffset;
         }
 
         private string ReadUnicodeString()
         {
             ushort length = r.ReadUInt16();
-            return r.ReadPaddedString(Encoding.Unicode, length * 2);
+            return r.ReadPaddedString(Encoding.Unicode, (uint)length * 2);
+        }
+
+        private Exception UnexpectedToken(long position, byte token, byte expected1, byte expected2)
+        {
+            return ParseError(
+                position,
+                "Unexpected BinXml tag 0x{0:X} ({0}), expected 0x{1:X} ({1}) or 0x{2:X} ({2})",
+                token, expected1, expected2);
+        }
+
+        private Exception ParseError(long position, string format, params object[] args)
+        {
+            string message = string.Format(format, args);
+
+            string input = GetStreamInput(r.BaseStream);
+            return new InvalidOperationException($"{input}(offset {position}): {message}");
+        }
+
+        private static string GetStreamInput(Stream stream)
+        {
+            if (stream is FileStream file)
+                return file.Name;
+            return null;
         }
     }
 }
