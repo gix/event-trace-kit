@@ -55,7 +55,6 @@
     <Compile Include="Collections\CachingUniqueConstraint.cs" />
     <Compile Include="EventManifestParser.cs" />
     <Compile Include="IEventManifestParser.cs" />
-    <Compile Include="Internal\Extensions\BinaryReaderExtensions.cs" />
     <Compile Include="Internal\Extensions\BinaryWriterExtensions.cs" />
     <Compile Include="Internal\Extensions\CollectionExtensions.cs" />
     <Compile Include="Internal\Extensions\SortExtensions.cs" />

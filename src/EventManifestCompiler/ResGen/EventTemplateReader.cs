@@ -50,44 +50,10 @@ namespace EventManifestCompiler.ResGen
             set => logWriter = value ?? Console.Out;
         }
 
-        public void DumpMessageTable(string filename)
-        {
-            using (var input = File.OpenRead(filename))
-                DumpMessageTable(input);
-        }
-
-        public void DumpMessageTable(Stream input)
-        {
-            log = true;
-            try {
-                using (var reader = IO.CreateBinaryReader(input))
-                    ReadMessageTable(reader);
-            } finally {
-                log = false;
-            }
-        }
-
         public IEnumerable<Message> ReadMessageTable(Stream input)
         {
             using (var reader = IO.CreateBinaryReader(input))
                 return ReadMessageTable(reader);
-        }
-
-        public void DumpWevtTemplate(string filename)
-        {
-            using (var input = File.OpenRead(filename))
-                DumpWevtTemplate(input);
-        }
-
-        public void DumpWevtTemplate(Stream input)
-        {
-            log = true;
-            try {
-                using (var reader = new BinaryReader(input))
-                    ReadCrimBlock(reader);
-            } finally {
-                log = false;
-            }
         }
 
         public EventManifest ReadWevtTemplate(Stream input, IEnumerable<Message> messages)

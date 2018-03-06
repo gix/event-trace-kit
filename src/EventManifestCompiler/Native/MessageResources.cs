@@ -3,7 +3,7 @@ namespace EventManifestCompiler.Native
     using System.Runtime.InteropServices;
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct MESSAGE_RESOURCE_DATA
+    internal struct MESSAGE_RESOURCE_DATA
     {
         public uint NumberOfBlocks;
         //[MarshalAs(UnmanagedType.ByValArray, SizeParamIndex = 0)]
@@ -11,7 +11,7 @@ namespace EventManifestCompiler.Native
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct MESSAGE_RESOURCE_BLOCK
+    internal struct MESSAGE_RESOURCE_BLOCK
     {
         public uint LowId;
         public uint HighId;
@@ -19,7 +19,7 @@ namespace EventManifestCompiler.Native
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct MESSAGE_RESOURCE_ENTRY
+    internal struct MESSAGE_RESOURCE_ENTRY
     {
         public ushort Length;
         public ushort Flags;

@@ -70,6 +70,8 @@
     <Compile Include="Native\SafeModuleHandle.cs" />
     <Compile Include="Native\UnsafeNativeMethods.cs" />
     <Compile Include="ResGen\Crimson\BlockTypes.cs" />
+    <Compile Include="ResGen\EventTemplateDumper.cs" />
+    <Compile Include="Support\ScopedWriter.cs" />
     <Compile Include="Support\IndentableTextWriter.cs" />
     <Compile Include="CodeGen\MCCompatibleCodeGenerator.cs" />
     <Compile Include="ResGen\Crimson\CrimsonTags.cs" />

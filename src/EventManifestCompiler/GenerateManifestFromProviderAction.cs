@@ -50,15 +50,15 @@ namespace EventManifestCompiler
 
             using (module) {
                 var metadata = EventManifestParser.LoadWinmeta(diags);
-                var templateReader = new EventTemplateReader(diags, metadata);
+                var reader = new EventTemplateReader(diags, metadata);
 
                 IEnumerable<Message> messages;
                 using (var stream = module.OpenResource(UnsafeNativeMethods.RT_MESSAGETABLE, 1))
-                    messages = templateReader.ReadMessageTable(stream);
+                    messages = reader.ReadMessageTable(stream);
 
                 EventManifest manifest;
                 using (var stream = module.OpenResource("WEVT_TEMPLATE", 1))
-                    manifest = templateReader.ReadWevtTemplate(stream, messages);
+                    manifest = reader.ReadWevtTemplate(stream, messages);
 
                 foreach (var provider in manifest.Providers) {
                     provider.ResourceFileName = providerBinary;

@@ -6,7 +6,6 @@ namespace EventManifestCompiler
     using EventManifestCompiler.Extensions;
     using EventManifestCompiler.Native;
     using EventManifestCompiler.ResGen;
-    using EventManifestFramework;
     using EventManifestFramework.Support;
 
     internal sealed class DumpAction : IAction
@@ -24,24 +23,19 @@ namespace EventManifestCompiler
         {
             var msgTableFile = opts.DumpMessageTable;
             var wevtFile = opts.DumpEventTemplate;
-            var metadata = EventManifestParser.LoadWinmeta(diags);
-            var d = new EventTemplateReader(diags, metadata);
+            var d = new EventTemplateDumper(Console.Out);
 
             if (msgTableFile != null) {
                 try {
-                    Console.WriteLine("--- Dump of message table '{0}' ---", msgTableFile);
                     if (IsModule(wevtFile))
-                        WithWevtTemplateResource(wevtFile, s => d.DumpMessageTable(s));
+                        WithMessageResource(wevtFile, s => d.DumpMessageTable(s));
                     else
                         d.DumpMessageTable(msgTableFile);
                 } catch (Exception ex) {
                     diags.ReportError(ex.Message);
                 }
-            }
-
-            if (wevtFile != null) {
+            } else if (wevtFile != null) {
                 try {
-                    Console.WriteLine("--- Dump of WEVT template '{0}' ---", wevtFile);
                     if (IsModule(wevtFile))
                         WithWevtTemplateResource(wevtFile, s => d.DumpWevtTemplate(s));
                     else
@@ -71,6 +65,17 @@ namespace EventManifestCompiler
 
             using (module)
             using (var stream = module.OpenResource("WEVT_TEMPLATE", 1))
+                action(stream);
+        }
+
+        private static void WithMessageResource(string fileName, Action<Stream> action)
+        {
+            var module = SafeModuleHandle.LoadImageResource(fileName);
+            if (module.IsInvalid)
+                throw new Win32Exception();
+
+            using (module)
+            using (var stream = module.OpenResource((IntPtr)11, 1))
                 action(stream);
         }
     }

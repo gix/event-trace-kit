@@ -29,6 +29,7 @@ namespace EventManifestCompiler.ResGen
             writer = new MemoryMappedViewWriter(output);
         }
 
+        public bool EnableMessageCompilerCompat { get; set; } = true;
         public bool UseLegacyTemplateIds { get; set; }
 
         public void Dispose()
@@ -588,14 +589,25 @@ namespace EventManifestCompiler.ResGen
 
         private Guid CreateTemplateId(XDocument doc, byte[] types)
         {
+            var xml = CreateTemplateXml(doc);
             if (UseLegacyTemplateIds)
-                return CreateMd5TemplateId(doc, types);
-            return CreateSha256TemplateId(doc, types);
+                return CreateMd5TemplateId(xml, types);
+            return CreateSha256TemplateId(xml, types);
         }
 
-        private static Guid CreateMd5TemplateId(XDocument doc, byte[] types)
+        private string CreateTemplateXml(XDocument doc)
         {
-            string templateXml = doc.ToString(SaveOptions.DisableFormatting);
+            var xml = doc.ToString(SaveOptions.DisableFormatting);
+
+            // "<foo />" -> "<foo/>"
+            if (EnableMessageCompilerCompat && doc.Root != null && doc.Root.IsEmpty && xml.EndsWith(" />"))
+                xml = xml.Substring(0, xml.Length - 3) + "/>";
+
+            return xml;
+        }
+
+        private static Guid CreateMd5TemplateId(string templateXml, byte[] types)
+        {
             var xmlBytes = Encoding.Unicode.GetBytes(templateXml);
             var typeBytes = new byte[types.Length * 4];
             for (int i = 0; i < types.Length; ++i)
@@ -608,9 +620,8 @@ namespace EventManifestCompiler.ResGen
             return new Guid(md5.Hash);
         }
 
-        private static Guid CreateSha256TemplateId(XDocument doc, byte[] types)
+        private static Guid CreateSha256TemplateId(string templateXml, byte[] types)
         {
-            var templateXml = doc.ToString(SaveOptions.DisableFormatting);
             var xmlBytes = Encoding.Unicode.GetBytes(templateXml);
 
             var magic = Encoding.ASCII.GetBytes("MS-WEVT\0");
@@ -664,7 +675,7 @@ namespace EventManifestCompiler.ResGen
                     continue;
 
                 keywordOffsets[i] = offset;
-                foreach (Keyword keyword in events[i].Keywords)
+                foreach (Keyword keyword in events[i].Keywords.OrderBy(x => x.Mask))
                     writer.WriteUInt32(ref offset, GetObjectOffset(keyword));
             }
 

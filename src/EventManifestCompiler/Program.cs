@@ -6,7 +6,6 @@ namespace EventManifestCompiler
     using System.Linq;
     using System.Reflection;
     using EventManifestCompiler.Support;
-    using EventManifestCompiler.X;
     using EventManifestFramework.Support;
     using NOption;
 
