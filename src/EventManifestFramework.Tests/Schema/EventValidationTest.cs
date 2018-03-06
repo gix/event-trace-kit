@@ -18,7 +18,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref @event);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]
@@ -59,7 +59,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref @event);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]
@@ -83,12 +83,12 @@ namespace EventManifestFramework.Tests.Schema
         [InlineData(10, 2, 11, 1)] // Different value and version
         public void ValueVersion_Unique(int value1, int version1, int value2, int version2)
         {
-            var @event1 = E("event", A("value", value1), A("version", version1));
-            var @event2 = E("event", A("value", value2), A("version", version2));
+            var event1 = E("event", A("value", value1), A("version", version1));
+            var event2 = E("event", A("value", value2), A("version", version2));
 
-            ParseInput(ref @event1, ref @event2);
+            ParseInput(ref event1, ref event2);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]
@@ -97,13 +97,13 @@ namespace EventManifestFramework.Tests.Schema
         [InlineData(12, 34)]
         public void ValueVersion_Duplicate(int value, int version)
         {
-            var @event1 = E("event", A("value", value), A("version", version));
-            var @event2 = E("event", A("value", value), A("version", version));
+            var event1 = E("event", A("value", value), A("version", version));
+            var event2 = E("event", A("value", value), A("version", version));
 
-            ParseInput(ref @event1, ref @event2);
+            ParseInput(ref event1, ref event2);
 
             Assert.Single(diags.Errors);
-            Assert.Equal(@event2.GetLocation(), diags.Errors[0].Location);
+            Assert.Equal(event2.GetLocation(), diags.Errors[0].Location);
         }
 
         [Theory]
@@ -114,7 +114,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref @event);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]
@@ -132,13 +132,13 @@ namespace EventManifestFramework.Tests.Schema
         [Fact]
         public void Symbol_Duplicate()
         {
-            var @event1 = E("event", A("value", 16), A("symbol", "Sym1"));
-            var @event2 = E("event", A("value", 17), A("symbol", "Sym1"));
+            var event1 = E("event", A("value", 16), A("symbol", "Sym1"));
+            var event2 = E("event", A("value", 17), A("symbol", "Sym1"));
 
-            ParseInput(ref @event1, ref @event2);
+            ParseInput(ref event1, ref event2);
 
             Assert.Single(diags.Errors);
-            Assert.Equal(@event2.Attribute("symbol").GetLocation(), diags.Errors[0].Location);
+            Assert.Equal(event2.Attribute("symbol").GetValueLocation(), diags.Errors[0].Location);
         }
 
         [Theory]
@@ -149,7 +149,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref @event);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]

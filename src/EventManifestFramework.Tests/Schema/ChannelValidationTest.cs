@@ -43,7 +43,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref channel);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]
@@ -100,7 +100,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref channel);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]
@@ -140,7 +140,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref channel);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]
@@ -181,7 +181,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref channel);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]
@@ -216,7 +216,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref channel);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]
@@ -251,7 +251,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref channel);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]
@@ -274,7 +274,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref channel);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Fact]
@@ -300,7 +300,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref channel);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]
@@ -330,7 +330,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref channel);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]

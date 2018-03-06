@@ -14,7 +14,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref opcode);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]
@@ -64,7 +64,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref opcode);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]
@@ -113,7 +113,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref opcode);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]
@@ -148,7 +148,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref opcode);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]

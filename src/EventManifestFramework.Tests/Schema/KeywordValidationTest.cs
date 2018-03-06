@@ -15,7 +15,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref keyword);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]
@@ -70,7 +70,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref keyword);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]
@@ -119,7 +119,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref keyword);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]
@@ -154,7 +154,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref keyword);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]

@@ -14,7 +14,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref filter);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]
@@ -66,7 +66,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref filter);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]
@@ -119,7 +119,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref filter);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]
@@ -148,7 +148,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref filter1, ref filter2);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]
@@ -174,7 +174,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref filter);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]
@@ -210,7 +210,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref filter);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]
@@ -235,7 +235,7 @@ namespace EventManifestFramework.Tests.Schema
 
             ParseInput(ref filter);
 
-            Assert.Equal(new DiagnosticsCollector.Diagnostic[0], diags.Errors);
+            Assert.Empty(diags.Errors);
         }
 
         [Theory]
