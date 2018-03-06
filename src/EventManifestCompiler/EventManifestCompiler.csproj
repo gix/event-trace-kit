@@ -69,10 +69,10 @@
     <Compile Include="Native\SafeHandleZeroIsInvalid.cs" />
     <Compile Include="Native\SafeModuleHandle.cs" />
     <Compile Include="Native\UnsafeNativeMethods.cs" />
+    <Compile Include="ResGen\Crimson\BlockTypes.cs" />
     <Compile Include="Support\IndentableTextWriter.cs" />
     <Compile Include="CodeGen\MCCompatibleCodeGenerator.cs" />
-    <Compile Include="ResGen\CrimsonTags.cs" />
-    <Compile Include="ResGen\EventFieldKind.cs" />
+    <Compile Include="ResGen\Crimson\CrimsonTags.cs" />
     <Compile Include="ResGen\EventTemplateReader.cs" />
     <Compile Include="ResGen\EventTemplateWriter.cs" />
     <Compile Include="ResGen\IMessageIdGenerator.cs" />

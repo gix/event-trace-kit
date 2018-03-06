@@ -12,10 +12,12 @@ namespace EventManifestCompiler.ResGen
     using EventManifestCompiler.BinXml;
     using EventManifestCompiler.Extensions;
     using EventManifestCompiler.Native;
+    using EventManifestCompiler.ResGen.Crimson;
     using EventManifestCompiler.Support;
     using EventManifestFramework.Schema;
     using EventManifestFramework.Schema.Base;
     using EventManifestFramework.Support;
+    using PropertyFlags = Crimson.PropertyFlags;
 
     internal sealed class EventTemplateReader
     {
@@ -225,11 +227,12 @@ namespace EventManifestCompiler.ResGen
             uint messageId = r.ReadUInt32();
             uint count = r.ReadUInt32();
 
-            var offsets = new List<Tuple<uint, uint>>();
+            var lists = new List<ProviderListOffset>();
             for (uint i = 0; i < count; ++i) {
-                uint type = r.ReadUInt32();
-                uint offset = r.ReadUInt32();
-                offsets.Add(Tuple.Create(type, offset));
+                var plo = new ProviderListOffset();
+                plo.Type = (EventFieldKind)r.ReadUInt32();
+                plo.Offset = r.ReadUInt32();
+                lists.Add(plo);
             }
 
             var provider = new Provider(name, Located.Create(providerId), name);
@@ -237,11 +240,9 @@ namespace EventManifestCompiler.ResGen
 
             var allOpcodes = new List<Tuple<ushort, Opcode>>();
 
-            foreach (var pair in offsets) {
-                uint type = pair.Item1;
-                uint offset = pair.Item2;
-                r.BaseStream.Position = offset;
-                switch (type) {
+            foreach (var list in lists) {
+                r.BaseStream.Position = list.Offset;
+                switch (list.Type) {
                     case EventFieldKind.Level:
                         provider.Levels.AddRange(ReadLevels(r));
                         break;
@@ -270,7 +271,7 @@ namespace EventManifestCompiler.ResGen
                         provider.Filters.AddRange(ReadFilters(r));
                         break;
                     default:
-                        LogMessage("Unknown item type {0} at offset {1}.", type, offset);
+                        LogMessage("Unknown item type {0} at offset {1}.", list.Type, list.Offset);
                         break;
                 }
             }
@@ -643,9 +644,9 @@ namespace EventManifestCompiler.ResGen
             LogMessage(doc);
             LogMessage("Template({0}-{1}, {2}, Flags={3})", paramCount, dataCount, guid, flags);
 
-            long structPropertyOffset = propertyOffset + paramCount * Marshal.SizeOf<EventTemplateWriter.PropertyEntry>();
+            long structPropertyOffset = propertyOffset + paramCount * Marshal.SizeOf<PropertyEntry>();
             for (uint i = 0; i < paramCount; ++i) {
-                r.BaseStream.Position = propertyOffset + i * Marshal.SizeOf<EventTemplateWriter.PropertyEntry>();
+                r.BaseStream.Position = propertyOffset + i * Marshal.SizeOf<PropertyEntry>();
                 template.Properties.Add(ReadProperty(r, ref structPropertyOffset, true));
             }
 
@@ -721,7 +722,6 @@ namespace EventManifestCompiler.ResGen
                     flags);
 
                 var property = new StructProperty(name);
-                //structRanges.Add(Tuple.Create(property, firstPropertyIndex, propertyCount));
 
                 if ((flags & PropertyFlags.VarLength) != 0)
                     property.Length.SetVariable(refPropertyIndex: length);
@@ -915,12 +915,6 @@ namespace EventManifestCompiler.ResGen
             }
         }
 
-        enum ChannelFlags : uint
-        {
-            None = 0,
-            Imported = 1,
-        }
-
         private class ChannelEntry
         {
             public ChannelFlags Flags;
@@ -1019,12 +1013,6 @@ namespace EventManifestCompiler.ResGen
             }
         }
 
-        private enum MapFlags : uint
-        {
-            None = 0,
-            Bitmap = 1,
-        }
-
         private class MapEntry
         {
             public MapFlags Flags;
@@ -1053,69 +1041,5 @@ namespace EventManifestCompiler.ResGen
                     Value, MessageId);
             }
         }
-    }
-
-    enum InTypeKind
-    {
-        Unknown = 0,
-        UnicodeString = 1,
-        AnsiString = 2,
-        Int8 = 3,
-        UInt8 = 4,
-        Int16 = 5,
-        UInt16 = 6,
-        Int32 = 7,
-        UInt32 = 8,
-        Int64 = 9,
-        UInt64 = 10,
-        Float = 11,
-        Double = 12,
-        Boolean = 13,
-        Binary = 14,
-        GUID = 15,
-        Pointer = 16,
-        FILETIME = 17,
-        SYSTEMTIME = 18,
-        SID = 19,
-        HexInt32 = 20,
-        HexInt64 = 21,
-    }
-
-    enum OutTypeKind
-    {
-        Unknown = 0,
-        String = 1,
-        DateTime = 2,
-        Byte = 3,
-        UnsignedByte = 4,
-        Short = 5,
-        UnsignedShort = 6,
-        Int = 7,
-        UnsignedInt = 8,
-        Long = 9,
-        UnsignedLong = 10,
-        Float = 11,
-        Double = 12,
-        Boolean = 13,
-        GUID = 14,
-        HexBinary = 15,
-        HexInt8 = 16,
-        HexInt16 = 17,
-        HexInt32 = 18,
-        HexInt64 = 19,
-        PID = 20,
-        TID = 21,
-        Port = 22,
-        IPv4 = 23,
-        IPv6 = 24,
-        SocketAddress = 25,
-        CIMDateTime = 26,
-        ETWTIME = 27,
-        Xml = 28,
-        ErrorCode = 29,
-        Win32Error = 30,
-        NTSTATUS = 31,
-        HResult = 32,
-        DateTimeCultureInsensitive = 33,
     }
 }

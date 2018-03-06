@@ -10,16 +10,18 @@ namespace EventManifestCompiler.ResGen
     using System.Xml;
     using System.Xml.Linq;
     using EventManifestCompiler.BinXml;
-    using EventManifestCompiler.Extensions;
+    using EventManifestCompiler.ResGen.Crimson;
     using EventManifestCompiler.Support;
     using EventManifestFramework.Internal.Extensions;
     using EventManifestFramework.Schema;
+    using PatternMapItem = EventManifestCompiler.ResGen.Crimson.PatternMapItem;
+    using PropertyFlags = EventManifestCompiler.ResGen.Crimson.PropertyFlags;
 
     internal class EventTemplateWriter : IDisposable
     {
         private readonly XmlNamespaceManager nsmgr = new XmlNamespaceManager(new NameTable());
-        private readonly Dictionary<object, long> offsetMap = new Dictionary<object, long>();
         private readonly MemoryMappedViewWriter writer;
+        private readonly Dictionary<object, long> offsetMap = new Dictionary<object, long>();
 
         public EventTemplateWriter(FileStream output)
         {
@@ -74,7 +76,7 @@ namespace EventManifestCompiler.ResGen
         {
             long startPos = writer.Position;
 
-            var types = new List<int>();
+            var types = new List<EventFieldKind>();
             if (provider.Channels.Count > 0)
                 types.Add(EventFieldKind.Channel);
             if (provider.Maps.Count > 0)
@@ -98,8 +100,8 @@ namespace EventManifestCompiler.ResGen
 
             writer.Position = dataOffset;
 
-            foreach (int type in types) {
-                offsets[type] = writer.Position;
+            foreach (var type in types) {
+                offsets[(int)type] = writer.Position;
                 switch (type) {
                     case EventFieldKind.Level:
                         WriteLevels(provider.Levels);
@@ -115,7 +117,7 @@ namespace EventManifestCompiler.ResGen
                         break;
                     case EventFieldKind.Event:
                         writer.FillAlignment(8);
-                        offsets[type] = writer.Position;
+                        offsets[(int)type] = writer.Position;
                         WriteEvents(provider.Events);
                         break;
                     case EventFieldKind.Channel:
@@ -138,10 +140,10 @@ namespace EventManifestCompiler.ResGen
                 }
             }
 
-            foreach (int type in types) {
+            foreach (var type in types) {
                 var o = new ProviderListOffset();
-                o.Type = (uint)type;
-                o.Offset = (uint)offsets[type];
+                o.Type = type;
+                o.Offset = (uint)offsets[(int)type];
                 writer.WriteResource(ref offset, ref o);
             }
             for (int i = types.Count; i < offsets.Length; ++i) {
@@ -342,7 +344,7 @@ namespace EventManifestCompiler.ResGen
         private static int CalcMapSize(Map map)
         {
             return Marshal.SizeOf<MapEntry>() +
-                   (map.Items.Count * Marshal.SizeOf<MapItem>());
+                   (map.Items.Count * Marshal.SizeOf<MapItemEntry>());
         }
 
         private void WriteMap(Map map, uint nameOffset)
@@ -354,7 +356,7 @@ namespace EventManifestCompiler.ResGen
             writer.Position += Marshal.SizeOf<MapEntry>();
 
             foreach (var item in items) {
-                MapItem i;
+                MapItemEntry i;
                 i.Value = item.Value;
                 i.MessageId = GetMessageId(item.Message);
                 writer.WriteResource(ref i);
@@ -460,7 +462,7 @@ namespace EventManifestCompiler.ResGen
         private void WriteProperty(
             Property property, ref long nameOffset, ref int structStartIndex, int indexRefOffset = 0)
         {
-            PropertyFlags flags = property.GetFlags();
+            var flags = property.GetFlags();
 
             ushort count = property.Count.Value.GetValueOrDefault();
             ushort length = property.Length.Value.GetValueOrDefault();
@@ -470,7 +472,7 @@ namespace EventManifestCompiler.ResGen
                 length = (ushort)(property.Length.DataPropertyIndex + indexRefOffset);
 
             var p = new PropertyEntry();
-            p.Flags = (uint)flags;
+            p.Flags = (PropertyFlags)flags;
             if (property.Kind == PropertyKind.Struct) {
                 var sp = (StructProperty)property;
                 p.structType.StructStartIndex = (ushort)structStartIndex;
@@ -478,8 +480,8 @@ namespace EventManifestCompiler.ResGen
                 structStartIndex += sp.Properties.Count;
             } else {
                 var dp = (DataProperty)property;
-                p.nonStructType.InputType = (byte)dp.InType.Value;
-                p.nonStructType.OutputType = (byte)dp.OutType.Value;
+                p.nonStructType.InputType = (InTypeKind)dp.InType.Value;
+                p.nonStructType.OutputType = (OutTypeKind)dp.OutType.Value;
                 p.nonStructType.MapOffset = GetObjectOffset(dp.Map);
             }
             p.Count = count;
@@ -718,242 +720,6 @@ namespace EventManifestCompiler.ResGen
         private static uint GetMessageId(LocalizedString message)
         {
             return message?.Id ?? Message.UnusedId;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct FileHeader
-        {
-            public uint Magic; // 'CRIM'
-            public uint Length;
-            public ushort Major;
-            public ushort Minor;
-            public uint NumProviders;
-            //ProviderEntry Providers[];
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct ProviderEntry
-        {
-            public Guid Guid;
-            public uint Offset;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct ProviderBlock
-        {
-            public uint Magic; // 'WEVT'
-            public uint Length;
-            public uint MessageId;
-            public uint NumOffsets;
-            //ProviderListOffset Offsets[11];
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct ProviderListOffset
-        {
-            public uint Type;
-            public uint Offset;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct ListBlock
-        {
-            public uint Magic;
-            public uint Length;
-            public uint NumEntries;
-        }
-
-        enum ChannelFlags : uint
-        {
-            None = 0,
-            Imported = 1,
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct ChannelEntry
-        {
-            public ChannelFlags Flags; // (?)
-            public uint NameOffset;
-            public uint Value;
-            public uint MessageId;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct OpcodeEntry
-        {
-            public ushort Unknown1;
-            public ushort Value;
-            public uint MessageId;
-            public uint NameOffset;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct LevelEntry
-        {
-            public uint Value;
-            public uint MessageId;
-            public uint NameOffset;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct TaskEntry
-        {
-            public uint Value;
-            public uint MessageId;
-            public Guid EventGuid;
-            public uint NameOffset;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct KeywordEntry
-        {
-            public ulong Mask;
-            public uint MessageId;
-            public uint NameOffset;
-        }
-
-        enum MapFlags : uint
-        {
-            None = 0,
-            Bitmap = 1,
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct MapEntry
-        {
-            public uint Magic; // 'VMAP', 'BMAP'
-            public uint Length;
-            public uint NameOffset;
-            public MapFlags Flags; // (?)
-            public uint NumItems;
-            //MapItem Items[];
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct MapItem
-        {
-            public uint Value;
-            public uint MessageId;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct PatternMapEntry
-        {
-            public uint Magic; // 'QUER'
-            public uint Length;
-            public uint NameOffset;
-            public uint FormatOffset;
-            public uint NumItems;
-            //PatternMapItem Items[];
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct PatternMapItem
-        {
-            public uint NameOffset;
-            public uint ValueOffset;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct TemplateEntry
-        {
-            public uint Magic; // 'TEMP'
-            public uint Length;
-            public uint NumParams;
-            public uint NumProperties;
-            public uint PropertyOffset;
-            public uint Flags; // (?)
-            public Guid TemplateId;
-            //char BinXml[];
-            //PropertyEntry Properties[];
-        }
-
-        [StructLayout(LayoutKind.Explicit)]
-        internal struct PropertyEntry
-        {
-            [StructLayout(LayoutKind.Sequential)]
-            public struct NonStructType
-            {
-                public byte InputType;
-                public byte OutputType;
-                public uint MapOffset;
-            }
-
-            [StructLayout(LayoutKind.Sequential)]
-            public struct StructType
-            {
-                public ushort StructStartIndex;
-                public ushort NumStructMembers;
-            }
-
-            [FieldOffset(0)]
-            public uint Flags;
-            [FieldOffset(4)]
-            public NonStructType nonStructType;
-            [FieldOffset(4)]
-            public StructType structType;
-            [FieldOffset(12)]
-            public ushort Count;
-            [FieldOffset(14)]
-            public ushort Length;
-            [FieldOffset(16)]
-            public uint NameOffset;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct FilterBlock
-        {
-            public uint Magic; // 'FLTR'
-            public uint Length;
-            public uint NumFilters;
-            public uint Junk;
-            //FilterEntry Filter[];
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct FilterEntry
-        {
-            public byte Value;
-            public byte Version;
-            public uint MessageId;
-            public uint NameOffset;
-            public uint TemplateOffset;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct EventBlock
-        {
-            public uint Magic; // 'EVNT'
-            public uint Length;
-            public uint NumEvents;
-            public uint Unknown;
-            //EventEntry Events[];
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct EventDescriptor
-        {
-            public ushort Id;
-            public byte Version;
-            public byte Channel;
-            public byte Level;
-            public byte Opcode;
-            public ushort Task;
-            public ulong Keyword;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct EventEntry
-        {
-            public EventDescriptor Descriptor;
-            public uint MessageId;
-            public uint TemplateOffset;
-            public uint OpcodeOffset;
-            public uint LevelOffset;
-            public uint TaskOffset;
-            public uint NumKeywords;
-            public uint KeywordsOffset;
-            public uint ChannelOffset;
         }
     }
 }

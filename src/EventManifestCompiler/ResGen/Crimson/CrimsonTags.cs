@@ -1,4 +1,4 @@
-namespace EventManifestCompiler.ResGen
+namespace EventManifestCompiler.ResGen.Crimson
 {
     internal static class CrimsonTags
     {
