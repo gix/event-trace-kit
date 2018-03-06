@@ -3,6 +3,7 @@ namespace EventManifestFramework.Schema
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Xml.Linq;
     using EventManifestFramework.Schema.Base;
     using EventManifestFramework.Support;
 
@@ -52,9 +53,15 @@ namespace EventManifestFramework.Schema
 
         public XmlType GetXmlType(QName name)
         {
-            if (!xmlTypeMap.TryGetValue(name, out var type))
-                throw new InternalException("Unknown XmlType '{0}'", name);
-            return type;
+            if (xmlTypeMap.TryGetValue(name, out var type))
+                return type;
+
+            // Some manifests (like wpf-etw.man) use HexType with a wrong namespace.
+            var compat = new QName(name.LocalName, "win", WinEventSchema.Namespace);
+            if (xmlTypeMap.TryGetValue(compat, out type))
+                return type;
+
+            throw new InternalException("Unknown XmlType '{0}'", name);
         }
 
         public XmlType GetXmlType(byte value)
