@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Check that channels can be imported from metadata. Some winmeta channels
+     like TraceClassic have special handling. -->
 <instrumentationManifest
     xsi:schemaLocation="http://schemas.microsoft.com/win/2004/08/events eventman.xsd"
     xmlns="http://schemas.microsoft.com/win/2004/08/events"

@@ -2,7 +2,6 @@ namespace EventManifestCompiler.Tests.TestSupport
 {
     using System;
     using System.IO;
-    using Xunit;
     using Xunit.Sdk;
 
     public static class StreamAssert

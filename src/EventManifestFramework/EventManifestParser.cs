@@ -542,39 +542,39 @@ namespace EventManifestFramework
         {
             foreach (var provider in manifest.Providers) {
                 var importableChannels =
-                    manifest.Providers.SelectMany(x => x.Channels)
-                        .Concat(metadata.SelectMany(m => m.Channels))
+                    metadata.SelectMany(x => x.Channels)
+                        .Concat(manifest.Providers.SelectMany(m => m.Channels))
                         .Where(x => !x.Imported).ToList();
 
                 foreach (var channel in provider.Channels) {
                     if (!channel.Imported)
                         continue;
 
-                    var id = channel.Id?.Value ?? channel.Name?.Value;
-                    var name = channel.Name;
+                    var id = channel.Id?.Value ?? channel.Name.Value;
+                    var name = channel.Name.Value;
 
                     Channel imported =
                         importableChannels.Where(x => x != channel)
-                            .FirstOrDefault(x => x.Id == id || x.Name == id);
+                            .FirstOrDefault(x => x.Id == id || x.Name == id || x.Name == name);
 
                     if (imported == null) {
-                        diags.ReportError(name.Location, "Unable to import unknown channel '{0}'", name);
+                        var location = channel.Name.Location;
+                        diags.ReportError(location, "Unable to import unknown channel '{0}'", name);
                         if (importableChannels.Count == 0)
                             diags.Report(
                                 DiagnosticSeverity.Note,
-                                name.Location,
+                                location,
                                 "No known importable channels.");
                         else
                             diags.Report(
                                 DiagnosticSeverity.Note,
-                                name.Location,
+                                location,
                                 "Known importable channels: {0}",
                                 string.Join(", ", importableChannels.Select(x => x.Name)));
                         continue;
                     }
 
                     channel.Type = imported.Type;
-                    channel.Id = imported.Id;
                     channel.Access = imported.Access;
                     channel.Isolation = imported.Isolation;
                     channel.Enabled = imported.Enabled;

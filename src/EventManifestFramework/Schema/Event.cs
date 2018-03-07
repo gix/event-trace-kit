@@ -33,10 +33,10 @@ namespace EventManifestFramework.Schema
             {
                 channel = value;
 
-                if (Channel == null || Channel.IsTraceClassic() || Channel.IsTraceLogging())
+                if (channel == null || channel.IsTraceClassic() || channel.IsTraceLogging() || channel.IsGlobal())
                     channelBit = 0;
                 else
-                    channelBit |= (ulong)1 << (63 - Channel.Index);
+                    channelBit |= (ulong)1 << (63 - channel.Index);
             }
         }
 

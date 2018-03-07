@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Check that a channel can be imported from another provider. -->
 <instrumentationManifest
     xsi:schemaLocation="http://schemas.microsoft.com/win/2004/08/events eventman.xsd"
     xmlns="http://schemas.microsoft.com/win/2004/08/events"
@@ -10,11 +11,23 @@
     <events>
       <provider name="ProviderName2" guid="{00000000-0000-0000-0000-000000000002}" symbol="ProviderSym2" resourceFileName="p2.dll" messageFileName="p2.dll">
         <events>
-          <event value="1" channel="P2/MyChannel" message="$(string.event.2.1)"/>
+          <event value="1" channel="P2/MyChannel1" message="$(string.event.2.1)"/>
+          <event value="2" channel="P2/MyChannel2" message="$(string.event.2.2)"/>
+          <event value="3" channel="MainChannelId" message="$(string.event.2.3)"/>
+          <event value="4" channel="P1/MainChannel" message="$(string.event.2.4)"/>
+          <event value="5" channel="P1/Channel2" message="$(string.event.2.5)"/>
+          <event value="6" channel="P1C2" message="$(string.event.2.6)"/>
+          <event value="7" channel="P1C3" message="$(string.event.2.7)"/>
+          <!-- Metadata channels take precedence -->
+          <event value="8" channel="System" level="win:Error" message="$(string.event.2.8)"/>
         </events>
         <channels>
-          <importChannel name="P2/MyChannel" chid="MainChannelId" symbol="MyChannelSym"/>
+          <importChannel name="P2/MyChannel1" chid="MainChannelId" symbol="MyChannelSym"/>
           <importChannel name="P2/MyChannel2" chid="P1/MainChannel" symbol="MyChannel2Sym"/>
+          <importChannel name="P1/Channel2"/>
+          <importChannel name="P1C2"/>
+          <importChannel name="P1C3"/>
+          <importChannel name="System" chid="System"/>
         </channels>
       </provider>
 
@@ -23,7 +36,7 @@
           <event value="1" channel="P1/MainChannel" level="win:Error" message="$(string.event.1.1)"/>
         </events>
         <channels>
-          <channel name="P1/MainChannel" type="Admin" value="23" chid="MainChannelId"
+          <channel name="P1/MainChannel" chid="MainChannelId" type="Admin" value="23"
                    isolation="Application" access="O:BAG:SYD:" enabled="false"
                    symbol="MainChannelSym" message="$(string.channel.1.1)">
             <logging>
@@ -36,6 +49,9 @@
               <controlGuid>{D0883FA6-F3FD-43C3-A0E4-1FCECC87AF8B}</controlGuid>
             </publishing>
           </channel>
+          <channel name="P1/Channel2" chid="P1C2" type="Analytic" value="24" message="$(string.channel.1.2)"/>
+          <channel name="P1C3" type="Analytic" value="25" message="$(string.channel.1.3)"/>
+          <channel name="System" chid="System" type="Analytic" value="26" message="$(string.channel.1.4)"/>
         </channels>
       </provider>
     </events>
@@ -46,8 +62,18 @@
         <string id="provider.1" value="Provider.1"/>
         <string id="provider.2" value="Provider.2"/>
         <string id="channel.1.1" value="Channel.1.1"/>
+        <string id="channel.1.2" value="Channel.1.2"/>
+        <string id="channel.1.3" value="Channel.1.3"/>
+        <string id="channel.1.4" value="Channel.1.4"/>
         <string id="event.1.1" value="Event.1.1"/>
         <string id="event.2.1" value="Event.2.1"/>
+        <string id="event.2.2" value="Event.2.2"/>
+        <string id="event.2.3" value="Event.2.3"/>
+        <string id="event.2.4" value="Event.2.4"/>
+        <string id="event.2.5" value="Event.2.5"/>
+        <string id="event.2.6" value="Event.2.6"/>
+        <string id="event.2.7" value="Event.2.7"/>
+        <string id="event.2.8" value="Event.2.8"/>
       </stringTable>
     </resources>
   </localization>
