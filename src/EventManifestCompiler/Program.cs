@@ -52,7 +52,7 @@ namespace EventManifestCompiler
             else if (opts.OutputManifest != null)
                 action = new GenerateManifestFromProviderAction(diags, opts);
             else
-                action = new EmcAction(diags, opts);
+                action = new CompileAction(diags, opts);
 
             return action.Execute();
         }

@@ -78,7 +78,7 @@
     <Compile Include="ResGen\EventTemplateReader.cs" />
     <Compile Include="ResGen\EventTemplateWriter.cs" />
     <Compile Include="ResGen\IMessageIdGenerator.cs" />
-    <Compile Include="EmcAction.cs" />
+    <Compile Include="CompileAction.cs" />
     <Compile Include="Support\MemoryMappedViewWriter.cs" />
     <Compile Include="ResGen\MessageTableWriter.cs" />
     <Compile Include="ResGen\StableMessageIdGenerator.cs" />

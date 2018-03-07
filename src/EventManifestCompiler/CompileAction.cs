@@ -15,14 +15,14 @@ namespace EventManifestCompiler
     using EventManifestFramework.Schema;
     using EventManifestFramework.Support;
 
-    internal sealed class EmcAction : IAction
+    internal sealed class CompileAction : IAction
     {
         private readonly IDiagnosticsEngine diags;
         private readonly EmcOpts opts;
         private readonly CompositionContainer container;
         private readonly Func<IMessageIdGenerator> msgIdGenFactory;
 
-        public EmcAction(IDiagnosticsEngine diags, EmcOpts opts)
+        public CompileAction(IDiagnosticsEngine diags, EmcOpts opts)
         {
             this.diags = diags ?? throw new ArgumentNullException(nameof(diags));
             this.opts = opts ?? throw new ArgumentNullException(nameof(opts));

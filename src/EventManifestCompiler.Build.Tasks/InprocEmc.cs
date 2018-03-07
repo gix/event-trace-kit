@@ -230,7 +230,7 @@ namespace EventManifestCompiler.Build.Tasks
             if (input.Length == 0)
                 return false;
 
-            var action = new EmcAction(diags, opts);
+            var action = new CompileAction(diags, opts);
             bool success = action.Execute() == ExitCode.Success;
             if (success) {
                 generatedFiles = new ITaskItem[] {
