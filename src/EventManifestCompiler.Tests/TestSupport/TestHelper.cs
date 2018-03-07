@@ -15,6 +15,8 @@ namespace EventManifestCompiler.Tests.TestSupport
 
             var parser = EventManifestParser.CreateWithWinmeta(diags);
             var manifest = parser.ParseManifest(input, inputName);
+            diagSink.AssertNoErrors();
+
             MessageHelpers.AssignMessageIds(diags, manifest, () => new StableMessageIdGenerator(diags));
 
             diagSink.AssertNoErrors();

@@ -10,6 +10,7 @@
     <RootNamespace>EventManifestCompiler.Tests</RootNamespace>
     <AssemblyName>EventManifestCompiler.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <LangVersion>latest</LangVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <NuGetPackageImportStamp>
@@ -47,10 +48,11 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ResGen\EventTemplateWriterTest.cs" />
     <Compile Include="ResGen\MessageTableWriterTest.cs" />
-    <Compile Include="ResGen\ResGenTestProviderAttribute.cs" />
+    <Compile Include="ResGen\ResGenTestDataAttribute.cs" />
     <Compile Include="ResGen\TestCases\ResGenTestCases.cs" />
     <Compile Include="TestSupport\AssertingDiagnostics.cs" />
     <Compile Include="TestSupport\DiagnosticSink.cs" />
+    <Compile Include="TestSupport\ExceptionOr.cs" />
     <Compile Include="TestSupport\StreamAssert.cs" />
     <Compile Include="TestSupport\StreamExtensions.cs" />
     <Compile Include="TestSupport\TempFile.cs" />

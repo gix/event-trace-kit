@@ -8,18 +8,18 @@ namespace EventManifestCompiler.Tests.ResGen
     using EventManifestFramework.Schema;
     using Xunit.Sdk;
 
-    public class ResGenTestProviderAttribute : DataAttribute
+    public class ResGenTestDataAttribute : DataAttribute
     {
         private readonly Type type;
         private readonly string fileExt;
         private readonly string resourcePrefix;
 
-        public ResGenTestProviderAttribute(Type type, string fileExt)
+        public ResGenTestDataAttribute(Type type, string fileExt)
             : this(type, null, fileExt)
         {
         }
 
-        public ResGenTestProviderAttribute(Type type, string name, string fileExt)
+        public ResGenTestDataAttribute(Type type, string name, string fileExt)
         {
             this.type = type;
             this.fileExt = fileExt;
@@ -47,9 +47,13 @@ namespace EventManifestCompiler.Tests.ResGen
                 if (expectedOutput == null)
                     continue;
 
-                EventManifest manifest;
-                using (var stream = assembly.GetManifestResourceStream(resourceName))
-                    manifest = TestHelper.LoadManifest(stream, testCase);
+                ExceptionOr<EventManifest> manifest;
+                try {
+                    using (var stream = assembly.GetManifestResourceStream(resourceName))
+                        manifest = TestHelper.LoadManifest(stream, testCase);
+                } catch (Exception ex) {
+                    manifest = ex;
+                }
 
                 yield return new object[] { testCase, manifest, expectedOutput };
             }

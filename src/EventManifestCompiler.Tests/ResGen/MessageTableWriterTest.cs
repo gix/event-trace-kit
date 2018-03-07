@@ -14,14 +14,14 @@ namespace EventManifestCompiler.Tests.ResGen
         private readonly IDiagnostics diags = new AssertingDiagnostics();
 
         [Theory]
-        [ResGenTestProvider(typeof(ResGenTestCases), ".msg.bin")]
-        public void Write(string testCase, EventManifest inputManifest, Stream expectedMsgTable)
+        [ResGenTestData(typeof(ResGenTestCases), ".msg.bin")]
+        public void Write(string testCase, ExceptionOr<EventManifest> inputManifest, Stream expectedMsgTable)
         {
-            Assert.Single(inputManifest.Resources);
+            Assert.Single(inputManifest.Value.Resources);
 
             using (var tempStream = new MemoryStream()) {
                 using (var writer = new MessageTableWriter(tempStream))
-                    writer.Write(inputManifest.Resources[0].Strings.Select(CreateMessage), diags);
+                    writer.Write(inputManifest.Value.Resources[0].Strings.Select(CreateMessage), diags);
 
                 StreamAssert.SequenceEqual(tempStream, expectedMsgTable, DumpMsg);
             }

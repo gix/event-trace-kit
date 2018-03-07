@@ -10,12 +10,12 @@ namespace EventManifestCompiler.Tests.ResGen
     public class EventTemplateWriterTest
     {
         [Theory]
-        [ResGenTestProvider(typeof(ResGenTestCases), ".wevt.bin")]
-        public void Write(string testCase, EventManifest inputManifest, Stream expectedWevt)
+        [ResGenTestData(typeof(ResGenTestCases), ".wevt.bin")]
+        public void Write(string testCase, ExceptionOr<EventManifest> inputManifest, Stream expectedWevt)
         {
             using (var temp = new TempFile()) {
                 using (var writer = new EventTemplateWriter(temp.Stream))
-                    writer.Write(inputManifest.Providers);
+                    writer.Write(inputManifest.Value.Providers);
                 StreamAssert.SequenceEqual(temp.Stream, expectedWevt, DumpWevt);
             }
         }
