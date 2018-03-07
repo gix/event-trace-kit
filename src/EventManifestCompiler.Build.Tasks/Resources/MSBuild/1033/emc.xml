@@ -24,7 +24,7 @@
     IsRequired="false"
     SwitchPrefix="-"
     Switch="out"
-    Separator="="/>
+    Separator=":"/>
   <StringProperty
     Category="General"
     Name="WinmetaPath"
@@ -33,7 +33,7 @@
     IsRequired="false"
     SwitchPrefix="-"
     Switch="winmeta"
-    Separator="="/>
+    Separator=":"/>
   <StringProperty
     Category="General"
     Name="EventmanPath"
@@ -42,7 +42,7 @@
     IsRequired="false"
     SwitchPrefix="-"
     Switch="schema"
-    Separator="="/>
+    Separator=":"/>
 
   <!-- Resource properties -->
   <BoolProperty
@@ -62,7 +62,7 @@
     Subtype="file"
     SwitchPrefix="-"
     Switch="msg-file"
-    Separator="="/>
+    Separator=":"/>
   <StringProperty
     Category="ResGen"
     Name="EventTemplateFile"
@@ -72,7 +72,7 @@
     Subtype="file"
     SwitchPrefix="-"
     Switch="etwbin-file"
-    Separator="="/>
+    Separator=":"/>
   <StringProperty
     Category="ResGen"
     Name="ResourceFile"
@@ -82,7 +82,7 @@
     Subtype="file"
     SwitchPrefix="-"
     Switch="rc-file"
-    Separator="="/>
+    Separator=":"/>
 
   <!-- CodeGen properties -->
   <BoolProperty
@@ -102,7 +102,7 @@
     Subtype="file"
     SwitchPrefix="-"
     Switch="header-file"
-    Separator="="/>
+    Separator=":"/>
   <StringProperty
     Category="CodeGen"
     Name="CodeGenerator"
@@ -111,7 +111,7 @@
     IsRequired="false"
     SwitchPrefix="-"
     Switch="Ggenerator"
-    Separator="="/>
+    Separator=":"/>
   <StringProperty
     Category="CodeGen"
     Name="LogNamespace"
@@ -120,7 +120,7 @@
     IsRequired="false"
     SwitchPrefix="-"
     Switch="Gnamespace"
-    Separator="="/>
+    Separator=":"/>
   <StringProperty
     Category="CodeGen"
     Name="EtwNamespace"
@@ -129,7 +129,7 @@
     IsRequired="false"
     SwitchPrefix="-"
     Switch="Getw-namespace"
-    Separator="="/>
+    Separator=":"/>
   <StringProperty
     Category="CodeGen"
     Name="LogCallPrefix"
@@ -138,7 +138,7 @@
     IsRequired="false"
     SwitchPrefix="-"
     Switch="Glog-prefix"
-    Separator="="
+    Separator=":"
     Default="EventWrite"/>
   <BoolProperty
     Category="CodeGen"
@@ -172,7 +172,7 @@
     IsRequired="false"
     SwitchPrefix="-"
     Switch="Galways-inline-attr"
-    Separator="="/>
+    Separator=":"/>
   <StringProperty
     Category="CodeGen"
     Name="NoinlineAttribute"
@@ -181,7 +181,7 @@
     IsRequired="false"
     SwitchPrefix="-"
     Switch="Gnoinline-attr"
-    Separator="="/>
+    Separator=":"/>
 
   <!-- Additional Options -->
   <StringProperty
