@@ -85,8 +85,9 @@ namespace EventManifestCompiler
             opts.DumpMessageTable = args.GetLastArgValue(Opt.dump_msg);
             opts.DumpEventTemplate = args.GetLastArgValue(Opt.dump_wevt);
             opts.OutputManifest = args.GetLastArgValue(Opt.gen_manifest);
-            opts.OutputBaseName = args.GetLastArgValue(Opt.out_eq);
+            opts.Verify = args.GetFlag(Opt.verify);
 
+            opts.OutputBaseName = args.GetLastArgValue(Opt.out_eq);
             opts.GenerateResources = args.GetFlag(Opt.res, Opt.no_res, true);
             opts.MessageTableFile = args.GetLastArgValue(Opt.msg_file_eq);
             opts.EventTemplateFile = args.GetLastArgValue(Opt.wevt_file_eq);
@@ -108,6 +109,11 @@ namespace EventManifestCompiler
             opts.CompatibilityLevel = args.GetLastArgValue(Opt.Gcompat_eq, "10.0");
 
             opts.InferUnspecifiedOutputFiles();
+
+            if (opts.Verify) {
+                opts.GenerateCode = false;
+                opts.GenerateResources = false;
+            }
 
             return success;
         }

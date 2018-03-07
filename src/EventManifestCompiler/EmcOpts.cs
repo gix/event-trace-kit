@@ -37,6 +37,7 @@ namespace EventManifestCompiler
         public string DumpMessageTable { get; set; }
         public string DumpEventTemplate { get; set; }
         public string OutputManifest { get; set; }
+        public bool Verify { get; set; }
 
         public List<string> Inputs { get; set; }
         public string WinmetaPath { get; set; }

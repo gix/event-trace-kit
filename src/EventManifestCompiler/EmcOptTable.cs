@@ -15,6 +15,7 @@ namespace EventManifestCompiler
         dump_msg,
         dump_wevt,
         gen_manifest,
+        verify,
         res,
         no_res,
         code,
@@ -71,6 +72,7 @@ namespace EventManifestCompiler
                 .AddSeparate(Opt.dump_msg, "-", "dump-msg", "Dump message table", metaVar: "<file>")
                 .AddSeparate(Opt.dump_wevt, "-", "dump-wevt", "Dump WEVT template", metaVar: "<file>")
                 .AddSeparate(Opt.gen_manifest, "-", "gen-manifest", "Generate event manifest from binary provider and write to <file>", metaVar: "<file>")
+                .AddFlag(Opt.verify, "-", "verify", "Only parse and check inputs.")
                 .AddGroup(Opt.O_group, "<O group>", "Output")
                 .AddJoined(Opt.out_eq, "-", "out:", "Base output filename", metaVar: "<file>", groupId: Opt.O_group)
                 .AddFlag(Opt.res, "-", "res")
