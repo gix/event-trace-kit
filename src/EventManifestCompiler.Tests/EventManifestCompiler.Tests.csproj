@@ -96,11 +96,6 @@
       <Version>2.3.1</Version>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="ResGen\TestCases\ImportChannelFromProvider.rc" />
-    <EmbeddedResource Include="ResGen\TestCases\TaskOpcodes.rc" />
-    <EmbeddedResource Include="ResGen\TestCases\wpf-etw.mc.rc" />
-  </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
