@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Windows
+namespace EventTraceKit.VsExtension.Windows
 {
     using System.Windows;
     using System.Windows.Interactivity;
@@ -15,8 +15,8 @@
 
         public bool? Binding
         {
-            get { return (bool?)GetValue(BindingProperty); }
-            set { SetValue(BindingProperty, value); }
+            get => (bool?)GetValue(BindingProperty);
+            set => SetValue(BindingProperty, value);
         }
 
         private static void OnDialogResultChanged(

@@ -5,6 +5,7 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
     using System.Linq;
     using System.Threading.Tasks;
     using System.Windows;
+    using EventTraceKit.VsExtension.Windows;
 
     public partial class PresetSaveAsDialog
     {

@@ -4,6 +4,7 @@ namespace EventTraceKit.VsExtension.Controls
     using System.Windows;
     using System.Windows.Documents;
     using System.Windows.Media;
+    using EventTraceKit.VsExtension.Windows;
 
     public sealed class InsertionAdorner : Adorner
     {

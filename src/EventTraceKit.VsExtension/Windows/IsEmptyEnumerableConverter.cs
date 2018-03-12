@@ -1,11 +1,11 @@
-﻿namespace EventTraceKit.VsExtension.Windows
+namespace EventTraceKit.VsExtension.Windows
 {
     using System;
     using System.Collections;
     using System.Globalization;
     using System.Windows;
     using System.Windows.Data;
-    using Collections;
+    using EventTraceKit.VsExtension.Extensions;
 
     [ValueConversion(typeof(object), typeof(bool))]
     public sealed class IsEmptyEnumerableConverter : IValueConverter

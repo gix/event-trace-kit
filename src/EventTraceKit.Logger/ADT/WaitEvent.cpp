@@ -196,9 +196,9 @@ HRESULT WaitEvent::Reset()
     return S_OK;
 }
 
-HRESULT WaitEvent::Wait(unsigned timeoutInMillis /*= INFINITE*/) const
+HRESULT WaitEvent::Wait(WaitTimeoutDuration timeout /*= InfiniteWaitTimeout*/) const
 {
-    DWORD const result = ::WaitForSingleObject(handle, timeoutInMillis);
+    DWORD const result = ::WaitForSingleObject(handle, timeout.count());
     switch (result) {
     case WAIT_OBJECT_0:
         return S_OK;

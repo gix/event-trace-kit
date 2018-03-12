@@ -1,9 +1,10 @@
-﻿namespace EventTraceKit.VsExtension
+namespace EventTraceKit.VsExtension
 {
     using System;
     using System.Collections;
     using System.Collections.Generic;
     using System.Windows;
+    using Expression = System.Linq.Expressions.Expression;
 
     public interface IDataView
     {
@@ -21,6 +22,7 @@
         object DataValidityToken { get; }
         bool IsValidDataValidityToken(object dataValidityToken);
         DataColumnView CreateDataColumnViewFromInfo(DataColumnViewInfo dataColumnViewInfo);
+        T GetInteractionWorkflow<T>(int? rowIndex, int? columnIndex) where T : class;
     }
 
     public sealed class DataViewColumnsCollection : IEnumerable<DataColumnView>
@@ -125,6 +127,7 @@
         public bool IsResizable { get; set; }
         public TextAlignment TextAlignment { get; set; }
         public Type DataType { get; }
+        public Expression FilterSelector { get; set; }
 
         public DataColumnView CreateView(DataColumnViewInfo info)
         {
@@ -163,7 +166,7 @@
         public DataColumn()
             : base(typeof(T))
         {
-            generator = _ => default(T);
+            generator = _ => default;
         }
 
         public new DataColumnView<T> CreateView(DataColumnViewInfo info)

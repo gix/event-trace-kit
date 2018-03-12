@@ -10,13 +10,13 @@ namespace EventTraceKit.VsExtension.Serialization
     using AutoMapper.Execution;
     using AutoMapper.Internal;
     using AutoMapper.Mappers.Internal;
-    using EventTraceKit.VsExtension.Collections;
+    using EventTraceKit.VsExtension.Extensions;
     using Settings.Persistence;
 
     public class SettingsSerializer : ShapingXamlSerializer<SettingsElement>
     {
         public SettingsSerializer()
-            : base(CreateSerializer(), new SerializationMapper<SettingsElement>(), CreateMapper())
+            : base(CreateSerializer(), CreateMapper())
         {
         }
 

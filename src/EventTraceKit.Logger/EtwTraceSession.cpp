@@ -1,10 +1,12 @@
 #include "ITraceSession.h"
 
 #include "ADT/ArrayRef.h"
+#include "ADT/Handle.h"
 #include "ADT/SmallVector.h"
 #include "Support/ByteCount.h"
 #include "Support/ErrorHandling.h"
 #include "Support/Hashing.h"
+#include "Support/OSVersionInfo.h"
 #include "Support/RangeAdaptors.h"
 
 #include <algorithm>
@@ -12,6 +14,7 @@
 #include <string_view>
 #include <unordered_set>
 
+#include <chrono>
 #include <evntcons.h>
 #include <evntrace.h>
 #include <windows.h>
@@ -56,14 +59,14 @@ size_t ComputeEventIdFilterSize(uint16_t eventCount)
 
 void AddEventIdFilter(SmallVectorBase<EVENT_FILTER_DESCRIPTOR>& filters,
                       SmallVectorBase<FilterPtr>& buffers, ArrayRef<uint16_t> eventIds,
-                      bool enable, ULONG type)
+                      bool filterIn, ULONG type)
 {
     uint16_t const eventCount = static_cast<uint16_t>(eventIds.size());
     size_t const byteSize = ComputeEventIdFilterSize(eventCount);
     FilterPtr& buffer = buffers.emplace_back(std::make_unique<std::byte[]>(byteSize));
 
     auto const filter = new (buffer.get()) EVENT_FILTER_EVENT_ID();
-    filter->FilterIn = enable ? TRUE : FALSE;
+    filter->FilterIn = filterIn ? TRUE : FALSE;
     filter->Count = eventCount;
     std::copy_n(eventIds.data(), eventCount, static_cast<uint16_t*>(filter->Events));
 
@@ -75,16 +78,36 @@ void AddEventIdFilter(SmallVectorBase<EVENT_FILTER_DESCRIPTOR>& filters,
 
 void AddEventFilter(SmallVectorBase<EVENT_FILTER_DESCRIPTOR>& filters,
                     SmallVectorBase<FilterPtr>& buffers, ArrayRef<uint16_t> eventIds,
-                    bool enable)
+                    bool filterIn)
 {
-    AddEventIdFilter(filters, buffers, eventIds, enable, EVENT_FILTER_TYPE_EVENT_ID);
+    AddEventIdFilter(filters, buffers, eventIds, filterIn, EVENT_FILTER_TYPE_EVENT_ID);
 }
 
 void AddStackWalkFilter(SmallVectorBase<EVENT_FILTER_DESCRIPTOR>& filters,
                         SmallVectorBase<FilterPtr>& buffers, ArrayRef<uint16_t> eventIds,
-                        bool enable)
+                        bool filterIn)
 {
-    AddEventIdFilter(filters, buffers, eventIds, enable, EVENT_FILTER_TYPE_STACKWALK);
+    AddEventIdFilter(filters, buffers, eventIds, filterIn, EVENT_FILTER_TYPE_STACKWALK);
+}
+
+void AddStackWalkLevelKeywordFilter(SmallVectorBase<EVENT_FILTER_DESCRIPTOR>& filters,
+                                    SmallVectorBase<FilterPtr>& buffers,
+                                    ULONGLONG matchAnyKeyword, ULONGLONG matchAllKeyword,
+                                    BYTE level, bool filterIn)
+{
+    size_t const byteSize = sizeof(EVENT_FILTER_LEVEL_KW);
+    FilterPtr& buffer = buffers.emplace_back(std::make_unique<std::byte[]>(byteSize));
+
+    auto const filter = new (buffer.get()) EVENT_FILTER_LEVEL_KW();
+    filter->MatchAnyKeyword = matchAnyKeyword;
+    filter->MatchAllKeyword = matchAllKeyword;
+    filter->Level = level;
+    filter->FilterIn = filterIn ? TRUE : FALSE;
+
+    auto& descriptor = filters.emplace_back();
+    descriptor.Ptr = reinterpret_cast<uintptr_t>(buffer.get());
+    descriptor.Size = static_cast<ULONG>(byteSize);
+    descriptor.Type = EVENT_FILTER_TYPE_STACKWALK_LEVEL_KW;
 }
 
 struct EqualProviderId
@@ -101,6 +124,41 @@ struct EqualProviderId
     bool operator()(TraceProviderDescriptor const& provider) const
     {
         return provider.Id == id;
+    }
+};
+
+struct ThreadpoolTimerTraits : NullIsInvalidHandleTraits<PTP_TIMER>
+{
+    static void Close(HandleType h) noexcept { CloseThreadpoolTimer(h); }
+};
+
+class ThreadpoolTimer : public Handle<ThreadpoolTimerTraits>
+{
+public:
+    using Handle<ThreadpoolTimerTraits>::Handle;
+    ThreadpoolTimer() = default;
+
+    ThreadpoolTimer(PTP_TIMER_CALLBACK callback, void* context,
+                    PTP_CALLBACK_ENVIRON cbe = nullptr)
+        : ThreadpoolTimer(CreateThreadpoolTimer(callback, context, cbe))
+    {
+    }
+
+    void Start(std::chrono::duration<unsigned, std::milli> period)
+    {
+        if (!IsValid())
+            return;
+
+        FILETIME dueTime = {};
+        SetThreadpoolTimer(Get(), &dueTime, period.count(), 0);
+    }
+
+    void Stop()
+    {
+        if (!IsValid())
+            return;
+
+        SetThreadpoolTimer(Get(), nullptr, 0, 0);
     }
 };
 
@@ -135,16 +193,27 @@ public:
     virtual void EnableAllProviders() override;
     virtual void DisableAllProviders() override;
 
+    virtual HRESULT SetKernelProviders(unsigned flags, bool enable) override;
+
 private:
     void SetProperties(TraceProperties const& properties);
     HRESULT StartEventProvider(TraceProviderDescriptor const& provider) const;
     HRESULT DisableProviderTrace(GUID const& providerId) const;
+
+    static void CALLBACK FlushTimerCallback(_Inout_ PTP_CALLBACK_INSTANCE /*Instance*/,
+                                            _Inout_opt_ PVOID Context,
+                                            _Inout_ PTP_TIMER /*Timer*/)
+    {
+        reinterpret_cast<EtwTraceSession*>(Context)->Flush();
+    }
 
     std::wstring sessionName;
     std::unique_ptr<EventTraceProperties> traceProperties;
     TRACEHANDLE traceHandle;
     std::vector<TraceProviderDescriptor> providers;
     std::unordered_set<GUID> enabledProviders;
+    ThreadpoolTimer customFlushTimer;
+    std::chrono::duration<unsigned, std::milli> customFlushPeriod{};
 };
 
 template<typename T, typename U>
@@ -189,7 +258,7 @@ void* EventTraceProperties::operator new(size_t n, size_t loggerNameBytes,
     return ::operator new(n + loggerNameBytes + logFileNameBytes);
 }
 
-void EventTraceProperties::operator delete(void* mem, size_t n)
+void EventTraceProperties::operator delete(void* mem, size_t /*n*/)
 {
     ::operator delete(mem);
 }
@@ -207,6 +276,11 @@ EtwTraceSession::EtwTraceSession(std::wstring_view name,
     if (st == ERROR_SUCCESS) {
         // Reinitialize.
         SetProperties(properties);
+    }
+
+    if (properties.CustomFlushTimer.count() != 0) {
+        customFlushTimer = ThreadpoolTimer(FlushTimerCallback, this);
+        customFlushPeriod = properties.CustomFlushTimer;
     }
 }
 
@@ -227,7 +301,7 @@ void EtwTraceSession::SetProperties(TraceProperties const& properties)
     traceProperties->MaximumFileSize = 0;
     traceProperties->LogFileMode =
         EVENT_TRACE_REAL_TIME_MODE | EVENT_TRACE_STOP_ON_HYBRID_SHUTDOWN;
-    traceProperties->FlushTimer = static_cast<ULONG>(properties.FlushTimer);
+    traceProperties->FlushTimer = static_cast<ULONG>(properties.FlushTimer.count());
     traceProperties->EnableFlags = 0;
 }
 
@@ -241,11 +315,17 @@ HRESULT EtwTraceSession::Start()
             (void)StartEventProvider(provider);
     }
 
+    if (customFlushTimer)
+        customFlushTimer.Start(customFlushPeriod);
+
     return S_OK;
 }
 
 HRESULT EtwTraceSession::Stop()
 {
+    if (customFlushTimer)
+        customFlushTimer.Stop();
+
     HR(HResultFromWin32(ControlTraceW(traceHandle, nullptr, traceProperties.get(),
                                       EVENT_TRACE_CONTROL_STOP)));
     traceHandle = 0;
@@ -347,15 +427,33 @@ EtwTraceSession::StartEventProvider(TraceProviderDescriptor const& provider) con
     SmallVector<EVENT_FILTER_DESCRIPTOR, 4> filters;
     SmallVector<std::unique_ptr<std::byte[]>, 3> buffers;
 
-    if (!provider.ExecutableName.empty())
+    if (OSVersion.IsWindows8Point1OrGreater() && !provider.ExecutableName.empty())
         AddExecutableNameFilter(filters, provider.ExecutableName);
     if (!provider.ProcessIds.empty())
         AddProcessIdFilter(filters, provider.ProcessIds);
     if (!provider.EventIds.empty())
-        AddEventFilter(filters, buffers, provider.EventIds, provider.EnableEventIds);
-    if (!provider.StackWalkEventIds.empty())
+        AddEventFilter(filters, buffers, provider.EventIds, provider.EventIdsFilterIn);
+    if (OSVersion.IsWindows8Point1OrGreater() && !provider.StackWalkEventIds.empty())
         AddStackWalkFilter(filters, buffers, provider.StackWalkEventIds,
-                           provider.EnableStackWalkEventIds);
+                           provider.StackWalkEventIdsFilterIn);
+    if (OSVersion.IsWindows8Point1OrGreater() && provider.EnableStackWalkFilter) {
+        AddStackWalkLevelKeywordFilter(
+            filters, buffers, provider.StackWalkMatchAnyKeyword,
+            provider.StackWalkMatchAllKeyword, provider.StackWalkLevel,
+            provider.StackWalkFilterIn);
+    }
+
+    {
+        struct CustomFilter
+        {
+            int value1;
+            int value2;
+        } customFilter = {23, 42};
+        auto& descriptor = filters.emplace_back();
+        descriptor.Ptr = reinterpret_cast<uintptr_t>(&customFilter);
+        descriptor.Size = static_cast<ULONG>(sizeof(CustomFilter));
+        descriptor.Type = EVENT_FILTER_TYPE_SCHEMATIZED;
+    }
 
     ENABLE_TRACE_PARAMETERS parameters = {};
     parameters.Version = ENABLE_TRACE_PARAMETERS_VERSION_2;
@@ -380,6 +478,15 @@ HRESULT EtwTraceSession::DisableProviderTrace(GUID const& providerId) const
     return HResultFromWin32(EnableTraceEx2(traceHandle, &providerId,
                                            EVENT_CONTROL_CODE_DISABLE_PROVIDER, 0, 0, 0,
                                            0, nullptr));
+}
+
+HRESULT EtwTraceSession::SetKernelProviders(unsigned flags, bool enable)
+{
+    if (enable)
+        traceProperties->EnableFlags |= flags;
+    else
+        traceProperties->EnableFlags &= ~flags;
+    return S_OK;
 }
 
 std::unique_ptr<ITraceSession> CreateEtwTraceSession(std::wstring_view name,

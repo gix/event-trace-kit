@@ -4,7 +4,7 @@ namespace EventTraceKit.VsExtension.Views
     using EventTraceKit.VsExtension.Serialization;
 
     [SerializedShape(typeof(Settings.Persistence.Collector))]
-    public abstract class CollectorViewModel : ViewModel
+    public abstract class CollectorViewModel : ObservableModel
     {
         public ITraceSettingsContext Context { get; set; }
 

@@ -3,6 +3,7 @@ namespace EventTraceKit.VsExtension.Controls
     using System;
     using System.Collections.Generic;
     using System.Windows;
+    using EventTraceKit.VsExtension.Windows;
     using Primitives;
 
     public sealed class AsyncDataGridCellsPresenterViewModel
@@ -42,8 +43,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public int FocusIndex
         {
-            get { return (int)GetValue(FocusIndexProperty); }
-            set { SetValue(FocusIndexProperty, value); }
+            get => (int)GetValue(FocusIndexProperty);
+            set => SetValue(FocusIndexProperty, value);
         }
 
         private void OnFocusIndexChanged(DependencyPropertyChangedEventArgs e)

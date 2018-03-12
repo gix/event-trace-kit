@@ -1,9 +1,8 @@
-﻿namespace EventTraceKit.VsExtension.Controls
+namespace EventTraceKit.VsExtension.Controls
 {
     using System;
     using System.Windows;
     using System.Windows.Controls;
-    using Windows;
 
     /// <summary>
     ///   Represents a control that indicates that an operation is ongoing. The
@@ -36,7 +35,8 @@
 
         static ProgressRing()
         {
-            DefaultStyleKeyProperty.OverrideMetadata<ProgressRing>();
+            DefaultStyleKeyProperty.OverrideMetadata(
+                typeof(ProgressRing), new FrameworkPropertyMetadata(typeof(ProgressRing)));
         }
 
         /// <summary>

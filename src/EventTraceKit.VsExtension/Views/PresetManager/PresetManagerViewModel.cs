@@ -7,7 +7,6 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
     using System.Windows;
     using System.Windows.Data;
     using System.Windows.Input;
-    using Collections;
     using Controls;
     using EventTraceKit.VsExtension.Windows;
     using Extensions;
@@ -403,6 +402,13 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
                     newPreset = HdvViewModel.TemplatePreset;
                     HdvViewModel.PresetCollection.SetUserPreset(newPreset);
                 }
+
+                if (HdvViewModel.Preset.Equals(currentPreset)) {
+                    isApplyingChanges = true;
+                    HdvViewModel.Preset = newPreset;
+                    isApplyingChanges = false;
+                }
+
                 RefreshFromPreset(newPreset);
             }
 

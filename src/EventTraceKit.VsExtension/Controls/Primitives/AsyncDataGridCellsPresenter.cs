@@ -81,8 +81,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public AsyncDataGridCellsPresenterViewModel ViewModel
         {
-            get { return (AsyncDataGridCellsPresenterViewModel)GetValue(ViewModelProperty); }
-            set { SetValue(ViewModelProperty, value); }
+            get => (AsyncDataGridCellsPresenterViewModel)GetValue(ViewModelProperty);
+            set => SetValue(ViewModelProperty, value);
         }
 
         private void OnViewModelChanged(DependencyPropertyChangedEventArgs e)
@@ -118,12 +118,9 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         /// </summary>
         public ReadOnlyObservableCollection<AsyncDataGridColumn> VisibleColumns
         {
-            get
-            {
-                return (ReadOnlyObservableCollection<AsyncDataGridColumn>)GetValue(
-                    VisibleColumnsProperty);
-            }
-            set { SetValue(VisibleColumnsProperty, value); }
+            get => (ReadOnlyObservableCollection<AsyncDataGridColumn>)GetValue(
+                VisibleColumnsProperty);
+            set => SetValue(VisibleColumnsProperty, value);
         }
 
         #endregion
@@ -144,8 +141,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         [TypeConverter(typeof(LengthConverter))]
         public double RowHeight
         {
-            get { return (double)GetValue(RowHeightProperty); }
-            set { SetValue(RowHeightProperty, value); }
+            get => (double)GetValue(RowHeightProperty);
+            set => SetValue(RowHeightProperty, value);
         }
 
         private double CoerceRowHeight(double baseValue)
@@ -176,8 +173,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public FontFamily FontFamily
         {
-            get { return (FontFamily)GetValue(FontFamilyProperty); }
-            set { SetValue(FontFamilyProperty, value); }
+            get => (FontFamily)GetValue(FontFamilyProperty);
+            set => SetValue(FontFamilyProperty, value);
         }
 
         #endregion
@@ -195,8 +192,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         [TypeConverter(typeof(FontSizeConverter))]
         public double FontSize
         {
-            get { return (double)GetValue(FontSizeProperty); }
-            set { SetValue(FontSizeProperty, value); }
+            get => (double)GetValue(FontSizeProperty);
+            set => SetValue(FontSizeProperty, value);
         }
 
         private static void OnFontSizeChanged(
@@ -221,8 +218,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public FontStretch FontStretch
         {
-            get { return (FontStretch)GetValue(FontStretchProperty); }
-            set { SetValue(FontStretchProperty, value); }
+            get => (FontStretch)GetValue(FontStretchProperty);
+            set => SetValue(FontStretchProperty, value);
         }
 
         #endregion
@@ -239,8 +236,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public FontStyle FontStyle
         {
-            get { return (FontStyle)GetValue(FontStyleProperty); }
-            set { SetValue(FontStyleProperty, value); }
+            get => (FontStyle)GetValue(FontStyleProperty);
+            set => SetValue(FontStyleProperty, value);
         }
 
         #endregion
@@ -257,8 +254,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public FontWeight FontWeight
         {
-            get { return (FontWeight)GetValue(FontWeightProperty); }
-            set { SetValue(FontWeightProperty, value); }
+            get => (FontWeight)GetValue(FontWeightProperty);
+            set => SetValue(FontWeightProperty, value);
         }
 
         #endregion
@@ -274,8 +271,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public Brush Foreground
         {
-            get { return (Brush)GetValue(ForegroundProperty); }
-            set { SetValue(ForegroundProperty, value); }
+            get => (Brush)GetValue(ForegroundProperty);
+            set => SetValue(ForegroundProperty, value);
         }
 
         #endregion
@@ -300,8 +297,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         /// </summary>
         public Brush PrimaryBackground
         {
-            get { return (Brush)GetValue(PrimaryBackgroundProperty); }
-            set { SetValue(PrimaryBackgroundProperty, value); }
+            get => (Brush)GetValue(PrimaryBackgroundProperty);
+            set => SetValue(PrimaryBackgroundProperty, value);
         }
 
         #endregion
@@ -326,8 +323,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         /// </summary>
         public Brush SecondaryBackground
         {
-            get { return (Brush)GetValue(SecondaryBackgroundProperty); }
-            set { SetValue(SecondaryBackgroundProperty, value); }
+            get => (Brush)GetValue(SecondaryBackgroundProperty);
+            set => SetValue(SecondaryBackgroundProperty, value);
         }
 
         #endregion
@@ -346,8 +343,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public Visibility HorizontalScrollVisibility
         {
-            get { return (Visibility)GetValue(HorizontalScrollVisibilityProperty); }
-            internal set { SetValue(HorizontalScrollVisibilityPropertyKey, value); }
+            get => (Visibility)GetValue(HorizontalScrollVisibilityProperty);
+            internal set => SetValue(HorizontalScrollVisibilityPropertyKey, value);
         }
 
         #endregion
@@ -366,8 +363,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public Visibility VerticalScrollVisibility
         {
-            get { return (Visibility)GetValue(VerticalScrollVisibilityProperty); }
-            internal set { SetValue(VerticalScrollVisibilityPropertyKey, value); }
+            get => (Visibility)GetValue(VerticalScrollVisibilityProperty);
+            internal set => SetValue(VerticalScrollVisibilityPropertyKey, value);
         }
 
         #endregion
@@ -390,8 +387,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public Brush HorizontalGridLinesBrush
         {
-            get { return (Brush)GetValue(HorizontalGridLinesBrushProperty); }
-            set { SetValue(HorizontalGridLinesBrushProperty, value); }
+            get => (Brush)GetValue(HorizontalGridLinesBrushProperty);
+            set => SetValue(HorizontalGridLinesBrushProperty, value);
         }
 
         private static void ClearHorizontalGridLinesPen(
@@ -421,8 +418,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public double HorizontalGridLinesThickness
         {
-            get { return (double)GetValue(HorizontalGridLinesThicknessProperty); }
-            set { SetValue(HorizontalGridLinesThicknessProperty, value); }
+            get => (double)GetValue(HorizontalGridLinesThicknessProperty);
+            set => SetValue(HorizontalGridLinesThicknessProperty, value);
         }
 
         #endregion
@@ -445,8 +442,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public Brush VerticalGridLinesBrush
         {
-            get { return (Brush)GetValue(VerticalGridLinesBrushProperty); }
-            set { SetValue(VerticalGridLinesBrushProperty, value); }
+            get => (Brush)GetValue(VerticalGridLinesBrushProperty);
+            set => SetValue(VerticalGridLinesBrushProperty, value);
         }
 
         private static void ClearVerticalGridLinesPen(
@@ -476,8 +473,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public double VerticalGridLinesThickness
         {
-            get { return (double)GetValue(VerticalGridLinesThicknessProperty); }
-            set { SetValue(VerticalGridLinesThicknessProperty, value); }
+            get => (double)GetValue(VerticalGridLinesThicknessProperty);
+            set => SetValue(VerticalGridLinesThicknessProperty, value);
         }
 
         #endregion
@@ -502,8 +499,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         /// </summary>
         public Brush KeySeparatorBrush
         {
-            get { return (Brush)GetValue(KeySeparatorBrushProperty); }
-            set { SetValue(KeySeparatorBrushProperty, value); }
+            get => (Brush)GetValue(KeySeparatorBrushProperty);
+            set => SetValue(KeySeparatorBrushProperty, value);
         }
 
         #endregion
@@ -528,8 +525,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         /// </summary>
         public Brush FrozenColumnBackground
         {
-            get { return (Brush)GetValue(FrozenColumnBackgroundProperty); }
-            set { SetValue(FrozenColumnBackgroundProperty, value); }
+            get => (Brush)GetValue(FrozenColumnBackgroundProperty);
+            set => SetValue(FrozenColumnBackgroundProperty, value);
         }
 
         #endregion
@@ -554,8 +551,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         /// </summary>
         public Brush FreezableAreaSeparatorBrush
         {
-            get { return (Brush)GetValue(FreezableAreaSeparatorBrushProperty); }
-            set { SetValue(FreezableAreaSeparatorBrushProperty, value); }
+            get => (Brush)GetValue(FreezableAreaSeparatorBrushProperty);
+            set => SetValue(FreezableAreaSeparatorBrushProperty, value);
         }
 
         #endregion
@@ -580,8 +577,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         /// </summary>
         public Brush SelectionForeground
         {
-            get { return (Brush)GetValue(SelectionForegroundProperty); }
-            set { SetValue(SelectionForegroundProperty, value); }
+            get => (Brush)GetValue(SelectionForegroundProperty);
+            set => SetValue(SelectionForegroundProperty, value);
         }
 
         #endregion
@@ -606,8 +603,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         /// </summary>
         public Brush SelectionBackground
         {
-            get { return (Brush)GetValue(SelectionBackgroundProperty); }
-            set { SetValue(SelectionBackgroundProperty, value); }
+            get => (Brush)GetValue(SelectionBackgroundProperty);
+            set => SetValue(SelectionBackgroundProperty, value);
         }
 
         #endregion
@@ -633,8 +630,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         /// </summary>
         public Brush SelectionBorderBrush
         {
-            get { return (Brush)GetValue(SelectionBorderBrushProperty); }
-            set { SetValue(SelectionBorderBrushProperty, value); }
+            get => (Brush)GetValue(SelectionBorderBrushProperty);
+            set => SetValue(SelectionBorderBrushProperty, value);
         }
 
         private static void ClearSelectionBorderPenCache(
@@ -667,8 +664,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         /// </summary>
         public double SelectionBorderThickness
         {
-            get { return (double)GetValue(SelectionBorderThicknessProperty); }
-            set { SetValue(SelectionBorderThicknessProperty, value); }
+            get => (double)GetValue(SelectionBorderThicknessProperty);
+            set => SetValue(SelectionBorderThicknessProperty, value);
         }
 
         #endregion
@@ -693,8 +690,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         /// </summary>
         public Brush InactiveSelectionForeground
         {
-            get { return (Brush)GetValue(InactiveSelectionForegroundProperty); }
-            set { SetValue(InactiveSelectionForegroundProperty, value); }
+            get => (Brush)GetValue(InactiveSelectionForegroundProperty);
+            set => SetValue(InactiveSelectionForegroundProperty, value);
         }
 
         #endregion
@@ -719,8 +716,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         /// </summary>
         public Brush InactiveSelectionBackground
         {
-            get { return (Brush)GetValue(InactiveSelectionBackgroundProperty); }
-            set { SetValue(InactiveSelectionBackgroundProperty, value); }
+            get => (Brush)GetValue(InactiveSelectionBackgroundProperty);
+            set => SetValue(InactiveSelectionBackgroundProperty, value);
         }
 
         #endregion
@@ -746,8 +743,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         /// </summary>
         public Brush InactiveSelectionBorderBrush
         {
-            get { return (Brush)GetValue(InactiveSelectionBorderBrushProperty); }
-            set { SetValue(InactiveSelectionBorderBrushProperty, value); }
+            get => (Brush)GetValue(InactiveSelectionBorderBrushProperty);
+            set => SetValue(InactiveSelectionBorderBrushProperty, value);
         }
 
         private static void ClearInactiveSelectionBorderPenCache(
@@ -780,8 +777,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         /// </summary>
         public Brush FocusBorderBrush
         {
-            get { return (Brush)GetValue(FocusBorderBrushProperty); }
-            set { SetValue(FocusBorderBrushProperty, value); }
+            get => (Brush)GetValue(FocusBorderBrushProperty);
+            set => SetValue(FocusBorderBrushProperty, value);
         }
 
         private static void ClearFocusBorderPenCache(
@@ -814,8 +811,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         /// </summary>
         public double FocusBorderThickness
         {
-            get { return (double)GetValue(FocusBorderThicknessProperty); }
-            set { SetValue(FocusBorderThicknessProperty, value); }
+            get => (double)GetValue(FocusBorderThicknessProperty);
+            set => SetValue(FocusBorderThicknessProperty, value);
         }
 
         #endregion
@@ -873,8 +870,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ScrollViewer ScrollOwner
         {
-            get { return (ScrollViewer)GetValue(ScrollOwnerProperty); }
-            set { SetValue(ScrollOwnerProperty, value); }
+            get => (ScrollViewer)GetValue(ScrollOwnerProperty);
+            set => SetValue(ScrollOwnerProperty, value);
         }
 
         #endregion
@@ -893,8 +890,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public bool CanHorizontallyScroll
         {
-            get { return (bool)GetValue(CanHorizontallyScrollProperty); }
-            set { SetValue(CanHorizontallyScrollProperty, value); }
+            get => (bool)GetValue(CanHorizontallyScrollProperty);
+            set => SetValue(CanHorizontallyScrollProperty, value);
         }
 
         #endregion
@@ -913,8 +910,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public bool CanVerticallyScroll
         {
-            get { return (bool)GetValue(CanVerticallyScrollProperty); }
-            set { SetValue(CanVerticallyScrollProperty, value); }
+            get => (bool)GetValue(CanVerticallyScrollProperty);
+            set => SetValue(CanVerticallyScrollProperty, value);
         }
 
         #endregion
@@ -923,7 +920,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public static readonly DependencyProperty ExtentWidthProperty =
             DependencyProperty.Register(
-                "ExtentWidth",
+                nameof(ExtentWidth),
                 typeof(double),
                 typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
@@ -932,8 +929,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public double ExtentWidth
         {
-            get { return (double)GetValue(ExtentWidthProperty); }
-            private set { SetValue(ExtentWidthProperty, value); }
+            get => (double)GetValue(ExtentWidthProperty);
+            private set => SetValue(ExtentWidthProperty, value);
         }
 
         private void OnExtentWidthChanged(DependencyPropertyChangedEventArgs e)
@@ -956,8 +953,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public double ExtentHeight
         {
-            get { return (double)GetValue(ExtentHeightProperty); }
-            private set { SetValue(ExtentHeightProperty, value); }
+            get => (double)GetValue(ExtentHeightProperty);
+            private set => SetValue(ExtentHeightProperty, value);
         }
 
         private void OnExtentHeightChanged(
@@ -972,7 +969,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public static readonly DependencyProperty ViewportWidthProperty =
             DependencyProperty.Register(
-                "ViewportWidth",
+                nameof(ViewportWidth),
                 typeof(double),
                 typeof(AsyncDataGridCellsPresenter),
                 new FrameworkPropertyMetadata(
@@ -981,8 +978,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public double ViewportWidth
         {
-            get { return (double)GetValue(ViewportWidthProperty); }
-            private set { SetValue(ViewportWidthProperty, value); }
+            get => (double)GetValue(ViewportWidthProperty);
+            private set => SetValue(ViewportWidthProperty, value);
         }
 
         private void OnViewportWidthChanged(
@@ -1006,8 +1003,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public double ViewportHeight
         {
-            get { return (double)GetValue(ViewportHeightProperty); }
-            private set { SetValue(ViewportHeightProperty, value); }
+            get => (double)GetValue(ViewportHeightProperty);
+            private set => SetValue(ViewportHeightProperty, value);
         }
 
         private void OnViewportHeightChanged(
@@ -1032,8 +1029,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public double HorizontalOffset
         {
-            get { return (double)GetValue(HorizontalOffsetProperty); }
-            private set { SetValue(HorizontalOffsetProperty, value); }
+            get => (double)GetValue(HorizontalOffsetProperty);
+            private set => SetValue(HorizontalOffsetProperty, value);
         }
 
         private object CoerceHorizontalOffset(object baseValue)
@@ -1066,8 +1063,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public double VerticalOffset
         {
-            get { return (double)GetValue(VerticalOffsetProperty); }
-            private set { SetValue(VerticalOffsetProperty, value); }
+            get => (double)GetValue(VerticalOffsetProperty);
+            private set => SetValue(VerticalOffsetProperty, value);
         }
 
         private object CoerceVerticalOffset(object baseValue)
@@ -1210,8 +1207,37 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public AsyncDataGridColumn GetColumnFromPosition(double x)
         {
+            // Check right-frozen columns.
+            var rx = ViewportWidth;
+            int r = VisibleColumns.Count;
+            for (; r > 0; --r) {
+                var column = VisibleColumns[r - 1];
+                if (!column.IsFrozen)
+                    break;
+
+                if (x >= rx - column.Width)
+                    return column;
+
+                rx -= column.Width;
+            }
+
+            // Check left-frozen columns.
+            int l = 0;
+            for (; l < r; ++l) {
+                var column = VisibleColumns[l];
+                if (!column.IsFrozen)
+                    break;
+
+                if (x <= column.Width)
+                    return column;
+
+                x -= column.Width;
+            }
+
+            // Check unfrozen columns.
             x += HorizontalOffset;
-            foreach (var column in VisibleColumns) {
+            for (int i = l; i < r; ++i) {
+                var column = VisibleColumns[i];
                 if (x <= column.Width)
                     return column;
 
@@ -1381,7 +1407,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             return renderedCellsVisual.GetColumnAutoSize(column);
         }
 
-        private int? GetRowFromPosition(double y)
+        public int? GetRowFromPosition(double y)
         {
             if (ViewModel == null)
                 return null;
@@ -1853,7 +1879,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 BringRowIntoView(rowIndex);
         }
 
-        internal Rect? TryGetViewportBoundsFromRow(int rowIndex)
+        internal Rect? TryGetViewportBoundsForRow(int rowIndex)
         {
             VerifyAccess();
             if (rowIndex < 0)
@@ -1868,7 +1894,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         private void BringRowIntoView(int rowIndex)
         {
             VerifyAccess();
-            Rect? bounds = TryGetViewportBoundsFromRow(rowIndex);
+            Rect? bounds = TryGetViewportBoundsForRow(rowIndex);
             if (bounds.HasValue)
                 BringIntoView(bounds.Value);
         }

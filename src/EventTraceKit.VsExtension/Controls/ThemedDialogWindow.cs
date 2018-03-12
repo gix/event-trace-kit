@@ -1,6 +1,5 @@
 namespace EventTraceKit.VsExtension.Controls
 {
-    using System;
     using System.Windows;
     using Microsoft.VisualStudio.PlatformUI;
 
@@ -8,10 +7,7 @@ namespace EventTraceKit.VsExtension.Controls
     {
         public ThemedDialogWindow()
         {
-            Resources.MergedDictionaries.Add(new ResourceDictionary {
-                Source = new Uri("pack://application:,,,/EventTraceKit.VsExtension;component/Themes/generic.xaml")
-            });
-
+            Resources.MergedDictionaries.Insert(0, ThemeResourceManager.Resources);
             Style = (Style)Resources[typeof(ThemedDialogWindow)];
         }
     }

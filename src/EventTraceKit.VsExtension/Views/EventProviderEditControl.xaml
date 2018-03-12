@@ -1,0 +1,209 @@
+<UserControl x:Class="EventTraceKit.VsExtension.Views.EventProviderEditControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:etkw="clr-namespace:EventTraceKit.VsExtension.Windows"
+             xmlns:etkc="clr-namespace:EventTraceKit.VsExtension.Controls"
+             xmlns:etkv="clr-namespace:EventTraceKit.VsExtension.Views"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance {x:Type etkv:EventProviderViewModel}, d:IsDesignTimeCreatable=False}"
+             d:DesignWidth="300"
+             d:DesignHeight="300">
+  <UserControl.Resources>
+    <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+      <Setter Property="Margin" Value="3"/>
+    </Style>
+    <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
+      <Setter Property="Margin" Value="3"/>
+      <Setter Property="Padding" Value="2"/>
+    </Style>
+    <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Type CheckBox}}">
+      <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="Margin" Value="3"/>
+      <Setter Property="Padding" Value="1"/>
+    </Style>
+    <Style TargetType="{x:Type ComboBox}" BasedOn="{StaticResource {x:Type ComboBox}}">
+      <Setter Property="Margin" Value="3"/>
+    </Style>
+
+    <Style x:Key="DataGridCheckBoxColumnStyle" TargetType="{x:Type CheckBox}"
+           BasedOn="{StaticResource {x:Type CheckBox}}">
+      <Setter Property="Margin" Value="0"/>
+    </Style>
+
+    <Style x:Key="DataGridTextColumnEditingStyle" TargetType="{x:Type TextBox}">
+      <Setter Property="Margin" Value="-2"/>
+      <Setter Property="Padding" Value="2"/>
+      <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+  </UserControl.Resources>
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition/>
+    </Grid.RowDefinitions>
+    <Grid>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="150"/>
+        <ColumnDefinition Width="22"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+      <Grid.RowDefinitions>
+        <RowDefinition/>
+        <RowDefinition/>
+        <RowDefinition/>
+        <RowDefinition/>
+        <RowDefinition/>
+        <RowDefinition/>
+        <RowDefinition/>
+        <RowDefinition/>
+        <RowDefinition/>
+      </Grid.RowDefinitions>
+      <Label Grid.Row="0" Grid.Column="0"
+              Content="Provider Id" Target="{Binding ElementName=id}"/>
+      <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" x:Name="id"
+                Text="{Binding Id, UpdateSourceTrigger=PropertyChanged}"/>
+
+      <Label Grid.Row="1" Grid.Column="0"
+              Content="Manifest" Target="{Binding ElementName=manifest}"/>
+      <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <ComboBox x:Name="manifest"
+                  ItemsSource="{Binding SuggestedManifests}"
+                  Text="{Binding Manifest, UpdateSourceTrigger=PropertyChanged}"
+                  IsEditable="True"/>
+        <Button Grid.Column="1" Content="…" MinWidth="0" Padding="10,0"
+                Command="{Binding BrowseManifestCommand}"/>
+      </Grid>
+
+      <Label Grid.Row="2" Grid.Column="0"
+             Content="Level" Target="{Binding ElementName=level}"/>
+      <TextBox Grid.Row="2" Grid.Column="1" x:Name="level"
+               Text="{Binding Level, Converter={x:Static etkw:HexNumberConverter.Instance}, ConverterParameter='2'}"/>
+      <!--<etkc:DropDownTextBox Grid.Row="2" Grid.Column="1" x:Name="level"
+                            Margin="3"
+                            Text="{Binding Level, Converter={x:Static etkw:HexNumberConverter.Instance}, ConverterParameter='2'}">
+        <etkc:DropDownTextBox.DropDownContentTemplate>
+          <DataTemplate>
+            <ListBox etkv:AsyncBind.ItemsSourceProvider="{Binding DefinedLevelsSource}"
+                     SelectedValue="{Binding Level}" SelectedValuePath="Value">
+              <ListBox.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding Name}"/>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </DataTemplate>
+        </etkc:DropDownTextBox.DropDownContentTemplate>
+      </etkc:DropDownTextBox>-->
+
+      <Label Grid.Row="3" Grid.Column="0"
+             Content="Match Any Keywords" Target="{Binding ElementName=matchAnyKeywords}"/>
+      <etkc:DropDownTextBox Grid.Row="3" Grid.Column="1" x:Name="matchAnyKeywords"
+                            Margin="3"
+                            Text="{Binding MatchAnyKeyword, Converter={x:Static etkw:HexNumberConverter.Instance}, ConverterParameter='16'}">
+        <etkc:DropDownTextBox.DropDownContentTemplate>
+          <DataTemplate>
+            <etkv:KeywordSelector KeywordsSource="{Binding DefinedKeywordsSource}"
+                                  Mask="{Binding MatchAnyKeyword}"/>
+          </DataTemplate>
+        </etkc:DropDownTextBox.DropDownContentTemplate>
+      </etkc:DropDownTextBox>
+
+      <Label Grid.Row="4" Grid.Column="0"
+             Content="Match All Keywords" Target="{Binding ElementName=matchAllKeyword}"/>
+      <etkc:DropDownTextBox Grid.Row="4" Grid.Column="1" x:Name="matchAllKeyword"
+                            Margin="3"
+                            Text="{Binding MatchAllKeyword, Converter={x:Static etkw:HexNumberConverter.Instance}, ConverterParameter='16'}">
+        <etkc:DropDownTextBox.DropDownContentTemplate>
+          <DataTemplate>
+            <etkv:KeywordSelector KeywordsSource="{Binding DefinedKeywordsSource}"
+                                  Mask="{Binding MatchAllKeyword}"/>
+          </DataTemplate>
+        </etkc:DropDownTextBox.DropDownContentTemplate>
+      </etkc:DropDownTextBox>
+
+      <CheckBox Grid.Row="2" Grid.Column="3" Content="Include Stacktrace"
+                HorizontalAlignment="Left"
+                IsChecked="{Binding IncludeStackTrace, UpdateSourceTrigger=PropertyChanged}"/>
+      <CheckBox Grid.Row="3" Grid.Column="3" Content="Include Security Id"
+                HorizontalAlignment="Left"
+                IsChecked="{Binding IncludeSecurityId, UpdateSourceTrigger=PropertyChanged}"/>
+      <CheckBox Grid.Row="4" Grid.Column="3" Content="Include Terminal Session Id"
+                HorizontalAlignment="Left"
+                IsChecked="{Binding IncludeTerminalSessionId, UpdateSourceTrigger=PropertyChanged}"/>
+
+      <Label Grid.Row="5" Grid.Column="0"
+             Content="Project" Target="{Binding ElementName=StartupProject}"/>
+      <ComboBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3"
+                x:Name="StartupProject"
+                ItemsSource="{Binding SuggestedProjects}"
+                SelectedValue="{Binding StartupProject, UpdateSourceTrigger=PropertyChanged}"
+                DisplayMemberPath="Name"
+                SelectedValuePath="FullName"/>
+
+      <CheckBox Grid.Row="6" Grid.Column="0"
+                Content="Executable Name" IsChecked="{Binding FilterExecutableNames}"/>
+      <TextBox Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3"
+                Text="{Binding ExecutableNames, UpdateSourceTrigger=PropertyChanged}"/>
+
+      <CheckBox Grid.Row="7" Grid.Column="0"
+                Content="Process Ids" IsChecked="{Binding FilterProcessIds}"/>
+      <TextBox Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="3"
+                Text="{Binding ProcessIds, UpdateSourceTrigger=PropertyChanged}"/>
+
+      <CheckBox Grid.Row="8" Grid.Column="0"
+                Content="Event Ids" IsChecked="{Binding FilterEventIds}"/>
+      <Grid Grid.Row="8" Grid.Column="1" Grid.ColumnSpan="3">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <CheckBox Content="Filter In" IsChecked="{Binding EventIdsFilterIn}"/>
+        <TextBox Grid.Column="1" Text="{Binding EventIds, UpdateSourceTrigger=PropertyChanged}"/>
+      </Grid>
+    </Grid>
+    <!--<Separator Grid.Row="1" Style="{StaticResource UnrelatedControlsSeparator}"/>
+    <TextBlock Grid.Row="2" Text="{Binding InvalidManifestMessage}"/>
+    <DataGrid Grid.Row="3"
+              ItemsSource="{Binding Events}"
+              AutoGenerateColumns="False"
+              BorderThickness="1"
+              CanUserAddRows="True"
+              CanUserDeleteRows="True"
+              GridLinesVisibility="None"
+              HeadersVisibility="Column"
+              SelectionMode="Extended"
+              SelectionUnit="FullRow"
+              EnableRowVirtualization="True"
+              EnableColumnVirtualization="True">
+      <i:Interaction.Behaviors>
+        <etkw:ToggleSelectOnSpace ToggleSelectCommand="{Binding ToggleSelectedEventsCommand}"/>
+      </i:Interaction.Behaviors>
+      <DataGrid.Columns>
+        <DataGridCheckBoxColumn Binding="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}"
+                                ElementStyle="{StaticResource DataGridCheckBoxColumnStyle}"
+                                EditingElementStyle="{StaticResource DataGridCheckBoxColumnStyle}"/>
+        <DataGridTextColumn Header="Id" Binding="{Binding Id}"
+                            EditingElementStyle="{StaticResource DataGridTextColumnEditingStyle}"/>
+        <DataGridTextColumn Header="Version" Binding="{Binding Version}"
+                            EditingElementStyle="{StaticResource DataGridTextColumnEditingStyle}"/>
+        <DataGridTextColumn Header="Symbol" Binding="{Binding Symbol}"
+                            EditingElementStyle="{StaticResource DataGridTextColumnEditingStyle}"
+                            Width="*"/>
+        <DataGridTextColumn Header="Channel" Binding="{Binding Channel}" IsReadOnly="True"/>
+        <DataGridTextColumn Header="Level" Binding="{Binding Level}" IsReadOnly="True"/>
+        <DataGridTextColumn Header="Task" Binding="{Binding Task}" IsReadOnly="True"/>
+        <DataGridTextColumn Header="Opcode" Binding="{Binding Opcode}" IsReadOnly="True"/>
+        <DataGridTextColumn Header="Keywords" Binding="{Binding Keywords}" IsReadOnly="True"/>
+      </DataGrid.Columns>
+    </DataGrid>-->
+  </Grid>
+</UserControl>

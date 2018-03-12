@@ -1,0 +1,66 @@
+<UserControl
+  x:Class="EventTraceKit.VsExtension.Views.TraceLogToolContent"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:vsui="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
+  xmlns:vsfx="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.14.0"
+  xmlns:etkvs="clr-namespace:EventTraceKit.VsExtension"
+  xmlns:etkc="clr-namespace:EventTraceKit.VsExtension.Controls"
+  xmlns:etks="clr-namespace:EventTraceKit.VsExtension.Styles"
+  xmlns:etkv="clr-namespace:EventTraceKit.VsExtension.Views"
+  mc:Ignorable="d"
+  d:DesignWidth="900"
+  d:DesignHeight="200"
+  d:DataContext="{d:DesignInstance {x:Type etkv:TraceLogPaneDesignTimeModel}, IsDesignTimeCreatable=False}"
+  UseLayoutRounding="True"
+  Background="{DynamicResource {x:Static vsfx:VsBrushes.WindowKey}}"
+  Foreground="{DynamicResource {x:Static vsfx:VsBrushes.WindowTextKey}}">
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="../Themes/generic.xaml"/>
+      </ResourceDictionary.MergedDictionaries>
+      <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </ResourceDictionary>
+  </UserControl.Resources>
+
+  <DockPanel>
+    <StatusBar DockPanel.Dock="Bottom"
+               Visibility="{Binding ShowStatusBar, Converter={StaticResource BooleanToVisibilityConverter}}"
+               Background="{DynamicResource {x:Static vsfx:VsBrushes.CommandBarGradientKey}}"
+               Foreground="{DynamicResource {x:Static vsfx:VsBrushes.CommandBarTextActiveKey}}">
+      <StatusBarItem VerticalContentAlignment="Stretch">
+        <etkc:ActivityRing Width="{Binding ActualHeight, RelativeSource={RelativeSource Self}}"
+                               VerticalAlignment="Stretch"
+                               Foreground="#FF990000"
+                               IsActive="{Binding IsCollecting}"/>
+      </StatusBarItem>
+      <StatusBarItem>
+        <TextBlock Text="{Binding FormattedEventStatistics}"/>
+      </StatusBarItem>
+      <StatusBarItem>
+        <TextBlock Text="{Binding FormattedBufferStatistics}"/>
+      </StatusBarItem>
+      <StatusBarItem HorizontalContentAlignment="Stretch">
+        <TextBlock Text="{Binding Status}" TextWrapping="NoWrap"/>
+      </StatusBarItem>
+    </StatusBar>
+
+    <etkc:AsyncDataGrid
+      ViewModel="{Binding GridModel}"
+      Background="{DynamicResource {x:Static vsui:TreeViewColors.BackgroundBrushKey}}"
+      RowFontFamily="{DynamicResource {x:Static etks:TraceLogFonts.RowFontFamilyKey}}"
+      RowFontSize="{DynamicResource {x:Static etks:TraceLogFonts.RowFontSizeKey}}"
+      RowForeground="{DynamicResource {x:Static etks:TraceLogColors.RowForegroundBrushKey}}"
+      RowBackground="{DynamicResource {x:Static etks:TraceLogColors.RowBackgroundBrushKey}}"
+      AlternatingRowBackground="{DynamicResource {x:Static etks:TraceLogColors.AlternatingRowBackgroundBrushKey}}"
+      FrozenColumnBackground="{DynamicResource {x:Static etks:TraceLogColors.FrozenColumnBackgroundBrushKey}}"
+      RowSelectionForeground="{DynamicResource {x:Static etks:TraceLogColors.SelectedRowForegroundBrushKey}}"
+      RowSelectionBackground="{DynamicResource {x:Static etks:TraceLogColors.SelectedRowBackgroundBrushKey}}"
+      RowInactiveSelectionForeground="{DynamicResource {x:Static etks:TraceLogColors.InactiveSelectedRowForegroundBrushKey}}"
+      RowInactiveSelectionBackground="{DynamicResource {x:Static etks:TraceLogColors.InactiveSelectedRowBackgroundBrushKey}}"
+      RowFocusBorderBrush="{DynamicResource {x:Static etkvs:CommonControlBrushes.FocusVisualForegroundKey}}"/>
+  </DockPanel>
+</UserControl>

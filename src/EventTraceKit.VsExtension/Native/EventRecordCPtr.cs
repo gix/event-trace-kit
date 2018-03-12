@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Native
+namespace EventTraceKit.VsExtension.Native
 {
     using System;
     using System.Runtime.InteropServices;
@@ -46,6 +46,23 @@
             return null;
         }
 
+        public bool HasStackTrace
+        {
+            get
+            {
+                if (!HasData)
+                    return false;
+
+                for (int i = 0; i < pEventRecord->ExtendedDataCount; ++i) {
+                    if (pEventRecord->ExtendedData[i].ExtType == EVENT_HEADER_EXT_TYPE.STACK_TRACE32 ||
+                        pEventRecord->ExtendedData[i].ExtType == EVENT_HEADER_EXT_TYPE.STACK_TRACE64)
+                        return true;
+                }
+
+                return false;
+            }
+        }
+
         public Guid? TryGetRelatedActivityId()
         {
             var item = FindExtendedData(EVENT_HEADER_EXT_TYPE.RELATED_ACTIVITYID);
@@ -91,7 +108,7 @@
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct FastEventRecordCPtr
+    public readonly unsafe struct FastEventRecordCPtr
     {
         private readonly EVENT_RECORD* pEventRecord;
 

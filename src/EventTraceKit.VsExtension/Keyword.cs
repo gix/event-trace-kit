@@ -18,7 +18,7 @@ namespace EventTraceKit.VsExtension
         public ulong KeywordValue { get; }
 
         public static Keyword Zero => new Keyword();
-        public static Keyword MinValue => new Keyword(0L);
+        public static Keyword MinValue => new Keyword(0UL);
         public static Keyword MaxValue => new Keyword(ulong.MaxValue);
 
         public static bool operator ==(Keyword lhs, Keyword rhs)

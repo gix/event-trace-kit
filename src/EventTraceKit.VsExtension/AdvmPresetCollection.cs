@@ -4,11 +4,10 @@ namespace EventTraceKit.VsExtension
     using System.Collections.Generic;
     using System.Linq;
     using System.Windows;
-    using Windows;
-    using Collections;
     using Controls;
     using Extensions;
     using Serialization;
+    using Windows;
 
     [SerializedShape(typeof(Settings.Persistence.ViewPresets))]
     public class AdvmPresetCollection : FreezableCustomSerializerAccessBase

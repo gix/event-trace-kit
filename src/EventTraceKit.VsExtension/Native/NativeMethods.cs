@@ -9,20 +9,20 @@ namespace EventTraceKit.VsExtension.Native
 
     internal static class NativeMethods
     {
-        private const string User32 = "user32.dll";
-        private const string Kernel32 = "kernel32.dll";
-
         public const int ERROR_NOT_SAME_DEVICE = 17;
 
-        [DllImport(User32)]
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetCapture();
+
+        [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool GetWindowRect(IntPtr hwnd, out RECT lpRect);
 
-        [DllImport(User32)]
+        [DllImport("user32.dll")]
         public static extern uint GetSysColor(int nIndex);
 
         [return: MarshalAs(UnmanagedType.Bool)]
-        [DllImport(Kernel32, CharSet = CharSet.Unicode, SetLastError = true)]
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         public static extern bool MoveFileEx(
             string lpExistingFilename, string lpNewFileName, MOVEFILE_FLAGS flags);
 
@@ -49,7 +49,7 @@ namespace EventTraceKit.VsExtension.Native
             return result.ToString();
         }
 
-        [DllImport(Kernel32, SetLastError = true)]
+        [DllImport("kernel32.dll", SetLastError = true)]
         public static extern uint FormatMessageW(
             [MarshalAs(UnmanagedType.U4)] FormatMessageFlags dwFlags,
             UnmanagedString lpSource,
@@ -60,7 +60,7 @@ namespace EventTraceKit.VsExtension.Native
             [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPWStr)]
             string[] Arguments);
 
-        [DllImport(Kernel32, SetLastError = true)]
+        [DllImport("kernel32.dll", SetLastError = true)]
         public static extern uint FormatMessageW(
             [MarshalAs(UnmanagedType.U4)] FormatMessageFlags dwFlags,
             IntPtr lpSource,
@@ -70,7 +70,7 @@ namespace EventTraceKit.VsExtension.Native
             uint nSize,
             IntPtr Arguments);
 
-        [DllImport(Kernel32, SetLastError = true)]
+        [DllImport("kernel32.dll", SetLastError = true)]
         public static extern bool FileTimeToSystemTime(
             [In] ref FILETIME lpFileTime, out SYSTEMTIME lpSystemTime);
 

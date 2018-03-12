@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension
+namespace EventTraceKit.VsExtension
 {
     using System;
     using System.Collections.Generic;
@@ -111,6 +111,12 @@
                 return null;
 
             return DataColumnViews[columnIndex].GetCellValue(rowIndex);
+        }
+
+        public virtual T GetInteractionWorkflow<T>(int? rowIndex, int? columnIndex)
+            where T : class
+        {
+            return null;
         }
 
         public void UpdateRowCount(int newCount)

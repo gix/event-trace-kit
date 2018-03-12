@@ -87,8 +87,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public FontFamily RowFontFamily
         {
-            get { return (FontFamily)GetValue(RowFontFamilyProperty); }
-            set { SetValue(RowFontFamilyProperty, value); }
+            get => (FontFamily)GetValue(RowFontFamilyProperty);
+            set => SetValue(RowFontFamilyProperty, value);
         }
 
         #endregion
@@ -111,8 +111,8 @@ namespace EventTraceKit.VsExtension.Controls
         [TypeConverter(typeof(FontSizeConverter))]
         public double RowFontSize
         {
-            get { return (double)GetValue(RowFontSizeProperty); }
-            set { SetValue(RowFontSizeProperty, value); }
+            get => (double)GetValue(RowFontSizeProperty);
+            set => SetValue(RowFontSizeProperty, value);
         }
 
         #endregion
@@ -134,8 +134,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public Brush RowForeground
         {
-            get { return (Brush)GetValue(RowForegroundProperty); }
-            set { SetValue(RowForegroundProperty, value); }
+            get => (Brush)GetValue(RowForegroundProperty);
+            set => SetValue(RowForegroundProperty, value);
         }
 
         #endregion
@@ -157,8 +157,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public Brush RowBackground
         {
-            get { return (Brush)GetValue(RowBackgroundProperty); }
-            set { SetValue(RowBackgroundProperty, value); }
+            get => (Brush)GetValue(RowBackgroundProperty);
+            set => SetValue(RowBackgroundProperty, value);
         }
 
         #endregion
@@ -180,8 +180,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public Brush AlternatingRowBackground
         {
-            get { return (Brush)GetValue(AlternatingRowBackgroundProperty); }
-            set { SetValue(AlternatingRowBackgroundProperty, value); }
+            get => (Brush)GetValue(AlternatingRowBackgroundProperty);
+            set => SetValue(AlternatingRowBackgroundProperty, value);
         }
 
         #endregion
@@ -203,8 +203,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public Brush FrozenColumnBackground
         {
-            get { return (Brush)GetValue(FrozenColumnBackgroundProperty); }
-            set { SetValue(FrozenColumnBackgroundProperty, value); }
+            get => (Brush)GetValue(FrozenColumnBackgroundProperty);
+            set => SetValue(FrozenColumnBackgroundProperty, value);
         }
 
         #endregion
@@ -226,8 +226,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public Brush RowSelectionForeground
         {
-            get { return (Brush)GetValue(RowSelectionForegroundProperty); }
-            set { SetValue(RowSelectionForegroundProperty, value); }
+            get => (Brush)GetValue(RowSelectionForegroundProperty);
+            set => SetValue(RowSelectionForegroundProperty, value);
         }
 
         #endregion
@@ -249,8 +249,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public Brush RowSelectionBackground
         {
-            get { return (Brush)GetValue(RowSelectionBackgroundProperty); }
-            set { SetValue(RowSelectionBackgroundProperty, value); }
+            get => (Brush)GetValue(RowSelectionBackgroundProperty);
+            set => SetValue(RowSelectionBackgroundProperty, value);
         }
 
         #endregion
@@ -272,8 +272,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public Brush RowInactiveSelectionForeground
         {
-            get { return (Brush)GetValue(RowInactiveSelectionForegroundProperty); }
-            set { SetValue(RowInactiveSelectionForegroundProperty, value); }
+            get => (Brush)GetValue(RowInactiveSelectionForegroundProperty);
+            set => SetValue(RowInactiveSelectionForegroundProperty, value);
         }
 
         #endregion
@@ -295,8 +295,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public Brush RowInactiveSelectionBackground
         {
-            get { return (Brush)GetValue(RowInactiveSelectionBackgroundProperty); }
-            set { SetValue(RowInactiveSelectionBackgroundProperty, value); }
+            get => (Brush)GetValue(RowInactiveSelectionBackgroundProperty);
+            set => SetValue(RowInactiveSelectionBackgroundProperty, value);
         }
 
         #endregion
@@ -318,8 +318,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public Brush RowFocusBorderBrush
         {
-            get { return (Brush)GetValue(RowFocusBorderBrushProperty); }
-            set { SetValue(RowFocusBorderBrushProperty, value); }
+            get => (Brush)GetValue(RowFocusBorderBrushProperty);
+            set => SetValue(RowFocusBorderBrushProperty, value);
         }
 
         #endregion
@@ -338,8 +338,8 @@ namespace EventTraceKit.VsExtension.Controls
 
         public AsyncDataGridViewModel ViewModel
         {
-            get { return (AsyncDataGridViewModel)GetValue(ViewModelProperty); }
-            set { SetValue(ViewModelProperty, value); }
+            get => (AsyncDataGridViewModel)GetValue(ViewModelProperty);
+            set => SetValue(ViewModelProperty, value);
         }
 
         private static void OnViewModelChanged(
@@ -416,13 +416,13 @@ namespace EventTraceKit.VsExtension.Controls
 
         public Button CancelButtonPart
         {
-            get { return (Button)GetValue(CancelButtonPartProperty); }
-            private set { SetValue(CancelButtonPartPropertyKey, value); }
+            get => (Button)GetValue(CancelButtonPartProperty);
+            private set => SetValue(CancelButtonPartPropertyKey, value);
         }
 
         #endregion
 
-        #region public ScrollViewer CenterCellsScrollViewer { get; private set; }
+        #region public ScrollViewer CellsScrollViewer { get; private set; }
 
         private static readonly DependencyPropertyKey CenterCellsScrollViewerPropertyKey =
             DependencyProperty.RegisterReadOnly(
@@ -439,8 +439,8 @@ namespace EventTraceKit.VsExtension.Controls
 
         public ScrollViewer CellsScrollViewer
         {
-            get { return (ScrollViewer)GetValue(CellsScrollViewerProperty); }
-            private set { SetValue(CenterCellsScrollViewerPropertyKey, value); }
+            get => (ScrollViewer)GetValue(CellsScrollViewerProperty);
+            private set => SetValue(CenterCellsScrollViewerPropertyKey, value);
         }
 
         #endregion
@@ -462,8 +462,8 @@ namespace EventTraceKit.VsExtension.Controls
 
         public AsyncDataGridColumnHeadersPresenter ColumnHeadersPresenter
         {
-            get { return (AsyncDataGridColumnHeadersPresenter)GetValue(ColumnHeadersPresenterProperty); }
-            private set { SetValue(ColumnHeadersPresenterPropertyKey, value); }
+            get => (AsyncDataGridColumnHeadersPresenter)GetValue(ColumnHeadersPresenterProperty);
+            private set => SetValue(ColumnHeadersPresenterPropertyKey, value);
         }
 
         #endregion
@@ -485,8 +485,8 @@ namespace EventTraceKit.VsExtension.Controls
 
         public AsyncDataGridCellsPresenter CellsPresenter
         {
-            get { return (AsyncDataGridCellsPresenter)GetValue(CellsPresenterProperty); }
-            private set { SetValue(CellsPresenterPartCenterPropertyKey, value); }
+            get => (AsyncDataGridCellsPresenter)GetValue(CellsPresenterProperty);
+            private set => SetValue(CellsPresenterPartCenterPropertyKey, value);
         }
 
         #endregion
@@ -508,8 +508,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public bool IsSelectionActive
         {
-            get { return (bool)GetValue(IsSelectionActiveProperty); }
-            set { SetValue(IsSelectionActiveProperty, Boxed.Bool(value)); }
+            get => (bool)GetValue(IsSelectionActiveProperty);
+            set => SetValue(IsSelectionActiveProperty, Boxed.Bool(value));
         }
 
         private static void OnIsSelectionActiveChanged(
@@ -724,9 +724,16 @@ namespace EventTraceKit.VsExtension.Controls
         {
             if (!e.Handled) {
                 var d = e.OriginalSource as DependencyObject;
-                if (d?.FindAncestorOrSelf<AsyncDataGridCellsPresenter>() != null) {
-                    ContextMenu menu = ViewModel.BuildContextMenu();
-                    if (menu != null) {
+                var cellsPresenter = d?.FindAncestorOrSelf<AsyncDataGridCellsPresenter>();
+                if (cellsPresenter != null) {
+                    var position = new Point(e.CursorLeft, e.CursorTop);
+                    var column = cellsPresenter.GetColumnFromPosition(position.X);
+                    var rowIndex = cellsPresenter.GetRowFromPosition(position.Y);
+                    var columnIndex = column?.ModelColumnIndex;
+
+                    var menu = new ContextMenu();
+                    ViewModel.BuildContextMenu(menu, rowIndex, columnIndex);
+                    if (menu.Items.Count != 0) {
                         menu.PlacementTarget = this;
                         using (EnterContextMenuVisualState())
                             menu.IsOpen = true;

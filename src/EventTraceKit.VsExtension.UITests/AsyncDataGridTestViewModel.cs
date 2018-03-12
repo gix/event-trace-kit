@@ -17,7 +17,7 @@ namespace EventTraceKit.VsExtension.UITests
     using Formatting;
     using Native;
 
-    public class AsyncDataGridTestViewModel : ViewModel
+    public class AsyncDataGridTestViewModel : ObservableModel
     {
         private bool isRunning;
         private AsyncDataGridViewModel gridModel;
@@ -43,7 +43,6 @@ namespace EventTraceKit.VsExtension.UITests
             StopCommand = new AsyncDelegateCommand(Stop, CanStop);
             ClearCommand = new AsyncDelegateCommand(Clear);
             OpenViewEditorCommand = new AsyncDelegateCommand(OpenViewEditor);
-            OpenFilterEditorCommand = new AsyncDelegateCommand(OpenFilterEditor);
 
             SelectableBrushes = new ObservableCollection<BrushEntry>();
             foreach (var property in typeof(Brushes).GetProperties(BindingFlags.Static | BindingFlags.Public).OrderBy(x => x.Name)) {
@@ -87,8 +86,8 @@ namespace EventTraceKit.VsExtension.UITests
 
         public bool IsRunning
         {
-            get { return isRunning; }
-            set { SetProperty(ref isRunning, value); }
+            get => isRunning;
+            set => SetProperty(ref isRunning, value);
         }
 
         private bool CanStart()
@@ -125,25 +124,6 @@ namespace EventTraceKit.VsExtension.UITests
             var dialog = PresetManagerDialog.CreateDialog(adv);
             dialog.Owner = Application.Current.MainWindow;
             dialog.ShowDialog();
-            return Task.CompletedTask;
-        }
-
-        private unsafe Task OpenFilterEditor()
-        {
-            var viewModel = new FilterDialogViewModel();
-            var dialog = new FilterDialog { DataContext = viewModel };
-            if (dialog.ShowDialog() != true)
-                return Task.CompletedTask;
-
-            var predicateExpr = viewModel.GetFilter().CreatePredicateExpr();
-            var predicate = predicateExpr.CompileToTransientAssembly();
-            MessageBox.Show(predicateExpr.ToString());
-
-            var record = new EVENT_RECORD();
-            record.EventHeader.EventDescriptor.Id = 23;
-            var info = new TRACE_EVENT_INFO();
-            MessageBox.Show(predicate((IntPtr)(&record), (IntPtr)(&info), (UIntPtr)Marshal.SizeOf(typeof(TRACE_EVENT_INFO))).ToString());
-
             return Task.CompletedTask;
         }
 
@@ -190,13 +170,13 @@ namespace EventTraceKit.VsExtension.UITests
 
         public AsyncDataGridViewModel GridModel
         {
-            get { return gridModel; }
-            set { SetProperty(ref gridModel, value); }
+            get => gridModel;
+            set => SetProperty(ref gridModel, value);
         }
 
         public int RowCount
         {
-            get { return rowCount; }
+            get => rowCount;
             set
             {
                 if (SetProperty(ref rowCount, value))
@@ -206,68 +186,68 @@ namespace EventTraceKit.VsExtension.UITests
 
         public FontFamily RowFontFamily
         {
-            get { return rowFontFamily; }
-            set { SetProperty(ref rowFontFamily, value); }
+            get => rowFontFamily;
+            set => SetProperty(ref rowFontFamily, value);
         }
 
         public double RowFontSize
         {
-            get { return rowFontSize; }
-            set { SetProperty(ref rowFontSize, value); }
+            get => rowFontSize;
+            set => SetProperty(ref rowFontSize, value);
         }
 
         public Brush RowForeground
         {
-            get { return rowForeground; }
-            set { SetProperty(ref rowForeground, value); }
+            get => rowForeground;
+            set => SetProperty(ref rowForeground, value);
         }
 
         public Brush Background
         {
-            get { return background; }
-            set { SetProperty(ref background, value); }
+            get => background;
+            set => SetProperty(ref background, value);
         }
 
         public Brush RowBackground
         {
-            get { return rowBackground; }
-            set { SetProperty(ref rowBackground, value); }
+            get => rowBackground;
+            set => SetProperty(ref rowBackground, value);
         }
 
         public Brush AlternatingRowBackground
         {
-            get { return alternatingRowBackground; }
-            set { SetProperty(ref alternatingRowBackground, value); }
+            get => alternatingRowBackground;
+            set => SetProperty(ref alternatingRowBackground, value);
         }
 
         public Brush RowSelectionForeground
         {
-            get { return rowSelectionForeground; }
-            set { SetProperty(ref rowSelectionForeground, value); }
+            get => rowSelectionForeground;
+            set => SetProperty(ref rowSelectionForeground, value);
         }
 
         public Brush RowSelectionBackground
         {
-            get { return rowSelectionBackground; }
-            set { SetProperty(ref rowSelectionBackground, value); }
+            get => rowSelectionBackground;
+            set => SetProperty(ref rowSelectionBackground, value);
         }
 
         public Brush RowInactiveSelectionForeground
         {
-            get { return rowInactiveSelectionForeground; }
-            set { SetProperty(ref rowInactiveSelectionForeground, value); }
+            get => rowInactiveSelectionForeground;
+            set => SetProperty(ref rowInactiveSelectionForeground, value);
         }
 
         public Brush RowInactiveSelectionBackground
         {
-            get { return rowInactiveSelectionBackground; }
-            set { SetProperty(ref rowInactiveSelectionBackground, value); }
+            get => rowInactiveSelectionBackground;
+            set => SetProperty(ref rowInactiveSelectionBackground, value);
         }
 
         public Brush RowFocusBorderBrush
         {
-            get { return rowFocusBorderBrush; }
-            set { SetProperty(ref rowFocusBorderBrush, value); }
+            get => rowFocusBorderBrush;
+            set => SetProperty(ref rowFocusBorderBrush, value);
         }
     }
 
@@ -302,7 +282,7 @@ namespace EventTraceKit.VsExtension.UITests
         public Brush Brush { get; }
     }
 
-    public abstract class PropertyEditor : ViewModel
+    public abstract class PropertyEditor : ObservableModel
     {
     }
 
@@ -312,7 +292,7 @@ namespace EventTraceKit.VsExtension.UITests
 
         public T Value
         {
-            get { return value; }
+            get => value;
             set
             {
                 if (SetProperty(ref this.value, value))

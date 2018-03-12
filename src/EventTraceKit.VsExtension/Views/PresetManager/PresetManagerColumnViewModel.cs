@@ -5,6 +5,7 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
     using System.Linq;
     using System.Windows;
     using System.Windows.Automation;
+    using EventTraceKit.VsExtension.Windows;
     using Extensions;
     using Formatting;
 

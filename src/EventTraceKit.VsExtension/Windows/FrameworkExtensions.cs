@@ -3,13 +3,28 @@ namespace EventTraceKit.VsExtension.Windows
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Reflection;
     using System.Windows;
     using System.Windows.Controls.Primitives;
     using System.Windows.Data;
     using System.Windows.Media;
+    using System.Windows.Media.Media3D;
 
     public static class FrameworkExtensions
     {
+        private static readonly Func<DependencyObject, DependencyObject, bool> MenuBase_IsDescendant;
+
+        static FrameworkExtensions()
+        {
+            MenuBase_IsDescendant = (Func<DependencyObject, DependencyObject, bool>)
+                typeof(MenuBase).GetMethod(
+                    "IsDescendant",
+                    BindingFlags.Static | BindingFlags.NonPublic,
+                    null, new[] { typeof(DependencyObject), typeof(DependencyObject) }, null)
+                    ?.CreateDelegate(typeof(Func<DependencyObject, DependencyObject, bool>)) ??
+                throw new InvalidOperationException($"{typeof(MenuBase).Name}.IsDescendant not found");
+        }
+
         public static T GetRootVisual<T>(this DependencyObject d) where T : Visual
         {
             while (true) {
@@ -192,6 +207,11 @@ namespace EventTraceKit.VsExtension.Windows
         {
             var binding = new Binding(path) { Source = source };
             d.SetBinding(dp, binding);
+        }
+
+        public static bool IsDescendant(DependencyObject reference, DependencyObject node)
+        {
+            return MenuBase_IsDescendant(reference, node);
         }
     }
 }

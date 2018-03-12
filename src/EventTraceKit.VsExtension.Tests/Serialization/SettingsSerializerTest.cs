@@ -154,7 +154,7 @@ namespace EventTraceKit.VsExtension.Tests.Serialization
                 x.ProcessIds == y.ProcessIds &&
                 x.FilterEventIds == y.FilterEventIds &&
                 x.EventIds == y.EventIds &&
-                x.EnableEvents == y.EnableEvents &&
+                x.EventIdsFilterIn == y.EventIdsFilterIn &&
                 x.StartupProject == y.StartupProject;
         }
 
@@ -237,7 +237,7 @@ namespace EventTraceKit.VsExtension.Tests.Serialization
             source.ProcessIds = "23,42";
             source.FilterEventIds = true;
             source.EventIds = "12,34";
-            source.EnableEvents = false;
+            source.EventIdsFilterIn = false;
             source.StartupProject = "z:\\foo.csproj";
 
             var stream = new MemoryStream();
@@ -285,7 +285,7 @@ namespace EventTraceKit.VsExtension.Tests.Serialization
             Assert.Equal(source.ProcessIds, deserialized.ProcessIds);
             Assert.Equal(source.FilterEventIds, deserialized.FilterEventIds);
             Assert.Equal(source.EventIds, deserialized.EventIds);
-            Assert.Equal(source.EnableEvents, deserialized.EnableEvents);
+            Assert.Equal(source.EventIdsFilterIn, deserialized.EventIdsFilterIn);
         }
 
         [Fact]

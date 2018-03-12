@@ -1,6 +1,5 @@
 namespace EventTraceKit.VsExtension.Serialization
 {
-    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
@@ -11,31 +10,22 @@ namespace EventTraceKit.VsExtension.Serialization
         where TSerializedBaseType : class
     {
         private readonly SafeXamlSerializer serializer;
-        private readonly SerializationMapper<TSerializedBaseType> shaper;
         private readonly IMapper mapper;
 
-        public ShapingXamlSerializer()
-            : this(new SafeXamlSerializer(), new SerializationMapper<TSerializedBaseType>())
-        {
-        }
-
-        public ShapingXamlSerializer(
-            SafeXamlSerializer serializer, SerializationMapper<TSerializedBaseType> shaper,
-            IMapper mapper = null)
+        public ShapingXamlSerializer(SafeXamlSerializer serializer, IMapper mapper)
         {
             this.serializer = serializer;
-            this.shaper = shaper;
             this.mapper = mapper;
         }
 
         public void Save(object element, Stream stream)
         {
-            serializer.Save(ConvertToSerializedShape(element), stream);
+            serializer.Save(ConvertToSerializedShape<TSerializedBaseType>(element), stream);
         }
 
         public void Save(IEnumerable<object> elements, Stream stream)
         {
-            serializer.Save(elements.Select(ConvertToSerializedShape), stream);
+            serializer.Save(elements.Select(ConvertToSerializedShape<TSerializedBaseType>), stream);
         }
 
         public T Load<T>(Stream stream)
@@ -47,37 +37,25 @@ namespace EventTraceKit.VsExtension.Serialization
         public IReadOnlyList<T> LoadMultiple<T>(Stream stream)
         {
             return serializer.LoadMultiple<TSerializedBaseType>(stream)
-                .Select(ConvertFromSerializedShape<T>).ToArray();
+                .Select(ConvertFromSerializedShape<T>).ToList();
         }
 
-        private TSerializedBaseType ConvertToSerializedShape(object element)
+        public TSerialized ConvertToSerializedShape<TSerialized>(object element)
+            where TSerialized : class, TSerializedBaseType
         {
-            if (element is TSerializedBaseType serializedType)
+            if (element is TSerialized serializedType)
                 return serializedType;
             if (element == null)
                 return null;
 
             var sourceType = element.GetType();
             var targetType = sourceType.GetCustomAttribute<SerializedShapeAttribute>()?.Shape;
-            return (TSerializedBaseType)mapper.Map(element, sourceType, targetType);
-
-            if (!shaper.TrySerialize(element, out var serialized))
-                throw new InvalidOperationException("Unable to convert object to serialized shape.");
-
-            return serialized;
+            return (TSerialized)mapper.Map(element, sourceType, targetType);
         }
 
-        private T ConvertFromSerializedShape<T>(TSerializedBaseType serialized)
+        public T ConvertFromSerializedShape<T>(TSerializedBaseType serialized)
         {
             return mapper.Map<T>(serialized);
-
-            if (shaper.TryDeserialize(serialized, out T element))
-                return element;
-
-            if (typeof(TSerializedBaseType).IsAssignableFrom(typeof(T)))
-                return (T)(object)serialized;
-
-            throw new InvalidOperationException("Unable to convert object from serialized shape.");
         }
     }
 }

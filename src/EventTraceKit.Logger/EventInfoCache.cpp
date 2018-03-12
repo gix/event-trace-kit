@@ -8,7 +8,7 @@ EventInfoCache::EventInfoCache()
 {
 }
 
-EventInfo EventInfoCache::Get(EVENT_RECORD& record)
+EventInfo EventInfoCache::Get(EVENT_RECORD const& record)
 {
     auto key = EventKey::FromEvent(record);
 
@@ -20,15 +20,17 @@ EventInfo EventInfoCache::Get(EVENT_RECORD& record)
 }
 
 EventInfoCache::TraceEventInfoPtr
-EventInfoCache::CreateEventInfo(EVENT_RECORD& record)
+EventInfoCache::CreateEventInfo(EVENT_RECORD const& record)
 {
     TraceEventInfoPtr info;
 
     ULONG bufferSize = 0;
-    TDHSTATUS ec = TdhGetEventInformation(&record, 0, nullptr, nullptr, &bufferSize);
+    TDHSTATUS ec = TdhGetEventInformation(const_cast<EVENT_RECORD*>(&record), 0, nullptr,
+                                          nullptr, &bufferSize);
     if (ec == ERROR_INSUFFICIENT_BUFFER) {
         std::get<0>(info) = make_vstruct<TRACE_EVENT_INFO>(bufferSize);
-        ec = TdhGetEventInformation(&record, 0, nullptr, std::get<0>(info).get(), &bufferSize);
+        ec = TdhGetEventInformation(const_cast<EVENT_RECORD*>(&record), 0, nullptr,
+                                    std::get<0>(info).get(), &bufferSize);
     }
 
     if (ec != ERROR_SUCCESS)

@@ -1,4 +1,5 @@
 #pragma once
+#include <chrono>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -34,7 +35,8 @@ struct TraceProperties
     unsigned BufferSize;
     unsigned MinimumBuffers;
     unsigned MaximumBuffers;
-    unsigned FlushTimer;
+    std::chrono::duration<unsigned> FlushTimer;
+    std::chrono::duration<unsigned, std::milli> CustomFlushTimer;
     ClockResolutionType ClockResolution;
     std::wstring LogFileName;
 };
@@ -71,16 +73,16 @@ public:
                             uint64_t anyKeywordMask = 0xFFFFFFFFFFFFFFFFULL,
                             uint64_t allKeywordMask = 0)
         : Id(id)
-        , Level(level)
         , MatchAnyKeyword(anyKeywordMask)
         , MatchAllKeyword(allKeywordMask)
+        , Level(level)
     {
     }
 
     GUID Id;
-    uint8_t Level;
     uint64_t MatchAnyKeyword;
     uint64_t MatchAllKeyword;
+    uint8_t Level;
 
     bool IncludeSecurityId = false;
     bool IncludeTerminalSessionId = false;
@@ -89,9 +91,15 @@ public:
     std::wstring ExecutableName;
     std::vector<unsigned> ProcessIds;
     std::vector<uint16_t> EventIds;
-    bool EnableEventIds = true;
     std::vector<uint16_t> StackWalkEventIds;
-    bool EnableStackWalkEventIds = true;
+    bool EventIdsFilterIn = true;
+    bool StackWalkEventIdsFilterIn = true;
+
+    uint64_t StackWalkMatchAnyKeyword = 0;
+    uint64_t StackWalkMatchAllKeyword = 0;
+    uint8_t StackWalkLevel = 0;
+    bool StackWalkFilterIn = true;
+    bool EnableStackWalkFilter = false;
 
     std::wstring_view GetManifest() const
     {
@@ -152,6 +160,8 @@ public:
     virtual bool DisableProvider(GUID const& providerId) = 0;
     virtual void EnableAllProviders() = 0;
     virtual void DisableAllProviders() = 0;
+
+    virtual HRESULT SetKernelProviders(unsigned flags, bool enable) = 0;
 };
 
 std::unique_ptr<ITraceSession> CreateEtwTraceSession(std::wstring_view name,

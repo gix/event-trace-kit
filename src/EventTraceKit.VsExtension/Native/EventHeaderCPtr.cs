@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Native
+namespace EventTraceKit.VsExtension.Native
 {
     using System;
     using System.Runtime.InteropServices;

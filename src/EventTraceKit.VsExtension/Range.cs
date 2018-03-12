@@ -2,7 +2,7 @@ namespace EventTraceKit.VsExtension
 {
     using System;
 
-    public struct Range
+    public readonly struct Range
         : IEquatable<Range>, IComparable<Range>, IComparable<int>
     {
         public Range(int begin, int end)

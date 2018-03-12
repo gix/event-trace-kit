@@ -10,11 +10,10 @@ namespace EventTraceKit.VsExtension.Views
     using System.Windows.Input;
     using EventManifestFramework;
     using EventManifestFramework.Schema;
-    using EventManifestFramework.Support;
     using EventTraceKit.Tracing;
     using EventTraceKit.VsExtension.Extensions;
+    using EventTraceKit.VsExtension.Serialization;
     using Microsoft.VisualStudio.Shell;
-    using Serialization;
     using Task = System.Threading.Tasks.Task;
 
     public interface ITraceSettingsContext
@@ -25,55 +24,17 @@ namespace EventTraceKit.VsExtension.Views
         Task<EventManifest> GetManifest(string manifestFile);
     }
 
-    internal sealed class DiagnosticCollector : IDiagnosticConsumer
-    {
-        private readonly List<DiagnosticInfo> diagnostics = new List<DiagnosticInfo>();
-
-        public void HandleDiagnostic(
-            DiagnosticSeverity severity, SourceLocation location, string message)
-        {
-            if (!Enum.IsDefined(typeof(DiagnosticSeverity), severity))
-                throw new ArgumentOutOfRangeException(nameof(severity), severity, null);
-            if (location == null)
-                throw new ArgumentNullException(nameof(location));
-            if (message == null)
-                throw new ArgumentNullException(nameof(message));
-
-            if (severity == DiagnosticSeverity.Ignored)
-                return;
-
-            diagnostics.Add(new DiagnosticInfo(severity, location, message));
-        }
-
-        public IReadOnlyList<DiagnosticInfo> Diagnostics => diagnostics;
-
-        public sealed class DiagnosticInfo
-        {
-            public DiagnosticInfo(DiagnosticSeverity severity, SourceLocation location, string message)
-            {
-                Severity = severity;
-                Location = location;
-                Message = message;
-            }
-
-            public DiagnosticSeverity Severity { get; }
-
-            public SourceLocation Location { get; }
-
-            public string Message { get; }
-        }
-    }
-
     [SerializedShape(typeof(Settings.Persistence.TraceSettings))]
-    public class TraceSettingsViewModel : ViewModel, ITraceSettingsContext
+    public class TraceSettingsViewModel : ObservableModel, ITraceSettingsContext
     {
+        private readonly Lazy<IReadOnlyList<ProjectInfo>> projectsInSolution;
+        private readonly Lazy<IReadOnlyList<string>> manifestsInSolution;
+
         private bool? dialogResult;
         private TraceProfileViewModel activeProfile;
         private ICommand newProfileCommand;
         private ICommand copyProfileCommand;
         private ICommand deleteProfileCommand;
-        private readonly Lazy<IReadOnlyList<ProjectInfo>> projectsInSolution;
-        private readonly Lazy<IReadOnlyList<string>> manifestsInSolution;
         private Window dialogOwner;
 
         public TraceSettingsViewModel()
@@ -86,14 +47,13 @@ namespace EventTraceKit.VsExtension.Views
 
             manifestCache = new FileCache<EventManifest>(
                 10, path => {
-                    var diagCollector = new DiagnosticCollector();
-                    var diags = new DiagnosticsEngine(diagCollector);
+                    var diags = new DiagnosticCollector();
 
                     var parser = EventManifestParser.CreateWithWinmeta(diags);
                     var manifest = parser.ParseManifest(path);
-                    if (manifest == null || diagCollector.Diagnostics.Count != 0)
+                    if (manifest == null || diags.Diagnostics.Count != 0)
                         throw new Exception(
-                            string.Join("\r\n", diagCollector.Diagnostics.Select(x => x.Message)));
+                            string.Join("\r\n", diags.Diagnostics.Select(x => x.Message)));
 
                     return manifest;
                 });
@@ -105,12 +65,12 @@ namespace EventTraceKit.VsExtension.Views
 
         private readonly FileCache<EventManifest> manifestCache;
 
-        Task<EventManifest> ITraceSettingsContext.GetManifest(string manifestFile)
+        async Task<EventManifest> ITraceSettingsContext.GetManifest(string manifestFile)
         {
             if (string.IsNullOrEmpty(manifestFile) || !File.Exists(manifestFile))
-                return Task.FromResult(new EventManifest());
+                return new EventManifest();
 
-            return Task.Run(() => manifestCache.Get(manifestFile));
+            return await Task.Run(() => manifestCache.Get(manifestFile));
         }
 
         private static EnvDTE.DTE GetDte()
@@ -264,17 +224,6 @@ namespace EventTraceKit.VsExtension.Views
             provider.Id = new Guid("9ED16FBE-E642-4D9F-B425-E339FEDC91F8");
             provider.Name = "Design Provider";
             provider.IncludeStackTrace = true;
-            provider.Events.Add(new EventViewModel {
-                Id = 23,
-                Version = 0,
-                IsEnabled = false,
-                Channel = "Debug"
-            });
-            provider.Events.Add(new EventViewModel {
-                Id = 42,
-                Version = 1,
-                IsEnabled = true
-            });
 
             var collector = new EventCollectorViewModel();
             collector.Id = new Guid("381F7EC1-AE97-41F9-8C48-727C49D3E210");
@@ -282,7 +231,7 @@ namespace EventTraceKit.VsExtension.Views
             collector.Providers.Add(provider);
 
             var preset = new TraceProfileViewModel();
-            preset.Name = "Design Preset";
+            preset.Name = "Design Profile";
             preset.Id = new Guid("7DB6B9B1-9ACF-42C8-B6B1-CEEB6F783689");
             preset.Collectors.Add(collector);
             preset.SelectedCollector = collector;

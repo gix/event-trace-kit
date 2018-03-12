@@ -8,6 +8,7 @@ namespace EventTraceKit.VsExtension.Views
         private static readonly RoutedUICommand[] Commands = new RoutedUICommand[(int)CommandId.Count];
 
         public static RoutedUICommand Toggle => EnsureCommand(CommandId.Toggle);
+        public static RoutedUICommand Rename => EnsureCommand(CommandId.Rename);
 
         private static RoutedUICommand EnsureCommand(CommandId idCommand)
         {
@@ -32,6 +33,12 @@ namespace EventTraceKit.VsExtension.Views
                             new KeyGesture(Key.T, ModifierKeys.Control)
                         }
                     };
+                case CommandId.Rename:
+                    return new RoutedUICommand("Rename", "Rename", typeof(ExtensionCommands)) {
+                        InputGestures = {
+                            new KeyGesture(Key.F2)
+                        }
+                    };
                 default:
                     throw new ArgumentOutOfRangeException(nameof(idCommand), idCommand, null);
             }
@@ -40,6 +47,7 @@ namespace EventTraceKit.VsExtension.Views
         private enum CommandId : byte
         {
             Toggle,
+            Rename,
             Count
         }
     }

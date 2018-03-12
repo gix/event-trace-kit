@@ -1,8 +1,7 @@
-﻿namespace EventTraceKit.VsExtension.Extensions
+namespace EventTraceKit.VsExtension.Extensions
 {
     using System;
     using System.Collections.Generic;
-    using Collections;
 
     internal static class ComparisonUtils
     {

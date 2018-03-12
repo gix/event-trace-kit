@@ -12,18 +12,17 @@ using namespace etk;
 static void CloseTraceSession(std::wstring const& loggerName)
 {
     size_t const bufferSize = sizeof(EVENT_TRACE_PROPERTIES) + ZStringByteCount(loggerName);
-    std::vector<char> buffer(bufferSize);
+    std::vector<std::byte> buffer(bufferSize);
 
-    auto traceProperties = new(buffer.data()) EVENT_TRACE_PROPERTIES();
-    //traceProperties->Wnode.Guid = properties.Id;
+    auto const traceProperties = new(buffer.data()) EVENT_TRACE_PROPERTIES();
     traceProperties->Wnode.BufferSize = static_cast<ULONG>(bufferSize);
     traceProperties->LoggerNameOffset = sizeof(EVENT_TRACE_PROPERTIES);
     std::memcpy(buffer.data() + traceProperties->LoggerNameOffset,
                 loggerName.data(), ZStringByteCount(loggerName));
 
-    ULONG ec = ControlTraceW(0, loggerName.c_str(), traceProperties,
-                             EVENT_TRACE_CONTROL_STOP);
-    if (ec != ERROR_SUCCESS)
+    ULONG const ec = ControlTraceW(0, loggerName.c_str(), traceProperties,
+                                   EVENT_TRACE_CONTROL_STOP);
+    if (ec != ERROR_SUCCESS && ec != ERROR_WMI_INSTANCE_NOT_FOUND)
         fwprintf(stderr, L"Failed to close trace session (status=%X)\n", ec);
 }
 

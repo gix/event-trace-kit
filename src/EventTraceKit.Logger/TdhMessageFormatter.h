@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "EventInfoCache.h"
+#include "ADT/SmallVector.h"
 #include <vector>
 
 namespace etk
@@ -16,9 +17,10 @@ private:
         EventInfo const& info, size_t pointerSize, wchar_t* buffer, size_t bufferSize);
 
     std::vector<wchar_t> propertyBuffer;
+    std::vector<BYTE> mapBuffer;
     std::wstring formattedProperties;
-    std::vector<size_t> formattedPropertiesOffsets;
-    std::vector<DWORD_PTR> formattedPropertiesPointers;
+    SmallVector<size_t, 16> formattedPropertiesOffsets;
+    SmallVector<DWORD_PTR, 16> formattedPropertiesPointers;
 };
 
 } // namespace etk

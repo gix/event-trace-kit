@@ -2,7 +2,7 @@ namespace EventTraceKit.VsExtension.Views
 {
     using System;
 
-    public class EventViewModel : ViewModel
+    public class EventViewModel : ObservableModel
     {
         private bool isEnabled;
         private ushort id;

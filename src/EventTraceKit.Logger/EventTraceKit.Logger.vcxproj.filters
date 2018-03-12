@@ -52,5 +52,7 @@
     <ClInclude Include="EventTraceKit\WatchDog.h" />
     <ClInclude Include="EventTraceKit\InteropHelper.h" />
     <ClInclude Include="ADT\SmallVector.h" />
+    <ClInclude Include="Support\OSVersionInfo.h" />
+    <ClInclude Include="Support\Rtl.h" />
   </ItemGroup>
 </Project>

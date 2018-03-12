@@ -2,6 +2,7 @@ namespace EventTraceKit.VsExtension.Views
 {
     using System.Threading.Tasks;
     using System.Windows;
+    using EventTraceKit.VsExtension.Windows;
 
     public partial class ImportProvidersDialog
     {

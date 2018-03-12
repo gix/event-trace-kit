@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="Extensions\StringBuilderExtensionsTest.cs" />
     <Compile Include="FileCacheTest.cs" />
+    <Compile Include="FilterTest.cs" />
     <Compile Include="Formatting\FormatProviderTest.cs" />
     <Compile Include="MessageFormatterTest.cs" />
     <Compile Include="MultiRangeTest.cs" />

@@ -3,41 +3,48 @@
 #include "EventInfo.h"
 
 #include <unordered_map>
+
+#include <boost/functional/hash/hash.hpp>
 #include <windows.h>
+
 #include <evntcons.h>
 #include <tdh.h>
-#include <boost/functional/hash/hash.hpp>
 
 namespace etk
 {
 
-struct EventKey
+class EventKey
 {
+public:
     EventKey(GUID const& providerId, USHORT eventId, UCHAR version)
     {
         std::memcpy(data, &providerId, sizeof(providerId));
         std::memcpy(data + sizeof(providerId), &eventId, sizeof(eventId));
-        std::memcpy(data + sizeof(providerId) + sizeof(eventId), &version, sizeof(version));
+        std::memcpy(data + sizeof(providerId) + sizeof(eventId), &version,
+                    sizeof(version));
     }
 
-    static EventKey FromEvent(EVENT_RECORD& record)
+    static EventKey FromEvent(EVENT_RECORD const& record)
     {
         return FromEventHeader(record.EventHeader);
     }
 
-    static EventKey FromEventHeader(EVENT_HEADER& header)
+    static EventKey FromEventHeader(EVENT_HEADER const& header)
     {
-        bool isClassicEvent = (header.Flags & EVENT_HEADER_FLAG_CLASSIC_HEADER) != 0;
+        bool const isClassic = (header.Flags & EVENT_HEADER_FLAG_CLASSIC_HEADER) != 0;
         return EventKey(header.ProviderId,
-                        !isClassicEvent ? header.EventDescriptor.Id : header.EventDescriptor.Opcode,
+                        !isClassic ? header.EventDescriptor.Id
+                                   : header.EventDescriptor.Opcode,
                         header.EventDescriptor.Version);
     }
 
-    friend bool operator ==(EventKey const& x, EventKey const& y) {
+    friend bool operator==(EventKey const& x, EventKey const& y)
+    {
         return std::memcmp(&x, &y, sizeof(y)) == 0;
     }
 
-    friend bool operator <(EventKey const& x, EventKey const& y) {
+    friend bool operator<(EventKey const& x, EventKey const& y)
+    {
         return std::memcmp(&x, &y, sizeof(y)) < 0;
     }
 
@@ -49,8 +56,7 @@ struct EventKey
     }
 
 private:
-    char data[sizeof(EVENT_HEADER::ProviderId) +
-              sizeof(EVENT_DESCRIPTOR::Id) +
+    char data[sizeof(EVENT_HEADER::ProviderId) + sizeof(EVENT_DESCRIPTOR::Id) +
               sizeof(EVENT_DESCRIPTOR::Version)];
 };
 
@@ -58,12 +64,12 @@ class EventInfoCache
 {
 public:
     EventInfoCache();
-    EventInfo Get(EVENT_RECORD& record);
+    EventInfo Get(EVENT_RECORD const& record);
 
     void Clear() { infos.clear(); }
 
     using TraceEventInfoPtr = std::tuple<vstruct_ptr<TRACE_EVENT_INFO>, size_t>;
-    static TraceEventInfoPtr CreateEventInfo(EVENT_RECORD& record);
+    static TraceEventInfoPtr CreateEventInfo(EVENT_RECORD const& record);
 
 private:
     std::unordered_map<EventKey, TraceEventInfoPtr, boost::hash<EventKey>> infos;

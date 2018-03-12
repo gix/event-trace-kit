@@ -4,7 +4,6 @@ namespace EventTraceKit.VsExtension.Controls
     using System.Collections.ObjectModel;
     using System.Linq;
     using System.Windows;
-    using Collections;
     using Extensions;
     using Primitives;
 

@@ -1,11 +1,10 @@
-﻿namespace EventTraceKit.VsExtension.Controls
+namespace EventTraceKit.VsExtension.Controls
 {
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Linq;
     using System.Windows;
-    using Collections;
     using Windows;
     using Extensions;
     using Serialization;

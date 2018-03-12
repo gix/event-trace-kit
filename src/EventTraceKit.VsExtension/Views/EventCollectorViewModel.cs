@@ -6,9 +6,9 @@ namespace EventTraceKit.VsExtension.Views
     using System.Linq;
     using System.Text.RegularExpressions;
     using System.Threading;
+    using System.Threading.Tasks;
     using System.Windows.Input;
     using EventTraceKit.Tracing;
-    using EventTraceKit.VsExtension.Collections;
     using EventTraceKit.VsExtension.Extensions;
     using EventTraceKit.VsExtension.Serialization;
     using Microsoft.VisualStudio.Shell;
@@ -278,7 +278,7 @@ namespace EventTraceKit.VsExtension.Views
             List<EventProviderViewModel> newProviders;
             try {
                 newProviders = await Task.Run(() => {
-                    var parser = new SimpleInstrumentationManifestParser(manifestPath);
+                    var parser = new SimpleEventManifestParser(manifestPath);
                     return parser.ReadProviders().ToList();
                 });
             } catch (Exception ex) {
@@ -382,24 +382,6 @@ namespace EventTraceKit.VsExtension.Views
         {
             if (target.Name == null)
                 target.Name = source.Name;
-
-            var targetEvents = target.Events.ToDictionary(x => x.CreateKey());
-            var sourceEvents = source.Events.ToDictionary(x => x.CreateKey());
-
-            var newKeys = sourceEvents.Keys.Except(targetEvents.Keys);
-            var mergeKeys = sourceEvents.Keys.Intersect(targetEvents.Keys);
-
-            foreach (var key in mergeKeys) {
-                var targetEvent = targetEvents[key];
-                var sourceEvent = sourceEvents[key];
-                MergeEvent(targetEvent, sourceEvent);
-            }
-
-            foreach (var key in newKeys)
-                targetEvents.Add(key, sourceEvents[key]);
-
-            target.Events.Clear();
-            target.Events.AddRange(targetEvents.OrderBy(x => x.Key).Select(x => x.Value));
         }
 
         private void MergeEvent(
@@ -423,16 +405,18 @@ namespace EventTraceKit.VsExtension.Views
             descriptor.MaximumBuffers = MaximumBuffers;
             descriptor.Providers.AddRange(
                 from x in Providers where x.IsEnabled select x.CreateDescriptor());
+            //descriptor.CustomFlushPeriod = 100;
             return descriptor;
         }
 
-        public Dictionary<EventKey, string> GetEventSymbols()
+        public async Task<Dictionary<EventKey, string>> GetEventSymbols()
         {
             var symbols = new Dictionary<EventKey, string>();
             foreach (var provider in Providers.Where(x => x.IsEnabled)) {
-                foreach (var evt in provider.Events) {
+                var p = await provider.GetSchemaProviderAsync();
+                foreach (var evt in p.Events) {
                     if (evt.Symbol != null)
-                        symbols.Add(new EventKey(provider.Id, evt.Id, evt.Version), evt.Symbol);
+                        symbols.Add(new EventKey(provider.Id, (ushort)evt.Value, evt.Version), evt.Symbol);
                 }
             }
 

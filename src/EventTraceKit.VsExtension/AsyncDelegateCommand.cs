@@ -25,7 +25,7 @@ namespace EventTraceKit.VsExtension
 
         private bool IsExecuting
         {
-            get { return isExecuting; }
+            get => isExecuting;
             set
             {
                 if (isExecuting != value) {
@@ -41,8 +41,8 @@ namespace EventTraceKit.VsExtension
         /// </summary>
         public event EventHandler CanExecuteChanged
         {
-            add { CommandManager.RequerySuggested += value; }
-            remove { CommandManager.RequerySuggested -= value; }
+            add => CommandManager.RequerySuggested += value;
+            remove => CommandManager.RequerySuggested -= value;
         }
 
         /// <summary>
@@ -115,7 +115,7 @@ namespace EventTraceKit.VsExtension
 
         private bool IsExecuting
         {
-            get { return isExecuting; }
+            get => isExecuting;
             set
             {
                 if (isExecuting != value) {
@@ -131,8 +131,8 @@ namespace EventTraceKit.VsExtension
         /// </summary>
         public event EventHandler CanExecuteChanged
         {
-            add { CommandManager.RequerySuggested += value; }
-            remove { CommandManager.RequerySuggested -= value; }
+            add => CommandManager.RequerySuggested += value;
+            remove => CommandManager.RequerySuggested -= value;
         }
 
         /// <summary>

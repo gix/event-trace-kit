@@ -1,9 +1,19 @@
-﻿namespace EventTraceKit.VsExtension
+namespace EventTraceKit.VsExtension
 {
     using System;
     using System.Collections;
     using System.Collections.Generic;
     using System.Runtime.InteropServices;
+
+    public interface IInteractionWorkflowProvider
+    {
+        T GetWorkflow<T>() where T : class;
+    }
+
+    public interface IContextMenuWorkflow
+    {
+        IEnumerable<object> GetItems();
+    }
 
     public class DataTable : ICloneable
     {

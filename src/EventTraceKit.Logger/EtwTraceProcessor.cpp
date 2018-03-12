@@ -1,15 +1,13 @@
 #define INITGUID
 #include "EtwTraceProcessor.h"
 
-#include "ADT/Guid.h"
-#include "ADT/ResPtr.h"
+#include "ADT/WaitEvent.h"
 #include "IEventSink.h"
 #include "ITraceSession.h"
 #include "Support/ErrorHandling.h"
 #include "Support/SetThreadName.h"
 
 #include <system_error>
-#include <vector>
 
 #include <tdh.h>
 
@@ -24,30 +22,70 @@ bool IsEventTraceHeader(EVENT_RECORD const& record)
            record.EventHeader.EventDescriptor.Opcode == EVENT_TRACE_TYPE_INFO;
 }
 
-} // namespace
-
-EtwTraceProcessor::EtwTraceProcessor(std::wstring loggerName,
-                                     ArrayRef<TraceProviderDescriptor> providers)
-    : loggerName(std::move(loggerName))
-    , traceHandle()
-    , traceLogFile()
+//! Wrap emplaces to back of container as output iterator
+template<typename Container>
+class string_back_inserter
 {
-    for (TraceProviderDescriptor const& provider : providers) {
-        std::wstring_view manifest = provider.GetManifest();
-        std::wstring_view providerBinary = provider.GetProviderBinary();
-        if (!manifest.empty())
-            manifests.emplace_back(manifest);
-        if (!providerBinary.empty())
-            providerBinaries.emplace_back(providerBinary);
+public:
+    using iterator_category = std::output_iterator_tag;
+    using value_type = void;
+    using difference_type = void;
+    using pointer = void;
+    using reference = void;
+
+    using container_type = Container;
+
+    explicit string_back_inserter(Container& container)
+        : container(std::addressof(container))
+    {
     }
 
-    traceLogFile.LogFileName = nullptr;
-    traceLogFile.LoggerName = const_cast<wchar_t*>(this->loggerName.c_str());
-    traceLogFile.ProcessTraceMode =
-        PROCESS_TRACE_MODE_EVENT_RECORD | PROCESS_TRACE_MODE_REAL_TIME;
-    traceLogFile.BufferCallback = nullptr;
-    traceLogFile.EventRecordCallback = EventRecordCallback;
-    traceLogFile.Context = this;
+    template<typename T>
+    string_back_inserter& operator=(T const& value)
+    {
+        container->push_back(static_cast<typename Container::value_type>(value));
+        return *this;
+    }
+
+    string_back_inserter& operator*() { return *this; }
+    string_back_inserter& operator++() { return *this; }
+    string_back_inserter operator++(int) { return *this; }
+
+protected:
+    Container* container;
+};
+
+template<typename Container>
+string_back_inserter<Container> sting_back_inserter(Container& c)
+{
+    return string_back_inserter<Container>(c);
+}
+
+} // namespace
+
+EtwTraceProcessor::EtwTraceProcessor(ArrayRef<std::wstring_view> loggerNames,
+                                     ArrayRef<std::wstring_view> eventManifests,
+                                     ArrayRef<std::wstring_view> providerBinaries)
+{
+    std::copy(std::begin(loggerNames), std::end(loggerNames),
+              sting_back_inserter(this->loggerNames));
+    traceHandles.reserve(this->loggerNames.size());
+
+    std::copy(std::begin(eventManifests), std::end(eventManifests),
+              sting_back_inserter(this->manifests));
+    std::copy(std::begin(providerBinaries), std::end(providerBinaries),
+              sting_back_inserter(this->providerBinaries));
+
+    for (auto const& name : this->loggerNames) {
+        auto& logFile = traceLogFiles.emplace_back();
+        logFile.LogFileName = nullptr;
+        logFile.LoggerName = const_cast<wchar_t*>(name.c_str());
+        logFile.ProcessTraceMode =
+            PROCESS_TRACE_MODE_EVENT_RECORD | PROCESS_TRACE_MODE_REAL_TIME;
+        logFile.BufferCallback = nullptr;
+        logFile.EventRecordCallback = EventRecordCallback;
+        logFile.Context = this;
+    }
 }
 
 EtwTraceProcessor::~EtwTraceProcessor()
@@ -62,43 +100,50 @@ void EtwTraceProcessor::SetEventSink(IEventSink* sink)
 
 void EtwTraceProcessor::StartProcessing()
 {
-    if (traceHandle)
+    if (!traceHandles.empty())
         return;
 
     RegisterManifests();
 
-    traceHandle = OpenTraceW(&traceLogFile);
-    if (traceHandle == INVALID_PROCESSTRACE_HANDLE) {
-        DWORD const ec = GetLastError();
-        UnregisterManifests();
-        throw std::system_error(ec, std::system_category());
+    for (auto& traceLogFile : traceLogFiles) {
+        TraceHandle traceHandle{OpenTraceW(&traceLogFile)};
+        if (!traceHandle) {
+            DWORD const ec = GetLastError();
+            UnregisterManifests();
+            throw std::system_error(ec, std::system_category());
+        }
+
+        traceHandles.push_back(std::move(traceHandle));
+        if (traceLogFile.LogfileHeader.StartTime.QuadPart == 0)
+            QueryPerformanceCounter(&traceLogFile.LogfileHeader.StartTime);
+
+        processorThreads.emplace_back(
+            &EtwTraceProcessor::ProcessTraceProc, traceHandles.back().Get());
     }
-
-    if (traceLogFile.LogfileHeader.StartTime.QuadPart == 0)
-        QueryPerformanceCounter(&traceLogFile.LogfileHeader.StartTime);
-
-    processorThread = std::thread(&EtwTraceProcessor::ProcessTraceProc, this);
 }
 
 void EtwTraceProcessor::StopProcessing()
 {
-    if (!traceHandle)
+    if (traceHandles.empty())
         return;
 
-    (void)CloseTrace(traceHandle);
-    traceHandle = 0;
+    traceHandles.clear();
 
-    if (processorThread.joinable())
-        processorThread.join();
+    for (auto& thread : processorThreads) {
+        if (thread.joinable())
+            thread.join();
+    }
+
     UnregisterManifests();
 }
 
-void EtwTraceProcessor::ProcessTraceProc()
+void EtwTraceProcessor::ProcessTraceProc(TRACEHANDLE traceHandle)
 {
     SetCurrentThreadName("ETW Trace Processor");
 
     try {
-        HRESULT hr = HResultFromWin32(ProcessTrace(&traceHandle, 1, nullptr, nullptr));
+        HRESULT hr = HResultFromWin32(
+            ProcessTrace(&traceHandle, 1, nullptr, nullptr));
         (void)ETK_TRACE_HR(hr);
     } catch (...) {
         fprintf(stderr, "Suppressing unhandled exception in ProcessTraceProc\n");
@@ -123,18 +168,22 @@ VOID EtwTraceProcessor::EventRecordCallback(_In_ PEVENT_RECORD EventRecord)
 
 bool EtwTraceProcessor::IsEndOfTracing()
 {
-    if (!processorThread.joinable())
+    if (processorThreads.empty())
         return true;
 
-    DWORD const st = WaitForSingleObject(processorThread.native_handle(), 0);
+    SmallVector<HANDLE, 2> threadHandles;
+    for (auto& thread : processorThreads)
+        threadHandles.push_back(thread.native_handle());
+
+    DWORD const st = WaitForMultipleObjects(threadHandles.size(), threadHandles.data(), TRUE, 0);
     return st == WAIT_OBJECT_0;
 }
 
 TRACE_LOGFILE_HEADER const* EtwTraceProcessor::GetLogFileHeader() const
 {
-    if (!traceHandle)
+    if (traceHandles.empty())
         return nullptr;
-    return &traceLogFile.LogfileHeader;
+    return &traceLogFiles.front().LogfileHeader;
 }
 
 void EtwTraceProcessor::RegisterManifests()
@@ -156,10 +205,12 @@ void EtwTraceProcessor::UnregisterManifests()
 }
 
 std::unique_ptr<ITraceProcessor>
-CreateEtwTraceProcessor(std::wstring loggerName,
-                        ArrayRef<TraceProviderDescriptor> providers)
+CreateEtwTraceProcessor(ArrayRef<std::wstring_view> loggerName,
+                        ArrayRef<std::wstring_view> eventManifests,
+                        ArrayRef<std::wstring_view> providerBinaries)
 {
-    return std::make_unique<EtwTraceProcessor>(std::move(loggerName), providers);
+    return std::make_unique<EtwTraceProcessor>(loggerName, eventManifests,
+                                               providerBinaries);
 }
 
 } // namespace etk

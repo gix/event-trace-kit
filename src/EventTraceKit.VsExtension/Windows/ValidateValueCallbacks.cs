@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Windows
+namespace EventTraceKit.VsExtension.Windows
 {
     using System.Windows;
     using Extensions;
@@ -7,7 +7,7 @@
     {
         private static bool IsFiniteDoubleImpl(object value)
         {
-            return value is double && ((double)value).IsFinite();
+            return value is double d && d.IsFinite();
         }
 
         public static ValidateValueCallback IsFiniteDouble { get; } = IsFiniteDoubleImpl;

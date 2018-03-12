@@ -124,12 +124,12 @@ namespace EventTraceKit.VsExtension
             return Path.Combine(directory, fileName);
         }
 
-        private TraceLogPaneContent TraceLogWindowFactory(IServiceProvider sp)
+        private TraceLogToolContent TraceLogWindowFactory(IServiceProvider sp)
         {
             viewPresetService.LoadFromStorage();
             traceSettingsService.Load();
 
-            var traceLog = new TraceLogPaneViewModel(
+            var traceLog = new TraceLogToolViewModel(
                 globalSettings,
                 sessionService,
                 viewPresetService,
@@ -140,7 +140,7 @@ namespace EventTraceKit.VsExtension
             if (commandService != null)
                 traceLog.InitializeMenuCommands(commandService);
 
-            return new TraceLogPaneContent { DataContext = traceLog };
+            return new TraceLogToolContent { DataContext = traceLog };
         }
 
         private void TraceLogWindowClose()
@@ -494,15 +494,12 @@ namespace EventTraceKit.VsExtension
             var provider = ServiceProvider.GlobalProvider;
 
             // Advise to selection events (e.g. startup project changed)
-
             monitorSelection = provider.GetService<SVsShellMonitorSelection, IVsMonitorSelection>();
             monitorSelection?.AdviseSelectionEvents(this, out selectionEventsCookie);
 
             // Advise to update solution events (e.g. switched debug/release configuration)
             solutionBuildManager = provider.GetService<SVsSolutionBuildManager, IVsSolutionBuildManager>();
             solutionBuildManager?.AdviseUpdateSolutionEvents(this, out updateSolutionEventsCookie);
-
-            solutionBuildManager = provider.GetService<SVsSolutionBuildManager, IVsSolutionBuildManager>();
         }
 
         public int OnSelectionChanged(

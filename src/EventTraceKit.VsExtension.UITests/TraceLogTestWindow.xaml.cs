@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.UITests
+namespace EventTraceKit.VsExtension.UITests
 {
     public partial class TraceLogTestWindow
     {

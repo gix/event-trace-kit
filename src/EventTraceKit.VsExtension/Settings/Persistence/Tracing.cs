@@ -31,6 +31,10 @@ namespace EventTraceKit.VsExtension.Settings.Persistence
     {
     }
 
+    public class SystemCollector : Collector
+    {
+    }
+
     public class EventCollector : Collector
     {
         private Collection<EventProvider> providers;
@@ -63,11 +67,11 @@ namespace EventTraceKit.VsExtension.Settings.Persistence
         public string Name { get; set; }
         [DefaultValue(false)]
         public bool IsEnabled { get; set; }
-        [DefaultValue(0)]
+        [DefaultValue((byte)0)]
         public byte Level { get; set; }
-        [DefaultValue(0)]
+        [DefaultValueEx(0UL)]
         public ulong MatchAnyKeyword { get; set; }
-        [DefaultValue(0)]
+        [DefaultValueEx(0UL)]
         public ulong MatchAllKeyword { get; set; }
 
         [DefaultValue(false)]

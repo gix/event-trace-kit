@@ -1,4 +1,4 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:vsfx="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.14.0"
                     xmlns:vsp="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
@@ -125,9 +125,24 @@
     </ControlTemplate.Triggers>
   </ControlTemplate>
 
+  <Style x:Key="ListBoxItem.FocusVisual">
+    <Setter Property="Control.Template">
+      <Setter.Value>
+        <ControlTemplate>
+          <Rectangle SnapsToDevicePixels="True"
+                     Stroke="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
+                     StrokeThickness="1"
+                     StrokeDashArray="1 1"
+                     StrokeDashOffset="1.5"/>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
   <Style TargetType="{x:Type ListBoxItem}">
-    <Setter Property="Padding" Value="2"/>
+    <Setter Property="FocusVisualStyle" Value="{StaticResource ListBoxItem.FocusVisual}"/>
     <Setter Property="Margin" Value="0"/>
+    <Setter Property="Padding" Value="2"/>
     <Setter Property="Template" Value="{StaticResource ListBoxItemTemplate}"/>
     <Setter Property="Foreground"
             Value="{DynamicResource {x:Static vsp:EnvironmentColors.CommandBarTextActiveBrushKey}}"/>

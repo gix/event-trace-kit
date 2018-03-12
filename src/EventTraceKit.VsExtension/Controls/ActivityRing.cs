@@ -1,10 +1,9 @@
-﻿namespace EventTraceKit.VsExtension.Controls
+namespace EventTraceKit.VsExtension.Controls
 {
     using System;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Media;
-    using Windows;
 
     /// <summary>
     ///   Represents a control that indicates that an activity is ongoing. The
@@ -31,7 +30,8 @@
 
         static ActivityRing()
         {
-            DefaultStyleKeyProperty.OverrideMetadata<ActivityRing>();
+            DefaultStyleKeyProperty.OverrideMetadata(
+                typeof(ActivityRing), new FrameworkPropertyMetadata(typeof(ActivityRing)));
         }
 
         /// <summary>
@@ -96,7 +96,7 @@
         }
     }
 
-    public sealed class ActivityRingTemplateSettings : DependencyObject
+    public sealed class ActivityRingTemplateSettings : FrameworkElement
     {
         private readonly ActivityRing activityRing;
 

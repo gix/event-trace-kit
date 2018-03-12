@@ -46,10 +46,14 @@
         </channels>
 
         <keywords>
-          <keyword name="KW1" symbol="KW1" mask="0x1" message="$(string.keyword.KW1)"/>
-          <keyword name="KW2" symbol="KW2" mask="0x2" message="$(string.keyword.KW2)"/>
-          <keyword name="KW3" symbol="KW3" mask="0x4" message="$(string.keyword.KW3)"/>
-          <keyword name="KW4" symbol="KW4" mask="0x8" message="$(string.keyword.KW4)"/>
+          <keyword name="Keyword1" symbol="KW1" mask="0x1" message="$(string.keyword.KW1)"/>
+          <keyword name="Keyword2" symbol="KW2" mask="0x2" message="$(string.keyword.KW2)"/>
+          <keyword name="Keyword3" symbol="KW3" mask="0x4" message="$(string.keyword.KW3)"/>
+          <keyword name="Keyword4" symbol="KW4" mask="0x8" message="$(string.keyword.KW4)"/>
+          <keyword name="Keyword5" symbol="KW5" mask="0x10"/>
+          <keyword name="Keyword6" symbol="KW6" mask="0x20"/>
+          <keyword name="Keyword7" symbol="KW7" mask="0x40"/>
+          <keyword name="ReallyLongLongLongLongLongLongLongKeyword8" symbol="KW8" mask="0x80"/>
         </keywords>
 
         <templates>

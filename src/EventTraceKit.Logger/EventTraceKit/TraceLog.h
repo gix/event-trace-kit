@@ -46,8 +46,8 @@ public:
     {
         auto eventInfo = filteredLog->GetEvent(index);
         EventInfo info;
-        info.EventRecord = System::IntPtr(eventInfo.Record());
-        info.TraceEventInfo = System::IntPtr(eventInfo.Info());
+        info.EventRecord = System::IntPtr(const_cast<EVENT_RECORD*>(eventInfo.Record()));
+        info.TraceEventInfo = System::IntPtr(const_cast<TRACE_EVENT_INFO*>(eventInfo.Info()));
         info.TraceEventInfoSize = System::UIntPtr((void*)eventInfo.InfoSize());
         return info;
     }

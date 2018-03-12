@@ -1,18 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
-    <UseCodebase>true</UseCodebase>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <SchemaVersion>2.0</SchemaVersion>
     <ProjectTypeGuids>{82B43B9B-A64C-4715-B499-D71E9CA2BD60};{60DC8134-EBA5-43B8-BCC9-BB4BC16C2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <ProjectGuid>{6D3D2D02-2D86-4FBF-9CC6-A0D7D37D5BA1}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -20,10 +15,14 @@
     <RootNamespace>EventTraceKit.VsExtension</RootNamespace>
     <AssemblyName>EventTraceKit.VsExtension</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <LangVersion>latest</LangVersion>
     <GeneratePkgDefFile>true</GeneratePkgDefFile>
     <IncludeAssemblyInVSIXContainer>true</IncludeAssemblyInVSIXContainer>
     <CopyBuildOutputToOutputDirectory>true</CopyBuildOutputToOutputDirectory>
     <CopyOutputSymbolsToOutputDirectory>true</CopyOutputSymbolsToOutputDirectory>
+    <UseCodebase>true</UseCodebase>
+    <SignAssembly>false</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\Build\EventTraceKit.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -33,7 +32,6 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>latest</LangVersion>
     <IncludeDebugSymbolsInVSIXContainer>true</IncludeDebugSymbolsInVSIXContainer>
     <IncludeDebugSymbolsInLocalVSIXDeployment>true</IncludeDebugSymbolsInLocalVSIXDeployment>
   </PropertyGroup>
@@ -45,15 +43,8 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>latest</LangVersion>
     <IncludeDebugSymbolsInVSIXContainer>false</IncludeDebugSymbolsInVSIXContainer>
     <IncludeDebugSymbolsInLocalVSIXDeployment>false</IncludeDebugSymbolsInLocalVSIXDeployment>
-  </PropertyGroup>
-  <PropertyGroup>
-    <SignAssembly>false</SignAssembly>
-  </PropertyGroup>
-  <PropertyGroup>
-    <AssemblyOriginatorKeyFile>..\Build\EventTraceKit.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="CustomMarshalers" />
@@ -85,6 +76,8 @@
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="UIAutomationProvider" />
+    <Reference Include="UIAutomationTypes" />
     <Reference Include="VSLangProj, Version=7.0.3300.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
@@ -98,13 +91,21 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ActionThrottler.cs" />
+    <Compile Include="Controls\DropDownTextBoxAutomationPeer.cs" />
+    <Compile Include="Controls\ThemeResourceManager.cs" />
+    <Compile Include="Controls\TransitioningControl.cs" />
+    <Compile Include="Controls\VisualStateExtensions.cs" />
+    <Compile Include="Controls\ToggleContentControl.cs" />
+    <Compile Include="Controls\TransitioningContentControl.cs" />
+    <Compile Include="Debugging\DebuggerIntegrationPackage.cs" />
+    <Compile Include="Debugging\TraceLaunchTarget.cs" />
     <Compile Include="DefaultTraceController.cs" />
-    <Compile Include="EtkDebugLaunchHook.cs" />
+    <Compile Include="DefaultValueExAttribute.cs" />
+    <Compile Include="Debugging\EtkDebugLaunchHook.cs" />
     <Compile Include="EventSymbolSource.cs" />
     <Compile Include="AsyncDelegateCommand.cs" />
     <Compile Include="Extensions\AsyncExtensions.cs" />
     <Compile Include="CharCPtrUtils.cs" />
-    <Compile Include="Collections\Extensions.cs" />
     <Compile Include="Extensions\CollectionExtensions.cs" />
     <Compile Include="Extensions\CollectionUtils.cs" />
     <Compile Include="Extensions\ComparisonUtils.cs" />
@@ -124,24 +125,33 @@
     <Compile Include="Extensions\ServiceProviderExtensions.cs" />
     <Compile Include="Extensions\SizeUtils.cs" />
     <Compile Include="Extensions\StringBuilderExtensions.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\VectorUtils.cs" />
     <Compile Include="Extensions\VsSdkExtensions.cs" />
     <Compile Include="Extensions\Extensions.cs" />
     <Compile Include="Extensions\XElementExtensions.cs" />
+    <Compile Include="Filtering\FilterRelation.cs" />
     <Compile Include="PortableExecutableUtils.cs" />
-    <Compile Include="ProvideDebuggerLaunchHookAttribute.cs" />
+    <Compile Include="Debugging\ProvideDebuggerLaunchHookAttribute.cs" />
     <Compile Include="Extensions\StreamExtensions.cs" />
     <Compile Include="Views\AcqRelObservableCollection.cs" />
     <Compile Include="Views\CollectorViewModel.cs" />
-    <Compile Include="Views\CommandBridge.cs" />
+    <Compile Include="Windows\CommandBridge.cs" />
+    <Compile Include="Controls\DropDownTextBox.cs" />
+    <Compile Include="DiagnosticCollector.cs" />
     <Compile Include="Views\ErrorUtils.cs" />
     <Compile Include="Views\EventCollectorViewModel.cs" />
+    <Compile Include="Views\EventProviderEditControl.xaml.cs">
+      <DependentUpon>EventProviderEditControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\ExtensionCommands.cs" />
     <Compile Include="FileCache.cs" />
-    <Compile Include="Views\FilterDialog.xaml.cs">
+    <Compile Include="Extensions\ExpressionEx.cs" />
+    <Compile Include="Filtering\FilterConditionViewModel.cs" />
+    <Compile Include="Filtering\FilterDialog.xaml.cs">
       <DependentUpon>FilterDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\FilterDialogViewModel.cs" />
+    <Compile Include="Filtering\FilterDialogViewModel.cs" />
     <Compile Include="FontAndColorsRegistrationAttribute.cs" />
     <Compile Include="Formatting\TimeSpanFormatProvider.cs" />
     <Compile Include="Formatting\DefaultFormatProviderSource.cs" />
@@ -162,6 +172,9 @@
     <Compile Include="Native\TraceDataHelper.cs" />
     <Compile Include="Native\UnmanagedString.cs" />
     <Compile Include="Threading\Threading.cs" />
+    <Compile Include="Filtering\FilterProperties.cs" />
+    <Compile Include="Filtering\TraceLogFilter.cs" />
+    <Compile Include="Filtering\TraceLogFilterBuilder.cs" />
     <Compile Include="Views\ImportProvidersDialog.xaml.cs">
       <DependentUpon>ImportProvidersDialog.xaml</DependentUpon>
     </Compile>
@@ -175,12 +188,25 @@
     <Compile Include="Native\FormatMessageFlags.cs" />
     <Compile Include="Native\MOVEFILE_FLAGS.cs" />
     <Compile Include="Native\RECT.cs" />
+    <Compile Include="Views\KeywordSelector.xaml.cs">
+      <DependentUpon>KeywordSelector.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Misc.cs" />
     <Compile Include="Views\PresetManager\ExceptionFilterEventArgs.cs" />
     <Compile Include="Views\PresetManager\PresetManagerDialog.xaml.cs">
       <DependentUpon>PresetManagerDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\PresetManager\GraphTreeItemHeaderCommand.cs" />
     <Compile Include="Views\PresetManager\HeaderDropDownMenu.cs" />
+    <Compile Include="Views\ProvidersListControl.xaml.cs">
+      <DependentUpon>ProvidersListControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\StackTraceView.xaml.cs">
+      <DependentUpon>StackTraceView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\StackTraceViewModel.cs" />
+    <Compile Include="Views\SystemCollectorViewModel.cs" />
+    <Compile Include="Views\TraceEventsDataView.cs" />
     <Compile Include="Windows\IsEqualConverter.cs" />
     <Compile Include="Views\PresetManager\PresetManagerColumnContainerStyleSelector.cs" />
     <Compile Include="Views\PresetManager\PresetManagerColumnDetailsTemplateSelector.cs" />
@@ -229,12 +255,10 @@
     <Compile Include="DataTable.cs" />
     <Compile Include="IDataView.cs" />
     <Compile Include="DataView.cs" />
-    <Compile Include="DteOperationalModeProvider.cs" />
     <Compile Include="ExceptionUtils.cs" />
     <Compile Include="ColumnViewModelPreset.cs" />
     <Compile Include="AsyncDataViewModel.cs" />
     <Compile Include="InternalErrorException.cs" />
-    <Compile Include="IOperationalModeProvider.cs" />
     <Compile Include="ItemEventHandler.cs" />
     <Compile Include="IWorkManager.cs" />
     <Compile Include="Settings\Persistence\Views.cs" />
@@ -244,11 +268,12 @@
     <Compile Include="UsedImplicitlyAttribute.cs" />
     <Compile Include="Windows\BindableDialogResult.cs" />
     <Compile Include="Windows\KeyDownEventTrigger.cs" />
-    <Compile Include="SimpleInstrumentationManifestParser.cs" />
+    <Compile Include="SimpleEventManifestParser.cs" />
     <Compile Include="SolutionFileGatherer.cs" />
     <Compile Include="Controls\ThemedDialogWindow.cs" />
+    <Compile Include="Windows\OfTypeConverter.cs" />
     <Compile Include="Windows\ToggleSelectOnSpace.cs" />
-    <Compile Include="Views\TraceLogPaneViewModel.cs" />
+    <Compile Include="Views\TraceLogToolViewModel.cs" />
     <Compile Include="Views\EventProviderViewModel.cs" />
     <Compile Include="Windows\HexNumberConverter.cs" />
     <Compile Include="Windows\MenuPopupPositionerExtension.cs" />
@@ -271,7 +296,7 @@
     <Compile Include="QueuedDispatcherAction.cs" />
     <Compile Include="Range.cs" />
     <Compile Include="CommonControlBrushes.cs" />
-    <Compile Include="Boxed.cs" />
+    <Compile Include="Windows\Boxed.cs" />
     <Compile Include="Controls\ExpanderHeaderColumn.cs" />
     <Compile Include="Controls\Primitives\AsyncDataGridColumnHeadersPanel.cs" />
     <Compile Include="Controls\AsyncDataGridRowSelection.cs" />
@@ -296,7 +321,6 @@
     <Compile Include="FontAndColorsHelper.cs" />
     <Compile Include="Controls\ActivityRing.cs" />
     <Compile Include="Controls\ProgressRing.cs" />
-    <Compile Include="Windows\DependencyPropertyExtensions.cs" />
     <Compile Include="EventTraceKitPackage.cs" />
     <Compile Include="VsGuids.cs" />
     <Compile Include="Windows\ValidateValueCallbacks.cs" />
@@ -311,14 +335,14 @@
     <Compile Include="TimePointFormatter.cs" />
     <Compile Include="Views\TraceLogToolWindow.cs" />
     <Compile Include="TraceLogWindowCommand.cs" />
-    <Compile Include="Views\TraceLogPaneContent.xaml.cs">
-      <DependentUpon>TraceLogPaneContent.xaml</DependentUpon>
+    <Compile Include="Views\TraceLogToolContent.xaml.cs">
+      <DependentUpon>TraceLogToolContent.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\EventSessionSettingsDialog.xaml.cs">
-      <DependentUpon>EventSessionSettingsDialog.xaml</DependentUpon>
+    <Compile Include="Views\TraceSettingsDialog.xaml.cs">
+      <DependentUpon>TraceSettingsDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\TraceProfileViewModel.cs" />
-    <Compile Include="ViewModel.cs" />
+    <Compile Include="ObservableModel.cs" />
     <Compile Include="Windows\ValueConverter.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -346,7 +370,27 @@
     </VSCTCompile>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="Views\FilterDialog.xaml">
+    <Page Include="Styles\DropDownTextBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\TransitioningControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\TransitioningContentControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\EventProviderEditControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Filtering\FilterDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\KeywordSelector.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -414,11 +458,19 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\TraceLogPaneContent.xaml">
+    <Page Include="Views\ProvidersListControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\StackTraceView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\TraceLogToolContent.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Views\EventSessionSettingsDialog.xaml">
+    <Page Include="Views\TraceSettingsDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

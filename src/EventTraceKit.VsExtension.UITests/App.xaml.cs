@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.UITests
+namespace EventTraceKit.VsExtension.UITests
 {
     using System;
     using System.Collections.Generic;
@@ -12,6 +12,7 @@
     using System.Xml.XPath;
     using EventTraceKit.VsExtension.Windows;
     using Microsoft.Internal.VisualStudio.Shell.Interop;
+    using Microsoft.VisualStudio.Imaging;
     using Microsoft.VisualStudio.OLE.Interop;
     using Microsoft.VisualStudio.PlatformUI;
     using Microsoft.VisualStudio.Settings;
@@ -31,10 +32,40 @@
 
         public App()
         {
+            //using (var stream = File.OpenRead(@"C:\Users\nrieck\AppData\Local\Microsoft\VisualStudio\15.0_f4016654\ImageLibrary\ImageLibrary.cache"))
+            //    ImageLibrary.Deserialize(stream, true);
+            //AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
+
             SetGlobalServiceProvider(CreateServiceProvider());
 
             ServiceProvider.GlobalProvider.GetService(typeof(SVsSettingsManager));
             EnvironmentRenderCapabilities.Current.VisualEffectsAllowed = 1 | 2;
+        }
+
+        private readonly string[] assemblySearchDirs = {
+            @"C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE"
+        };
+
+        private Assembly OnAssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            foreach (var searchDir in assemblySearchDirs) {
+                try {
+                    var name = new AssemblyName(args.Name);
+                    string filePath = Path.Combine(searchDir, name.Name + ".dll");
+                    if (File.Exists(filePath))
+                        return Assembly.LoadFile(filePath);
+
+                    if (name.CultureName != null) {
+                        filePath = Path.Combine(searchDir, name.CultureName, name.Name + ".dll");
+                        if (File.Exists(filePath))
+                            return Assembly.LoadFile(filePath);
+                    }
+                } catch (Exception) {
+                    return null;
+                }
+            }
+
+            return null;
         }
 
         private static void SetGlobalServiceProvider(ServiceProvider serviceProvider)

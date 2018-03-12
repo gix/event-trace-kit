@@ -8,6 +8,7 @@ namespace EventTraceKit.VsExtension
     using System.Threading.Tasks;
     using EnvDTE;
     using EventTraceKit.Tracing;
+    using EventTraceKit.VsExtension.Debugging;
     using Microsoft.VisualStudio.Threading;
     using Microsoft.VisualStudio.VCProjectEngine;
     using Native;

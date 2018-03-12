@@ -71,14 +71,24 @@ namespace EventTraceKit.VsExtension.Controls
             }
         }
 
-        public ContextMenu BuildContextMenu()
+        public void BuildContextMenu(ContextMenu menu, int? rowIndex, int? columnIndex)
         {
-            var menu = new ContextMenu();
             menu.Items.Add(new CopyContextMenu(this, CopyBehavior.Selection) {
                 Icon = new CrispImage { Moniker = KnownMonikers.Copy }
             });
 
-            return menu;
+            var workflow = advModel.DataView.GetInteractionWorkflow<IContextMenuWorkflow>(rowIndex, columnIndex);
+            if (workflow != null) {
+                bool hasSeparator = false;
+                foreach (var item in workflow.GetItems()) {
+                    if (!hasSeparator) {
+                        menu.Items.Add(new Separator());
+                        hasSeparator = true;
+                    }
+
+                    menu.Items.Add(item);
+                }
+            }
         }
 
         public void CopyToClipboard(CopyBehavior copyBehavior)

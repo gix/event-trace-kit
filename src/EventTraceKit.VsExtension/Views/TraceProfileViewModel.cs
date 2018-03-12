@@ -4,16 +4,18 @@ namespace EventTraceKit.VsExtension.Views
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
+    using System.Threading.Tasks;
+    using System.Windows.Input;
     using EventTraceKit.Tracing;
-    using EventTraceKit.VsExtension.Collections;
+    using EventTraceKit.VsExtension.Extensions;
     using Serialization;
 
     [SerializedShape(typeof(Settings.Persistence.TraceProfile))]
-    public class TraceProfileViewModel : ViewModel
+    public class TraceProfileViewModel : ObservableModel
     {
         private Guid id;
         private string name;
-        private EventCollectorViewModel selectedCollector;
+        private CollectorViewModel selectedCollector;
 
         public TraceProfileViewModel()
         {
@@ -37,10 +39,30 @@ namespace EventTraceKit.VsExtension.Views
 
         public ObservableCollection<CollectorViewModel> Collectors { get; }
 
-        public EventCollectorViewModel SelectedCollector
+        public CollectorViewModel SelectedCollector
         {
-            get => selectedCollector;
+            get => selectedCollector ?? Collectors.FirstOrDefault();
             set => SetProperty(ref selectedCollector, value);
+        }
+
+        private ICommand addOrRemoveSystemCollectorCommand;
+        public ICommand AddOrRemoveSystemCollectorCommand =>
+            addOrRemoveSystemCollectorCommand ??
+            (addOrRemoveSystemCollectorCommand = new AsyncDelegateCommand(AddOrRemoveSystemCollector));
+
+        private Task AddOrRemoveSystemCollector()
+        {
+            var systemCollector = Collectors.FirstOrDefault(x => x is SystemCollectorViewModel);
+            if (systemCollector == null) {
+                systemCollector = new SystemCollectorViewModel();
+                Collectors.Add(systemCollector);
+                SelectedCollector = systemCollector;
+            } else {
+                Collectors.Remove(systemCollector);
+                SelectedCollector = Collectors.FirstOrDefault();
+            }
+
+            return Task.CompletedTask;
         }
 
         public TraceProfileViewModel DeepClone()

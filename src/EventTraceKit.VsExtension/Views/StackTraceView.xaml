@@ -1,0 +1,28 @@
+<etkc:ThemedDialogWindow
+  x:Class="EventTraceKit.VsExtension.Views.StackTraceView"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:etkc="clr-namespace:EventTraceKit.VsExtension.Controls"
+  xmlns:etkv="clr-namespace:EventTraceKit.VsExtension.Views"
+  d:DataContext="{d:DesignInstance {x:Type etkv:StackTraceViewModel}, d:IsDesignTimeCreatable=False}"
+  mc:Ignorable="d"
+  Title="Stack Trace"
+  MinWidth="600"
+  MinHeight="450"
+  Width="1000"
+  Height="700"
+  WindowStartupLocation="CenterOwner"
+  ShowInTaskbar="False">
+  <Grid Margin="7">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition/>
+    </Grid.RowDefinitions>
+    <TextBlock Text="{Binding MatchId}" Margin="3"/>
+    <DataGrid Grid.Row="1" ItemsSource="{Binding Frames}" Margin="3">
+
+    </DataGrid>
+  </Grid>
+</etkc:ThemedDialogWindow>

@@ -13,14 +13,14 @@ namespace EventTraceKit.VsExtension.UITests
     using Microsoft.VisualStudio.PlatformUI;
     using Task = System.Threading.Tasks.Task;
 
-    public class TraceLogTestViewModel : TraceLogPaneViewModel
+    public class TraceLogTestViewModel : TraceLogToolViewModel
     {
         private string selectedTheme;
         private bool isRunning;
 
         public TraceLogTestViewModel()
             : base(new StubGlobalSettings(),
-                   new StubTraceController(),
+                   new DefaultTraceController(),
                    new StubViewPresetService(),
                    new StubTraceSettingsService())
         {
@@ -37,7 +37,6 @@ namespace EventTraceKit.VsExtension.UITests
             SelectedTheme = App.Current.ActiveTheme;
 
             viewModel = new TraceSettingsViewModel();
-            var session = new TraceProfileViewModel();
 
             var knownProviders = new Dictionary<Guid, string> {
                 {new Guid("A0386E75-F70C-464C-A9CE-33C44E091623"), "DXVA2"},
@@ -76,19 +75,48 @@ namespace EventTraceKit.VsExtension.UITests
                 {new Guid("712909C0-6E57-4121-B639-87C8BF9004E0"), "D2DSCENARIOS"},
             };
 
-            var collector = new EventCollectorViewModel();
-            session.Collectors.Add(collector);
+            {
+                var collector = new EventCollectorViewModel();
+                collector.Name = "Default Collector";
 
-            foreach (var provider in knownProviders) {
-                collector.Providers.Add(new EventProviderViewModel {
-                    Id = provider.Key,
-                    Name = provider.Value,
-                    IsEnabled = true
-                });
+                foreach (var provider in knownProviders) {
+                    collector.Providers.Add(new EventProviderViewModel {
+                        Id = provider.Key,
+                        Name = provider.Value
+                    });
+                }
+
+                var knownProfile = new TraceProfileViewModel {
+                    Name = "Known Providers",
+                    Collectors = { collector }
+                };
+                viewModel.Profiles.Add(knownProfile);
             }
 
-            viewModel.Profiles.Add(session);
-            viewModel.ActiveProfile = session;
+            {
+                var collector = new EventCollectorViewModel();
+                collector.Name = "Default Collector";
+                collector.Providers.Add(new EventProviderViewModel {
+                    Id = new Guid("716EFEF7-5AC2-4EE0-8277-D9226411A155"),
+                    Name = "FFMF-FFMF-Sculptor",
+                    Manifest = @"C:\Users\nrieck\dev\ffmf\src\Sculptor\Sculptor.man",
+                    IsEnabled = true
+                });
+                collector.Providers.Add(new EventProviderViewModel {
+                    Id = new Guid("E13B77A8-14B6-11DE-8069-001B212B5009"),
+                    Name = "WPF",
+                    Manifest = @"C:\Windows\Microsoft.NET\Framework\v4.0.30319\WPF\wpf-etw.man",
+                    IsEnabled = true
+                });
+
+                var profile = new TraceProfileViewModel {
+                    Name = "Default Profile",
+                    Collectors = { collector }
+                };
+                viewModel.Profiles.Add(profile);
+                viewModel.ActiveProfile = profile;
+            }
+
             traceProfile = viewModel.GetDescriptor();
         }
 
@@ -115,33 +143,25 @@ namespace EventTraceKit.VsExtension.UITests
         public ICommand OpenViewEditorCommand { get; }
         public ICommand OpenFilterCommand { get; }
 
-        public bool IsRunning
-        {
-            get => isRunning;
-            set => SetProperty(ref isRunning, value);
-        }
-
         private bool CanStart()
         {
-            return !IsRunning && traceProfile != null;
+            return !IsCollecting && traceProfile != null;
         }
 
         private async Task Start()
         {
             await StartCapture();
-            IsRunning = true;
             CommandManager.InvalidateRequerySuggested();
         }
 
         private bool CanStop()
         {
-            return IsRunning;
+            return IsCollecting;
         }
 
         private async Task Stop()
         {
             await StopCapture();
-            IsRunning = false;
             CommandManager.InvalidateRequerySuggested();
         }
 
@@ -159,14 +179,16 @@ namespace EventTraceKit.VsExtension.UITests
                 viewModel = new TraceSettingsViewModel();
             }
 
-            var dialog = new TraceSessionSettingsWindow();
+            var dialog = new TraceSettingsWindow();
             dialog.DataContext = viewModel;
+            dialog.Owner = Application.Current.MainWindow;
             try {
+                viewModel.Attach(dialog);
                 if (dialog.ShowDialog() != true)
                     return;
             } finally {
                 var selectedSession = viewModel.ActiveProfile;
-                dialog.DataContext = null;
+                viewModel.Detach();
                 viewModel.ActiveProfile = selectedSession;
                 viewModel.DialogResult = null;
             }
@@ -221,7 +243,7 @@ namespace EventTraceKit.VsExtension.UITests
 
             public Task<EventSession> StartSessionAsync(TraceProfileDescriptor descriptor)
             {
-                return Task.FromResult(new EventSession(new TraceProfileDescriptor()));
+                return Task.FromResult(new EventSession(descriptor));
             }
 
             public Task StopSessionAsync()
@@ -252,16 +274,6 @@ namespace EventTraceKit.VsExtension.UITests
             public bool AutoLog { get; set; }
             public bool ShowColumnHeaders { get; set; } = true;
             public bool ShowStatusBar { get; set; } = true;
-        }
-
-        private sealed class OperationalModeProviderStub : IOperationalModeProvider
-        {
-            public VsOperationalMode CurrentMode => VsOperationalMode.Design;
-            public event Action<VsOperationalMode, IReadOnlyList<DebuggedProjectInfo>> OperationalModeChanged
-            {
-                add { }
-                remove { }
-            }
         }
     }
 }

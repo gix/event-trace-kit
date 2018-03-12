@@ -110,36 +110,38 @@ template<typename Traits>
 void CloseHandle(Handle<Traits> const&) = delete;
 
 
+template<typename T = HANDLE>
 struct MinusOneIsInvalidHandleTraits
 {
-    using HandleType = HANDLE;
+    using HandleType = T;
     constexpr static HandleType InvalidHandle() noexcept { return INVALID_HANDLE_VALUE; }
     constexpr static bool IsValid(HandleType h) noexcept { return h != InvalidHandle(); }
     static void Close(HandleType h) noexcept { ::CloseHandle(h); }
 };
 
+template<typename T = HANDLE>
 struct NullIsInvalidHandleTraits
 {
-    using HandleType = HANDLE;
+    using HandleType = T;
     constexpr static HandleType InvalidHandle() noexcept { return nullptr; }
     constexpr static bool IsValid(HandleType h) noexcept { return h != InvalidHandle(); }
     static void Close(HandleType h) noexcept { ::CloseHandle(h); }
 };
 
 
-struct FileHandleTraits : MinusOneIsInvalidHandleTraits {};
+struct FileHandleTraits : MinusOneIsInvalidHandleTraits<> {};
 using FileHandle = Handle<FileHandleTraits>;
 
-struct ProcessHandleTraits : NullIsInvalidHandleTraits {};
+struct ProcessHandleTraits : NullIsInvalidHandleTraits<> {};
 using ProcessHandle = Handle<ProcessHandleTraits>;
 
-struct ThreadHandleTraits : NullIsInvalidHandleTraits {};
+struct ThreadHandleTraits : NullIsInvalidHandleTraits<> {};
 using ThreadHandle = Handle<ThreadHandleTraits>;
 
-struct TimerHandleTraits : NullIsInvalidHandleTraits {};
+struct TimerHandleTraits : NullIsInvalidHandleTraits<> {};
 using TimerHandle = Handle<TimerHandleTraits>;
 
-struct TokenHandleTraits : NullIsInvalidHandleTraits {};
+struct TokenHandleTraits : NullIsInvalidHandleTraits<> {};
 using TokenHandle = Handle<TokenHandleTraits>;
 
 } // namespace etk

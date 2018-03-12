@@ -6,11 +6,13 @@ namespace EventTraceKit.VsExtension
     using System.Security.Principal;
     using System.Text;
     using System.Windows;
-    using Controls;
-    using Extensions;
-    using Native;
-    using Utilities;
-    using Windows;
+    using EventTraceKit.VsExtension.Controls;
+    using EventTraceKit.VsExtension.Extensions;
+    using EventTraceKit.VsExtension.Filtering;
+    using EventTraceKit.VsExtension.Native;
+    using EventTraceKit.VsExtension.Utilities;
+    using EventTraceKit.VsExtension.Windows;
+    using Expression = System.Linq.Expressions.Expression;
 
     public sealed class GenericEventsViewModelSource
     {
@@ -487,26 +489,27 @@ namespace EventTraceKit.VsExtension
 
             var table = new DataTable("Generic Events");
             var templatePreset = new AsyncDataViewModelPreset();
+            var filter = TraceLogFilterBuilder.Instance;
 
             AddColumn(table, templatePreset, timePointGeneratorPreset, DataColumn.Create(info.ProjectTimePoint));
             AddColumn(table, templatePreset, timeAbsoluteGeneratorPreset, DataColumn.Create(info.ProjectTimeAbsolute));
             AddColumn(table, templatePreset, timeRelativeGeneratorPreset, DataColumn.Create(info.ProjectTimeRelative));
-            AddColumn(table, templatePreset, providerIdPreset, DataColumn.Create(info.ProjectProviderId));
+            AddColumn(table, templatePreset, providerIdPreset, DataColumn.Create(info.ProjectProviderId), filter.ProviderId);
             AddColumn(table, templatePreset, providerNamePreset, DataColumn.Create(info.ProjectProviderName));
-            AddColumn(table, templatePreset, idPreset, DataColumn.Create(info.ProjectId));
-            AddColumn(table, templatePreset, versionPreset, DataColumn.Create(info.ProjectVersion));
+            AddColumn(table, templatePreset, idPreset, DataColumn.Create(info.ProjectId), filter.Id);
+            AddColumn(table, templatePreset, versionPreset, DataColumn.Create(info.ProjectVersion), filter.Version);
             AddColumn(table, templatePreset, symbolPreset, DataColumn.Create(info.ProjectSymbol));
-            AddColumn(table, templatePreset, channelPreset, DataColumn.Create(info.ProjectChannel));
-            AddColumn(table, templatePreset, channelNamePreset, DataColumn.Create(info.ProjectChannelName));
-            AddColumn(table, templatePreset, taskPreset, DataColumn.Create(info.ProjectTask));
-            AddColumn(table, templatePreset, taskNamePreset, DataColumn.Create(info.ProjectTaskName));
-            AddColumn(table, templatePreset, opcodeNamePreset, DataColumn.Create(info.ProjectOpCodeName));
-            AddColumn(table, templatePreset, opcodeOrTypePreset, DataColumn.Create(info.ProjectOpCode));
-            AddColumn(table, templatePreset, levelPreset, DataColumn.Create(info.ProjectLevel));
-            AddColumn(table, templatePreset, levelNamePreset, DataColumn.Create(info.ProjectLevelName));
+            AddColumn(table, templatePreset, channelPreset, DataColumn.Create(info.ProjectChannel), filter.Channel);
+            AddColumn(table, templatePreset, channelNamePreset, DataColumn.Create(info.ProjectChannelName), filter.Channel);
+            AddColumn(table, templatePreset, taskPreset, DataColumn.Create(info.ProjectTask), filter.Task);
+            AddColumn(table, templatePreset, taskNamePreset, DataColumn.Create(info.ProjectTaskName), filter.Task);
+            AddColumn(table, templatePreset, opcodeNamePreset, DataColumn.Create(info.ProjectOpCodeName), filter.Opcode);
+            AddColumn(table, templatePreset, opcodeOrTypePreset, DataColumn.Create(info.ProjectOpCode), filter.Opcode);
+            AddColumn(table, templatePreset, levelPreset, DataColumn.Create(info.ProjectLevel), filter.Level);
+            AddColumn(table, templatePreset, levelNamePreset, DataColumn.Create(info.ProjectLevelName), filter.Level);
             AddColumn(table, templatePreset, keywordPreset, DataColumn.Create(info.ProjectKeyword));
-            AddColumn(table, templatePreset, processIdPreset, DataColumn.Create(info.ProjectProcessId));
-            AddColumn(table, templatePreset, threadIdPreset, DataColumn.Create(info.ProjectThreadId));
+            AddColumn(table, templatePreset, processIdPreset, DataColumn.Create(info.ProjectProcessId), filter.ProcessId);
+            AddColumn(table, templatePreset, threadIdPreset, DataColumn.Create(info.ProjectThreadId), filter.ThreadId);
             AddColumn(table, templatePreset, messagePreset, DataColumn.Create(info.ProjectMessage));
             AddColumn(table, templatePreset, eventNamePreset, DataColumn.Create(info.ProjectEventName));
             AddColumn(table, templatePreset, eventTypePreset, DataColumn.Create(info.ProjectEventType));
@@ -518,7 +521,7 @@ namespace EventTraceKit.VsExtension
             AddColumn(table, templatePreset, userSecurityIdentifierPreset, DataColumn.Create(info.ProjectUserSecurityIdentifier));
             AddColumn(table, templatePreset, sessionIdPreset, DataColumn.Create(info.ProjectSessionId));
             AddColumn(table, templatePreset, eventKeyPreset, DataColumn.Create(info.ProjectEventKey));
-            AddColumn(table, templatePreset, decodingSourcePreset, DataColumn.Create(info.ProjectDecodingSource));
+            AddColumn(table, templatePreset, decodingSourcePreset, DataColumn.Create(info.ProjectDecodingSource), filter.DecodingSource);
             //AddColumn(table, templatePreset, modernProcessDataPreset, DataColumn.Create<object>());
             //AddColumn(table, templatePreset, processNamePreset, DataColumn.Create<string>());
             //AddColumn(table, templatePreset, stackTopPreset, DataColumn.Create<object>());
@@ -530,7 +533,8 @@ namespace EventTraceKit.VsExtension
 
         private void AddColumn(
             DataTable table, AsyncDataViewModelPreset templatePreset,
-            ColumnViewModelPreset preset, DataColumn column)
+            ColumnViewModelPreset preset, DataColumn column,
+            Expression filterExpr = null)
         {
             column.Id = preset.Id;
             column.Name = preset.Name;
@@ -538,6 +542,7 @@ namespace EventTraceKit.VsExtension
             column.IsVisible = preset.IsVisible;
             column.TextAlignment = preset.TextAlignment;
             column.IsResizable = true;
+            column.FilterSelector = filterExpr;
             table.Add(column);
             templatePreset.ConfigurableColumns.Add(preset);
         }
@@ -833,7 +838,56 @@ namespace EventTraceKit.VsExtension
             {
                 return GetTraceEventInfo(index).DecodingSource;
             }
+
+            public bool HasStackTrace(int index)
+            {
+                return GetEventRecord(index).HasStackTrace;
+            }
+
+            public unsafe StackTraceInfo ProjectStackTrace(int index)
+            {
+                var item = GetEventRecord(index).FindExtendedData(EVENT_HEADER_EXT_TYPE.STACK_TRACE64);
+                if (item != null) {
+                    var trace64 = (EVENT_EXTENDED_ITEM_STACK_TRACE64*)item->Data;
+                    var addressCount = (item->DataSize - sizeof(ulong)) / sizeof(ulong);
+
+                    var addresses = new ulong[addressCount];
+                    for (int i = 0; i < addressCount; ++i)
+                        addresses[i] = trace64->Address[i];
+
+                    return new StackTraceInfo(trace64->MatchId, addresses, true);
+                }
+
+                item = GetEventRecord(index).FindExtendedData(EVENT_HEADER_EXT_TYPE.STACK_TRACE32);
+                if (item != null) {
+                    var trace32 = (EVENT_EXTENDED_ITEM_STACK_TRACE32*)item->Data;
+                    var addressCount = (item->DataSize - sizeof(ulong)) / sizeof(uint);
+
+                    var addresses = new ulong[addressCount];
+                    for (int i = 0; i < addressCount; ++i)
+                        addresses[i] = trace32->Address[i];
+
+                    return new StackTraceInfo(trace32->MatchId, addresses, false);
+                }
+
+                return null;
+            }
         }
+    }
+
+    public sealed class StackTraceInfo
+    {
+        private readonly bool is64Bit;
+
+        public StackTraceInfo(ulong matchId, IReadOnlyList<ulong> addresses, bool is64Bit)
+        {
+            MatchId = matchId;
+            Addresses = addresses;
+            this.is64Bit = is64Bit;
+        }
+
+        public ulong MatchId { get; }
+        public IReadOnlyList<ulong> Addresses { get; }
     }
 
     public enum EventType

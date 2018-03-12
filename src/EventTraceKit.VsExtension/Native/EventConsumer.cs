@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Native
+namespace EventTraceKit.VsExtension.Native
 {
     using System;
     using System.Runtime.InteropServices;
@@ -122,9 +122,9 @@
                 Keyword == other.Keyword;
         }
 
-        public override bool Equals(object other)
+        public override bool Equals(object obj)
         {
-            return other is EVENT_DESCRIPTOR && Equals((EVENT_DESCRIPTOR)other);
+            return obj is EVENT_DESCRIPTOR other && Equals(other);
         }
 
         public override int GetHashCode()
@@ -234,5 +234,19 @@
                 return *(ulong*)Data;
             }
         }
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct EVENT_EXTENDED_ITEM_STACK_TRACE32
+    {
+        public readonly ulong MatchId;
+        public fixed uint Address[1];
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct EVENT_EXTENDED_ITEM_STACK_TRACE64
+    {
+        public ulong MatchId;
+        public fixed ulong Address[1];
     }
 }

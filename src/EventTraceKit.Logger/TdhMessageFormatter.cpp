@@ -1,6 +1,7 @@
 ﻿#include "TdhMessageFormatter.h"
 
 #include "ADT/ArrayRef.h"
+#include "Support/ErrorHandling.h"
 #include <evntcons.h>
 #include <in6addr.h>
 #include <strsafe.h>
@@ -31,18 +32,10 @@ void RemoveTrailingSpace(EVENT_MAP_INFO* mapInfo)
 }
 
 template<typename T>
-ULONG GetProperty(EVENT_RECORD* record, PROPERTY_DATA_DESCRIPTOR& pdd, T& value)
+ULONG GetProperty(EVENT_RECORD const* record, PROPERTY_DATA_DESCRIPTOR& pdd, T& value)
 {
-    DWORD propertySize = 0;
-    ULONG ec = TdhGetPropertySize(record, 0, nullptr, 1, &pdd, &propertySize);
-    if (ec != ERROR_SUCCESS)
-        return ec;
-
-    if (propertySize > sizeof(value))
-        return ERROR_INSUFFICIENT_BUFFER;
-
-    return TdhGetProperty(record, 0, nullptr, 1, &pdd, sizeof(value),
-                          reinterpret_cast<PBYTE>(&value));
+    return TdhGetProperty(const_cast<EVENT_RECORD*>(record), 0, nullptr, 1, &pdd,
+                          sizeof(value), reinterpret_cast<PBYTE>(&value));
 }
 
 ULONG GetProperty(EventInfo info, EVENT_PROPERTY_INFO const& property, USHORT& value)
@@ -131,21 +124,29 @@ ULONG GetArraySize(EventInfo info, EVENT_PROPERTY_INFO const& propInfo, USHORT* 
 // Both MOF-based events and manifest-based events can specify name/value maps.
 // The map values can be integer values or bit values. If the property specifies
 // a value map, get the map.
-ULONG GetEventMapInfo(EVENT_RECORD* event, LPWSTR mapName, DWORD decodingSource,
-                      vstruct_ptr<EVENT_MAP_INFO>& mapInfo)
+ULONG GetEventMapInfo(EVENT_RECORD const* event, wchar_t const* mapName,
+                      DWORD decodingSource, EVENT_MAP_INFO*& mapInfo,
+                      std::vector<BYTE>& mapBuffer)
 {
+    mapInfo = new (mapBuffer.data()) EVENT_MAP_INFO;
+
     // Retrieve the required buffer size for the map info.
-    DWORD bufferSize = 0;
-    ULONG ec = TdhGetEventMapInformation(event, mapName, nullptr, &bufferSize);
+    DWORD bufferSize = static_cast<DWORD>(mapBuffer.size());
+    ULONG ec = TdhGetEventMapInformation(const_cast<EVENT_RECORD*>(event),
+                                         const_cast<wchar_t*>(mapName),
+                                         bufferSize ? mapInfo : nullptr, &bufferSize);
 
     if (ec == ERROR_INSUFFICIENT_BUFFER) {
-        mapInfo = make_vstruct<EVENT_MAP_INFO>(bufferSize);
-        ec = TdhGetEventMapInformation(event, mapName, mapInfo.get(), &bufferSize);
+        mapBuffer.resize(bufferSize);
+        mapInfo = new (mapBuffer.data()) EVENT_MAP_INFO;
+        ec = TdhGetEventMapInformation(const_cast<EVENT_RECORD*>(event),
+                                       const_cast<wchar_t*>(mapName), mapInfo,
+                                       &bufferSize);
     }
 
     if (ec == ERROR_SUCCESS) {
         if (decodingSource == DecodingSourceXMLFile)
-            RemoveTrailingSpace(mapInfo.get());
+            RemoveTrailingSpace(mapInfo);
     } else if (ec == ERROR_NOT_FOUND) {
         ec = ERROR_SUCCESS; // This case is okay.
     }
@@ -154,25 +155,40 @@ ULONG GetEventMapInfo(EVENT_RECORD* event, LPWSTR mapName, DWORD decodingSource,
 }
 
 ULONG GetEventMapInfo(EventInfo info, EVENT_PROPERTY_INFO const& propertyInfo,
-                      vstruct_ptr<EVENT_MAP_INFO>& mapInfo)
+                      EVENT_MAP_INFO*& mapInfo, std::vector<BYTE>& mapBuffer)
 {
     if (propertyInfo.nonStructType.MapNameOffset == 0)
         return ERROR_SUCCESS;
 
-    PWCHAR mapName;
+    wchar_t const* mapName;
     if (!info.TryGetAt(propertyInfo.nonStructType.MapNameOffset, mapName))
         return ERROR_EVT_INVALID_EVENT_DATA;
 
-    ULONG ec = GetEventMapInfo(info.Record(), mapName, info->DecodingSource, mapInfo);
+    ULONG ec =
+        GetEventMapInfo(info.Record(), mapName, info->DecodingSource, mapInfo, mapBuffer);
     if (ec != ERROR_SUCCESS)
         return ec;
 
     return ERROR_SUCCESS;
 }
 
+ULONG FormatProperty(TRACE_EVENT_INFO const& tei, EVENT_MAP_INFO const& emi,
+                     unsigned pointerSize, EVENT_PROPERTY_INFO const& pi,
+                     USHORT propertyLength, ArrayRef<std::byte> userData,
+                     ULONG* bufferSize, wchar_t* buffer, USHORT* userDataConsumed)
+{
+    return TdhFormatProperty(
+        const_cast<TRACE_EVENT_INFO*>(&tei), const_cast<EVENT_MAP_INFO*>(&emi),
+        static_cast<ULONG>(pointerSize), pi.nonStructType.InType,
+        pi.nonStructType.OutType, propertyLength, static_cast<USHORT>(userData.size()),
+        const_cast<BYTE*>(reinterpret_cast<BYTE const*>(userData.data())), bufferSize,
+        buffer, userDataConsumed);
+}
+
 ULONG FormatProperty(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
-                     size_t pointerSize, ArrayRef<uint8_t>& userData, std::wstring& sink,
-                     std::vector<wchar_t>& buffer)
+                     size_t pointerSize, ArrayRef<std::byte>& userData,
+                     std::wstring& sink, std::vector<wchar_t>& buffer,
+                     std::vector<BYTE>& mapBuffer)
 {
     ULONG ec;
 
@@ -195,7 +211,8 @@ ULONG FormatProperty(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
 
             for (USHORT j = propInfo.structType.StructStartIndex; j < lastMember; ++j) {
                 EVENT_PROPERTY_INFO const& pi = info->EventPropertyInfoArray[j];
-                ec = FormatProperty(info, pi, pointerSize, userData, sink, buffer);
+                ec = FormatProperty(info, pi, pointerSize, userData, sink, buffer,
+                                    mapBuffer);
                 if (ec != ERROR_SUCCESS)
                     return ec;
             }
@@ -204,9 +221,9 @@ ULONG FormatProperty(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
         }
 
         // Get the name/value mapping if the property specifies a value map.
-        vstruct_ptr<EVENT_MAP_INFO> mapInfo;
+        EVENT_MAP_INFO* mapInfo = nullptr;
         if (propInfo.nonStructType.MapNameOffset != 0) {
-            ec = GetEventMapInfo(info, propInfo, mapInfo);
+            ec = GetEventMapInfo(info, propInfo, mapInfo, mapBuffer);
             if (ec != ERROR_SUCCESS)
                 return ec;
         }
@@ -214,30 +231,23 @@ ULONG FormatProperty(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
         DWORD bufferSize = 0;
         USHORT userDataConsumed = 0;
 
-        bufferSize = static_cast<DWORD>(buffer.size());
-        ec = TdhFormatProperty(
-            info.Info(), mapInfo.get(), static_cast<ULONG>(pointerSize),
-            propInfo.nonStructType.InType, propInfo.nonStructType.OutType, propertyLength,
-            static_cast<USHORT>(userData.size()), const_cast<BYTE*>(userData.data()),
-            &bufferSize, buffer.data(), &userDataConsumed);
+        bufferSize = static_cast<DWORD>(buffer.size() * sizeof(wchar_t));
+        ec = FormatProperty(*info.Info(), *mapInfo, pointerSize, propInfo, propertyLength,
+                            userData, &bufferSize, buffer.data(), &userDataConsumed);
 
         if (ec == ERROR_INSUFFICIENT_BUFFER) {
-            buffer.resize(bufferSize);
-            bufferSize = static_cast<DWORD>(buffer.size());
-            ec = TdhFormatProperty(
-                info.Info(), mapInfo.get(), static_cast<ULONG>(pointerSize),
-                propInfo.nonStructType.InType, propInfo.nonStructType.OutType,
-                propertyLength, static_cast<USHORT>(userData.size()),
-                const_cast<BYTE*>(userData.data()), &bufferSize, buffer.data(),
-                &userDataConsumed);
+            buffer.resize(bufferSize / sizeof(wchar_t));
+            ec = FormatProperty(*info.Info(), *mapInfo, pointerSize, propInfo,
+                                propertyLength, userData, &bufferSize, buffer.data(),
+                                &userDataConsumed);
         }
 
         if (ec != ERROR_SUCCESS)
             return ec;
 
-        buffer.resize(bufferSize);
+        buffer.resize(bufferSize / sizeof(wchar_t));
         userData.remove_prefix(userDataConsumed);
-        sink.append(buffer.data());
+        sink.append(buffer.data(), buffer.size() - 1); // buffer is null-terminated.
     }
 
     return ec;
@@ -253,7 +263,7 @@ bool TdhMessageFormatter::FormatEventMessage(EventInfo const info,
     if (!info)
         return false;
 
-    ArrayRef<uint8_t> userData = info.UserData();
+    ArrayRef<std::byte> userData = info.UserData();
     if (info.IsStringOnly()) {
         (void)StringCchCopyNW(buffer, bufferSize,
                               reinterpret_cast<wchar_t const*>(userData.data()),
@@ -274,7 +284,7 @@ bool TdhMessageFormatter::FormatEventMessage(EventInfo const info,
 
         size_t begin = formattedProperties.size();
         DWORD const ec = FormatProperty(info, pi, pointerSize, userData,
-                                        formattedProperties, propertyBuffer);
+                                        formattedProperties, propertyBuffer, mapBuffer);
         if (ec != ERROR_SUCCESS)
             return false;
 
@@ -346,7 +356,7 @@ bool TdhMessageFormatter::FormatEventMessage(EventInfo const info,
 bool TdhMessageFormatter::FormatMofEvent(EventInfo const& info, size_t const pointerSize,
                                          wchar_t* const buffer, size_t const bufferSize)
 {
-    ArrayRef<uint8_t> userData = info.UserData();
+    ArrayRef<std::byte> userData = info.UserData();
 
     for (ULONG i = 0; i < info->TopLevelPropertyCount; ++i) {
         auto const& pi = info->EventPropertyInfoArray[i];
@@ -360,7 +370,7 @@ bool TdhMessageFormatter::FormatMofEvent(EventInfo const& info, size_t const poi
         }
 
         DWORD const ec = FormatProperty(info, pi, pointerSize, userData,
-                                        formattedProperties, propertyBuffer);
+                                        formattedProperties, propertyBuffer, mapBuffer);
         if (ec != ERROR_SUCCESS)
             return false;
     }

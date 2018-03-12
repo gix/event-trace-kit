@@ -17,9 +17,14 @@ public:
         using namespace System::Collections::Generic;
         ProcessIds = gcnew List<unsigned>();
         EventIds = gcnew List<System::UInt16>();
-        EnableEventIds = true;
+        EventIdsFilterIn = true;
         StackWalkEventIds = gcnew List<System::UInt16>();
-        EnableStackWalkEventIds = true;
+        StackWalkEventIdsFilterIn = true;
+        StackWalkMatchAnyKeyword = 0;
+        StackWalkMatchAllKeyword = 0;
+        StackWalkLevel = 0;
+        StackWalkFilterIn = true;
+        EnableStackWalkFilter = false;
     }
 
     EventProviderDescriptor(EventProviderDescriptor^ source)
@@ -40,9 +45,14 @@ public:
         ExecutableName = source->ExecutableName;
         ProcessIds = gcnew List<unsigned>(source->ProcessIds);
         EventIds = gcnew List<System::UInt16>(source->EventIds);
-        EnableEventIds = source->EnableEventIds;
+        EventIdsFilterIn = source->EventIdsFilterIn;
         StackWalkEventIds = gcnew List<System::UInt16>(source->StackWalkEventIds);
-        EnableStackWalkEventIds = source->EnableStackWalkEventIds;
+        StackWalkEventIdsFilterIn = source->StackWalkEventIdsFilterIn;
+        StackWalkMatchAnyKeyword = source->StackWalkMatchAnyKeyword;
+        StackWalkMatchAllKeyword = source->StackWalkMatchAllKeyword;
+        StackWalkLevel = source->StackWalkLevel;
+        StackWalkFilterIn = source->StackWalkFilterIn;
+        EnableStackWalkFilter = source->EnableStackWalkFilter;
 
         Manifest = source->Manifest;
         if (source->StartupProjects)
@@ -61,9 +71,14 @@ public:
     property System::String^ ExecutableName;
     property System::Collections::Generic::List<unsigned>^ ProcessIds;
     property System::Collections::Generic::List<System::UInt16>^ EventIds;
-    property bool EnableEventIds;
+    property bool EventIdsFilterIn;
     property System::Collections::Generic::List<System::UInt16>^ StackWalkEventIds;
-    property bool EnableStackWalkEventIds;
+    property bool StackWalkEventIdsFilterIn;
+    property System::UInt64 StackWalkMatchAnyKeyword;
+    property System::UInt64 StackWalkMatchAllKeyword;
+    property System::Byte StackWalkLevel;
+    property bool StackWalkFilterIn;
+    property bool EnableStackWalkFilter;
 
     property System::String^ Manifest;
     property System::Collections::Generic::List<System::String^>^ StartupProjects;
@@ -71,6 +86,30 @@ public:
 
 public ref class CollectorDescriptor abstract
 {
+public:
+    property System::Nullable<unsigned> BufferSize;
+    property System::Nullable<unsigned> MinimumBuffers;
+    property System::Nullable<unsigned> MaximumBuffers;
+    property System::String^ LogFileName;
+    property System::UInt32 CustomFlushPeriod;
+
+protected:
+    CollectorDescriptor()
+    {
+        CustomFlushPeriod = 0;
+    }
+
+    CollectorDescriptor(CollectorDescriptor^ source)
+    {
+        if (!source)
+            throw gcnew System::ArgumentNullException("source");
+
+        BufferSize = source->BufferSize;
+        MinimumBuffers = source->MinimumBuffers;
+        MaximumBuffers = source->MaximumBuffers;
+        LogFileName = source->LogFileName;
+        CustomFlushPeriod = source->CustomFlushPeriod;
+    }
 };
 
 public ref class EventCollectorDescriptor : public CollectorDescriptor
@@ -82,29 +121,38 @@ public:
     }
 
     EventCollectorDescriptor(EventCollectorDescriptor^ source)
+        : CollectorDescriptor(source)
     {
-        if (!source)
-            throw gcnew System::ArgumentNullException("source");
-
-        BufferSize = source->BufferSize;
-        MinimumBuffers = source->MinimumBuffers;
-        MaximumBuffers = source->MaximumBuffers;
-        LogFileName = source->LogFileName;
         providers = gcnew System::Collections::Generic::List<EventProviderDescriptor^>(source->Providers->Count);
         for each (auto provider in source->Providers)
             providers->Add(gcnew EventProviderDescriptor(provider));
     }
 
-    property System::Nullable<unsigned> BufferSize;
-    property System::Nullable<unsigned> MinimumBuffers;
-    property System::Nullable<unsigned> MaximumBuffers;
-    property System::String^ LogFileName;
     property System::Collections::Generic::IList<EventProviderDescriptor^>^ Providers {
         System::Collections::Generic::IList<EventProviderDescriptor^>^ get() { return providers; }
     }
 
 private:
     System::Collections::Generic::IList<EventProviderDescriptor^>^ providers;
+};
+
+public ref class SystemCollectorDescriptor : public CollectorDescriptor
+{
+public:
+    SystemCollectorDescriptor()
+    {
+        KernelFlags = 0;
+    }
+
+    SystemCollectorDescriptor(SystemCollectorDescriptor^ source)
+    {
+        if (!source)
+            throw gcnew System::ArgumentNullException("source");
+
+        KernelFlags = source->KernelFlags;
+    }
+
+    property System::UInt32 KernelFlags;
 };
 
 public ref class TraceProfileDescriptor
@@ -124,6 +172,8 @@ public:
         for each (auto collector in source->Collectors) {
             if (auto eventCollector = dynamic_cast<EventCollectorDescriptor^>(collector))
                 collectors->Add(gcnew EventCollectorDescriptor(eventCollector));
+            if (auto systemCollector = dynamic_cast<SystemCollectorDescriptor^>(collector))
+                collectors->Add(gcnew SystemCollectorDescriptor(systemCollector));
         }
     }
 

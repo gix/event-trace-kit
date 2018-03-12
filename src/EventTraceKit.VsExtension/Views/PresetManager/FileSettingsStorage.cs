@@ -263,23 +263,22 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
             });
         }
 
-        private ViewPresets Serialize(AdvmPresetCollection presetCollection)
+        private ViewPresets Serialize(AdvmPresetCollection presets)
         {
-            var shaper = new SerializationMapper<SettingsElement>();
-
-            if (!shaper.TrySerialize(presetCollection, out ViewPresets viewPresets))
-                return null;
-
+            var serializer = new SettingsSerializer();
+            var viewPresets = serializer.ConvertToSerializedShape<ViewPresets>(presets);
             return viewPresets;
         }
 
         private static AdvmPresetCollection Deserialize(ViewPresets viewPresets)
         {
-            var shaper = new SerializationMapper<SettingsElement>();
+            if (viewPresets != null) {
+                var serializer = new SettingsSerializer();
 
-            if (viewPresets != null && shaper.TryDeserialize(viewPresets, out AdvmPresetCollection presets)
-                                    && presets != null)
-                return presets;
+                var presets = serializer.ConvertFromSerializedShape<AdvmPresetCollection>(viewPresets);
+                if (presets != null)
+                    return presets;
+            }
 
             return new AdvmPresetCollection();
         }

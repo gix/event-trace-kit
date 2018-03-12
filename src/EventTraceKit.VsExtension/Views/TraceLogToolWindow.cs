@@ -9,15 +9,15 @@ namespace EventTraceKit.VsExtension.Views
     [Guid("D7E4C7D7-6A52-4586-9D42-D1AD0A407E4F")]
     public class TraceLogToolWindow : ToolWindowPane
     {
-        private readonly Func<IServiceProvider, TraceLogPaneContent> traceLogFactory;
+        private readonly Func<IServiceProvider, TraceLogToolContent> traceLogFactory;
         private readonly Action onClose;
-        private TraceLogPaneContent content;
+        private TraceLogToolContent content;
 
         /// <summary>
         ///   Initializes a new instance of the <see cref="TraceLogToolWindow"/>
         ///   class.
         /// </summary>
-        public TraceLogToolWindow(Func<IServiceProvider, TraceLogPaneContent> traceLogFactory, Action onClose)
+        public TraceLogToolWindow(Func<IServiceProvider, TraceLogToolContent> traceLogFactory, Action onClose)
         {
             this.traceLogFactory = traceLogFactory;
             this.onClose = onClose;

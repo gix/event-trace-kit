@@ -1,6 +1,6 @@
 namespace EventTraceKit.VsExtension
 {
-    public class TraceLogStatsModel : ViewModel
+    public class TraceLogStatsModel : ObservableModel
     {
         private uint shownEvents;
         private uint totalEvents;

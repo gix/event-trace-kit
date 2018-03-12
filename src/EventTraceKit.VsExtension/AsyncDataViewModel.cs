@@ -75,8 +75,8 @@ namespace EventTraceKit.VsExtension
 
         public AdvmPresetCollection PresetCollection
         {
-            get { return (AdvmPresetCollection)GetValue(PresetCollectionProperty); }
-            private set { SetValue(PresetCollectionPropertyKey, value); }
+            get => (AdvmPresetCollection)GetValue(PresetCollectionProperty);
+            private set => SetValue(PresetCollectionPropertyKey, value);
         }
 
         #endregion
@@ -95,8 +95,8 @@ namespace EventTraceKit.VsExtension
 
         public AsyncDataViewModelPreset Preset
         {
-            get { return (AsyncDataViewModelPreset)GetValue(PresetProperty); }
-            set { SetValue(PresetProperty, value); }
+            get => (AsyncDataViewModelPreset)GetValue(PresetProperty);
+            set => SetValue(PresetProperty, value);
         }
 
         public event ValueChangedEventHandler<AsyncDataViewModelPreset> PresetChanged;
@@ -171,8 +171,8 @@ namespace EventTraceKit.VsExtension
 
         public bool IsReady
         {
-            get { return (bool)GetValue(IsReadyProperty); }
-            private set { SetValue(IsReadyPropertyKey, Boxed.Bool(value)); }
+            get => (bool)GetValue(IsReadyProperty);
+            private set => SetValue(IsReadyPropertyKey, Boxed.Bool(value));
         }
 
         private static void OnIsReadyChanged(

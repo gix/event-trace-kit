@@ -8,8 +8,8 @@ namespace EventTraceKit.VsExtension
     using Settings.Persistence;
 
     [SerializedShape(typeof(ViewColumn))]
-    public class ColumnViewModelPreset :
-        FreezableCustomSerializerAccessBase
+    public class ColumnViewModelPreset
+        : FreezableCustomSerializerAccessBase
         , IComparable<ColumnViewModelPreset>
         , ICloneable
     {

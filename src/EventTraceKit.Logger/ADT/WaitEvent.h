@@ -11,7 +11,10 @@
 namespace etk
 {
 
-using WaitHandle = Handle<NullIsInvalidHandleTraits>;
+using WaitHandle = Handle<NullIsInvalidHandleTraits<>>;
+
+using WaitTimeoutDuration = std::chrono::duration<unsigned, std::milli>;
+WaitTimeoutDuration const InfiniteWaitTimeout{ INFINITE };
 
 class WaitEvent
 {
@@ -23,27 +26,11 @@ public:
     WaitEvent(HRESULT& hr, bool initialState, bool manualReset);
     WaitEvent(HRESULT& hr, bool initialState, bool manualReset, std::wstring const& name);
 
-    WaitEvent(WaitEvent const&) = delete;
-    WaitEvent& operator =(WaitEvent const&) = delete;
-
     static WaitEvent Open(std::wstring const& name);
     static WaitEvent Open(std::wstring const& name, unsigned desiredAccess);
     static WaitEvent OpenOrCreate(
         bool initialState, bool manualReset, std::wstring const& name,
         bool* created = nullptr);
-
-    WaitEvent(WaitEvent&& source) noexcept
-        : handle(std::move(source.handle))
-    {
-        source.handle = WaitHandle::InvalidHandle();
-    }
-
-    WaitEvent& operator =(WaitEvent&& source) noexcept
-    {
-        using std::swap;
-        swap(handle, source.handle);
-        return *this;
-    }
 
     void Close()
     {
@@ -52,7 +39,7 @@ public:
 
     HRESULT Reset();
     HRESULT Set();
-    HRESULT Wait(unsigned timeoutInMillis = INFINITE) const;
+    HRESULT Wait(WaitTimeoutDuration timeout = InfiniteWaitTimeout) const;
 
     HANDLE Handle() const { return handle.Get(); }
 
@@ -73,8 +60,6 @@ private:
 
     WaitHandle handle;
 };
-
-using WaitTimeoutDuration = std::chrono::duration<unsigned, std::milli>;
 
 namespace details
 {
@@ -122,7 +107,7 @@ template<typename... Ts>
 bool WaitForAll(Ts const&... events)
 {
     HANDLE handles[] = { details::GetWaitHandle(events)... };
-    return details::WaitFor(WaitTimeoutDuration(INFINITE), handles, true) != WAIT_TIMEOUT;
+    return details::WaitFor(InfiniteWaitTimeout, handles, true) != WAIT_TIMEOUT;
 }
 
 template<typename Rep, typename Period, typename... Ts>
@@ -137,7 +122,7 @@ template<typename... Ts>
 unsigned WaitForAny(Ts const&... events)
 {
     HANDLE handles[] = { details::GetWaitHandle(events)... };
-    return details::WaitFor(WaitTimeoutDuration(INFINITE), handles, false);
+    return details::WaitFor(InfiniteWaitTimeout, handles, false);
 }
 
 

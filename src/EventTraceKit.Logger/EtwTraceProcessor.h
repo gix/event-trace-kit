@@ -1,5 +1,7 @@
 #pragma once
+#include "ADT/SmallVector.h"
 #include "ADT/ArrayRef.h"
+#include "ADT/Handle.h"
 #include "ITraceProcessor.h"
 
 #include <atomic>
@@ -11,13 +13,23 @@
 namespace etk
 {
 
+struct TraceHandleTraits
+{
+    using HandleType = TRACEHANDLE;
+    constexpr static HandleType InvalidHandle() noexcept { return INVALID_PROCESSTRACE_HANDLE; }
+    constexpr static bool IsValid(HandleType h) noexcept { return h != InvalidHandle(); }
+    static void Close(HandleType h) noexcept { ::CloseTrace(h); }
+};
+using TraceHandle = Handle<TraceHandleTraits>;
+
 class IEventSink;
 
 class EtwTraceProcessor : public ITraceProcessor
 {
 public:
-    EtwTraceProcessor(std::wstring loggerName,
-                      ArrayRef<TraceProviderDescriptor> providers);
+    EtwTraceProcessor(ArrayRef<std::wstring_view> loggerNames,
+                      ArrayRef<std::wstring_view> eventManifests,
+                      ArrayRef<std::wstring_view> providerBinaries);
     virtual ~EtwTraceProcessor();
 
     virtual void SetEventSink(IEventSink* sink) override;
@@ -30,15 +42,23 @@ public:
 private:
     static VOID WINAPI EventRecordCallback(_In_ PEVENT_RECORD EventRecord);
 
-    void ProcessTraceProc();
+    static void ProcessTraceProc(TRACEHANDLE traceHandle);
 
     void RegisterManifests();
     void UnregisterManifests();
 
-    std::wstring loggerName;
-    std::thread processorThread;
-    TRACEHANDLE traceHandle;
-    EVENT_TRACE_LOGFILEW traceLogFile;
+    struct X
+    {
+        std::wstring LoggerName;
+        EVENT_TRACE_LOGFILEW TraceLogFile;
+        TraceHandle Handle;
+        std::thread ProcessorThread;
+    };
+
+    SmallVector<std::wstring, 2> loggerNames;
+    SmallVector<EVENT_TRACE_LOGFILEW, 2> traceLogFiles;
+    SmallVector<TraceHandle, 2> traceHandles;
+    SmallVector<std::thread, 2> processorThreads;
 
     std::vector<std::wstring> manifests;
     std::vector<std::wstring> providerBinaries;

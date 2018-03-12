@@ -3,6 +3,7 @@ namespace EventTraceKit.VsExtension.Controls
     using System;
     using System.Windows;
     using System.Windows.Automation;
+    using EventTraceKit.VsExtension.Windows;
 
     public class AsyncDataGridColumn : DependencyObject
     {
@@ -83,8 +84,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public double Width
         {
-            get { return (double)GetValue(WidthProperty); }
-            set { SetValue(WidthProperty, value); }
+            get => (double)GetValue(WidthProperty);
+            set => SetValue(WidthProperty, value);
         }
 
         private object CoerceWidth(double baseValue)
@@ -111,8 +112,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public bool IsVisible
         {
-            get { return (bool)GetValue(IsVisibleProperty); }
-            set { SetValue(IsVisibleProperty, Boxed.Bool(value)); }
+            get => (bool)GetValue(IsVisibleProperty);
+            set => SetValue(IsVisibleProperty, Boxed.Bool(value));
         }
 
         private static void OnIsVisibleChanged(
@@ -154,8 +155,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public bool IsKeySeparator
         {
-            get { return (bool)GetValue(IsKeySeparatorProperty); }
-            private set { SetValue(IsSeparatorPropertyKey, value); }
+            get => (bool)GetValue(IsKeySeparatorProperty);
+            private set => SetValue(IsSeparatorPropertyKey, value);
         }
 
         #endregion
@@ -181,8 +182,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public bool IsFreezableAreaSeparator
         {
-            get { return (bool)GetValue(IsFreezableAreaSeparatorProperty); }
-            private set { SetValue(IsFreezableAreaSeparatorPropertyKey, value); }
+            get => (bool)GetValue(IsFreezableAreaSeparatorProperty);
+            private set => SetValue(IsFreezableAreaSeparatorPropertyKey, value);
         }
 
         #endregion
@@ -209,8 +210,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public TextAlignment TextAlignment
         {
-            get { return (TextAlignment)GetValue(TextAlignmentProperty); }
-            set { SetValue(TextAlignmentPropertyKey, TextAlignmentBoxes.Box(value)); }
+            get => (TextAlignment)GetValue(TextAlignmentProperty);
+            set => SetValue(TextAlignmentPropertyKey, TextAlignmentBoxes.Box(value));
         }
 
         #endregion
@@ -234,8 +235,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public string CellFormat
         {
-            get { return (string)GetValue(CellFormatProperty); }
-            set { SetValue(CellFormatProperty, value); }
+            get => (string)GetValue(CellFormatProperty);
+            set => SetValue(CellFormatProperty, value);
         }
 
         #endregion
@@ -260,8 +261,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public bool IsResizable
         {
-            get { return (bool)GetValue(IsResizableProperty); }
-            protected set { SetValue(IsResizablePropertyKey, Boxed.Bool(value)); }
+            get => (bool)GetValue(IsResizableProperty);
+            protected set => SetValue(IsResizablePropertyKey, Boxed.Bool(value));
         }
 
         #endregion
@@ -286,8 +287,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public bool IsExpanderHeader
         {
-            get { return (bool)GetValue(IsExpanderHeaderProperty); }
-            private set { SetValue(IsExpanderHeaderPropertyKey, Boxed.Bool(value)); }
+            get => (bool)GetValue(IsExpanderHeaderProperty);
+            private set => SetValue(IsExpanderHeaderPropertyKey, Boxed.Bool(value));
         }
 
         #endregion
@@ -316,8 +317,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public string ColumnName
         {
-            get { return (string)GetValue(ColumnNameProperty); }
-            set { SetValue(ColumnNamePropertyKey, value); }
+            get => (string)GetValue(ColumnNameProperty);
+            set => SetValue(ColumnNamePropertyKey, value);
         }
 
         private void OnColumnNameChanged(DependencyPropertyChangedEventArgs e)
@@ -328,7 +329,7 @@ namespace EventTraceKit.VsExtension.Controls
 
         #endregion
 
-        #region public FrozenState FrozenState { get; set; }
+        #region public AsyncDataGridColumnFrozenState FrozenState { get; set; }
 
         /// <summary>
         ///   Identifies the <see cref="FrozenState"/> dependency property.
@@ -345,8 +346,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public AsyncDataGridColumnFrozenState FrozenState
         {
-            get { return (AsyncDataGridColumnFrozenState)GetValue(FrozenStateProperty); }
-            set { SetValue(FrozenStateProperty, value); }
+            get => (AsyncDataGridColumnFrozenState)GetValue(FrozenStateProperty);
+            set => SetValue(FrozenStateProperty, value);
         }
 
         #endregion
