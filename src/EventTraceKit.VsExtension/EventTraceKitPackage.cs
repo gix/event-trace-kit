@@ -6,6 +6,7 @@ namespace EventTraceKit.VsExtension
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Windows;
+    using EventTraceKit.VsExtension.Resources;
     using EventTraceKit.VsExtension.Views;
     using EventTraceKit.VsExtension.Views.PresetManager;
     using Extensions;

@@ -10,6 +10,7 @@ namespace EventTraceKit.VsExtension.UITests
     using System.Windows.Media;
     using System.Xml.Linq;
     using System.Xml.XPath;
+    using EventTraceKit.VsExtension.Resources;
     using EventTraceKit.VsExtension.Windows;
     using Microsoft.Internal.VisualStudio.Shell.Interop;
     using Microsoft.VisualStudio.Imaging;

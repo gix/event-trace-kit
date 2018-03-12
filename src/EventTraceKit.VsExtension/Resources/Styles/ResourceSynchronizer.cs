@@ -1,8 +1,10 @@
-namespace EventTraceKit.VsExtension.Styles
+namespace EventTraceKit.VsExtension.Resources.Styles
 {
     using System;
     using System.Collections.ObjectModel;
     using System.Windows;
+    using EventTraceKit.VsExtension.Resources;
+    using EventTraceKit.VsExtension.Styles;
     using Microsoft.VisualStudio.PlatformUI;
     using Microsoft.VisualStudio.Shell.Interop;
 

@@ -1,7 +1,9 @@
-﻿namespace EventTraceKit.VsExtension
+namespace EventTraceKit.VsExtension
 {
     using System;
     using System.Runtime.InteropServices;
+    using EventTraceKit.VsExtension.Resources;
+    using EventTraceKit.VsExtension.Resources.Styles;
     using Microsoft.VisualStudio;
     using Microsoft.VisualStudio.Shell.Interop;
     using Styles;

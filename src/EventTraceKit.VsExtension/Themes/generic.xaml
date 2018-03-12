@@ -1,17 +1,12 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <ResourceDictionary.MergedDictionaries>
-    <ResourceDictionary Source="../Styles/ActivityRing.xaml"/>
-    <ResourceDictionary Source="../Styles/CommonControls.xaml"/>
-    <ResourceDictionary Source="../Styles/ContextMenu.xaml"/>
-    <ResourceDictionary Source="../Styles/DataGrid.xaml"/>
-    <ResourceDictionary Source="../Styles/ListView.xaml"/>
-    <ResourceDictionary Source="../Styles/Menu.xaml"/>
-    <ResourceDictionary Source="../Styles/AsyncDataGrid.xaml"/>
-    <ResourceDictionary Source="../Styles/Primitives/AsyncDataGridColumnHeader.xaml"/>
-    <ResourceDictionary Source="../Styles/Primitives/AsyncDataGridColumnHeadersPresenter.xaml"/>
-    <ResourceDictionary Source="../Styles/DropDownTextBox.xaml"/>
-    <ResourceDictionary Source="TransitioningContentControl.xaml"/>
-    <ResourceDictionary Source="TransitioningControl.xaml"/>
+    <ResourceDictionary Source="pack://application:,,,/EventTraceKit.VsExtension;component/Resources/Styles/ActivityRing.xaml"/>
+    <ResourceDictionary Source="pack://application:,,,/EventTraceKit.VsExtension;component/Resources/Styles/AsyncDataGrid.xaml"/>
+    <ResourceDictionary Source="pack://application:,,,/EventTraceKit.VsExtension;component/Resources/Styles/AsyncDataGridColumnHeader.xaml"/>
+    <ResourceDictionary Source="pack://application:,,,/EventTraceKit.VsExtension;component/Resources/Styles/AsyncDataGridColumnHeadersPresenter.xaml"/>
+    <ResourceDictionary Source="pack://application:,,,/EventTraceKit.VsExtension;component/Resources/Styles/DropDownTextBox.xaml"/>
+    <ResourceDictionary Source="pack://application:,,,/EventTraceKit.VsExtension;component/Resources/Styles/TransitioningContentControl.xaml"/>
+    <ResourceDictionary Source="pack://application:,,,/EventTraceKit.VsExtension;component/Resources/Styles/TransitioningControl.xaml"/>
   </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

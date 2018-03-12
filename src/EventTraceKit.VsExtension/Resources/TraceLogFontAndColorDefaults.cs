@@ -1,13 +1,13 @@
-﻿namespace EventTraceKit.VsExtension
+namespace EventTraceKit.VsExtension.Resources
 {
     using System;
     using System.Collections.Generic;
     using System.Windows.Media;
-    using Windows;
+    using EventTraceKit.VsExtension.Resources.Styles;
+    using EventTraceKit.VsExtension.Windows;
     using Microsoft.VisualStudio;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
-    using Styles;
 
     public class TraceLogFontAndColorDefaults
         : IVsFontAndColorDefaults, IVsFontAndColorEvents

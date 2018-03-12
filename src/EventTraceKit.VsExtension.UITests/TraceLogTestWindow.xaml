@@ -3,11 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:Controls="clr-namespace:EventTraceKit.VsExtension.Controls;assembly=EventTraceKit.VsExtension"
-        xmlns:uit="clr-namespace:EventTraceKit.VsExtension.UITests"
-        xmlns:EtkVs="clr-namespace:EventTraceKit.VsExtension;assembly=EventTraceKit.VsExtension"
+        xmlns:etk="clr-namespace:EventTraceKit.VsExtension;assembly=EventTraceKit.VsExtension"
+        xmlns:etkc="clr-namespace:EventTraceKit.VsExtension.Controls;assembly=EventTraceKit.VsExtension"
+        xmlns:etkr="clr-namespace:EventTraceKit.VsExtension.Resources;assembly=EventTraceKit.VsExtension"
         xmlns:vsp="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
-        xmlns:styles="clr-namespace:EventTraceKit.VsExtension.Styles;assembly=EventTraceKit.VsExtension"
+        xmlns:uit="clr-namespace:EventTraceKit.VsExtension.UITests"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance uit:TraceLogTestViewModel, IsDesignTimeCreatable=false}"
         UseLayoutRounding="True"
@@ -28,24 +28,24 @@
       <Button Margin="7,1,1,1" Content="Filters" Command="{Binding OpenFilterCommand}"/>
       <Button Margin="7,1,1,1" Content="Open View Editor" Command="{Binding OpenViewEditorCommand}"/>
       <TextBlock Margin="7,1,1,1" Text="{Binding EventsDataView.RowCount}"/>
-      <Controls:ActivityRing IsActive="{Binding IsCollecting}" Margin="10,0,0,0"
+      <etkc:ActivityRing IsActive="{Binding IsCollecting}" Margin="10,0,0,0"
                              Width="16" Height="16"/>
     </StackPanel>
 
-    <Controls:AsyncDataGrid
+    <etkc:AsyncDataGrid
       Grid.Row="1"
       ViewModel="{Binding GridModel}"
       RowFontFamily="Consolas"
       RowFontSize="9pt"
-      Foreground="{DynamicResource {x:Static styles:TraceLogColors.RowForegroundBrushKey}}"
+      Foreground="{DynamicResource {x:Static etkr:TraceLogColors.RowForegroundBrushKey}}"
       Background="{DynamicResource {x:Static vsp:TreeViewColors.BackgroundBrushKey}}"
-      RowBackground="{DynamicResource {x:Static styles:TraceLogColors.RowBackgroundBrushKey}}"
-      AlternatingRowBackground="{DynamicResource {x:Static styles:TraceLogColors.AlternatingRowBackgroundBrushKey}}"
-      FrozenColumnBackground="{DynamicResource {x:Static styles:TraceLogColors.FrozenColumnBackgroundBrushKey}}"
-      RowSelectionForeground="{DynamicResource {x:Static styles:TraceLogColors.SelectedRowForegroundBrushKey}}"
-      RowSelectionBackground="{DynamicResource {x:Static styles:TraceLogColors.SelectedRowBackgroundBrushKey}}"
-      RowInactiveSelectionForeground="{DynamicResource {x:Static styles:TraceLogColors.InactiveSelectedRowForegroundBrushKey}}"
-      RowInactiveSelectionBackground="{DynamicResource {x:Static styles:TraceLogColors.InactiveSelectedRowBackgroundBrushKey}}"
-      RowFocusBorderBrush="{DynamicResource {x:Static EtkVs:CommonControlBrushes.FocusVisualForegroundKey}}"/>
+      RowBackground="{DynamicResource {x:Static etkr:TraceLogColors.RowBackgroundBrushKey}}"
+      AlternatingRowBackground="{DynamicResource {x:Static etkr:TraceLogColors.AlternatingRowBackgroundBrushKey}}"
+      FrozenColumnBackground="{DynamicResource {x:Static etkr:TraceLogColors.FrozenColumnBackgroundBrushKey}}"
+      RowSelectionForeground="{DynamicResource {x:Static etkr:TraceLogColors.SelectedRowForegroundBrushKey}}"
+      RowSelectionBackground="{DynamicResource {x:Static etkr:TraceLogColors.SelectedRowBackgroundBrushKey}}"
+      RowInactiveSelectionForeground="{DynamicResource {x:Static etkr:TraceLogColors.InactiveSelectedRowForegroundBrushKey}}"
+      RowInactiveSelectionBackground="{DynamicResource {x:Static etkr:TraceLogColors.InactiveSelectedRowBackgroundBrushKey}}"
+      RowFocusBorderBrush="{DynamicResource {x:Static etk:CommonControlBrushes.FocusVisualForegroundKey}}"/>
   </Grid>
 </Window>

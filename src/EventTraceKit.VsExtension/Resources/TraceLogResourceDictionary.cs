@@ -1,11 +1,10 @@
-﻿namespace EventTraceKit.VsExtension
+namespace EventTraceKit.VsExtension.Resources
 {
     using System;
     using System.Windows;
     using System.Windows.Media;
-    using Windows;
+    using EventTraceKit.VsExtension.Windows;
     using Microsoft.VisualStudio.PlatformUI;
-    using Styles;
 
     public class TraceLogResourceDictionary : ResourceDictionary
     {

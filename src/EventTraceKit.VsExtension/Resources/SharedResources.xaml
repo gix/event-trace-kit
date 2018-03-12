@@ -1,0 +1,10 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceDictionary Source="Styles/VS/CommonControls.xaml"/>
+    <ResourceDictionary Source="Styles/VS/ContextMenu.xaml"/>
+    <ResourceDictionary Source="Styles/VS/DataGrid.xaml"/>
+    <ResourceDictionary Source="Styles/VS/ListView.xaml"/>
+    <ResourceDictionary Source="Styles/VS/Menu.xaml"/>
+  </ResourceDictionary.MergedDictionaries>
+</ResourceDictionary>

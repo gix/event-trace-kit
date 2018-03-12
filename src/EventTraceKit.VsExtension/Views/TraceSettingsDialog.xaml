@@ -35,12 +35,6 @@
         <Setter Property="Background" Value="{x:Null}"/>
       </Style>
 
-      <Style TargetType="{x:Type Label}" BasedOn="{StaticResource {x:Type Label}}">
-        <Setter Property="VerticalAlignment" Value="Center"/>
-        <Setter Property="Margin" Value="3"/>
-        <Setter Property="Padding" Value="1"/>
-      </Style>
-
       <DataTemplate DataType="{x:Type etkv:EventProviderViewModel}">
         <etkv:EventProviderEditControl/>
       </DataTemplate>

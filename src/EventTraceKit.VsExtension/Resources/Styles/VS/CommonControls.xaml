@@ -2,95 +2,65 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:vsfx="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.14.0"
                     xmlns:vsp="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
-                    xmlns:etkc="clr-namespace:EventTraceKit.VsExtension.Controls">
-  <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.TextBoxStyleKey}}">
+                    xmlns:etkc="clr-namespace:EventTraceKit.VsExtension.Controls"
+                    xmlns:etkr="clr-namespace:EventTraceKit.VsExtension.Resources">
+  <Style x:Key="{x:Static etkr:ResourceKeys.ButtonStyleKey}" TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ButtonStyleKey}}"/>
+  <Style x:Key="{x:Static etkr:ResourceKeys.CheckBoxStyleKey}" TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.CheckBoxStyleKey}}"/>
+  <Style x:Key="{x:Static etkr:ResourceKeys.ComboBoxStyleKey}" TargetType="{x:Type ComboBox}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ComboBoxStyleKey}}"/>
+  <Style x:Key="{x:Static etkr:ResourceKeys.HyperlinkStyleKey}" TargetType="{x:Type Hyperlink}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogHyperlinkStyleKey}}"/>
+  <Style x:Key="{x:Static etkr:ResourceKeys.LabelStyleKey}" TargetType="{x:Type Label}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogLabelStyleKey}}"/>
+  <Style x:Key="{x:Static etkr:ResourceKeys.ListBoxStyleKey}" TargetType="{x:Type ListBox}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogListBoxStyleKey}}"/>
+  <Style x:Key="{x:Static etkr:ResourceKeys.ProgressBarStyleKey}" TargetType="{x:Type ProgressBar}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ProgressBarStyleKey}}"/>
+  <Style x:Key="{x:Static etkr:ResourceKeys.RadioButtonStyleKey}" TargetType="{x:Type RadioButton}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogRadioButtonStyleKey}}"/>
+  <Style x:Key="{x:Static etkr:ResourceKeys.ScrollBarStyleKey}" TargetType="{x:Type ScrollBar}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ScrollBarStyleKey}}"/>
+  <Style x:Key="{x:Static etkr:ResourceKeys.ScrollViewerStyleKey}" TargetType="{x:Type ScrollViewer}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ScrollViewerStyleKey}}"/>
+  <Style x:Key="{x:Static etkr:ResourceKeys.TextBoxStyleKey}" TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.TextBoxStyleKey}}"/>
+  <Style x:Key="{x:Static etkr:ResourceKeys.TreeViewStyleKey}" TargetType="{x:Type TreeView}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogTreeViewStyleKey}}"/>
+  <Style x:Key="{x:Static etkr:ResourceKeys.TreeViewItemStyleKey}" TargetType="{x:Type TreeViewItem}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogTreeViewItemStyleKey}}"/>
+
+  <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Static etkr:ResourceKeys.TextBoxStyleKey}}">
     <Setter Property="Padding" Value="2"/>
   </Style>
 
-  <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ButtonStyleKey}}">
+  <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static etkr:ResourceKeys.ButtonStyleKey}}">
     <Setter Property="MinWidth" Value="73"/>
     <Setter Property="MinHeight" Value="21"/>
     <Setter Property="Margin" Value="1"/>
     <Setter Property="Padding" Value="15,0"/>
   </Style>
 
-  <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.CheckBoxStyleKey}}"/>
+  <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Static etkr:ResourceKeys.CheckBoxStyleKey}}"/>
 
-  <Style TargetType="{x:Type ComboBox}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ComboBoxStyleKey}}">
+  <Style TargetType="{x:Type ComboBox}" BasedOn="{StaticResource {x:Static etkr:ResourceKeys.ComboBoxStyleKey}}">
     <Setter Property="MinHeight" Value="21"/>
     <Setter Property="Margin" Value="1"/>
   </Style>
 
-  <Style TargetType="{x:Type ProgressBar}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ProgressBarStyleKey}}"/>
-  <Style TargetType="{x:Type ScrollBar}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ScrollBarStyleKey}}"/>
-  <Style TargetType="{x:Type ScrollViewer}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ScrollViewerStyleKey}}"/>
+  <Style TargetType="{x:Type Label}" BasedOn="{StaticResource {x:Static etkr:ResourceKeys.LabelStyleKey}}"/>
+  <Style TargetType="{x:Type Hyperlink}" BasedOn="{StaticResource {x:Static etkr:ResourceKeys.HyperlinkStyleKey}}"/>
+  <Style TargetType="{x:Type ProgressBar}" BasedOn="{StaticResource {x:Static etkr:ResourceKeys.ProgressBarStyleKey}}"/>
+  <Style TargetType="{x:Type RadioButton}" BasedOn="{StaticResource {x:Static etkr:ResourceKeys.RadioButtonStyleKey}}"/>
+  <Style TargetType="{x:Type ScrollBar}" BasedOn="{StaticResource {x:Static etkr:ResourceKeys.ScrollBarStyleKey}}"/>
+  <Style TargetType="{x:Type ScrollViewer}" BasedOn="{StaticResource {x:Static etkr:ResourceKeys.ScrollViewerStyleKey}}"/>
 
-  <Style TargetType="{x:Type Label}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogLabelStyleKey}}"/>
-  <Style TargetType="{x:Type RadioButton}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogRadioButtonStyleKey}}"/>
-  <Style TargetType="{x:Type Hyperlink}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogHyperlinkStyleKey}}"/>
-  <Style TargetType="{x:Type TreeView}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogTreeViewStyleKey}}"/>
-  <Style TargetType="{x:Type TreeViewItem}" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogTreeViewItemStyleKey}}"/>
+  <Style TargetType="{x:Type TreeView}" BasedOn="{StaticResource {x:Static etkr:ResourceKeys.TreeViewStyleKey}}"/>
+  <Style TargetType="{x:Type TreeViewItem}" BasedOn="{StaticResource {x:Static etkr:ResourceKeys.TreeViewItemStyleKey}}"/>
 
-  <!--<Style x:Key="{x:Type TextBox}" TargetType="{x:Type TextBox}">
-    <Style.Setters>
-      <Setter Property="VerticalContentAlignment" Value="Center"/>
-      <Setter Property="HorizontalAlignment" Value="Stretch"/>
-      <Setter Property="VerticalAlignment" Value="Center"/>
-      <Setter Property="TextWrapping" Value="NoWrap"/>
-      <Setter Property="Background" Value="{DynamicResource {x:Static vpui:CommonControlsColors.TextBoxBackgroundBrushKey}}"/>
-      <Setter Property="Foreground" Value="{DynamicResource {x:Static vpui:CommonControlsColors.TextBoxTextBrushKey}}"/>
-      <Setter Property="CaretBrush" Value="{Binding RelativeSource={RelativeSource Self}, Path=Foreground}"/>
-      -->
-  <!--<Setter Property="SelectionBrush" Value="{DynamicResource {x:Static tp:CommonControlsColors.TextBoxSelectionBrushKey}}"/>-->
-  <!--
-      <Setter Property="AllowDrop" Value="True"/>
-      <Setter Property="Margin" Value="0"/>
-      <Setter Property="BorderBrush" Value="{DynamicResource {x:Static vpui:CommonControlsColors.TextBoxBorderBrushKey}}"/>
-      <Setter Property="BorderThickness" Value="1"/>
-      <Setter Property="Template">
-        <Setter.Value>
-          <ControlTemplate TargetType="{x:Type TextBox}">
-            <Border x:Name="border" Background="{TemplateBinding Control.Background}"
-                        BorderBrush="{TemplateBinding Control.BorderBrush}"
-                        BorderThickness="{TemplateBinding Control.BorderThickness}" SnapsToDevicePixels="True">
-              <ScrollViewer x:Name="PART_ContentHost" Focusable="False" HorizontalScrollBarVisibility="Hidden"
-                                VerticalScrollBarVisibility="Hidden"/>
-            </Border>
-            <ControlTemplate.Triggers>
-              <Trigger Property="UIElement.IsMouseOver" Value="True">
-                <Setter TargetName="border" Property="Border.BorderBrush"
-                        Value="{DynamicResource {x:Static vpui:CommonControlsColors.TextBoxBorderFocusedBrushKey}}"/>
-              </Trigger>
-              <Trigger Property="UIElement.IsKeyboardFocused" Value="True">
-                <Setter TargetName="border" Property="Border.BorderBrush"
-                        Value="{DynamicResource {x:Static vpui:CommonControlsColors.TextBoxBorderFocusedBrushKey}}"/>
-              </Trigger>
-            </ControlTemplate.Triggers>
-          </ControlTemplate>
-        </Setter.Value>
-      </Setter>
-    </Style.Setters>
-    <Style.Triggers>
-      <Trigger Property="UIElement.IsEnabled" Value="False">
-        <Setter Property="Control.Background" Value="{DynamicResource {x:Static vpui:CommonControlsColors.TextBoxBackgroundDisabledBrushKey}}"/>
-        <Setter Property="Control.Foreground" Value="{DynamicResource {x:Static vpui:CommonControlsColors.TextBoxTextDisabledBrushKey}}"/>
-        <Setter Property="Control.BorderBrush" Value="{DynamicResource {x:Static vpui:CommonControlsColors.TextBoxBorderDisabledBrushKey}}"/>
-      </Trigger>
-    </Style.Triggers>
-  </Style>-->
-
-  <Style x:Key="GridSplitterPreviewStyle">
-    <Setter Property="Control.Template">
-      <Setter.Value>
-        <ControlTemplate>
-          <Rectangle Fill="{DynamicResource {x:Static vsfx:VsBrushes.ButtonShadowKey}}"/>
-        </ControlTemplate>
-      </Setter.Value>
-    </Setter>
-  </Style>
   <Style x:Key="{x:Type GridSplitter}" TargetType="{x:Type GridSplitter}">
     <Setter Property="Background" Value="Transparent"/>
-    <Setter Property="PreviewStyle" Value="{StaticResource GridSplitterPreviewStyle}"/>
+    <Setter Property="PreviewStyle">
+      <Setter.Value>
+        <Style>
+          <Setter Property="Control.Template">
+            <Setter.Value>
+              <ControlTemplate>
+                <Rectangle Fill="{DynamicResource {x:Static vsfx:VsBrushes.ButtonShadowKey}}"/>
+              </ControlTemplate>
+            </Setter.Value>
+          </Setter>
+        </Style>
+      </Setter.Value>
+    </Setter>
   </Style>
 
   <ControlTemplate x:Key="ListBoxItemTemplate" TargetType="{x:Type ListBoxItem}">
@@ -148,8 +118,7 @@
             Value="{DynamicResource {x:Static vsp:EnvironmentColors.CommandBarTextActiveBrushKey}}"/>
   </Style>
 
-  <Style TargetType="{x:Type ListBox}"
-         BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogListBoxStyleKey}}">
+  <Style TargetType="{x:Type ListBox}" BasedOn="{StaticResource {x:Static etkr:ResourceKeys.ListBoxStyleKey}}">
     <Setter Property="BorderBrush" Value="{DynamicResource {x:Static vsp:ThemedDialogColors.GridLineBrushKey}}"/>
     <Setter Property="Padding" Value="0"/>
     <Setter Property="Template">

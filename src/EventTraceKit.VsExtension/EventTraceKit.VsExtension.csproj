@@ -92,7 +92,9 @@
   <ItemGroup>
     <Compile Include="ActionThrottler.cs" />
     <Compile Include="Controls\DropDownTextBoxAutomationPeer.cs" />
-    <Compile Include="Controls\ThemeResourceManager.cs" />
+    <Compile Include="Controls\ThemedUserControl.cs" />
+    <Compile Include="Resources\ResourceKeys.cs" />
+    <Compile Include="Resources\ThemeResourceManager.cs" />
     <Compile Include="Controls\TransitioningControl.cs" />
     <Compile Include="Controls\VisualStateExtensions.cs" />
     <Compile Include="Controls\ToggleContentControl.cs" />
@@ -240,12 +242,12 @@
     <Compile Include="Settings\Persistence\NamespaceMapping.cs" />
     <Compile Include="Settings\Persistence\SettingsElement.cs" />
     <Compile Include="Settings\Persistence\Tracing.cs" />
-    <Compile Include="Styles\FontAndColorsResourceDictionary.cs" />
-    <Compile Include="Styles\FontAndColorsResourceKey.cs" />
-    <Compile Include="Styles\ResourceSynchronizer.cs" />
+    <Compile Include="Resources\Styles\FontAndColorsResourceDictionary.cs" />
+    <Compile Include="Resources\Styles\FontAndColorsResourceKey.cs" />
+    <Compile Include="Resources\Styles\ResourceSynchronizer.cs" />
     <Compile Include="FontAndColorDefaultsProvider.cs" />
-    <Compile Include="TraceLogFontAndColorDefaults.cs" />
-    <Compile Include="TraceLogResourceDictionary.cs" />
+    <Compile Include="Resources\TraceLogFontAndColorDefaults.cs" />
+    <Compile Include="Resources\TraceLogResourceDictionary.cs" />
     <Compile Include="Utilities\UnboundedCache.cs" />
     <Compile Include="ValueChangedEventArgs.cs" />
     <Compile Include="ValueChangedEventHandler.cs" />
@@ -317,7 +319,6 @@
     <Compile Include="Controls\AsyncDataGridColumnsViewModel.cs" />
     <Compile Include="Controls\AsyncDataGridColumn.cs" />
     <Compile Include="Controls\AsyncDataGridViewModel.cs" />
-    <Compile Include="Styles\ResourceKeys.cs" />
     <Compile Include="FontAndColorsHelper.cs" />
     <Compile Include="Controls\ActivityRing.cs" />
     <Compile Include="Controls\ProgressRing.cs" />
@@ -370,15 +371,19 @@
     </VSCTCompile>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="Styles\DropDownTextBox.xaml">
+    <Page Include="Resources\SharedResources.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Themes\TransitioningControl.xaml">
+    <Page Include="Resources\Styles\DropDownTextBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Resources\Styles\TransitioningControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Themes\TransitioningContentControl.xaml">
+    <Page Include="Resources\Styles\TransitioningContentControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -406,19 +411,19 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Styles\ActivityRing.xaml">
+    <Page Include="Resources\Styles\ActivityRing.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Styles\CommonControls.xaml">
+    <Page Include="Resources\Styles\VS\CommonControls.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Styles\ContextMenu.xaml">
+    <Page Include="Resources\Styles\VS\ContextMenu.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Styles\DataGrid.xaml">
+    <Page Include="Resources\Styles\VS\DataGrid.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -426,23 +431,23 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Styles\ListView.xaml">
+    <Page Include="Resources\Styles\VS\ListView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Styles\Menu.xaml">
+    <Page Include="Resources\Styles\VS\Menu.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Styles\Primitives\AsyncDataGridColumnHeader.xaml">
+    <Page Include="Resources\Styles\AsyncDataGridColumnHeader.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Styles\Primitives\AsyncDataGridColumnHeadersPresenter.xaml">
+    <Page Include="Resources\Styles\AsyncDataGridColumnHeadersPresenter.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Styles\ProgressRing.xaml">
+    <Page Include="Resources\Styles\ProgressRing.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -450,7 +455,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Styles\AsyncDataGrid.xaml">
+    <Page Include="Resources\Styles\AsyncDataGrid.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

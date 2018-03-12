@@ -1,6 +1,24 @@
-namespace EventTraceKit.VsExtension.Styles
+namespace EventTraceKit.VsExtension.Resources
 {
     using System;
+    using EventTraceKit.VsExtension.Styles;
+
+    public static class ResourceKeys
+    {
+        public static object ButtonStyleKey => "EtkButtonStyleKey";
+        public static object CheckBoxStyleKey => "EtkCheckBoxStyleKey";
+        public static object ComboBoxStyleKey => "EtkComboBoxStyleKey";
+        public static object HyperlinkStyleKey => "EtkHyperlinkStyleKey";
+        public static object LabelStyleKey => "EtkLabelStyleKey";
+        public static object ListBoxStyleKey => "EtkListBoxStyleKey";
+        public static object ProgressBarStyleKey => "EtkProgressBarStyleKey";
+        public static object RadioButtonStyleKey => "EtkRadioButtonStyleKey";
+        public static object ScrollBarStyleKey => "EtkScrollBarStyleKey";
+        public static object ScrollViewerStyleKey => "EtkScrollViewerStyleKey";
+        public static object TextBoxStyleKey => "EtkTextBoxStyleKey";
+        public static object TreeViewStyleKey => "EtkTreeViewStyleKey";
+        public static object TreeViewItemStyleKey => "EtkTreeViewItemStyleKey";
+    }
 
     public static class TraceLogColors
     {

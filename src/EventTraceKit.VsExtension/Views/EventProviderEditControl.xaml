@@ -1,44 +1,34 @@
-<UserControl x:Class="EventTraceKit.VsExtension.Views.EventProviderEditControl"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:etkw="clr-namespace:EventTraceKit.VsExtension.Windows"
-             xmlns:etkc="clr-namespace:EventTraceKit.VsExtension.Controls"
-             xmlns:etkv="clr-namespace:EventTraceKit.VsExtension.Views"
-             mc:Ignorable="d"
-             d:DataContext="{d:DesignInstance {x:Type etkv:EventProviderViewModel}, d:IsDesignTimeCreatable=False}"
-             d:DesignWidth="300"
-             d:DesignHeight="300">
-  <UserControl.Resources>
-    <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
-      <Setter Property="Margin" Value="3"/>
-    </Style>
-    <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
-      <Setter Property="Margin" Value="3"/>
-      <Setter Property="Padding" Value="2"/>
-    </Style>
-    <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Type CheckBox}}">
-      <Setter Property="VerticalAlignment" Value="Center"/>
-      <Setter Property="Margin" Value="3"/>
-      <Setter Property="Padding" Value="1"/>
-    </Style>
-    <Style TargetType="{x:Type ComboBox}" BasedOn="{StaticResource {x:Type ComboBox}}">
-      <Setter Property="Margin" Value="3"/>
-    </Style>
-
-    <Style x:Key="DataGridCheckBoxColumnStyle" TargetType="{x:Type CheckBox}"
-           BasedOn="{StaticResource {x:Type CheckBox}}">
-      <Setter Property="Margin" Value="0"/>
-    </Style>
-
-    <Style x:Key="DataGridTextColumnEditingStyle" TargetType="{x:Type TextBox}">
-      <Setter Property="Margin" Value="-2"/>
-      <Setter Property="Padding" Value="2"/>
-      <Setter Property="BorderThickness" Value="0"/>
-    </Style>
-  </UserControl.Resources>
+<etkc:ThemedUserControl
+  x:Class="EventTraceKit.VsExtension.Views.EventProviderEditControl"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:etkc="clr-namespace:EventTraceKit.VsExtension.Controls"
+  xmlns:etkv="clr-namespace:EventTraceKit.VsExtension.Views"
+  xmlns:etkw="clr-namespace:EventTraceKit.VsExtension.Windows"
+  mc:Ignorable="d"
+  d:DataContext="{d:DesignInstance {x:Type etkv:EventProviderViewModel}, d:IsDesignTimeCreatable=False}"
+  d:DesignWidth="300"
+  d:DesignHeight="300">
   <Grid>
+    <FrameworkElement.Resources>
+      <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Margin" Value="3"/>
+      </Style>
+      <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
+        <Setter Property="Margin" Value="3"/>
+        <Setter Property="Padding" Value="2"/>
+      </Style>
+      <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Type CheckBox}}">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="3"/>
+        <Setter Property="Padding" Value="1"/>
+      </Style>
+      <Style TargetType="{x:Type ComboBox}" BasedOn="{StaticResource {x:Type ComboBox}}">
+        <Setter Property="Margin" Value="3"/>
+      </Style>
+    </FrameworkElement.Resources>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="Auto"/>
@@ -206,4 +196,4 @@
       </DataGrid.Columns>
     </DataGrid>-->
   </Grid>
-</UserControl>
+</etkc:ThemedUserControl>
