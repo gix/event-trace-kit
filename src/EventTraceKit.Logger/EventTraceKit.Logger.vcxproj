@@ -85,6 +85,7 @@
   <ItemGroup>
     <ClCompile Include="ADT\Guid.cpp" />
     <ClCompile Include="ADT\WaitEvent.cpp" />
+    <ClInclude Include="BinaryFind.h" />
     <ClCompile Include="EventTraceKit\IMessageFormatter.h" />
     <ClCompile Include="EventTraceKit\ParseTdhContext.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
@@ -163,6 +164,7 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(AdditionalOptions) -Zc:twoPhase-</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(AdditionalOptions) -Zc:twoPhase-</AdditionalOptions>
     </ClCompile>
+    <ClCompile Include="TraceDataContext.cpp" />
     <ClCompile Include="Win32Exception.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -171,6 +173,7 @@
     <ClInclude Include="EventTraceKit\Descriptors.h" />
     <ClInclude Include="EventTraceKit\ParseTdhContext.h" />
     <ClInclude Include="EventTraceKit\TraceLog.h" />
+    <ClInclude Include="ManualResetEventSlim.h" />
     <ClInclude Include="Support\OSVersionInfo.h" />
     <ClInclude Include="Support\Rtl.h" />
     <ClInclude Include="TdhMessageFormatter.h" />
@@ -199,6 +202,7 @@
     <ClInclude Include="Support\SetThreadName.h" />
     <ClInclude Include="Support\StringFormat.h" />
     <ClInclude Include="EventTraceKit\WatchDog.h" />
+    <ClInclude Include="TraceDataContext.h" />
     <ClInclude Include="Win32Exception.h" />
   </ItemGroup>
   <ImportGroup Label="ExtensionTargets">

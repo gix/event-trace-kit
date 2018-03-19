@@ -7,32 +7,14 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
 
     public class GraphTreeItemHeaderCommand : DependencyObject
     {
+        private DelegateCommand executeCommand;
+
         public static readonly DependencyProperty CommandParameterProperty = DependencyProperty.Register("CommandParameter", typeof(object), typeof(GraphTreeItemHeaderCommand), new PropertyMetadata(null));
         public static readonly DependencyProperty CommandProperty = DependencyProperty.Register("Command", typeof(ICommand), typeof(GraphTreeItemHeaderCommand), new PropertyMetadata(null, (s, e) => ((GraphTreeItemHeaderCommand)s).CommandPropertyChanged(e)));
         public static readonly DependencyProperty DisplayNameProperty = DependencyProperty.Register("DisplayName", typeof(string), typeof(GraphTreeItemHeaderCommand), PropertyMetadataUtils.DefaultNull);
-        private DelegateCommand executeCommand;
         public static readonly DependencyProperty IsCheckableProperty = DependencyProperty.Register("IsCheckable", typeof(bool), typeof(GraphTreeItemHeaderCommand), new PropertyMetadata(Boxed.False));
         public static readonly DependencyProperty IsCheckedProperty = DependencyProperty.Register("IsChecked", typeof(bool), typeof(GraphTreeItemHeaderCommand), new PropertyMetadata(Boxed.False));
         public static readonly DependencyProperty IsEnabledProperty = DependencyProperty.Register("IsEnabled", typeof(bool), typeof(GraphTreeItemHeaderCommand), new PropertyMetadata(Boxed.True));
-
-        private void CommandPropertyChanged(DependencyPropertyChangedEventArgs e)
-        {
-        }
-
-        public void Execute()
-        {
-            VerifyAccess();
-            OnExecute();
-        }
-
-        public virtual void OnExecute()
-        {
-            ICommand command = Command;
-            object commandParameter = CommandParameter;
-            if (command != null && command.CanExecute(commandParameter)) {
-                command.Execute(commandParameter);
-            }
-        }
 
         public ICommand Command
         {
@@ -79,6 +61,25 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
         {
             get => (bool)GetValue(IsEnabledProperty);
             set => SetValue(IsEnabledProperty, Boxed.Bool(value));
+        }
+
+        private void CommandPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
+        }
+
+        public void Execute()
+        {
+            VerifyAccess();
+            OnExecute();
+        }
+
+        public virtual void OnExecute()
+        {
+            ICommand command = Command;
+            object commandParameter = CommandParameter;
+            if (command != null && command.CanExecute(commandParameter)) {
+                command.Execute(commandParameter);
+            }
         }
     }
 }

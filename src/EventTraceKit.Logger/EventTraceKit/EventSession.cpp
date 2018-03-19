@@ -85,12 +85,12 @@ public ref struct TraceStatistics
 public ref class EventSession : public System::IDisposable
 {
 public:
-    EventSession(TraceProfileDescriptor^ descriptor);
+    EventSession(TraceProfileDescriptor^ profile, TraceLog^ traceLog);
     ~EventSession() { this->!EventSession(); }
     !EventSession();
 
-    void Start(TraceLog^ traceLog);
-    Task^ StartAsync(TraceLog^ traceLog);
+    void Start();
+    Task^ StartAsync();
     void Stop();
     void Flush();
     TraceStatistics^ Query();
@@ -100,16 +100,19 @@ public:
 private:
     ref struct StartAsyncHelper
     {
-        StartAsyncHelper(EventSession^ parent, TraceLog^ traceLog)
-            : parent(parent), traceLog(traceLog) {}
+        StartAsyncHelper(EventSession^ parent)
+            : parent(parent) {}
 
-        void Run();
+        void Run()
+        {
+            parent->Start();
+        }
 
         EventSession^ parent;
-        TraceLog^ traceLog;
     };
 
-    TraceProfileDescriptor^ descriptor;
+    TraceProfileDescriptor^ profile;
+    TraceLog^ traceLog;
     std::wstring* loggerName = nullptr;
     std::vector<etk::TraceProviderDescriptor>* nativeProviders = nullptr;
     WatchDog^ watchDog;
@@ -128,31 +131,35 @@ static std::wstring CreateLoggerName()
     return LoggerNameBase + L"_" + std::to_wstring(pid);
 }
 
-static etk::TraceProperties CreateTraceProperties(CollectorDescriptor^ descriptor)
+static etk::TraceProperties CreateTraceProperties(CollectorDescriptor^ profile)
 {
     etk::TraceProperties properties(marshal_as<GUID>(System::Guid::NewGuid()));
-    if (descriptor->BufferSize.HasValue)
-        properties.BufferSize = descriptor->BufferSize.Value;
-    if (descriptor->MinimumBuffers.HasValue)
-        properties.MinimumBuffers = descriptor->MinimumBuffers.Value;
-    if (descriptor->MaximumBuffers.HasValue)
-        properties.MaximumBuffers = descriptor->MaximumBuffers.Value;
-    if (descriptor->LogFileName)
-        properties.LogFileName = marshal_as<std::wstring>(descriptor->LogFileName);
-    properties.CustomFlushTimer = std::chrono::duration<unsigned, std::milli>(descriptor->CustomFlushPeriod);
+    if (profile->BufferSize.HasValue)
+        properties.BufferSize = profile->BufferSize.Value;
+    if (profile->MinimumBuffers.HasValue)
+        properties.MinimumBuffers = profile->MinimumBuffers.Value;
+    if (profile->MaximumBuffers.HasValue)
+        properties.MaximumBuffers = profile->MaximumBuffers.Value;
+    if (profile->LogFileName)
+        properties.LogFileName = marshal_as<std::wstring>(profile->LogFileName);
+    properties.CustomFlushTimer = std::chrono::duration<unsigned, std::milli>(profile->CustomFlushPeriod);
     return properties;
 }
 
-EventSession::EventSession(TraceProfileDescriptor^ descriptor)
-    : descriptor(descriptor)
+EventSession::EventSession(TraceProfileDescriptor^ profile, TraceLog^ traceLog)
+    : profile(profile)
+    , traceLog(traceLog)
     , loggerName(new std::wstring(CreateLoggerName()))
 {
-    if (descriptor->Collectors->Count == 0)
-        throw gcnew System::ArgumentException(L"descriptor");
+    if (profile->Collectors->Count == 0)
+        throw gcnew System::ArgumentException(L"profile");
+    if (!traceLog)
+        throw gcnew System::ArgumentNullException(L"traceLog");
 
     watchDog = gcnew WatchDog(marshal_as<String^>(*loggerName));
+    traceLog->UpdateTraceData(profile);
 
-    for each (auto collector in descriptor->Collectors) {
+    for each (auto collector in profile->Collectors) {
         if (auto systemCollector = dynamic_cast<SystemCollectorDescriptor^>(collector)) {
             auto traceProperties = CreateTraceProperties(systemCollector);
             auto session = etk::CreateEtwTraceSession(L"NT Kernel Logger", traceProperties);
@@ -187,11 +194,8 @@ EventSession::!EventSession()
     delete loggerName;
 }
 
-void EventSession::Start(TraceLog^ traceLog)
+void EventSession::Start()
 {
-    if (!traceLog)
-        throw gcnew ArgumentNullException("traceLog");
-
     watchDog->Start();
 
     HRESULT hr;
@@ -228,18 +232,9 @@ void EventSession::Start(TraceLog^ traceLog)
     sessionInfo.PointerSize = logFileHeader->PointerSize;
 }
 
-Task^ EventSession::StartAsync(TraceLog^ traceLog)
+Task^ EventSession::StartAsync()
 {
-    if (!traceLog)
-        throw gcnew ArgumentNullException("traceLog");
-
-    auto helper = gcnew StartAsyncHelper(this, traceLog);
-    return Task::Run(gcnew Action(helper, &StartAsyncHelper::Run));
-}
-
-void EventSession::StartAsyncHelper::Run()
-{
-    parent->Start(traceLog);
+    return Task::Run(gcnew Action(this, &EventSession::Start));
 }
 
 void EventSession::Stop()

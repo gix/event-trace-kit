@@ -6,42 +6,53 @@ namespace EventTraceKit.VsExtension.Views
     using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
-    using System.Windows;
     using System.Windows.Input;
+    using AutoMapper;
     using EventManifestFramework;
     using EventManifestFramework.Schema;
     using EventTraceKit.Tracing;
     using EventTraceKit.VsExtension.Extensions;
     using EventTraceKit.VsExtension.Serialization;
-    using Microsoft.VisualStudio.Shell;
+    using EventTraceKit.VsExtension.Settings;
+    using EventTraceKit.VsExtension.Settings.Persistence;
     using Task = System.Threading.Tasks.Task;
+    using TaskEx = EventTraceKit.VsExtension.Threading.TaskExtensions;
 
     public interface ITraceSettingsContext
     {
-        Window DialogOwner { get; }
         Lazy<IReadOnlyList<ProjectInfo>> ProjectsInSolution { get; }
         Lazy<IReadOnlyList<string>> ManifestsInSolution { get; }
         Task<EventManifest> GetManifest(string manifestFile);
     }
 
-    [SerializedShape(typeof(Settings.Persistence.TraceSettings))]
+    [SerializedShape(typeof(TraceSettings))]
     public class TraceSettingsViewModel : ObservableModel, ITraceSettingsContext
     {
+        private readonly ISolutionBrowser solutionBrowser;
+        private readonly ISettingsStore settingsStore;
         private readonly Lazy<IReadOnlyList<ProjectInfo>> projectsInSolution;
         private readonly Lazy<IReadOnlyList<string>> manifestsInSolution;
+        private readonly FileCache<EventManifest> manifestCache;
+        private readonly IMapper mapper = SettingsSerializer.CreateMapper();
 
         private bool? dialogResult;
-        private TraceProfileViewModel activeProfile;
+        private ICommand saveCommand;
+        private ICommand restoreCommand;
         private ICommand newProfileCommand;
         private ICommand copyProfileCommand;
         private ICommand deleteProfileCommand;
-        private Window dialogOwner;
+        private TraceProfileViewModel activeProfile;
 
-        public TraceSettingsViewModel()
+        public TraceSettingsViewModel(
+            ISolutionBrowser solutionBrowser = null,
+            ISettingsStore settingsStore = null)
         {
-            AcceptCommand = new AsyncDelegateCommand(Accept);
+            this.solutionBrowser = solutionBrowser;
+            this.settingsStore = settingsStore;
+
             Profiles = new AcqRelObservableCollection<TraceProfileViewModel>(
                 x => x.Context = null, x => x.Context = this);
+
             projectsInSolution = new Lazy<IReadOnlyList<ProjectInfo>>(FindProjects);
             manifestsInSolution = new Lazy<IReadOnlyList<string>>(FindManifests);
 
@@ -57,13 +68,17 @@ namespace EventTraceKit.VsExtension.Views
 
                     return manifest;
                 });
+
+            if (settingsStore != null) {
+                LoadFromSettings();
+                Title = $"Trace Settings ({settingsStore.Name})";
+            } else {
+                Title = "Trace Settings";
+            }
         }
 
-        Window ITraceSettingsContext.DialogOwner => dialogOwner;
         Lazy<IReadOnlyList<ProjectInfo>> ITraceSettingsContext.ProjectsInSolution => projectsInSolution;
         Lazy<IReadOnlyList<string>> ITraceSettingsContext.ManifestsInSolution => manifestsInSolution;
-
-        private readonly FileCache<EventManifest> manifestCache;
 
         async Task<EventManifest> ITraceSettingsContext.GetManifest(string manifestFile)
         {
@@ -73,46 +88,41 @@ namespace EventTraceKit.VsExtension.Views
             return await Task.Run(() => manifestCache.Get(manifestFile));
         }
 
-        private static EnvDTE.DTE GetDte()
+        private IReadOnlyList<ProjectInfo> FindProjects()
         {
-            return ServiceProvider.GlobalProvider.GetService<Microsoft.VisualStudio.Shell.Interop.SDTE, EnvDTE.DTE>();
-        }
-
-        private static IReadOnlyList<ProjectInfo> FindProjects()
-        {
-            var dte = GetDte();
-            if (dte == null)
-                return new ProjectInfo[0];
-
             try {
-                var projectProvider = new DefaultProjectProvider(GetDte());
-                return projectProvider.EnumerateProjects().OrderBy(x => x.Name).ToList();
+                if (solutionBrowser != null)
+                    return solutionBrowser.EnumerateProjects().OrderBy(x => x.Name).ToList();
             } catch (Exception) {
-                return new ProjectInfo[0];
             }
+
+            return new ProjectInfo[0];
         }
 
-        private static IReadOnlyList<string> FindManifests()
+        private IReadOnlyList<string> FindManifests()
         {
-            var dte = GetDte();
-            if (dte == null)
-                return new string[0];
-
             try {
-                var gatherer = new SolutionFileGatherer(dte);
-                return gatherer.FindFiles(".man").ToList();
+                if (solutionBrowser != null)
+                    return solutionBrowser.FindFiles(".man").ToList();
             } catch (Exception) {
-                return new string[0];
             }
+
+            return new string[0];
         }
 
-        public ICommand AcceptCommand { get; }
+        public string Title { get; }
 
         public bool? DialogResult
         {
             get => dialogResult;
             set => SetProperty(ref dialogResult, value);
         }
+
+        public ICommand SaveCommand =>
+            saveCommand ?? (saveCommand = new AsyncDelegateCommand(Save));
+
+        public ICommand RestoreCommand =>
+            restoreCommand ?? (restoreCommand = new AsyncDelegateCommand(Restore, () => settingsStore != null));
 
         public ICommand NewProfileCommand =>
             newProfileCommand ?? (newProfileCommand = new AsyncDelegateCommand(NewProfile));
@@ -131,9 +141,8 @@ namespace EventTraceKit.VsExtension.Views
 
         public ObservableCollection<TraceProfileViewModel> Profiles { get; }
 
-        public void Attach(Window window)
+        public void Attach()
         {
-            dialogOwner = window;
             foreach (var session in Profiles) {
                 session.Context = this;
                 foreach (var collector in session.Collectors) {
@@ -146,18 +155,15 @@ namespace EventTraceKit.VsExtension.Views
             }
         }
 
-        public void Detach()
-        {
-            dialogOwner = null;
-        }
-
         private Task NewProfile()
         {
             var newProfile = new TraceProfileViewModel {
                 Name = "Unnamed",
+                Context = this,
                 Collectors = {
                     new EventCollectorViewModel {
-                        Name = "Default"
+                        Name = "Default",
+                        Context = this
                     }
                 }
             };
@@ -199,10 +205,31 @@ namespace EventTraceKit.VsExtension.Views
             return Task.CompletedTask;
         }
 
-        private Task Accept()
+        private async Task Save()
         {
+            var settings = settingsStore.GetValue(SettingsKeys.Tracing) ?? new TraceSettings();
+            settings.Profiles.SetRange(GetProfiles());
+            settings.ActiveProfile = ActiveProfile?.Name;
+            settingsStore.SetValue(SettingsKeys.Tracing, settings);
+
+            await TaskEx.RunWithProgress(() => settingsStore.Save(), "Saving");
             DialogResult = true;
+        }
+
+        private Task Restore()
+        {
+            LoadFromSettings();
             return Task.CompletedTask;
+        }
+
+        private void LoadFromSettings()
+        {
+            var traceSettings = settingsStore.GetValue(SettingsKeys.Tracing);
+            if (traceSettings != null) {
+                Profiles.SetRange(traceSettings.Profiles.Select(
+                    x => mapper.Map(x, new TraceProfileViewModel())));
+                ActiveProfile = Profiles.FirstOrDefault(x => x.Name == traceSettings.ActiveProfile);
+            }
         }
 
         public TraceProfileDescriptor GetDescriptor()
@@ -213,6 +240,11 @@ namespace EventTraceKit.VsExtension.Views
         public Dictionary<EventKey, string> GetEventSymbols()
         {
             return ActiveProfile?.GetEventSymbols() ?? new Dictionary<EventKey, string>();
+        }
+
+        public IEnumerable<TraceProfile> GetProfiles()
+        {
+            return Profiles.Select(x => mapper.Map<TraceProfile>(x));
         }
     }
 

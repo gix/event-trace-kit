@@ -1,4 +1,4 @@
-﻿#include "Descriptors.h"
+#include "Descriptors.h"
 #include "IMessageFormatter.h"
 
 #include "TdhMessageFormatter.h"

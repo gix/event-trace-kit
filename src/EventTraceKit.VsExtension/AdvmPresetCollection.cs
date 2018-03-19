@@ -10,6 +10,7 @@ namespace EventTraceKit.VsExtension
     using Windows;
 
     [SerializedShape(typeof(Settings.Persistence.ViewPresets))]
+    [DeserializationCallback(typeof(PersistedPresetsSerializerCallback))]
     public class AdvmPresetCollection : FreezableCustomSerializerAccessBase
     {
         private int deferChangeNotificationCount;
@@ -68,7 +69,6 @@ namespace EventTraceKit.VsExtension
         }
 
         [Serialize]
-        [DeserializationCallback(typeof(PersistedPresetsSerializerCallback))]
         public FreezableCollection<AsyncDataViewModelPreset> PersistedPresets
         {
             get => (FreezableCollection<AsyncDataViewModelPreset>)GetValue(PersistedPresetsProperty);
@@ -379,8 +379,8 @@ namespace EventTraceKit.VsExtension
         {
             public void OnDeserialized(object obj)
             {
-                var persistedPresets = (FreezableCollection<AsyncDataViewModelPreset>)obj;
-                foreach (var preset in persistedPresets)
+                var collection = (AdvmPresetCollection)obj;
+                foreach (var preset in collection.PersistedPresets)
                     preset.IsModified = true;
             }
         }

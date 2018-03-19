@@ -16,11 +16,11 @@ namespace EventTraceKit.VsExtension.Serialization
     public class SettingsSerializer : ShapingXamlSerializer<SettingsElement>
     {
         public SettingsSerializer()
-            : base(CreateSerializer(), CreateMapper())
+            : base(CreateXamlSerializer(), CreateMapper())
         {
         }
 
-        private static SafeXamlSerializer CreateSerializer()
+        public static SafeXamlSerializer CreateXamlSerializer()
         {
             var serializer = new SafeXamlSerializer(typeof(SettingsElement).Assembly);
 
@@ -43,12 +43,14 @@ namespace EventTraceKit.VsExtension.Serialization
                     if (sourceType == null)
                         continue;
 
-                    CreateMapHierarchy(sourceType, targetType);
+                    var m = CreateMapHierarchy(sourceType, targetType);
                     CreateMapHierarchy(targetType, sourceType);
+
+                    AddCallbacks(m, targetType);
                 }
             }
 
-            private void CreateMapHierarchy(Type sourceType, Type targetType)
+            private IMappingExpression CreateMapHierarchy(Type sourceType, Type targetType)
             {
                 var m = CreateMap(sourceType, targetType);
 
@@ -65,6 +67,21 @@ namespace EventTraceKit.VsExtension.Serialization
                     if (x.DestinationMember is PropertyInfo property && !property.CanWrite)
                         x.UseDestinationValue();
                 });
+
+                return m;
+            }
+
+            private IMappingExpression AddCallbacks(IMappingExpression mapping, Type type)
+            {
+                var callbackAttribs = type.GetCustomAttributes<DeserializationCallbackAttribute>();
+                if (callbackAttribs.Any()) {
+                    mapping.AfterMap((src, dst) => {
+                        foreach (var attrib in callbackAttribs)
+                            attrib.Callback.OnDeserialized(dst);
+                    });
+                }
+
+                return mapping;
             }
 
             private static Type GetShape(Type type)
@@ -76,7 +93,7 @@ namespace EventTraceKit.VsExtension.Serialization
             }
         }
 
-        private static IMapper CreateMapper()
+        public static IMapper CreateMapper()
         {
             var cfg = new MapperConfiguration(c => {
                 c.Mappers.Insert(0, new CommaSeparatedValuesToCollectionMapper());

@@ -5,17 +5,11 @@ namespace EventTraceKit.VsExtension.Views
     using System.Collections.ObjectModel;
     using System.Linq;
     using System.Text.RegularExpressions;
-    using System.Threading;
-    using System.Threading.Tasks;
     using System.Windows.Input;
     using EventTraceKit.Tracing;
     using EventTraceKit.VsExtension.Extensions;
     using EventTraceKit.VsExtension.Serialization;
-    using Microsoft.VisualStudio.Shell;
-    using Microsoft.VisualStudio.Shell.Interop;
     using Microsoft.Win32;
-    using Microsoft.Windows.TaskDialogs;
-    using Microsoft.Windows.TaskDialogs.Controls;
     using Task = System.Threading.Tasks.Task;
 
     [SerializedShape(typeof(Settings.Persistence.EventCollector))]
@@ -167,7 +161,7 @@ namespace EventTraceKit.VsExtension.Views
                 var text = serializer.SaveToString(providers);
                 ClipboardUtils.SetText(text);
             } catch (Exception ex) {
-                ErrorUtils.ReportException(Context.DialogOwner, ex, "Failed to copy provider.");
+                MessageHelper.ReportException(ex, "Failed to copy provider.");
             }
 
             return Task.CompletedTask;
@@ -183,7 +177,7 @@ namespace EventTraceKit.VsExtension.Views
             try {
                 newProviders = serializer.LoadFromStringMultiple<EventProviderViewModel>(text);
             } catch (Exception ex) {
-                ErrorUtils.ReportDebugException(Context.DialogOwner, ex, "Failed to paste provider.");
+                MessageHelper.ReportDebugException(ex, "Failed to paste provider.");
                 return Task.CompletedTask;
             }
 
@@ -211,39 +205,9 @@ namespace EventTraceKit.VsExtension.Views
             return str + $" (Copy {num + 1})";
         }
 
-        private async Task Foo()
-        {
-            var vstwdf = (IVsThreadedWaitDialogFactory)ServiceProvider.GlobalProvider.GetService(
-                typeof(SVsThreadedWaitDialogFactory));
-
-            ManifestInfo manifestInfo;
-            //using (var wds = vstwdf.StartWaitDialog("Enumerating Providers")) {
-            //    manifestInfo = await Task.Run(
-            //        () => ManifestInfo.EnumerateAsync(
-            //            wds.UserCancellationToken,
-            //            new Progress<ManifestInfoProcess>(
-            //                mip => wds.Progress.Report(new ThreadedWaitDialogProgressData(
-            //                    "Enumerating", "X", "Y", true, mip.Processed, mip.TotalProviders)))),
-            //        wds.UserCancellationToken);
-            //}
-            manifestInfo = await Task.Run(
-                () => ManifestInfo.Enumerate(
-                    new CancellationToken(),
-                    new Progress<ManifestInfoProcess>()));
-
-            //foreach (var providerInfo in manifestInfo.Providers ?? Enumerable.Empty<ProviderInfo>()) {
-            //    var p = new TraceProviderDescriptorViewModel(providerInfo.Id, providerInfo.Name);
-            //    p.IsMOF = providerInfo.IsMOF;
-            //    foreach (var evtDesc in providerInfo.Events ?? Enumerable.Empty<ProviderEventInfo>())
-            //        p.Events.Add(new TraceEventDescriptorViewModel(evtDesc));
-
-            //    Providers.Add(p);
-            //}
-        }
-
         private Task ImportProviders()
         {
-            string declarations = ImportProvidersDialog.Prompt(Context.DialogOwner);
+            string declarations = ImportProvidersDialog.Prompt();
             if (string.IsNullOrWhiteSpace(declarations))
                 return Task.CompletedTask;
 
@@ -282,36 +246,14 @@ namespace EventTraceKit.VsExtension.Views
                     return parser.ReadProviders().ToList();
                 });
             } catch (Exception ex) {
-                ShowErrorDialog("Failed to add manifest", ex);
+                MessageHelper.ShowErrorMessage("Failed to add manifest", exception: ex);
                 return;
             }
 
-            MergeStrategy? pinnedMergeStrategy = null;
-
             foreach (var provider in newProviders) {
                 var existingProvider = Providers.FirstOrDefault(x => x.Id == provider.Id);
-                if (existingProvider == null) {
+                if (existingProvider == null)
                     Providers.Add(provider);
-                    continue;
-                }
-
-                MergeStrategy? mergeStrategy = pinnedMergeStrategy;
-                if (mergeStrategy == null) {
-                    var result = PromptConflictResolution(provider);
-                    mergeStrategy = (MergeStrategy)(int)result.Button;
-                    if (result.VerificationFlagChecked)
-                        pinnedMergeStrategy = mergeStrategy;
-                }
-
-                switch (mergeStrategy) {
-                    case MergeStrategy.Merge:
-                        MergeProviders(existingProvider, provider);
-                        break;
-                    case MergeStrategy.Overwrite:
-                        Providers.Remove(existingProvider);
-                        Providers.Add(provider);
-                        break;
-                }
             }
         }
 
@@ -324,7 +266,7 @@ namespace EventTraceKit.VsExtension.Views
             dialog.DefaultExt = ".etl";
             dialog.OverwritePrompt = true;
             dialog.AddExtension = true;
-            if (dialog.ShowDialog(Context.DialogOwner) != true)
+            if (dialog.ShowModal() != true)
                 return Task.CompletedTask;
 
             LogFileName = dialog.FileName;
@@ -339,61 +281,10 @@ namespace EventTraceKit.VsExtension.Views
                             "Binary Providers (*.dll, *.exe)|*.dll, *.exe|" +
                             "All Files (*.*)|*.*";
             dialog.DefaultExt = ".man";
-            if (dialog.ShowDialog(Context.DialogOwner) != true)
+            if (dialog.ShowModal() != true)
                 return null;
 
             return dialog.FileName;
-        }
-
-        private void ShowErrorDialog(string message, Exception exception)
-        {
-            var dialog = new TaskDialog();
-            dialog.Caption = "Error";
-            dialog.Content = message;
-            dialog.ExpandedInfo = exception.Message;
-            dialog.ExpandedInfoLocation = TaskDialogExpandedInfoLocation.Footer;
-            dialog.ExpandedButtonLabel = "Details";
-            dialog.Show(Context.DialogOwner);
-        }
-
-        private enum MergeStrategy
-        {
-            Merge = TaskDialog.MinimumCustomButtonId,
-            Keep = TaskDialog.MinimumCustomButtonId + 1,
-            Overwrite = TaskDialog.MinimumCustomButtonId + 2
-        }
-
-        private TaskDialogResult PromptConflictResolution(
-            EventProviderViewModel duplicateProvider)
-        {
-            var dialog = new TaskDialog();
-            dialog.Caption = "Provider Conflict";
-            dialog.Instruction = $"Provider {duplicateProvider.DisplayName} exists already";
-            dialog.Controls.Add(new TaskDialogCommandLink((int)MergeStrategy.Merge, "Merge both"));
-            dialog.Controls.Add(new TaskDialogCommandLink((int)MergeStrategy.Keep, "Keep existing provider"));
-            dialog.Controls.Add(new TaskDialogCommandLink((int)MergeStrategy.Overwrite, "Overwrite existing provider"));
-            dialog.VerificationText = "Do this for the next conflicts";
-            return dialog.Show(Context.DialogOwner);
-        }
-
-        private void MergeProviders(
-            EventProviderViewModel target,
-            EventProviderViewModel source)
-        {
-            if (target.Name == null)
-                target.Name = source.Name;
-        }
-
-        private void MergeEvent(
-            EventViewModel target,
-            EventViewModel source)
-        {
-            target.Symbol = target.Symbol ?? source.Symbol;
-            target.Level = target.Level ?? source.Level;
-            target.Channel = target.Channel ?? source.Channel;
-            target.Task = target.Task ?? source.Task;
-            target.Opcode = target.Opcode ?? source.Opcode;
-            target.Keywords = target.Keywords ?? source.Keywords;
         }
 
         public override CollectorDescriptor CreateDescriptor()
@@ -407,20 +298,6 @@ namespace EventTraceKit.VsExtension.Views
                 from x in Providers where x.IsEnabled select x.CreateDescriptor());
             //descriptor.CustomFlushPeriod = 100;
             return descriptor;
-        }
-
-        public async Task<Dictionary<EventKey, string>> GetEventSymbols()
-        {
-            var symbols = new Dictionary<EventKey, string>();
-            foreach (var provider in Providers.Where(x => x.IsEnabled)) {
-                var p = await provider.GetSchemaProviderAsync();
-                foreach (var evt in p.Events) {
-                    if (evt.Symbol != null)
-                        symbols.Add(new EventKey(provider.Id, (ushort)evt.Value, evt.Version), evt.Symbol);
-                }
-            }
-
-            return symbols;
         }
     }
 }

@@ -1,8 +1,7 @@
 namespace EventTraceKit.VsExtension.Extensions
 {
-    using System.Runtime.InteropServices;
     using System.Windows;
-    using System.Windows.Interop;
+    using EventTraceKit.VsExtension.Windows;
     using Microsoft.Windows.TaskDialogs;
 
     public static class TaskDialogExtensions
@@ -12,8 +11,7 @@ namespace EventTraceKit.VsExtension.Extensions
             if (owner == null)
                 return dialog.Show();
 
-            var wih = new WindowInteropHelper(owner);
-            dialog.OwnerWindow = new HandleRef(owner, wih.Handle);
+            dialog.OwnerWindow = owner.GetHandleRef();
             return dialog.Show();
         }
     }

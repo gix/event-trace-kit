@@ -8,7 +8,7 @@
 
   <Commands package="guidEventTraceKitPackage">
     <Menus>
-      <Menu guid="guidTraceLogCmdSet" id="Toolbar" type="ToolWindowToolbar">
+      <Menu guid="guidTraceLogCmdSet" id="idTraceLogToolbar" type="ToolWindowToolbar">
         <Strings>
           <ButtonText>Trace Log</ButtonText>
         </Strings>
@@ -16,27 +16,38 @@
     </Menus>
 
     <Groups>
-      <Group guid="guidTraceLogCmdSet" id="ToolbarCaptureGroup" priority="0x1">
-        <Parent guid="guidTraceLogCmdSet" id="Toolbar"/>
+      <Group guid="guidTraceLogCmdSet" id="idTraceLogToolbarCaptureGroup" priority="0x1">
+        <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbar"/>
       </Group>
-      <Group guid="guidTraceLogCmdSet" id="ToolbarConfigGroup" priority="0x2">
-        <Parent guid="guidTraceLogCmdSet" id="Toolbar"/>
+      <Group guid="guidTraceLogCmdSet" id="idTraceLogToolbarConfigGroup" priority="0x2">
+        <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbar"/>
       </Group>
-      <Group guid="guidTraceLogCmdSet" id="ToolbarOptionsGroup" priority="0x3">
-        <Parent guid="guidTraceLogCmdSet" id="Toolbar"/>
+      <Group guid="guidTraceLogCmdSet" id="idTraceLogToolbarOptionsGroup" priority="0x3">
+        <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbar"/>
       </Group>
     </Groups>
 
     <Buttons>
-      <Button guid="guidTraceLogCmdSet" id="cmdidTraceLog" priority="0x0100" type="Button">
+      <Button guid="guidViewCmdSet" id="cmdidTraceLog" priority="0x0100" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
         <Icon guid="EtkImagesGuid" id="TraceLog"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>&amp;Trace Log</ButtonText>
         </Strings>
       </Button>
+
+      <Button guid="guidProjectContextCmdSet" id="cmdidTraceSettings" priority="0x1" type="Button">
+        <Icon guid="EtkImagesGuid" id="TraceLog"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Trace Settings</ButtonText>
+        </Strings>
+      </Button>
+
       <Button guid="guidTraceLogCmdSet" id="cmdidCaptureLog" priority="0x1" type="Button">
-        <Parent guid="guidTraceLogCmdSet" id="ToolbarCaptureGroup"/>
+        <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarCaptureGroup"/>
         <Icon guid="ImageCatalogGuid" id="RecordDot"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <CommandFlag>IconAndText</CommandFlag>
@@ -47,7 +58,7 @@
         </Strings>
       </Button>
       <Button guid="guidTraceLogCmdSet" id="cmdidClearLog" priority="0x2" type="Button">
-        <Parent guid="guidTraceLogCmdSet" id="ToolbarCaptureGroup"/>
+        <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarCaptureGroup"/>
         <Icon guid="ImageCatalogGuid" id="ClearWindowContent"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
@@ -55,7 +66,7 @@
         </Strings>
       </Button>
       <Button guid="guidTraceLogCmdSet" id="cmdidAutoLog" priority="0x3" type="Button">
-        <Parent guid="guidTraceLogCmdSet" id="ToolbarCaptureGroup"/>
+        <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarCaptureGroup"/>
         <Icon guid="ImageCatalogGuid" id="RunUpdate"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
@@ -64,7 +75,7 @@
         </Strings>
       </Button>
       <Button guid="guidTraceLogCmdSet" id="cmdidConfigureSession" priority="0x4" type="Button">
-        <Parent guid="guidTraceLogCmdSet" id="ToolbarCaptureGroup"/>
+        <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarCaptureGroup"/>
         <Icon guid="ImageCatalogGuid" id="Settings"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
@@ -72,7 +83,7 @@
         </Strings>
       </Button>
       <Button guid="guidTraceLogCmdSet" id="cmdidOpenViewEditor" priority="0x2" type="Button">
-        <Parent guid="guidTraceLogCmdSet" id="ToolbarConfigGroup"/>
+        <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarConfigGroup"/>
         <Icon guid="ImageCatalogGuid" id="ColumnSettings"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
@@ -80,7 +91,7 @@
         </Strings>
       </Button>
       <Button guid="guidTraceLogCmdSet" id="cmdidEnableFilter" priority="0x3" type="Button">
-        <Parent guid="guidTraceLogCmdSet" id="ToolbarConfigGroup"/>
+        <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarConfigGroup"/>
         <Icon guid="ImageCatalogGuid" id="Filter"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
@@ -88,7 +99,7 @@
         </Strings>
       </Button>
       <Button guid="guidTraceLogCmdSet" id="cmdidOpenFilterEditor" priority="0x4" type="Button">
-        <Parent guid="guidTraceLogCmdSet" id="ToolbarConfigGroup"/>
+        <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarConfigGroup"/>
         <Icon guid="ImageCatalogGuid" id="EditFilter"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
@@ -96,7 +107,7 @@
         </Strings>
       </Button>
       <Button guid="guidTraceLogCmdSet" id="cmdidToggleColumnHeaders" priority="0x1" type="Button">
-        <Parent guid="guidTraceLogCmdSet" id="ToolbarOptionsGroup"/>
+        <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarOptionsGroup"/>
         <Icon guid="ImageCatalogGuid" id="TableViewNameOnly"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
@@ -105,7 +116,7 @@
         </Strings>
       </Button>
       <Button guid="guidTraceLogCmdSet" id="cmdidToggleStatusBar" priority="0x2" type="Button">
-        <Parent guid="guidTraceLogCmdSet" id="ToolbarOptionsGroup"/>
+        <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarOptionsGroup"/>
         <Icon guid="ImageCatalogGuid" id="StatusStrip"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
@@ -119,7 +130,7 @@
       <Combo guid="guidTraceLogCmdSet" id="cmdidViewPresetCombo"
              idCommandList="cmdidViewPresetComboGetList" type="DropDownCombo"
              priority="0x1" defaultWidth="200">
-        <Parent guid="guidTraceLogCmdSet" id="ToolbarConfigGroup"/>
+        <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarConfigGroup"/>
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
           <ButtonText>View Preset</ButtonText>
@@ -130,31 +141,38 @@
   </Commands>
 
   <CommandPlacements>
-    <CommandPlacement guid="guidTraceLogCmdSet" id="cmdidTraceLog" priority="0x0100">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+    <CommandPlacement guid="guidProjectContextCmdSet" id="cmdidTraceSettings" priority="0x1000">
+      <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_START"/>
     </CommandPlacement>
   </CommandPlacements>
 
   <Symbols>
     <GuidSymbol name="guidEventTraceKitPackage" value="{7867DA46-69A8-40D7-8B8F-92B0DE8084D8}"/>
 
-    <GuidSymbol name="guidTraceLogCmdSet" value="{46A772AB-D554-45B9-8DE2-EF68FCEF6732}">
-      <IDSymbol name="Toolbar" value="0x1000"/>
-      <IDSymbol name="ToolbarCaptureGroup" value="0x2000"/>
-      <IDSymbol name="ToolbarConfigGroup" value="0x3000"/>
-      <IDSymbol name="ToolbarOptionsGroup" value="0x4000"/>
+    <GuidSymbol name="guidViewCmdSet" value="{893F7D3D-AA53-4053-A0AC-F2B098E210A7}">
       <IDSymbol name="cmdidTraceLog" value="0x0100"/>
-      <IDSymbol name="cmdidAutoLog" value="0x0200"/>
-      <IDSymbol name="cmdidCaptureLog" value="0x0300"/>
-      <IDSymbol name="cmdidClearLog" value="0x0400"/>
-      <IDSymbol name="cmdidConfigureSession" value="0x0500"/>
-      <IDSymbol name="cmdidOpenViewEditor" value="0x0600"/>
-      <IDSymbol name="cmdidViewPresetCombo" value="0x0700"/>
-      <IDSymbol name="cmdidViewPresetComboGetList" value="0x0710"/>
-      <IDSymbol name="cmdidEnableFilter" value="0x0800"/>
-      <IDSymbol name="cmdidOpenFilterEditor" value="0x0850"/>
-      <IDSymbol name="cmdidToggleColumnHeaders" value="0x0900"/>
-      <IDSymbol name="cmdidToggleStatusBar" value="0x0A00"/>
+    </GuidSymbol>
+
+    <GuidSymbol name="guidProjectContextCmdSet" value="{A9913707-D677-4EF7-BEA9-3865257F817E}">
+      <IDSymbol name="cmdidTraceSettings" value="0x0100"/>
+    </GuidSymbol>
+
+    <GuidSymbol name="guidTraceLogCmdSet" value="{46A772AB-D554-45B9-8DE2-EF68FCEF6732}">
+      <IDSymbol name="idTraceLogToolbar" value="0x1000"/>
+      <IDSymbol name="idTraceLogToolbarCaptureGroup" value="0x2000"/>
+      <IDSymbol name="idTraceLogToolbarConfigGroup" value="0x3000"/>
+      <IDSymbol name="idTraceLogToolbarOptionsGroup" value="0x4000"/>
+      <IDSymbol name="cmdidAutoLog" value="0x0100"/>
+      <IDSymbol name="cmdidCaptureLog" value="0x0200"/>
+      <IDSymbol name="cmdidClearLog" value="0x0300"/>
+      <IDSymbol name="cmdidConfigureSession" value="0x0400"/>
+      <IDSymbol name="cmdidOpenViewEditor" value="0x0500"/>
+      <IDSymbol name="cmdidViewPresetCombo" value="0x0600"/>
+      <IDSymbol name="cmdidViewPresetComboGetList" value="0x0610"/>
+      <IDSymbol name="cmdidEnableFilter" value="0x0700"/>
+      <IDSymbol name="cmdidOpenFilterEditor" value="0x0750"/>
+      <IDSymbol name="cmdidToggleColumnHeaders" value="0x0800"/>
+      <IDSymbol name="cmdidToggleStatusBar" value="0x0900"/>
     </GuidSymbol>
   </Symbols>
 </CommandTable>

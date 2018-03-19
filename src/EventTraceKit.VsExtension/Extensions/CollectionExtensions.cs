@@ -9,6 +9,13 @@ namespace EventTraceKit.VsExtension.Extensions
 
     public static class CollectionExtensions
     {
+        public static void SetRange<T>(
+            this ICollection<T> collection, IEnumerable<T> newItems)
+        {
+            collection.Clear();
+            collection.AddRange(newItems);
+        }
+
         public static void AddRange<T>(
             this ICollection<T> collection, IEnumerable<T> newItems)
         {

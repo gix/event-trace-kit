@@ -4,6 +4,7 @@ namespace EventTraceKit.VsExtension.Filtering
     using System.Linq;
     using System.Linq.Expressions;
     using System.Runtime.InteropServices;
+    using EventTraceKit.Tracing;
     using EventTraceKit.VsExtension.Extensions;
     using EventTraceKit.VsExtension.Native;
 
@@ -84,8 +85,8 @@ namespace EventTraceKit.VsExtension.Filtering
         public Expression<TraceLogFilterPredicate> CreatePredicateExpr(TraceLogFilter filter)
         {
             var enabled = filter.Conditions.Where(x => x.IsEnabled).ToList();
-            var includedConds = enabled.Where(x => x.Action == FilterConditionAction.Include).ToList();
-            var excludedConds = enabled.Where(x => x.Action == FilterConditionAction.Exclude).ToList();
+            var includedConds = enabled.Where(x => x.Action == FilterConditionAction.Include);
+            var excludedConds = enabled.Where(x => x.Action == FilterConditionAction.Exclude);
 
             var includeExpr = ExpressionEx.OrElse(includedConds.Select(CreateComparisonExpr), true);
             var excludeExpr = ExpressionEx.OrElse(excludedConds.Select(CreateComparisonExpr), false);
@@ -128,7 +129,7 @@ namespace EventTraceKit.VsExtension.Filtering
         private Expression CreateComparisonExpr(TraceLogFilterCondition condition)
         {
             var property = condition.Property;
-            var value = Expression.Constant(condition.Value);
+            var value = CreateValueExpression(condition.Value);
             switch (condition.Relation) {
                 case FilterRelationKind.Equal:
                     return Expression.Equal(property, value);
@@ -161,6 +162,18 @@ namespace EventTraceKit.VsExtension.Filtering
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        private static Expression CreateValueExpression(object value)
+        {
+            switch (value) {
+                case Guid guid:
+                    return Expression.New(
+                        typeof(Guid).GetConstructor(new[] { typeof(string) }),
+                        Expression.Constant(guid.ToString()));
+            }
+
+            return Expression.Constant(value);
         }
     }
 }

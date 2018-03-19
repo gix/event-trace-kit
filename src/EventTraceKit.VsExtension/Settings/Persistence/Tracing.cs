@@ -3,14 +3,51 @@ namespace EventTraceKit.VsExtension.Settings.Persistence
     using System;
     using System.Collections.ObjectModel;
     using System.ComponentModel;
+    using EventTraceKit.VsExtension.Filtering;
 
     public class TraceSettings : SettingsElement
     {
         private Collection<TraceProfile> profiles;
+        private Collection<TraceLogFilter> filters;
+
+        [DefaultValue(null)]
+        public string ActiveProfile { get; set; }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public Collection<TraceProfile> Profiles =>
             profiles ?? (profiles = new Collection<TraceProfile>());
+
+        [DefaultValue(null)]
+        public TraceLogFilter ActiveFilter { get; set; }
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        public Collection<TraceLogFilter> Filters =>
+            filters ?? (filters = new Collection<TraceLogFilter>());
+    }
+
+    public class TraceLogFilter : SettingsElement
+    {
+        private Collection<TraceLogFilter> conditions;
+
+        public string Name { get; set; }
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        public Collection<TraceLogFilter> Conditions =>
+            conditions ?? (conditions = new Collection<TraceLogFilter>());
+    }
+
+    public class TraceLogFilterCondition : SettingsElement
+    {
+        public string Property { get; set; }
+
+        [DefaultValue(false)]
+        public bool IsEnabled { get; set; }
+
+        public FilterRelationKind Relation { get; set; }
+        public FilterConditionAction Action { get; set; }
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        public object Value { get; set; }
     }
 
     public class TraceProfile : SettingsElement

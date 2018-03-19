@@ -13,8 +13,8 @@
   xmlns:vsui="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
   mc:Ignorable="d"
   d:DataContext="{d:DesignInstance {x:Type etkv:TraceSettingsDesignTimeModel}, d:IsDesignTimeCreatable=True}"
-  Title="Trace Session Settings"
-  MinWidth="600"
+  Title="{Binding Title}"
+  MinWidth="700"
   MinHeight="450"
   Width="1000"
   Height="700"
@@ -206,7 +206,8 @@
     </DockPanel>
     <Border Grid.Row="1" Background="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarGradientBrushKey}}">
       <StackPanel Margin="7" Orientation="Horizontal" HorizontalAlignment="Right">
-        <Button Content="OK" IsDefault="True" Command="{Binding AcceptCommand}"/>
+        <Button Content="Restore" Command="{Binding RestoreCommand}"/>
+        <Button Content="Save" IsDefault="True" Margin="7,1,1,1" Command="{Binding SaveCommand}"/>
         <Button Content="Cancel" IsCancel="True" Margin="7,1,1,1"/>
       </StackPanel>
     </Border>

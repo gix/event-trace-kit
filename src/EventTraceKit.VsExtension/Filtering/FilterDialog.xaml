@@ -13,9 +13,9 @@
   xmlns:imageCatalog="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
   xmlns:windows="clr-namespace:EventTraceKit.VsExtension.Windows"
   xmlns:imaging="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Imaging"
-  xmlns:filtering1="clr-namespace:EventTraceKit.VsExtension.Filtering"
+  xmlns:filterin="clr-namespace:EventTraceKit.VsExtension.Filtering"
   mc:Ignorable="d"
-  d:DataContext="{d:DesignInstance {x:Type filtering1:FilterDialogViewModel}, d:IsDesignTimeCreatable=True}"
+  d:DataContext="{d:DesignInstance {x:Type filterin:FilterDialogViewModel}, d:IsDesignTimeCreatable=True}"
   Title="Filter Editor"
   MinWidth="600"
   MinHeight="450"
@@ -29,102 +29,100 @@
   <Window.Resources>
     <ObjectDataProvider x:Key="ActionValues" ObjectType="{x:Type sys:Enum}" MethodName="GetValues">
       <ObjectDataProvider.MethodParameters>
-        <x:Type TypeName="filtering1:FilterConditionAction"/>
+        <x:Type TypeName="filterin:FilterConditionAction"/>
       </ObjectDataProvider.MethodParameters>
     </ObjectDataProvider>
   </Window.Resources>
-  <Grid>
-    <Grid.RowDefinitions>
-      <RowDefinition/>
-      <RowDefinition Height="Auto"/>
-    </Grid.RowDefinitions>
-    <DockPanel>
-      <StackPanel DockPanel.Dock="Top">
-        <Grid Margin="7,7,7,6">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" MinWidth="150"/>
-            <ColumnDefinition Width="Auto" MinWidth="80"/>
-            <ColumnDefinition/>
-            <ColumnDefinition Width="Auto" MinWidth="80"/>
-          </Grid.ColumnDefinitions>
-          <ComboBox Grid.Column="0" Margin="1"
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Top">
+      <Grid Margin="7,7,7,6">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" MinWidth="150"/>
+          <ColumnDefinition Width="Auto" MinWidth="80"/>
+          <ColumnDefinition/>
+          <ColumnDefinition Width="Auto" MinWidth="80"/>
+        </Grid.ColumnDefinitions>
+        <ComboBox Grid.Column="0" Margin="1"
                     ItemsSource="{Binding Properties}"
                     SelectedValue="{Binding SelectedProperty, UpdateSourceTrigger=PropertyChanged}"
                     DisplayMemberPath="Name"/>
-          <ComboBox Grid.Column="1" Margin="7,1,1,1"
+        <ComboBox Grid.Column="1" Margin="7,1,1,1"
                     ItemsSource="{Binding Relations}"
                     SelectedValue="{Binding SelectedRelation, UpdateSourceTrigger=PropertyChanged}"
                     DisplayMemberPath="DisplayName"/>
-          <TextBox Grid.Column="2" Margin="7,1,1,1" Text="{Binding ValueHolder.Value, UpdateSourceTrigger=PropertyChanged}"/>
-          <ComboBox Grid.Column="3" Margin="7,1,1,1"
+        <TextBox Grid.Column="2" Margin="7,1,1,1" Text="{Binding ValueHolder.Value, UpdateSourceTrigger=PropertyChanged}"/>
+        <ComboBox Grid.Column="3" Margin="7,1,1,1"
                     ItemsSource="{Binding Source={StaticResource ActionValues}}"
                     SelectedValue="{Binding SelectedAction}"/>
-        </Grid>
-        <Grid Margin="7,0,7,7">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="Auto"/>
-          </Grid.ColumnDefinitions>
-          <Button Grid.Column="0" Content="Reset" Command="{Binding ResetCommand}"/>
-          <Button Grid.Column="2" Content="Add" Margin="7,1,1,1" Command="{Binding AddCommand}"/>
-          <Button Grid.Column="3" Content="Remove" Margin="7,1,1,1" Command="{Binding RemoveCommand}"/>
-        </Grid>
-      </StackPanel>
-      <DataGrid Margin="8,0"
-                ItemsSource="{Binding Conditions}"
-                SelectedItem="{Binding SelectedCondition}"
-                CanUserAddRows="False"
-                CanUserDeleteRows="False"
-                AutoGenerateColumns="False"
-                HeadersVisibility="Column"
-                SelectionMode="Single"
-                SelectionUnit="FullRow"
-                BorderThickness="1">
+      </Grid>
+      <Grid Margin="7,0,7,7">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <Button Grid.Column="0" Content="Reset" Command="{Binding ResetCommand}"/>
+        <Button Grid.Column="2" Content="Add" Margin="7,1,1,1" Command="{Binding AddCommand}"/>
+        <Button Grid.Column="3" Content="Remove" Margin="7,1,1,1" Command="{Binding RemoveCommand}"/>
+      </Grid>
+      <Grid Height="200" x:Name="editorHost">
 
-        <DataGrid.Resources>
-          <Style TargetType="{x:Type DataGridRow}" BasedOn="{StaticResource {x:Type DataGridRow}}">
-            <EventSetter Event="MouseDoubleClick" Handler="OnRowDoubleClick"/>
-            <!-- Default or Transparent results in weird artifacts in the image. -->
-            <Setter Property="imaging:ImageThemingUtilities.ImageBackgroundColor" Value="#00000000"/>
-          </Style>
-        </DataGrid.Resources>
-        <i:Interaction.Triggers>
-          <ei:KeyTrigger Key="Delete">
-            <i:InvokeCommandAction Command="{Binding RemoveCommand}"/>
-          </ei:KeyTrigger>
-        </i:Interaction.Triggers>
-        <DataGrid.Columns>
-          <DataGridTemplateColumn Header="Property" Width="100">
-            <DataGridTemplateColumn.CellTemplate>
-              <DataTemplate DataType="{x:Type filtering1:FilterConditionViewModel}">
-                <StackPanel Orientation="Horizontal">
-                  <CheckBox IsChecked="{Binding IsEnabled}"/>
-                  <vsimg:CrispImage x:Name="image" Moniker="{x:Static imageCatalog:KnownMonikers.StatusOK}"
-                                      Margin="4,0,0,0"/>
-                  <TextBlock Text="{Binding DisplayName}" Margin="8,0,0,0"/>
-                </StackPanel>
-                <DataTemplate.Triggers>
-                  <DataTrigger Binding="{Binding Action}" Value="Exclude">
-                    <Setter TargetName="image" Property="Moniker" Value="{x:Static imageCatalog:KnownMonikers.StatusExcluded}"/>
-                  </DataTrigger>
-                </DataTemplate.Triggers>
-              </DataTemplate>
-            </DataGridTemplateColumn.CellTemplate>
-          </DataGridTemplateColumn>
-          <DataGridTextColumn Header="Relation" Binding="{Binding Relation.DisplayName}" Width="80" IsReadOnly="True"/>
-          <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="*" IsReadOnly="True"/>
-          <DataGridTextColumn Header="Action" Binding="{Binding Action}" Width="80" IsReadOnly="True"/>
-        </DataGrid.Columns>
-      </DataGrid>
-    </DockPanel>
-    <Border Grid.Row="1" Background="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarGradientBrushKey}}">
+      </Grid>
+    </StackPanel>
+
+    <Border DockPanel.Dock="Bottom" Background="{DynamicResource {x:Static vsui:EnvironmentColors.CommandBarGradientBrushKey}}">
       <StackPanel Margin="7" Orientation="Horizontal" HorizontalAlignment="Right">
         <Button Content="OK" IsDefault="True" Command="{Binding AcceptCommand}"/>
         <Button Content="Cancel" IsCancel="True" Margin="7,1,1,1"/>
         <!--<Button Content="Apply" Margin="7,1,1,1" Command="{Binding ApplyCommand}"/>-->
       </StackPanel>
     </Border>
-  </Grid>
+
+    <DataGrid Margin="8,0"
+              ItemsSource="{Binding Conditions}"
+              SelectedItem="{Binding SelectedCondition}"
+              CanUserAddRows="False"
+              CanUserDeleteRows="False"
+              AutoGenerateColumns="False"
+              HeadersVisibility="Column"
+              SelectionMode="Single"
+              SelectionUnit="FullRow"
+              BorderThickness="1">
+      <DataGrid.Resources>
+        <Style TargetType="{x:Type DataGridRow}" BasedOn="{StaticResource {x:Type DataGridRow}}">
+          <EventSetter Event="MouseDoubleClick" Handler="OnRowDoubleClick"/>
+          <!-- Default or Transparent results in weird artifacts in the image. -->
+          <Setter Property="imaging:ImageThemingUtilities.ImageBackgroundColor" Value="#00000000"/>
+        </Style>
+      </DataGrid.Resources>
+      <i:Interaction.Triggers>
+        <ei:KeyTrigger Key="Delete">
+          <i:InvokeCommandAction Command="{Binding RemoveCommand}"/>
+        </ei:KeyTrigger>
+      </i:Interaction.Triggers>
+      <DataGrid.Columns>
+        <DataGridTemplateColumn Header="Property" Width="100">
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate DataType="{x:Type filterin:FilterConditionViewModel}">
+              <StackPanel Orientation="Horizontal">
+                <CheckBox IsChecked="{Binding IsEnabled}"/>
+                <vsimg:CrispImage x:Name="image" Moniker="{x:Static imageCatalog:KnownMonikers.StatusOK}"
+                                  Margin="4,0,0,0"/>
+                <TextBlock Text="{Binding DisplayName}" Margin="8,0,0,0"/>
+              </StackPanel>
+              <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Action}" Value="Exclude">
+                  <Setter TargetName="image" Property="Moniker" Value="{x:Static imageCatalog:KnownMonikers.StatusExcluded}"/>
+                </DataTrigger>
+              </DataTemplate.Triggers>
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
+        <DataGridTextColumn Header="Relation" Binding="{Binding Relation.DisplayName}" Width="80" IsReadOnly="True"/>
+        <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="*" IsReadOnly="True"/>
+        <DataGridTextColumn Header="Action" Binding="{Binding Action}" Width="80" IsReadOnly="True"/>
+      </DataGrid.Columns>
+    </DataGrid>
+  </DockPanel>
 </etkc:ThemedDialogWindow>

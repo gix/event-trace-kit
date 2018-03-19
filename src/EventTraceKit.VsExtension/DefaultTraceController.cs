@@ -2,17 +2,14 @@ namespace EventTraceKit.VsExtension
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using EnvDTE;
     using EventTraceKit.Tracing;
     using EventTraceKit.VsExtension.Debugging;
     using Microsoft.VisualStudio.Threading;
-    using Microsoft.VisualStudio.VCProjectEngine;
-    using Native;
-    using VSLangProj;
     using Process = System.Diagnostics.Process;
 
     public interface ITraceController
@@ -20,24 +17,36 @@ namespace EventTraceKit.VsExtension
         event Action<TraceLog> SessionStarting;
         event Action<EventSession> SessionStarted;
         event Action<EventSession> SessionStopped;
+
         Task<EventSession> StartSessionAsync(TraceProfileDescriptor descriptor);
         Task StopSessionAsync();
+
+        bool IsAutoLogEnabled { get; }
         void EnableAutoLog(TraceProfileDescriptor profile);
         void DisableAutoLog();
     }
 
-    public class DefaultTraceController : ITraceController
+    internal interface ITraceControllerInternal : ITraceController
     {
-        private EventSession runningSession;
+        void LaunchTraceTargets(IReadOnlyList<TraceLaunchTarget> targets);
+    }
 
+    [Guid("F1D64E54-9508-47B3-90E1-30135AF5D992")]
+    public sealed class STraceController
+    {
+    }
+
+    public class DefaultTraceController : ITraceControllerInternal
+    {
+        private readonly object mutex = new object();
+
+        private EventSession runningSession;
         private bool autoLogEnabled;
+#pragma warning disable 649
         private bool asyncAutoLog;
+#pragma warning restore 649
         private TraceProfileDescriptor autoLogProfile;
         private CancellationTokenSource autoLogExitCts;
-
-        public DefaultTraceController()
-        {
-        }
 
         public event Action<TraceLog> SessionStarting;
         public event Action<EventSession> SessionStarted;
@@ -46,14 +55,18 @@ namespace EventTraceKit.VsExtension
 
         public void EnableAutoLog(TraceProfileDescriptor profile)
         {
-            autoLogProfile = profile;
-            autoLogEnabled = true;
+            lock (mutex) {
+                autoLogProfile = profile;
+                autoLogEnabled = true;
+            }
         }
 
         public void DisableAutoLog()
         {
-            autoLogEnabled = false;
-            autoLogProfile = null;
+            lock (mutex) {
+                autoLogEnabled = false;
+                autoLogProfile = null;
+            }
         }
 
         public EventSession StartSession(TraceProfileDescriptor descriptor)
@@ -62,9 +75,9 @@ namespace EventTraceKit.VsExtension
                 throw new InvalidOperationException("Session already in progress.");
 
             var traceLog = new TraceLog();
+            var session = new EventSession(descriptor, traceLog);
             SessionStarting?.Invoke(traceLog);
-            var session = new EventSession(descriptor);
-            session.Start(traceLog);
+            session.Start();
 
             runningSession = session;
             SessionStarted?.Invoke(runningSession);
@@ -77,9 +90,10 @@ namespace EventTraceKit.VsExtension
                 throw new InvalidOperationException("Session already in progress.");
 
             var traceLog = new TraceLog();
+            var session = new EventSession(descriptor, traceLog);
             SessionStarting?.Invoke(traceLog);
-            var session = new EventSession(descriptor);
-            await session.StartAsync(traceLog);
+
+            await session.StartAsync();
 
             runningSession = session;
             SessionStarted?.Invoke(runningSession);
@@ -112,7 +126,7 @@ namespace EventTraceKit.VsExtension
             }
         }
 
-        private static bool IsUsableDescriptor(TraceProfileDescriptor descriptor)
+        private static bool IsUsableProfile(TraceProfileDescriptor descriptor)
         {
             return
                 descriptor != null &&
@@ -121,8 +135,8 @@ namespace EventTraceKit.VsExtension
                 collector.Providers.Count > 0;
         }
 
-        private TraceProfileDescriptor AugmentDescriptor(
-            TraceProfileDescriptor descriptor, List<TraceLaunchTarget> targets)
+        private TraceProfileDescriptor AugmentTraceProfile(
+            TraceProfileDescriptor descriptor, IReadOnlyList<TraceLaunchTarget> targets)
         {
             foreach (var collector in descriptor.Collectors.OfType<EventCollectorDescriptor>()) {
                 foreach (var provider in collector.Providers) {
@@ -142,20 +156,20 @@ namespace EventTraceKit.VsExtension
             return descriptor;
         }
 
-        public void LaunchTraceTargets(List<TraceLaunchTarget> targets)
+        public void LaunchTraceTargets(IReadOnlyList<TraceLaunchTarget> targets)
         {
-            if (!autoLogEnabled || runningSession != null || !IsUsableDescriptor(autoLogProfile))
+            if (!autoLogEnabled || runningSession != null || !IsUsableProfile(autoLogProfile))
                 return;
 
             autoLogExitCts?.Cancel();
             autoLogExitCts = new CancellationTokenSource();
 
-            var descriptor = AugmentDescriptor(autoLogProfile, targets);
+            var profile = AugmentTraceProfile(autoLogProfile, targets);
 
             if (asyncAutoLog)
-                StartSessionAsync(descriptor).Forget();
+                StartSessionAsync(profile).Forget();
             else
-                StartSession(descriptor);
+                StartSession(profile);
 
             var processTasks = targets.Select(
                 x => Process.GetProcessById((int)x.ProcessId).WaitForExitAsync());
@@ -165,272 +179,13 @@ namespace EventTraceKit.VsExtension
             }, autoLogExitCts.Token).Forget();
         }
 
-        private void ExitTraceTargets(List<TraceLaunchTarget> targets)
+        private void ExitTraceTargets(IReadOnlyList<TraceLaunchTarget> targets)
         {
             if (!autoLogEnabled || runningSession == null)
                 return;
 
             StopSession();
         }
-    }
-
-    public class DebugTargetInfo
-    {
-        public DebugTargetInfo(string projectPath, string command, string commandArguments)
-        {
-            ProjectPath = projectPath;
-            Command = command;
-            CommandArguments = commandArguments;
-        }
-
-        public string ProjectPath { get; }
-        public string Command { get; }
-        public string CommandArguments { get; }
-
-        public bool MatchesProcess(Process process)
-        {
-            return
-                string.Equals(Command, process.TryGetCommand(), StringComparison.OrdinalIgnoreCase) &&
-                CommandArguments == process.TryGetCommandLine();
-        }
-    }
-
-    public class DebuggedProjectInfo
-    {
-        public DebuggedProjectInfo(string projectPath, int processId)
-        {
-            ProjectPath = projectPath;
-            ProcessId = processId;
-        }
-
-        public string ProjectPath { get; }
-        public int ProcessId { get; }
-    }
-
-#if false
-    public class DebuggerListener : IDebugEventCallback2, IOperationalModeProvider, IDisposable
-    {
-        private readonly IVsDebugger debugger;
-        private readonly IProjectProvider projectProvider;
-
-        private readonly List<DebuggedProjectInfo> debuggedProjects =
-            new List<DebuggedProjectInfo>();
-
-        private Action<VsOperationalMode, IReadOnlyList<DebuggedProjectInfo>> operationalModeChanged;
-
-        private bool isReceivingEvents;
-        private int listeners;
-
-        public DebuggerListener(EventTraceKitPackage package)
-        {
-            debugger = package.GetService<SVsShellDebugger, IVsDebugger>();
-            projectProvider = new DefaultProjectProvider(package.GetService<SDTE, DTE>());
-            AdviseEvents();
-
-            CurrentMode = VsOperationalMode.Design;
-        }
-
-        public VsOperationalMode CurrentMode { get; }
-
-        public event Action<VsOperationalMode, IReadOnlyList<DebuggedProjectInfo>> OperationalModeChanged
-        {
-            add
-            {
-                operationalModeChanged += value;
-                if (Interlocked.Increment(ref listeners) == 1)
-                    AdviseEvents();
-            }
-            remove
-            {
-                if (Interlocked.Decrement(ref listeners) == 0)
-                    UnadviseEvents();
-                operationalModeChanged -= value;
-            }
-        }
-
-        private void AdviseEvents()
-        {
-            if (!isReceivingEvents) {
-                ErrorHandler.ThrowOnFailure(debugger.AdviseDebugEventCallback(this));
-                isReceivingEvents = true;
-            }
-        }
-
-        private void UnadviseEvents()
-        {
-            if (isReceivingEvents) {
-                ErrorHandler.ThrowOnFailure(debugger.AdviseDebugEventCallback(this));
-                isReceivingEvents = false;
-            }
-        }
-
-        public void Dispose()
-        {
-            UnadviseEvents();
-        }
-
-        int IDebugEventCallback2.Event(
-            IDebugEngine2 engine, IDebugProcess2 process, IDebugProgram2 program,
-            IDebugThread2 thread, IDebugEvent2 debugEvent, ref Guid riidEvent, uint attributes)
-        {
-            //var eventType = GetEventType(riidEvent);
-            //Debug.WriteLine($"Event: {eventType}");
-
-            switch (debugEvent) {
-                case IDebugSessionCreateEvent2 _:
-                    NewSession();
-                    break;
-
-                case IDebugSessionDestroyEvent2 _:
-                    EndSession();
-                    break;
-
-                case IDebugProcessCreateEvent2 _:
-                    int pid = process.GetProcessId();
-                    var proc = Process.GetProcessById(pid);
-
-                    if (IsNewProcess(proc)) {
-                        foreach (var dti in projectProvider.StartupProjectDTI()) {
-                            if (dti.MatchesProcess(proc))
-                                debuggedProjects.Add(new DebuggedProjectInfo(dti.ProjectPath, pid));
-                        }
-                    }
-
-                    break;
-
-                case IDebugLoadCompleteEvent2 _:
-                    LoadCompleted();
-                    break;
-            }
-
-            // Documentation advises strongly to explicitly release these.
-            Marshal.ReleaseComObject(debugEvent);
-            if (thread != null)
-                Marshal.ReleaseComObject(thread);
-            if (program != null)
-                Marshal.ReleaseComObject(program);
-            if (process != null)
-                Marshal.ReleaseComObject(process);
-            if (engine != null)
-                Marshal.ReleaseComObject(engine);
-
-            return 0;
-        }
-
-        private static bool IsNewProcess(Process process)
-        {
-            return
-                process.GetProcessTimes(out var kernelTime, out var userTime) &&
-                kernelTime + userTime < TimeSpan.FromSeconds(1);
-        }
-
-        private void NewSession()
-        {
-            debuggedProjects.Clear();
-        }
-
-        private void LoadCompleted()
-        {
-            operationalModeChanged?.Invoke(VsOperationalMode.Debug, debuggedProjects);
-        }
-
-        private void EndSession()
-        {
-            operationalModeChanged?.Invoke(VsOperationalMode.Design, null);
-            debuggedProjects.Clear();
-        }
-
-        private string GetEventType(Guid eventId)
-        {
-            var eventTypes = new Type[] {
-                //typeof(IDebugActivateDocumentEvent2),
-                //typeof(IDebugBeforeSymbolSearchEvent2),
-                //typeof(IDebugBreakEvent2),
-                //typeof(IDebugBreakpointBoundEvent2),
-                //typeof(IDebugBreakpointErrorEvent2),
-                //typeof(IDebugBreakpointEvent2),
-                //typeof(IDebugBreakpointUnboundEvent2),
-                //typeof(IDebugCanStopEvent2),
-                //typeof(IDebugDocumentTextEvents2),
-                //typeof(IDebugEngineCreateEvent2),
-                //typeof(IDebugEntryPointEvent2),
-                //typeof(IDebugErrorEvent2),
-                ////typeof(IDebugExitB‌​reakStateEvent),
-                //typeof(IDebugEventCallback2),
-                //typeof(IDebugExceptionEvent2),
-                //typeof(IDebugExpressionEvaluationCompleteEvent2),
-                //typeof(IDebugInterceptExceptionCompleteEvent2),
-                //typeof(IDebugLoadCompleteEvent2),
-                //typeof(IDebugMessageEvent2),
-                //typeof(IDebugModuleLoadEvent2),
-                //typeof(IDebugNoSymbolsEvent2),
-                //typeof(IDebugOutputStringEvent2),
-                //typeof(IDebugPortEvents2),
-                //typeof(IDebugProcessCreateEvent2),
-                //typeof(IDebugProcessDestroyEvent2),
-                //typeof(IDebugProgramCreateEvent2),
-                //typeof(IDebugProgramDestroyEvent2),
-                //typeof(IDebugProgramDestroyEventFlags2),
-                //typeof(IDebugProgramNameChangedEvent2),
-                //typeof(IDebugPropertyCreateEvent2),
-                //typeof(IDebugPropertyDestroyEvent2),
-                //typeof(IDebugReturnValueEvent2),
-                //typeof(IDebugSessionCreateEvent2),
-                //typeof(IDebugSettingsCallback2),
-                //typeof(IDebugStepCompleteEvent2),
-                //typeof(IDebugSymbolSearchEvent2),
-                //typeof(IDebugThreadCreateEvent2),
-                //typeof(IDebugThreadDestroyEvent2),
-                //typeof(IDebugThreadNameChangedEvent2),
-                //
-                //typeof(IDebugProcessContinueEvent100),
-                //typeof(IDebugCustomEvent110),
-                //typeof(IDebugSessionDestroyEvent2),
-            };
-
-            foreach (var eventType in eventTypes) {
-                if (eventId == eventType.GUID)
-                    return eventType.Name;
-            }
-
-            return $"<{eventId}>";
-        }
-    }
-
-    public static class DebuggerExtensions
-    {
-        public static int GetProcessId(this IDebugProcess2 process)
-        {
-            if (process == null)
-                return 0;
-
-            var id = new AD_PROCESS_ID[1];
-            if (process.GetPhysicalProcessId(id) != VSConstants.S_OK)
-                return 0;
-
-            return (int)id[0].dwProcessId;
-        }
-    }
-#endif
-
-    public class ProjectInfo
-    {
-        public ProjectInfo(Guid kind, string fullName, string name)
-        {
-            Kind = kind;
-            FullName = fullName;
-            Name = name;
-        }
-
-        public Guid Kind { get; }
-        public string FullName { get; }
-        public string Name { get; }
-    }
-
-    public interface IProjectProvider
-    {
-        IEnumerable<ProjectInfo> EnumerateProjects();
-        IEnumerable<DebugTargetInfo> StartupProjectDTI();
     }
 
     internal static class PropertiesExtensions
@@ -464,135 +219,6 @@ namespace EventTraceKit.VsExtension
                 value = default;
                 return false;
             }
-        }
-    }
-
-    public class DefaultProjectProvider : IProjectProvider
-    {
-        private readonly DTE dte;
-
-        public DefaultProjectProvider(DTE dte)
-        {
-            this.dte = dte;
-        }
-
-        public IEnumerable<Project> EnumerateStartupProjects()
-        {
-            foreach (string name in (Array)dte.Solution.SolutionBuild.StartupProjects) {
-                Project project = dte.Solution.Item(name);
-                yield return project;
-            }
-        }
-
-        /// <summary>{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}</summary>
-        private static readonly Guid CppProjectKindId =
-            new Guid(0x8BC9CEB8, 0x8B4A, 0x11D0, 0x8D, 0x11, 0x00, 0xA0, 0xC9, 0x1B, 0xC9, 0x42);
-
-        /// <summary>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</summary>
-        private static readonly Guid LegacyCSharpProjectKindId =
-            new Guid(0xFAE04EC0, 0x301F, 0x11D3, 0xBF, 0x4B, 0x00, 0xC0, 0x4F, 0x79, 0xEF, 0xBC);
-
-        /// <summary>{9A19103F-16F7-4668-BE54-9A1E7A4F7556}</summary>
-        private static readonly Guid CSharpProjectKindId =
-            new Guid(0x9A19103F, 0x16F7, 0x4668, 0xBE, 0x54, 0x9A, 0x1E, 0x7A, 0x4F, 0x75, 0x56);
-
-        public IEnumerable<DebugTargetInfo> EnumerateDebugInfos()
-        {
-            foreach (Project project in dte.Solution.Projects) {
-                var dti = GetDTI(project);
-                if (dti != null)
-                    yield return dti;
-            }
-        }
-
-        private static DebugTargetInfo GetDTI(Project project)
-        {
-            var kind = new Guid(project.Kind);
-
-            if (kind == CppProjectKindId)
-                return GetNativeDTI(project);
-            if (kind == LegacyCSharpProjectKindId)
-                return GetManagedDTI(project);
-            if (kind == CSharpProjectKindId)
-                return GetManagedDTI(project);
-
-            return null;
-        }
-
-        private static DebugTargetInfo GetNativeDTI(Project project)
-        {
-            var vcp = (VCProject)project.Object;
-            var cfg = vcp.ActiveConfiguration;
-            var debugSettings = (VCDebugSettings)cfg.DebugSettings;
-
-            var debuggerFlavor = debugSettings.DebuggerFlavor;
-            if (debuggerFlavor != eDebuggerTypes.eLocalDebugger)
-                return null;
-
-            string command = cfg.Evaluate(debugSettings.Command);
-            string args = cfg.Evaluate(debugSettings.CommandArguments);
-            return new DebugTargetInfo(project.FullName, command, args);
-        }
-
-        private static DebugTargetInfo GetManagedDTI(Project project)
-        {
-            try {
-                var config = project.ConfigurationManager.ActiveConfiguration;
-                var cfgProperties = config.Properties;
-
-                var startAction = cfgProperties.GetValue<prjStartAction>(
-                    nameof(ProjectConfigurationProperties.StartAction));
-
-                string command;
-                switch (startAction) {
-                    case prjStartAction.prjStartActionProject:
-                        var rootPath = Path.GetDirectoryName(project.FullName);
-                        var outputPath = cfgProperties.GetValue<string>(
-                            nameof(ProjectConfigurationProperties.OutputPath));
-                        command = Path.Combine(rootPath, outputPath);
-                        break;
-                    case prjStartAction.prjStartActionProgram:
-                        command = cfgProperties.GetValue<string>(
-                            nameof(ProjectConfigurationProperties.StartProgram));
-                        break;
-                    case prjStartAction.prjStartActionURL:
-                    case prjStartAction.prjStartActionNone:
-                        return null;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-
-                var commandArguments = cfgProperties.GetValue<string>(
-                    nameof(ProjectConfigurationProperties.StartArguments));
-
-                return new DebugTargetInfo(project.FullName, command, commandArguments);
-            } catch (Exception) {
-                return null;
-            }
-        }
-
-        public IEnumerable<ProjectInfo> EnumerateProjects()
-        {
-            var result = new List<ProjectInfo>();
-
-            var solution = dte.Solution;
-            var projects = solution.Projects;
-            foreach (Project project in projects)
-                result.Add(GetProjectInfo(project));
-
-            return result;
-        }
-
-        private static ProjectInfo GetProjectInfo(Project project)
-        {
-            return new ProjectInfo(
-                new Guid(project.Kind), project.FullName, project.Name);
-        }
-
-        public IEnumerable<DebugTargetInfo> StartupProjectDTI()
-        {
-            foreach (var project in EnumerateStartupProjects())
-                yield return GetDTI(project);
         }
     }
 }

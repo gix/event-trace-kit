@@ -8,9 +8,10 @@ namespace EventTraceKit.VsExtension.Views
     using System.Windows.Input;
     using EventTraceKit.Tracing;
     using EventTraceKit.VsExtension.Extensions;
+    using EventTraceKit.VsExtension.Settings.Persistence;
     using Serialization;
 
-    [SerializedShape(typeof(Settings.Persistence.TraceProfile))]
+    [SerializedShape(typeof(TraceProfile))]
     public class TraceProfileViewModel : ObservableModel
     {
         private Guid id;
@@ -70,7 +71,6 @@ namespace EventTraceKit.VsExtension.Views
             var clone = new TraceProfileViewModel();
             clone.id = Guid.NewGuid();
             clone.name = name;
-            clone.Context = Context;
             clone.Collectors.AddRange(Collectors.Select(x => x.DeepClone()));
             return clone;
         }

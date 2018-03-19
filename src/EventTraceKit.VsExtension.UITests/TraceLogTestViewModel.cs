@@ -3,11 +3,15 @@ namespace EventTraceKit.VsExtension.UITests
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
+    using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Input;
     using EventTraceKit.Tracing;
     using EventTraceKit.VsExtension;
+    using EventTraceKit.VsExtension.Settings;
+    using EventTraceKit.VsExtension.Settings.Persistence;
     using EventTraceKit.VsExtension.Views;
     using EventTraceKit.VsExtension.Views.PresetManager;
     using Microsoft.VisualStudio.PlatformUI;
@@ -16,13 +20,10 @@ namespace EventTraceKit.VsExtension.UITests
     public class TraceLogTestViewModel : TraceLogToolViewModel
     {
         private string selectedTheme;
-        private bool isRunning;
 
         public TraceLogTestViewModel()
             : base(new StubGlobalSettings(),
-                   new DefaultTraceController(),
-                   new StubViewPresetService(),
-                   new StubTraceSettingsService())
+                   new DefaultTraceController())
         {
             StartCommand = new AsyncDelegateCommand(Start, CanStart);
             StopCommand = new AsyncDelegateCommand(Stop, CanStop);
@@ -183,12 +184,11 @@ namespace EventTraceKit.VsExtension.UITests
             dialog.DataContext = viewModel;
             dialog.Owner = Application.Current.MainWindow;
             try {
-                viewModel.Attach(dialog);
+                viewModel.Attach();
                 if (dialog.ShowDialog() != true)
                     return;
             } finally {
                 var selectedSession = viewModel.ActiveProfile;
-                viewModel.Detach();
                 viewModel.ActiveProfile = selectedSession;
                 viewModel.DialogResult = null;
             }
@@ -203,77 +203,76 @@ namespace EventTraceKit.VsExtension.UITests
             dialog.ShowDialog();
         }
 
-        private class StubTraceSettingsService : ITraceSettingsService
+        private class StubGlobalSettings : ISettingsService
         {
-            public IReadOnlyCollection<TraceProfileViewModel> Profiles { get; } =
-                new List<TraceProfileViewModel>();
+            private readonly ISettingsStore nullStore = new NullSettingsStore();
 
-            public void Save(TraceSettingsViewModel sessions)
+            event EventHandler ISettingsService.SettingsLayerChanged
+            {
+                add { }
+                remove { }
+            }
+
+            public ISettingsStore GetGlobalStore()
+            {
+                return nullStore;
+            }
+
+            public ISettingsStore GetAmbientStore()
+            {
+                return nullStore;
+            }
+
+            public ISettingsStore GetProjectStore(ProjectInfo project)
+            {
+                return nullStore;
+            }
+
+            public AdvmPresetCollection GetViewPresets()
+            {
+                return new AdvmPresetCollection();
+            }
+
+            public void SaveViewPresets(AdvmPresetCollection presets)
+            {
+            }
+
+            public void SaveAmbient()
             {
             }
         }
+    }
 
-        private class StubTraceController : ITraceController
+    internal class NullSettingsStore : ISettingsStore
+    {
+        private readonly Dictionary<string, object> entries = new Dictionary<string, object>();
+        public string LayerId { get; }
+        public string Name { get; }
+        public string Origin { get; }
+
+        public T GetValue<T>(SettingsKey<T> key)
         {
-            public event Action<TraceLog> SessionStarting
-            {
-                add { }
-                remove { }
-            }
-
-            public event Action<EventSession> SessionStarted
-            {
-                add { }
-                remove { }
-            }
-
-            public event Action<EventSession> SessionStopped
-            {
-                add { }
-                remove { }
-            }
-
-            public void EnableAutoLog(TraceProfileDescriptor descriptor)
-            {
-            }
-
-            public void DisableAutoLog()
-            {
-            }
-
-            public Task<EventSession> StartSessionAsync(TraceProfileDescriptor descriptor)
-            {
-                return Task.FromResult(new EventSession(descriptor));
-            }
-
-            public Task StopSessionAsync()
-            {
-                return Task.CompletedTask;
-            }
+            if (entries.TryGetValue(key.KeyPath, out object obj) && obj is T value)
+                return value;
+            return default;
         }
 
-        private class StubViewPresetService : IViewPresetService
+        public void ClearValue<T>(SettingsKey<T> key)
         {
-            public AdvmPresetCollection Presets { get; } =
-                new AdvmPresetCollection();
-
-            public event EventHandler<ExceptionFilterEventArgs> ExceptionFilter
-            {
-                add { }
-                remove { }
-            }
-
-            public void SaveToStorage()
-            {
-            }
+            entries.Remove(key.KeyPath);
         }
 
-        private class StubGlobalSettings : IGlobalSettings
+        public void SetValue<T>(SettingsKey<T> key, T value)
         {
-            public string ActiveViewPreset { get; set; }
-            public bool AutoLog { get; set; }
-            public bool ShowColumnHeaders { get; set; } = true;
-            public bool ShowStatusBar { get; set; } = true;
+            entries[key.KeyPath] = value;
+        }
+
+        public void Reload()
+        {
+        }
+
+        public void Save()
+        {
         }
     }
 }

@@ -10,7 +10,15 @@ namespace EventTraceKit.VsExtension.Serialization
     using System.Xaml;
     using System.Xml;
 
-    public class SafeXamlSerializer
+    public interface IUntypedXamlSerializer
+    {
+        void Save(object element, XmlWriter writer);
+        void Save(IEnumerable<object> elements, XmlWriter writer);
+        object Load(XmlReader reader);
+        IReadOnlyList<object> LoadMultiple(XmlReader reader);
+    }
+
+    public class SafeXamlSerializer : IUntypedXamlSerializer
     {
         private readonly SafeXamlSchemaContext schemaContext;
 

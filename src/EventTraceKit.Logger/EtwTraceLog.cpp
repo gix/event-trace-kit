@@ -1,15 +1,14 @@
-﻿#include "ITraceLog.h"
+#include "ITraceLog.h"
 
 #include "EventInfoCache.h"
+#include "ManualResetEventSlim.h"
 #include "Support/Allocator.h"
-
 #include "Support/SetThreadName.h"
+#include "TraceDataContext.h"
+
 #include <atomic>
-#include <condition_variable>
 #include <deque>
 #include <shared_mutex>
-#include <string>
-#include <vector>
 
 namespace etk
 {
@@ -17,47 +16,10 @@ namespace etk
 namespace
 {
 
-class ManualResetEventSlim
-{
-public:
-    ManualResetEventSlim(bool signaled = false)
-        : signaled(signaled)
-    {
-    }
-
-    void Set()
-    {
-        {
-            std::unique_lock<std::mutex> lock(mutex);
-            signaled = true;
-        }
-
-        cv.notify_all();
-    }
-
-    void Reset()
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        signaled = false;
-    }
-
-    void Wait()
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        while (!signaled)
-            cv.wait(lock);
-    }
-
-private:
-    std::mutex mutex;
-    std::condition_variable cv;
-    bool signaled;
-};
-
 class EtwTraceLog : public ITraceLog
 {
 public:
-    explicit EtwTraceLog();
+    explicit EtwTraceLog(TraceDataToken traceDataToken);
 
     void SetCallback(TraceLogEventsChangedCallback* callback, void* state)
     {
@@ -73,13 +35,11 @@ public:
 
     virtual EventInfo GetEvent(size_t index) const override;
 
-    virtual void RegisterManifests() override;
-    virtual void UnregisterManifests() override;
+    virtual HRESULT UpdateTraceData(ArrayRef<std::wstring> eventManifests) override;
 
 private:
     EventInfoCache eventInfoCache;
-    std::vector<std::wstring> manifests;
-    std::vector<std::wstring> providerBinaries;
+    TraceDataToken traceDataToken;
 
     using EventRecordAllocator = BumpPtrAllocator<MallocAllocator, 10 * 1024 * 1024>;
     EventRecordAllocator eventRecordAllocator;
@@ -87,6 +47,8 @@ private:
     std::deque<EventInfo> events;
     std::atomic<size_t> eventCount{};
 
+    using SharedLock = std::shared_lock<std::shared_mutex>;
+    using ExclusiveLock = std::unique_lock<std::shared_mutex>;
     mutable std::shared_mutex mutex;
     TraceLogEventsChangedCallback* changedCallback;
     void* changedCallbackState;
@@ -157,7 +119,7 @@ public:
         if (index >= eventCount)
             return EventInfo();
 
-        std::shared_lock<decltype(mutex)> lock(mutex);
+        SharedLock lock(mutex);
         if (index < events.size())
             return events[index];
         return EventInfo();
@@ -278,6 +240,8 @@ private:
     TraceLogFilterEvent* filter;
 
     // Shared
+    using SharedLock = std::shared_lock<std::shared_mutex>;
+    using ExclusiveLock = std::unique_lock<std::shared_mutex>;
     mutable std::shared_mutex mutex;
     std::deque<EventInfo> events;
     std::atomic<size_t> eventCount{};
@@ -294,8 +258,9 @@ private:
 
 } // namespace
 
-EtwTraceLog::EtwTraceLog()
-    : changedCallback(&NullCallback)
+EtwTraceLog::EtwTraceLog(TraceDataToken traceDataToken)
+    : traceDataToken(std::move(traceDataToken))
+    , changedCallback(&NullCallback)
     , changedCallbackState()
 {
 }
@@ -305,7 +270,7 @@ void EtwTraceLog::ProcessEvent(EVENT_RECORD const& record)
     EVENT_RECORD* eventCopy = CopyEvent(eventRecordAllocator, &record);
 
     {
-        std::unique_lock<std::shared_mutex> lock(mutex);
+        ExclusiveLock lock(mutex);
         events.push_back(eventInfoCache.Get(*eventCopy));
     }
 
@@ -322,6 +287,7 @@ void EtwTraceLog::Clear()
         events.shrink_to_fit();
         eventInfoCache.Clear();
         eventRecordAllocator.Reset();
+        traceDataToken.Invalidate();
     }
 
     changedCallback(0, changedCallbackState);
@@ -332,33 +298,21 @@ EventInfo EtwTraceLog::GetEvent(size_t index) const
     if (index >= eventCount)
         return EventInfo();
 
-    std::shared_lock<decltype(mutex)> lock(mutex);
+    SharedLock lock(mutex);
     if (index >= events.size())
         return EventInfo();
     return events[index];
 }
 
-void EtwTraceLog::RegisterManifests()
+HRESULT EtwTraceLog::UpdateTraceData(ArrayRef<std::wstring> eventManifests)
 {
-    TDHSTATUS ec = 0;
-    for (std::wstring& manifest : manifests)
-        ec = TdhLoadManifest(&manifest[0]);
-    for (std::wstring& providerBinary : providerBinaries)
-        ec = TdhLoadManifestFromBinary(&providerBinary[0]);
-}
-
-void EtwTraceLog::UnregisterManifests()
-{
-    TDHSTATUS ec = 0;
-    for (std::wstring& manifest : manifests)
-        ec = TdhUnloadManifest(&manifest[0]);
-    // for (std::wstring& providerBinary : providerBinaries)
-    //    ec = TdhUnloadManifest(&providerBinary[0]);
+    return traceDataToken.Update(eventManifests);
 }
 
 std::unique_ptr<ITraceLog> CreateEtwTraceLog(TraceLogEventsChangedCallback* callback)
 {
-    auto log = std::make_unique<EtwTraceLog>();
+    auto token = TraceDataToken(TraceDataContext::GlobalContext());
+    auto log = std::make_unique<EtwTraceLog>(std::move(token));
     log->SetCallback(callback, nullptr);
     return std::move(log);
 }
@@ -368,7 +322,8 @@ CreateFilteredTraceLog(TraceLogEventsChangedCallback* callback,
                        TraceLogFilterEvent* filter)
 {
     auto filteredLog = std::make_unique<FilteredTraceLog>(callback, filter);
-    auto traceLog = std::make_unique<EtwTraceLog>();
+    auto token = TraceDataToken(TraceDataContext::GlobalContext());
+    auto traceLog = std::make_unique<EtwTraceLog>(std::move(token));
     filteredLog->SetLog(traceLog.get());
     traceLog->SetCallback(&FilteredTraceLog::Callback, filteredLog.get());
 

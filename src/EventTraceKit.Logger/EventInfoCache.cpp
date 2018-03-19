@@ -1,4 +1,4 @@
-﻿#include "EventInfoCache.h"
+#include "EventInfoCache.h"
 
 namespace etk
 {

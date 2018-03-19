@@ -1,17 +1,68 @@
 namespace EventTraceKit.VsExtension.Threading
 {
     using System;
-    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows;
-    using System.Windows.Interop;
     using System.Windows.Threading;
+    using EventTraceKit.VsExtension.Windows;
     using Microsoft.Windows.TaskDialogs;
     using Microsoft.Windows.TaskDialogs.Controls;
 
     public static class TaskExtensions
     {
+        public static async Task RunWithProgress(
+            Func<Task> action, string caption, CancellationTokenSource cts = null, Window owner = null)
+        {
+            await Task.Run(action).WaitWithProgress(caption, cts, owner);
+        }
+
+        public static async Task RunWithProgress(
+            Action action, string caption, CancellationTokenSource cts = null, Window owner = null)
+        {
+            await Task.Run(action).WaitWithProgress(caption, cts, owner);
+        }
+
+        public static async Task WaitWithProgress(
+            this Task task, string caption, CancellationTokenSource cts = null, Window owner = null)
+        {
+            var dialogCts = new CancellationTokenSource();
+
+            var dialog = new TaskDialog {
+                Caption = caption,
+                Content = string.Empty,
+                OwnerWindow = owner.GetHandleRef()
+            };
+            if (cts != null) {
+                dialog.IsCancelable = true;
+                dialog.CommonButtons = TaskDialogButtons.Cancel;
+            }
+            dialog.Controls.Add(new TaskDialogProgressBar { IsIndeterminate = true });
+
+            dialog.Closing += (s, e) => {
+                if (e.Button == TaskDialogButtonId.Cancel) {
+                    dialogCts.Cancel();
+                    cts?.Cancel();
+                }
+            };
+
+            var currentScheduler = TaskScheduler.FromCurrentSynchronizationContext();
+            var delay = TimeSpan.FromMilliseconds(250);
+
+            var dialogTask = Task.Delay(delay, dialogCts.Token)
+                .ContinueWith(t => {
+                    if (!dialogCts.IsCancellationRequested)
+                        dialog.Show();
+                }, dialogCts.Token, TaskContinuationOptions.None, currentScheduler)
+                .IgnoreCancellation();
+
+            await Task.WhenAny(task, dialogTask);
+
+            dialogCts.Cancel();
+            if (dialog.IsShown)
+                dialog.Abort();
+        }
+
         public static async Task<T> RunWithProgress<T>(
             this TaskFactory taskFactory, string caption, Window owner,
             Func<CancellationToken, IProgress<ProgressState>, T> action)
@@ -20,11 +71,9 @@ namespace EventTraceKit.VsExtension.Threading
 
             var dialog = new TaskDialog {
                 Caption = caption,
-                Content = string.Empty
+                Content = string.Empty,
+                OwnerWindow = owner.GetHandleRef()
             };
-            if (owner != null)
-                dialog.OwnerWindow = new HandleRef(
-                    owner, new WindowInteropHelper(owner).Handle);
 
             dialog.Controls.Add(new TaskDialogButton(
                 TaskDialogButtonId.Cancel, "Cancel", (s, e) => cts.Cancel()));

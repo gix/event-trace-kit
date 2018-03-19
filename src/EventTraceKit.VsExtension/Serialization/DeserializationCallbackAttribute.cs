@@ -2,6 +2,7 @@
 {
     using System;
 
+    [AttributeUsage(AttributeTargets.Class)]
     public class DeserializationCallbackAttribute : Attribute
     {
         public DeserializationCallbackAttribute(Type callbackType)

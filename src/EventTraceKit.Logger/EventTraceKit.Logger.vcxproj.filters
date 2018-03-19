@@ -18,6 +18,8 @@
     <ClCompile Include="EventTraceKit\WatchDog.cpp" />
     <ClCompile Include="EventTraceKit\ManifestInfo.cpp" />
     <ClCompile Include="EventTraceKit\EventSession.cpp" />
+    <ClCompile Include="TraceDataContext.cpp" />
+    <ClCompile Include="BinaryFind.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EtwTraceProcessor.h" />
@@ -54,5 +56,7 @@
     <ClInclude Include="ADT\SmallVector.h" />
     <ClInclude Include="Support\OSVersionInfo.h" />
     <ClInclude Include="Support\Rtl.h" />
+    <ClInclude Include="TraceDataContext.h" />
+    <ClInclude Include="ManualResetEventSlim.h" />
   </ItemGroup>
 </Project>

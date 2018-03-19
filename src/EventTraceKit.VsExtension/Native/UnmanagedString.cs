@@ -6,8 +6,8 @@
     [StructLayout(LayoutKind.Sequential)]
     public struct UnmanagedString
         : IEquatable<UnmanagedString>
-            , IComparable<UnmanagedString>
-            , IComparable<string>
+        , IComparable<UnmanagedString>
+        , IComparable<string>
     {
         private readonly unsafe char* str;
 

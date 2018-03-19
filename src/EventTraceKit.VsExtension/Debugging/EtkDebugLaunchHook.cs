@@ -24,8 +24,8 @@ namespace EventTraceKit.VsExtension.Debugging
 
         private EventTraceKitPackage package;
         private IDiagLog log = new NullDiagLog();
-        private IProjectProvider projectProvider;
-        private DefaultTraceController sessionService;
+        private ISolutionBrowser solutionBrowser;
+        private ITraceControllerInternal traceController;
 
         private bool EnsureInitialized()
         {
@@ -43,8 +43,8 @@ namespace EventTraceKit.VsExtension.Debugging
         private void Initialize()
         {
             log = package;
-            sessionService = package.SessionService;
-            projectProvider = new DefaultProjectProvider(package.GetService<SDTE, EnvDTE.DTE>());
+            traceController = package.GetService<STraceController, ITraceControllerInternal>();
+            solutionBrowser = new DteSolutionBrowser(package.GetService<SDTE, EnvDTE.DTE>());
         }
 
         public int IsProcessRecycleRequired(VsDebugTargetProcessInfo[] pProcessInfo)
@@ -77,7 +77,7 @@ namespace EventTraceKit.VsExtension.Debugging
             if (nextHook == null)
                 return VSConstants.S_FALSE;
 
-            if (!EnsureInitialized() || !sessionService.IsAutoLogEnabled)
+            if (!EnsureInitialized() || !traceController.IsAutoLogEnabled)
                 return nextHook.OnLaunchDebugTargets(debugTargetCount, debugTargets, launchResults);
 
             bool noDebug = debugTargets.Any(
@@ -219,7 +219,7 @@ namespace EventTraceKit.VsExtension.Debugging
         {
             var targets = CreateTraceLaunchTargets(debugTargets, processIds);
             LogTraceTargets(targets);
-            sessionService.LaunchTraceTargets(targets);
+            traceController.LaunchTraceTargets(targets);
         }
 
         private static bool IsCmdWrapper(in VsDebugTargetInfo4 target)
@@ -300,7 +300,7 @@ namespace EventTraceKit.VsExtension.Debugging
         private List<TraceLaunchTarget> CreateTraceLaunchTargets(
             VsDebugTargetInfo4[] debugTargets, IReadOnlyList<uint> processIds)
         {
-            var startupProject = projectProvider.StartupProjectDTI().FirstOrDefault();
+            var startupProject = solutionBrowser.StartupProjectDTI().FirstOrDefault();
 
             var targets = new List<TraceLaunchTarget>(debugTargets.Length);
             for (int i = 0; i < debugTargets.Length; ++i) {
@@ -308,7 +308,7 @@ namespace EventTraceKit.VsExtension.Debugging
                     debugTargets[i].bstrExe,
                     debugTargets[i].bstrArg,
                     processIds[i],
-                    startupProject?.ProjectPath);
+                    startupProject?.Project.FullName);
                 targets.Add(target);
             }
 

@@ -39,12 +39,10 @@ namespace EventTraceKit.VsExtension.Views
             DataContext = this;
         }
 
-        public static string Prompt(Window owner = null)
+        public static string Prompt()
         {
             var dialog = new ImportProvidersDialog();
-            if (owner != null)
-                dialog.Owner = owner;
-            if (dialog.ShowDialog() != true)
+            if (dialog.ShowModal() != true)
                 return string.Empty;
             return dialog.ImportDeclarations;
         }

@@ -4,14 +4,20 @@ namespace EventTraceKit.VsExtension.Views
     using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Threading.Tasks;
+    using System.Windows;
     using System.Windows.Input;
+    using System.Windows.Interop;
     using EventManifestFramework.Schema;
     using EventTraceKit.Tracing;
     using EventTraceKit.VsExtension.Extensions;
     using EventTraceKit.VsExtension.Serialization;
     using Microsoft.VisualStudio.PlatformUI;
+    using Microsoft.VisualStudio.Shell;
+    using Microsoft.VisualStudio.Shell.Interop;
     using Microsoft.Win32;
+    using Microsoft.Windows.TaskDialogs;
     using Task = System.Threading.Tasks.Task;
 
     [SerializedShape(typeof(Settings.Persistence.EventProvider))]
@@ -357,11 +363,38 @@ namespace EventTraceKit.VsExtension.Views
             dialog.Filter = "Manifest Files (*.man)|*.man|" +
                             "All Files (*.*)|*.*";
             dialog.DefaultExt = ".man";
-            if (dialog.ShowDialog(Context.DialogOwner) != true)
+            if (dialog.ShowModal() != true)
                 return Task.CompletedTask;
 
             Manifest = dialog.FileName;
             return Task.CompletedTask;
+        }
+    }
+
+    public static class VsModalExtensions
+    {
+        public static TaskDialogResult ShowModal(this TaskDialog dialog)
+        {
+            dialog.OwnerWindow = new HandleRef(null, GetDialogOwnerHwnd());
+            return dialog.Show();
+        }
+
+        public static bool? ShowModal(this CommonDialog dialog)
+        {
+            var owner = GetDialogOwnerHwnd();
+            if (owner != IntPtr.Zero && HwndSource.FromHwnd(owner)?.RootVisual is Window ownerWindow)
+                return dialog.ShowDialog(ownerWindow);
+
+            return dialog.ShowDialog();
+        }
+
+        public static IntPtr GetDialogOwnerHwnd()
+        {
+            var shell = ServiceProvider.GlobalProvider?.GetService<SVsUIShell, IVsUIShell>();
+            if (shell != null && shell.GetDialogOwnerHwnd(out var owner) >= 0)
+                return owner;
+
+            return IntPtr.Zero;
         }
     }
 }

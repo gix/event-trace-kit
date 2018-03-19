@@ -3,7 +3,7 @@
 #include "ITraceLog.h"
 #include "Descriptors.h"
 
-namespace EventTraceKit
+namespace EventTraceKit::Tracing
 {
 
 [System::Runtime::InteropServices::UnmanagedFunctionPointer(
@@ -54,6 +54,8 @@ public:
 
     void SetFilter(TraceLogFilterPredicate^ filter);
 
+    void UpdateTraceData(TraceProfileDescriptor^ profile);
+
 internal:
     etk::ITraceLog* Native() { return nativeLog; }
 
@@ -66,6 +68,6 @@ private:
     TraceLogFilterPredicate^ filter;
 };
 
-} // namespace EventTraceKit
+} // namespace EventTraceKit::Tracing
 
 #endif // __cplusplus_cli

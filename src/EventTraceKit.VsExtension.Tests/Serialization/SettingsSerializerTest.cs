@@ -5,6 +5,7 @@ namespace EventTraceKit.VsExtension.Tests.Serialization
     using System.IO;
     using System.Linq;
     using System.Windows;
+    using System.Xml;
     using System.Xml.Linq;
     using Controls;
     using EventTraceKit.VsExtension.Views;
@@ -19,6 +20,31 @@ namespace EventTraceKit.VsExtension.Tests.Serialization
         public SettingsSerializerTest(ITestOutputHelper output)
         {
             this.output = output;
+        }
+
+        [Fact]
+        public void Entries()
+        {
+            var xml = "<Settings xmlns=\"urn:schemas-eventtracekit:settings\"" +
+                      " xmlns:x=\"http://schemas.microsoft.com/winfx/2006/xaml\"" +
+                      " xmlns:s=\"clr-namespace:System;assembly=mscorlib\">" +
+                      "<s:String x:Key=\"foo\">bar</s:String>" +
+                      "<TraceSettings x:Key=\"Tracing\">" +
+                      "  <TraceSettings.Profiles>" +
+                      "    <TraceProfile Id=\"65538BEB-0D6B-4395-9A2D-28716E204CF1\" Name=\"MyProfile\">" +
+                      "    </TraceProfile>" +
+                      "  </TraceSettings.Profiles>" +
+                      "</TraceSettings>" +
+                      "</Settings>";
+
+            var valueSerializer = SettingsSerializer.CreateXamlSerializer();
+
+            var settings = valueSerializer.Load(CreateXmlReaderFromString(xml));
+        }
+
+        private static XmlReader CreateXmlReaderFromString(string xml)
+        {
+            return XmlReader.Create(new StringReader(xml));
         }
 
         [Fact]

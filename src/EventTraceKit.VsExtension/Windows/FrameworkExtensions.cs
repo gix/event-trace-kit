@@ -4,11 +4,12 @@ namespace EventTraceKit.VsExtension.Windows
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using System.Runtime.InteropServices;
     using System.Windows;
     using System.Windows.Controls.Primitives;
     using System.Windows.Data;
+    using System.Windows.Interop;
     using System.Windows.Media;
-    using System.Windows.Media.Media3D;
 
     public static class FrameworkExtensions
     {
@@ -212,6 +213,15 @@ namespace EventTraceKit.VsExtension.Windows
         public static bool IsDescendant(DependencyObject reference, DependencyObject node)
         {
             return MenuBase_IsDescendant(reference, node);
+        }
+
+        public static HandleRef GetHandleRef(this Window window)
+        {
+            if (window == null)
+                return new HandleRef();
+
+            var wih = new WindowInteropHelper(window);
+            return new HandleRef(window, wih.Handle);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿#include "TdhMessageFormatter.h"
+#include "TdhMessageFormatter.h"
 
 #include "ADT/ArrayRef.h"
 #include "Support/ErrorHandling.h"

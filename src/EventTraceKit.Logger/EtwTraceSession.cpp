@@ -334,15 +334,18 @@ HRESULT EtwTraceSession::Stop()
 
 HRESULT EtwTraceSession::Flush()
 {
-    HR(HResultFromWin32(ControlTraceW(traceHandle, nullptr, traceProperties.get(),
-                                      EVENT_TRACE_CONTROL_FLUSH)));
+    ControlTraceW(traceHandle, nullptr, traceProperties.get(), EVENT_TRACE_CONTROL_FLUSH);
     return S_OK;
 }
 
 HRESULT EtwTraceSession::Query(TraceStatistics& stats)
 {
-    HR(HResultFromWin32(HResultFromWin32(ControlTraceW(
-        traceHandle, nullptr, traceProperties.get(), EVENT_TRACE_CONTROL_QUERY))));
+    HRESULT hr = HResultFromWin32(ControlTraceW(
+        traceHandle, nullptr, traceProperties.get(), EVENT_TRACE_CONTROL_QUERY));
+    if (FAILED(hr)) {
+        stats = {};
+        return hr;
+    }
 
     stats.NumberOfBuffers = static_cast<unsigned>(traceProperties->NumberOfBuffers);
     stats.FreeBuffers = static_cast<unsigned>(traceProperties->FreeBuffers);

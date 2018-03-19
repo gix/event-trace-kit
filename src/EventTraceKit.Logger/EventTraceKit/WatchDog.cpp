@@ -1,4 +1,4 @@
-﻿#include "WatchDog.h"
+#include "WatchDog.h"
 
 using namespace System;
 using namespace System::Diagnostics;

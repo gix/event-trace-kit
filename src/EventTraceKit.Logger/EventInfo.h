@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "ADT/ArrayRef.h"
 #include "Support/CompilerSupport.h"
 

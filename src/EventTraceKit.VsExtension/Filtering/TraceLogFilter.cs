@@ -2,6 +2,7 @@ namespace EventTraceKit.VsExtension.Filtering
 {
     using System.Collections.Generic;
     using System.Linq.Expressions;
+    using EventTraceKit.Tracing;
 
     public class TraceLogFilter
     {

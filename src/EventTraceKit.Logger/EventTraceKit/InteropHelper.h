@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #if __cplusplus_cli
 #include <algorithm>
 #include <string_view>

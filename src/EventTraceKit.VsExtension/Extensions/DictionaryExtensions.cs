@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Serialization
+﻿namespace EventTraceKit.VsExtension.Extensions
 {
     using System;
     using System.Collections.Generic;
