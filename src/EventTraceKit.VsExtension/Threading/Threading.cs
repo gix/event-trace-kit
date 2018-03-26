@@ -5,6 +5,7 @@ namespace EventTraceKit.VsExtension.Threading
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Threading;
+    using EventTraceKit.VsExtension.Views;
     using EventTraceKit.VsExtension.Windows;
     using Microsoft.Windows.TaskDialogs;
     using Microsoft.Windows.TaskDialogs.Controls;
@@ -12,26 +13,25 @@ namespace EventTraceKit.VsExtension.Threading
     public static class TaskExtensions
     {
         public static async Task RunWithProgress(
-            Func<Task> action, string caption, CancellationTokenSource cts = null, Window owner = null)
+            Func<Task> action, string caption, CancellationTokenSource cts = null)
         {
-            await Task.Run(action).WaitWithProgress(caption, cts, owner);
+            await Task.Run(action).WaitWithProgress(caption, cts);
         }
 
         public static async Task RunWithProgress(
-            Action action, string caption, CancellationTokenSource cts = null, Window owner = null)
+            Action action, string caption, CancellationTokenSource cts = null)
         {
-            await Task.Run(action).WaitWithProgress(caption, cts, owner);
+            await Task.Run(action).WaitWithProgress(caption, cts);
         }
 
         public static async Task WaitWithProgress(
-            this Task task, string caption, CancellationTokenSource cts = null, Window owner = null)
+            this Task task, string caption, CancellationTokenSource cts = null)
         {
             var dialogCts = new CancellationTokenSource();
 
             var dialog = new TaskDialog {
                 Caption = caption,
-                Content = string.Empty,
-                OwnerWindow = owner.GetHandleRef()
+                Content = string.Empty
             };
             if (cts != null) {
                 dialog.IsCancelable = true;
@@ -52,7 +52,7 @@ namespace EventTraceKit.VsExtension.Threading
             var dialogTask = Task.Delay(delay, dialogCts.Token)
                 .ContinueWith(t => {
                     if (!dialogCts.IsCancellationRequested)
-                        dialog.Show();
+                        dialog.ShowModal();
                 }, dialogCts.Token, TaskContinuationOptions.None, currentScheduler)
                 .IgnoreCancellation();
 
@@ -92,7 +92,7 @@ namespace EventTraceKit.VsExtension.Threading
             var dialogTask = Task.Delay(delay, cts.Token)
                 .ContinueWith(t => {
                     if (!cts.IsCancellationRequested)
-                        dialog.Show();
+                        dialog.ShowModal();
                 }, cts.Token, TaskContinuationOptions.None, currentScheduler);
 
             var result = await taskFactory.StartNew(() => action(cts.Token, progress), cts.Token);

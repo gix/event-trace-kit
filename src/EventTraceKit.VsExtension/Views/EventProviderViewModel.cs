@@ -4,20 +4,14 @@ namespace EventTraceKit.VsExtension.Views
     using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Runtime.InteropServices;
     using System.Threading.Tasks;
-    using System.Windows;
     using System.Windows.Input;
-    using System.Windows.Interop;
     using EventManifestFramework.Schema;
     using EventTraceKit.Tracing;
     using EventTraceKit.VsExtension.Extensions;
     using EventTraceKit.VsExtension.Serialization;
     using Microsoft.VisualStudio.PlatformUI;
-    using Microsoft.VisualStudio.Shell;
-    using Microsoft.VisualStudio.Shell.Interop;
     using Microsoft.Win32;
-    using Microsoft.Windows.TaskDialogs;
     using Task = System.Threading.Tasks.Task;
 
     [SerializedShape(typeof(Settings.Persistence.EventProvider))]
@@ -47,6 +41,11 @@ namespace EventTraceKit.VsExtension.Views
 
         private bool isSelected;
 
+        private bool isInRenamingingMode;
+        private ICommand switchToRenamingModeCommand;
+        private ICommand saveAndSwitchFromRenamingModeCommand;
+        private ICommand discardAndSwitchFromRenamingModeCommand;
+
         public EventProviderViewModel()
         {
             ToggleSelectedEventsCommand = new AsyncDelegateCommand<IList>(ToggleSelectedEvents);
@@ -67,28 +66,22 @@ namespace EventTraceKit.VsExtension.Views
             this.manifest = manifest;
         }
 
-        public EventProviderViewModel(EventProviderViewModel source)
-            : this()
-        {
-            Copy(source, this);
-        }
-
         public ITraceSettingsContext Context { get; set; }
 
-        public IEnumerable<string> SuggestedManifests => Context.ManifestsInSolution.Value;
-        public IEnumerable<ProjectInfo> SuggestedProjects => Context.ProjectsInSolution.Value;
+        public Func<Task<IEnumerable>> SuggestedManifestsSource => async () => await Context.ManifestsInSolution;
+        public Func<Task<IEnumerable>> SuggestedProjectsSource => async () => await Context.ProjectsInSolution;
 
         public ICommand BrowseManifestCommand { get; }
         public ICommand ToggleSelectedEventsCommand { get; }
+
+        public Func<Task<IEnumerable>> DefinedLevelsSource =>
+            async () => (await GetSchemaListAsync(x => x.Levels)).OrderBy(x => x.Value).ToList();
 
         public Func<Task<IReadOnlyList<Keyword>>> DefinedKeywordsSource =>
             async () => await GetSchemaListAsync(x => x.Keywords);
 
         public Func<Task<IReadOnlyList<Event>>> DefinedEventsSource =>
             async () => await GetSchemaListAsync(x => x.Events);
-
-        public Func<Task<IReadOnlyList<Level>>> DefinedLevelsSource =>
-            async () => await GetSchemaListAsync(x => x.Levels);
 
         public string DisplayName => !string.IsNullOrWhiteSpace(Name) ? Name : Id.ToString();
 
@@ -228,12 +221,6 @@ namespace EventTraceKit.VsExtension.Views
             set => SetProperty(ref eventIdsFilterIn, value);
         }
 
-
-        private bool isInRenamingingMode;
-        private ICommand switchToRenamingModeCommand;
-        private ICommand saveAndSwitchFromRenamingModeCommand;
-        private ICommand discardAndSwitchFromRenamingModeCommand;
-
         public string NewName { get; set; }
 
         public bool IsInRenamingingMode
@@ -368,33 +355,6 @@ namespace EventTraceKit.VsExtension.Views
 
             Manifest = dialog.FileName;
             return Task.CompletedTask;
-        }
-    }
-
-    public static class VsModalExtensions
-    {
-        public static TaskDialogResult ShowModal(this TaskDialog dialog)
-        {
-            dialog.OwnerWindow = new HandleRef(null, GetDialogOwnerHwnd());
-            return dialog.Show();
-        }
-
-        public static bool? ShowModal(this CommonDialog dialog)
-        {
-            var owner = GetDialogOwnerHwnd();
-            if (owner != IntPtr.Zero && HwndSource.FromHwnd(owner)?.RootVisual is Window ownerWindow)
-                return dialog.ShowDialog(ownerWindow);
-
-            return dialog.ShowDialog();
-        }
-
-        public static IntPtr GetDialogOwnerHwnd()
-        {
-            var shell = ServiceProvider.GlobalProvider?.GetService<SVsUIShell, IVsUIShell>();
-            if (shell != null && shell.GetDialogOwnerHwnd(out var owner) >= 0)
-                return owner;
-
-            return IntPtr.Zero;
         }
     }
 }

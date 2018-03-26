@@ -21,18 +21,31 @@ namespace EventTraceKit.VsExtension.Filtering
             Expression property, bool isEnabled, FilterRelationKind relation,
             FilterConditionAction action, object value)
         {
-            Property = property;
             IsEnabled = isEnabled;
-            Relation = relation;
             Action = action;
+
+            Property = property;
+            Relation = relation;
             Value = value;
         }
 
-        public Expression Property { get; }
+        public TraceLogFilterCondition(
+            string expression, bool isEnabled, FilterConditionAction action)
+        {
+            IsEnabled = isEnabled;
+            Action = action;
+
+            Expression = expression;
+        }
+
         public bool IsEnabled { get; }
-        public FilterRelationKind Relation { get; }
         public FilterConditionAction Action { get; }
+
+        public Expression Property { get; }
+        public FilterRelationKind Relation { get; }
         public object Value { get; }
+
+        public string Expression { get; }
     }
 
     public enum FilterConditionAction

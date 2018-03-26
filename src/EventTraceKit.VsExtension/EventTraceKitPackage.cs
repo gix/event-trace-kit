@@ -152,7 +152,8 @@ namespace EventTraceKit.VsExtension
             menuCommandService.AddCommand(
                 new ProjectTraceSettingsCommand(
                     vsMonitorSelection,
-                    x => new TraceSettingsViewModel(solutionBrowser, settings.GetProjectStore(x))));
+                    x => new TraceSettingsViewModel(
+                        settings.GetProjectStore(x), solutionBrowser)));
         }
 
         void IDiagLog.WriteLine(string format, params object[] args)

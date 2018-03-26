@@ -86,6 +86,7 @@
     <Compile Include="AsyncDataGridTestWindow.xaml.cs">
       <DependentUpon>AsyncDataGridTestWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="BindTest.cs" />
     <Compile Include="TraceLogTestViewModel.cs" />
     <Compile Include="TraceLogTestWindow.xaml.cs">
       <DependentUpon>TraceLogTestWindow.xaml</DependentUpon>
@@ -178,6 +179,15 @@
     <PackageReference Include="Microsoft.VisualStudio.Validation">
       <Version>14.1.111</Version>
     </PackageReference>
+    <PackageReference Include="xunit">
+      <Version>2.3.1</Version>
+    </PackageReference>
+    <PackageReference Include="Xunit.StaFact">
+      <Version>0.2.9</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -94,6 +94,14 @@
     <Compile Include="Controls\DropDownTextBoxAutomationPeer.cs" />
     <Compile Include="Controls\ThemedUserControl.cs" />
     <Compile Include="DteUtils.cs" />
+    <Compile Include="Filtering\ExpressionFactoryVisitor.cs" />
+    <Compile Include="Filtering\FilterExpressionLexer.cs" />
+    <Compile Include="Filtering\FilterExpressionParser.cs" />
+    <Compile Include="Filtering\FilterSyntaxFactory.cs" />
+    <Compile Include="Filtering\FilterSyntaxVisitor.cs" />
+    <Compile Include="Filtering\SyntaxNodes.cs" />
+    <Compile Include="Filtering\TextBuffer.cs" />
+    <Compile Include="Filtering\Token.cs" />
     <Compile Include="IDiagLog.cs" />
     <Compile Include="IVsSolutionManager.cs" />
     <Compile Include="MessageHelper.cs" />
@@ -142,6 +150,8 @@
     <Compile Include="PortableExecutableUtils.cs" />
     <Compile Include="Debugging\ProvideDebuggerLaunchHookAttribute.cs" />
     <Compile Include="Extensions\StreamExtensions.cs" />
+    <Compile Include="Serialization\CollectionToCommaSeparatedValuesMapper.cs" />
+    <Compile Include="Serialization\CommaSeparatedValuesToCollectionMapper.cs" />
     <Compile Include="Settings\GlobalSettingsStore.cs" />
     <Compile Include="Settings\ISettingsService.cs" />
     <Compile Include="Settings\ProjectSettingsStore.cs" />
@@ -151,9 +161,13 @@
     <Compile Include="Settings\XamlFileSettingsStorage.cs" />
     <Compile Include="Settings\Persistence\Settings.cs" />
     <Compile Include="Views\AcqRelObservableCollection.cs" />
+    <Compile Include="AsyncLazy.cs" />
+    <Compile Include="Views\VsModalExtensions.cs" />
+    <Compile Include="Windows\Bind.cs" />
     <Compile Include="Views\CollectorViewModel.cs" />
     <Compile Include="VsProjectKinds.cs" />
     <Compile Include="VsSolutionManager.cs" />
+    <Compile Include="Windows\ComboBoxLoadingScope.cs" />
     <Compile Include="Windows\CommandBridge.cs" />
     <Compile Include="Controls\DropDownTextBox.cs" />
     <Compile Include="DiagnosticCollector.cs" />
@@ -164,7 +178,7 @@
     <Compile Include="Views\ExtensionCommands.cs" />
     <Compile Include="FileCache.cs" />
     <Compile Include="Extensions\ExpressionEx.cs" />
-    <Compile Include="Filtering\FilterConditionViewModel.cs" />
+    <Compile Include="Filtering\SimpleFilterConditionViewModel.cs" />
     <Compile Include="Filtering\FilterDialog.xaml.cs">
       <DependentUpon>FilterDialog.xaml</DependentUpon>
     </Compile>
@@ -238,7 +252,6 @@
     <Compile Include="Serialization\DeserializationCallbackAttribute.cs" />
     <Compile Include="Extensions\DictionaryExtensions.cs" />
     <Compile Include="Serialization\EnumerableExtensions.cs" />
-    <Compile Include="Serialization\EnumUtils.cs" />
     <Compile Include="Serialization\IXamlSerializer.cs" />
     <Compile Include="Serialization\SafeXamlSerializer.cs" />
     <Compile Include="Serialization\SerializeAttribute.cs" />
@@ -283,6 +296,7 @@
     <Compile Include="DteSolutionBrowser.cs" />
     <Compile Include="Controls\ThemedDialogWindow.cs" />
     <Compile Include="Windows\OfTypeConverter.cs" />
+    <Compile Include="Windows\SuspendBindingScope.cs" />
     <Compile Include="Windows\ToggleSelectOnSpace.cs" />
     <Compile Include="Views\TraceLogToolViewModel.cs" />
     <Compile Include="Views\EventProviderViewModel.cs" />

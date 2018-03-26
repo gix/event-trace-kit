@@ -35,39 +35,58 @@
   </Window.Resources>
   <DockPanel>
     <StackPanel DockPanel.Dock="Top">
-      <Grid Margin="7,7,7,6">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="Auto" MinWidth="150"/>
-          <ColumnDefinition Width="Auto" MinWidth="80"/>
-          <ColumnDefinition/>
-          <ColumnDefinition Width="Auto" MinWidth="80"/>
-        </Grid.ColumnDefinitions>
-        <ComboBox Grid.Column="0" Margin="1"
-                    ItemsSource="{Binding Properties}"
-                    SelectedValue="{Binding SelectedProperty, UpdateSourceTrigger=PropertyChanged}"
-                    DisplayMemberPath="Name"/>
-        <ComboBox Grid.Column="1" Margin="7,1,1,1"
-                    ItemsSource="{Binding Relations}"
-                    SelectedValue="{Binding SelectedRelation, UpdateSourceTrigger=PropertyChanged}"
-                    DisplayMemberPath="DisplayName"/>
-        <TextBox Grid.Column="2" Margin="7,1,1,1" Text="{Binding ValueHolder.Value, UpdateSourceTrigger=PropertyChanged}"/>
-        <ComboBox Grid.Column="3" Margin="7,1,1,1"
-                    ItemsSource="{Binding Source={StaticResource ActionValues}}"
-                    SelectedValue="{Binding SelectedAction}"/>
-      </Grid>
+      <etkc:ToggleContentControl IsChecked="{Binding AdvancedMode}">
+        <etkc:ToggleContentControl.CheckedTemplate>
+          <DataTemplate>
+            <Grid Margin="7,7,7,6">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="Auto" MinWidth="80"/>
+              </Grid.ColumnDefinitions>
+              <TextBox Grid.Column="0" Margin="1" Text="{Binding Expression, UpdateSourceTrigger=PropertyChanged, Delay=150, ValidatesOnNotifyDataErrors=True}"/>
+              <ComboBox Grid.Column="1" Margin="7,1,1,1"
+                        ItemsSource="{Binding Source={StaticResource ActionValues}}"
+                        SelectedValue="{Binding SelectedAction}"/>
+            </Grid>
+          </DataTemplate>
+        </etkc:ToggleContentControl.CheckedTemplate>
+        <etkc:ToggleContentControl.UncheckedTemplate>
+          <DataTemplate>
+            <Grid Margin="7,7,7,6">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" MinWidth="150"/>
+                <ColumnDefinition Width="Auto" MinWidth="80"/>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="Auto" MinWidth="80"/>
+              </Grid.ColumnDefinitions>
+              <ComboBox Grid.Column="0" Margin="1"
+                ItemsSource="{Binding Properties}"
+                SelectedValue="{Binding SelectedProperty, UpdateSourceTrigger=PropertyChanged}"
+                DisplayMemberPath="Name"/>
+              <ComboBox Grid.Column="1" Margin="7,1,1,1"
+                ItemsSource="{Binding Relations}"
+                SelectedValue="{Binding SelectedRelation, UpdateSourceTrigger=PropertyChanged}"
+                DisplayMemberPath="DisplayName"/>
+              <TextBox Grid.Column="2" Margin="7,1,1,1" Text="{Binding ValueHolder.Value, UpdateSourceTrigger=PropertyChanged}"/>
+              <ComboBox Grid.Column="3" Margin="7,1,1,1"
+                ItemsSource="{Binding Source={StaticResource ActionValues}}"
+                SelectedValue="{Binding SelectedAction}"/>
+            </Grid>
+          </DataTemplate>
+        </etkc:ToggleContentControl.UncheckedTemplate>
+      </etkc:ToggleContentControl>
       <Grid Margin="7,0,7,7">
         <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto"/>
           <ColumnDefinition Width="Auto"/>
           <ColumnDefinition Width="*"/>
           <ColumnDefinition Width="Auto"/>
           <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
         <Button Grid.Column="0" Content="Reset" Command="{Binding ResetCommand}"/>
-        <Button Grid.Column="2" Content="Add" Margin="7,1,1,1" Command="{Binding AddCommand}"/>
-        <Button Grid.Column="3" Content="Remove" Margin="7,1,1,1" Command="{Binding RemoveCommand}"/>
-      </Grid>
-      <Grid Height="200" x:Name="editorHost">
-
+        <CheckBox Grid.Column="1" Content="Advanced" Margin="7,1,1,1" IsChecked="{Binding AdvancedMode}" VerticalAlignment="Center"/>
+        <Button Grid.Column="3" Content="Add" Margin="7,1,1,1" Command="{Binding AddCommand}"/>
+        <Button Grid.Column="4" Content="Remove" Margin="7,1,1,1" Command="{Binding RemoveCommand}"/>
       </Grid>
     </StackPanel>
 
@@ -102,7 +121,7 @@
         </ei:KeyTrigger>
       </i:Interaction.Triggers>
       <DataGrid.Columns>
-        <DataGridTemplateColumn Header="Property" Width="100">
+        <DataGridTemplateColumn Header="Property">
           <DataGridTemplateColumn.CellTemplate>
             <DataTemplate DataType="{x:Type filterin:FilterConditionViewModel}">
               <StackPanel Orientation="Horizontal">
@@ -119,8 +138,6 @@
             </DataTemplate>
           </DataGridTemplateColumn.CellTemplate>
         </DataGridTemplateColumn>
-        <DataGridTextColumn Header="Relation" Binding="{Binding Relation.DisplayName}" Width="80" IsReadOnly="True"/>
-        <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="*" IsReadOnly="True"/>
         <DataGridTextColumn Header="Action" Binding="{Binding Action}" Width="80" IsReadOnly="True"/>
       </DataGrid.Columns>
     </DataGrid>

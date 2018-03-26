@@ -7,6 +7,7 @@
   xmlns:etkc="clr-namespace:EventTraceKit.VsExtension.Controls"
   xmlns:etkv="clr-namespace:EventTraceKit.VsExtension.Views"
   xmlns:etkw="clr-namespace:EventTraceKit.VsExtension.Windows"
+  xmlns:schema="clr-namespace:EventManifestFramework.Schema;assembly=EventManifestFramework"
   mc:Ignorable="d"
   d:DataContext="{d:DesignInstance {x:Type etkv:EventProviderViewModel}, d:IsDesignTimeCreatable=False}"
   d:DesignWidth="300"
@@ -66,7 +67,7 @@
           <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
         <ComboBox x:Name="manifest"
-                  ItemsSource="{Binding SuggestedManifests}"
+                  etkw:Bind.ItemsSourceProviderAsync="{Binding SuggestedManifestsSource}"
                   Text="{Binding Manifest, UpdateSourceTrigger=PropertyChanged}"
                   IsEditable="True"/>
         <Button Grid.Column="1" Content="…" MinWidth="0" Padding="10,0"
@@ -75,24 +76,20 @@
 
       <Label Grid.Row="2" Grid.Column="0"
              Content="Level" Target="{Binding ElementName=level}"/>
-      <TextBox Grid.Row="2" Grid.Column="1" x:Name="level"
-               Text="{Binding Level, Converter={x:Static etkw:HexNumberConverter.Instance}, ConverterParameter='2'}"/>
-      <!--<etkc:DropDownTextBox Grid.Row="2" Grid.Column="1" x:Name="level"
-                            Margin="3"
-                            Text="{Binding Level, Converter={x:Static etkw:HexNumberConverter.Instance}, ConverterParameter='2'}">
-        <etkc:DropDownTextBox.DropDownContentTemplate>
-          <DataTemplate>
-            <ListBox etkv:AsyncBind.ItemsSourceProvider="{Binding DefinedLevelsSource}"
-                     SelectedValue="{Binding Level}" SelectedValuePath="Value">
-              <ListBox.ItemTemplate>
-                <DataTemplate>
-                  <TextBlock Text="{Binding Name}"/>
-                </DataTemplate>
-              </ListBox.ItemTemplate>
-            </ListBox>
+      <ComboBox Grid.Row="2" Grid.Column="1" x:Name="level"
+                etkw:Bind.ItemsSourceProviderAsync="{Binding DefinedLevelsSource}"
+                Text="{Binding Level}"
+                TextSearch.TextPath="Value.Value"
+                IsEditable="True">
+        <ComboBox.ItemTemplate>
+          <DataTemplate DataType="{x:Type schema:Level}">
+            <TextBlock>
+              <Run Text="{Binding Value, Mode=OneTime, StringFormat='0x{0:X2}'}"/>
+              (<Run Text="{Binding Name.Value.Prefix, Mode=OneTime}"/>:<Run Text="{Binding Name.Value.LocalName, Mode=OneTime}"/>)
+            </TextBlock>
           </DataTemplate>
-        </etkc:DropDownTextBox.DropDownContentTemplate>
-      </etkc:DropDownTextBox>-->
+        </ComboBox.ItemTemplate>
+      </ComboBox>
 
       <Label Grid.Row="3" Grid.Column="0"
              Content="Match Any Keywords" Target="{Binding ElementName=matchAnyKeywords}"/>
@@ -134,9 +131,9 @@
              Content="Project" Target="{Binding ElementName=StartupProject}"/>
       <ComboBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3"
                 x:Name="StartupProject"
-                ItemsSource="{Binding SuggestedProjects}"
-                SelectedValue="{Binding StartupProject, UpdateSourceTrigger=PropertyChanged}"
+                etkw:Bind.ItemsSourceProviderAsync="{Binding SuggestedProjectsSource}"
                 DisplayMemberPath="Name"
+                SelectedValue="{Binding StartupProject, UpdateSourceTrigger=PropertyChanged}"
                 SelectedValuePath="FullName"/>
 
       <CheckBox Grid.Row="6" Grid.Column="0"

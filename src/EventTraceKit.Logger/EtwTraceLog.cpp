@@ -95,8 +95,9 @@ class FilteredTraceLog : public IFilteredTraceLog
 {
 public:
     explicit FilteredTraceLog(TraceLogEventsChangedCallback* callback = nullptr,
-                              TraceLogFilterEvent* filter = nullptr)
-        : filter(filter ? filter : &AlwaysFilter)
+                              TraceLogFilter* filter = nullptr)
+        : filterObj(filter)
+        , filter(filter ? filter->Filter : &AlwaysFilter)
         , changedCallback(callback ? callback : &NullCallback)
         , changedCallbackState(nullptr)
     {
@@ -110,6 +111,7 @@ public:
         changedEvent.Set();
         if (filterThread.joinable())
             filterThread.join();
+        delete pendingFilter.load();
     }
 
     virtual size_t GetEventCount() override { return eventCount; }
@@ -125,9 +127,9 @@ public:
         return EventInfo();
     }
 
-    virtual void SetFilter(TraceLogFilterEvent* filter) override
+    virtual void SetFilter(TraceLogFilter* filter) override
     {
-        pendingFilter = filter != nullptr ? filter : &AlwaysFilter;
+        pendingFilter = filter;
         changedEvent.Set();
     }
 
@@ -153,7 +155,8 @@ private:
             changedEvent.Reset();
             auto const newFilter = pendingFilter.exchange(nullptr);
             if (newFilter) {
-                filter = newFilter;
+                filterObj = std::unique_ptr<TraceLogFilter>(newFilter);
+                filter = filterObj->Filter ? filterObj->Filter : &AlwaysFilter;
                 Rebuild();
                 continue;
             }
@@ -237,6 +240,7 @@ private:
 
     // Owned by ThreadProc
     size_t prevTotal = 0;
+    std::unique_ptr<TraceLogFilter> filterObj;
     TraceLogFilterEvent* filter;
 
     // Shared
@@ -245,7 +249,7 @@ private:
     mutable std::shared_mutex mutex;
     std::deque<EventInfo> events;
     std::atomic<size_t> eventCount{};
-    std::atomic<TraceLogFilterEvent*> pendingFilter{};
+    std::atomic<TraceLogFilter*> pendingFilter{};
 
     std::atomic<bool> running{};
     std::thread filterThread;
@@ -319,7 +323,7 @@ std::unique_ptr<ITraceLog> CreateEtwTraceLog(TraceLogEventsChangedCallback* call
 
 std::tuple<std::unique_ptr<ITraceLog>, std::unique_ptr<IFilteredTraceLog>>
 CreateFilteredTraceLog(TraceLogEventsChangedCallback* callback,
-                       TraceLogFilterEvent* filter)
+                       TraceLogFilter* filter)
 {
     auto filteredLog = std::make_unique<FilteredTraceLog>(callback, filter);
     auto token = TraceDataToken(TraceDataContext::GlobalContext());

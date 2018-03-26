@@ -10,7 +10,6 @@ namespace EventTraceKit.VsExtension.Views
     using System.Windows.Threading;
     using Controls;
     using EventTraceKit.Tracing;
-    using EventTraceKit.VsExtension.Extensions;
     using EventTraceKit.VsExtension.Filtering;
     using EventTraceKit.VsExtension.Settings;
     using EventTraceKit.VsExtension.Views.PresetManager;
@@ -326,12 +325,12 @@ namespace EventTraceKit.VsExtension.Views
         private void Configure()
         {
             if (settingsViewModel == null)
-                settingsViewModel = new TraceSettingsViewModel(solutionBrowser, settings.GetAmbientStore());
+                settingsViewModel = new TraceSettingsViewModel(
+                    settings.GetAmbientStore(), solutionBrowser);
 
             var window = new TraceSettingsWindow();
+            window.DataContext = settingsViewModel;
             try {
-                window.DataContext = settingsViewModel;
-                settingsViewModel.Attach();
                 if (window.ShowModal() != true)
                     return;
             } finally {
@@ -372,6 +371,7 @@ namespace EventTraceKit.VsExtension.Views
                 return;
 
             currentFilter = viewModel.GetFilter();
+            IsFilterEnabled = true;
             RefreshFilter();
         }
 

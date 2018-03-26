@@ -20,41 +20,22 @@ namespace EventTraceKit.VsExtension.Views
 
     public interface ITraceSettingsContext
     {
-        Lazy<IReadOnlyList<ProjectInfo>> ProjectsInSolution { get; }
-        Lazy<IReadOnlyList<string>> ManifestsInSolution { get; }
+        AsyncLazy<IReadOnlyList<ProjectInfo>> ProjectsInSolution { get; }
+        AsyncLazy<IReadOnlyList<string>> ManifestsInSolution { get; }
         Task<EventManifest> GetManifest(string manifestFile);
     }
 
-    [SerializedShape(typeof(TraceSettings))]
-    public class TraceSettingsViewModel : ObservableModel, ITraceSettingsContext
+    public class TraceSettingsContext : ITraceSettingsContext
     {
         private readonly ISolutionBrowser solutionBrowser;
-        private readonly ISettingsStore settingsStore;
-        private readonly Lazy<IReadOnlyList<ProjectInfo>> projectsInSolution;
-        private readonly Lazy<IReadOnlyList<string>> manifestsInSolution;
         private readonly FileCache<EventManifest> manifestCache;
-        private readonly IMapper mapper = SettingsSerializer.CreateMapper();
 
-        private bool? dialogResult;
-        private ICommand saveCommand;
-        private ICommand restoreCommand;
-        private ICommand newProfileCommand;
-        private ICommand copyProfileCommand;
-        private ICommand deleteProfileCommand;
-        private TraceProfileViewModel activeProfile;
-
-        public TraceSettingsViewModel(
-            ISolutionBrowser solutionBrowser = null,
-            ISettingsStore settingsStore = null)
+        public TraceSettingsContext(ISolutionBrowser solutionBrowser = null)
         {
             this.solutionBrowser = solutionBrowser;
-            this.settingsStore = settingsStore;
 
-            Profiles = new AcqRelObservableCollection<TraceProfileViewModel>(
-                x => x.Context = null, x => x.Context = this);
-
-            projectsInSolution = new Lazy<IReadOnlyList<ProjectInfo>>(FindProjects);
-            manifestsInSolution = new Lazy<IReadOnlyList<string>>(FindManifests);
+            ProjectsInSolution = new AsyncLazy<IReadOnlyList<ProjectInfo>>(() => FindProjects());
+            ManifestsInSolution = new AsyncLazy<IReadOnlyList<string>>(() => FindManifests());
 
             manifestCache = new FileCache<EventManifest>(
                 10, path => {
@@ -68,19 +49,12 @@ namespace EventTraceKit.VsExtension.Views
 
                     return manifest;
                 });
-
-            if (settingsStore != null) {
-                LoadFromSettings();
-                Title = $"Trace Settings ({settingsStore.Name})";
-            } else {
-                Title = "Trace Settings";
-            }
         }
 
-        Lazy<IReadOnlyList<ProjectInfo>> ITraceSettingsContext.ProjectsInSolution => projectsInSolution;
-        Lazy<IReadOnlyList<string>> ITraceSettingsContext.ManifestsInSolution => manifestsInSolution;
+        public AsyncLazy<IReadOnlyList<ProjectInfo>> ProjectsInSolution { get; }
+        public AsyncLazy<IReadOnlyList<string>> ManifestsInSolution { get; }
 
-        async Task<EventManifest> ITraceSettingsContext.GetManifest(string manifestFile)
+        public async Task<EventManifest> GetManifest(string manifestFile)
         {
             if (string.IsNullOrEmpty(manifestFile) || !File.Exists(manifestFile))
                 return new EventManifest();
@@ -90,13 +64,15 @@ namespace EventTraceKit.VsExtension.Views
 
         private IReadOnlyList<ProjectInfo> FindProjects()
         {
+            var projects = new List<ProjectInfo>();
+            projects.Add(new ProjectInfo(Guid.Empty, null, string.Empty));
             try {
                 if (solutionBrowser != null)
-                    return solutionBrowser.EnumerateProjects().OrderBy(x => x.Name).ToList();
+                    projects.AddRange(solutionBrowser.EnumerateProjects().OrderBy(x => x.Name));
             } catch (Exception) {
             }
 
-            return new ProjectInfo[0];
+            return projects;
         }
 
         private IReadOnlyList<string> FindManifests()
@@ -108,6 +84,41 @@ namespace EventTraceKit.VsExtension.Views
             }
 
             return new string[0];
+        }
+    }
+
+    [SerializedShape(typeof(TraceSettings))]
+    public class TraceSettingsViewModel : ObservableModel
+    {
+        private readonly ISettingsStore settingsStore;
+        private readonly IMapper mapper = SettingsSerializer.CreateMapper();
+        private ITraceSettingsContext context;
+
+        private bool? dialogResult;
+        private ICommand saveCommand;
+        private ICommand restoreCommand;
+        private ICommand newProfileCommand;
+        private ICommand copyProfileCommand;
+        private ICommand deleteProfileCommand;
+        private TraceProfileViewModel activeProfile;
+
+        public TraceSettingsViewModel(
+            ISettingsStore settingsStore = null,
+            ISolutionBrowser solutionBrowser = null)
+        {
+            this.settingsStore = settingsStore;
+
+            context = new TraceSettingsContext(solutionBrowser);
+
+            Profiles = new AcqRelObservableCollection<TraceProfileViewModel>(
+                x => x.Context = null, x => x.Context = context);
+
+            if (settingsStore != null) {
+                LoadFromSettings();
+                Title = $"Trace Settings ({settingsStore.Name})";
+            } else {
+                Title = "Trace Settings";
+            }
         }
 
         public string Title { get; }
@@ -141,29 +152,13 @@ namespace EventTraceKit.VsExtension.Views
 
         public ObservableCollection<TraceProfileViewModel> Profiles { get; }
 
-        public void Attach()
-        {
-            foreach (var session in Profiles) {
-                session.Context = this;
-                foreach (var collector in session.Collectors) {
-                    collector.Context = this;
-                    if (collector is EventCollectorViewModel ec) {
-                        foreach (var provider in ec.Providers)
-                            provider.Context = this;
-                    }
-                }
-            }
-        }
-
         private Task NewProfile()
         {
             var newProfile = new TraceProfileViewModel {
                 Name = "Unnamed",
-                Context = this,
                 Collectors = {
                     new EventCollectorViewModel {
-                        Name = "Default",
-                        Context = this
+                        Name = "Default"
                     }
                 }
             };

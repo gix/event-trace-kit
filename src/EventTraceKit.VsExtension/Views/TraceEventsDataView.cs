@@ -1,5 +1,6 @@
 namespace EventTraceKit.VsExtension.Views
 {
+    using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
@@ -26,15 +27,53 @@ namespace EventTraceKit.VsExtension.Views
 
         private class WorkflowProvider : IInteractionWorkflowProvider, IContextMenuWorkflow
         {
+            private static readonly Dictionary<Guid, Guid> filterableColumnsMap = new Dictionary<Guid, Guid> {
+                {GenericEventsViewModelSource.ProviderIdColumnId, Guid.Empty},
+                {GenericEventsViewModelSource.ProviderNameColumnId, GenericEventsViewModelSource.ProviderIdColumnId},
+                {GenericEventsViewModelSource.IdColumnId, Guid.Empty},
+                {GenericEventsViewModelSource.VersionColumnId, Guid.Empty},
+                {GenericEventsViewModelSource.ChannelColumnId, Guid.Empty},
+                {GenericEventsViewModelSource.ChannelNameColumnId, GenericEventsViewModelSource.ChannelColumnId},
+                {GenericEventsViewModelSource.TaskColumnId, Guid.Empty},
+                {GenericEventsViewModelSource.TaskNameColumnId, GenericEventsViewModelSource.TaskColumnId},
+                {GenericEventsViewModelSource.OpcodeColumnId, Guid.Empty},
+                {GenericEventsViewModelSource.OpcodeNameColumnId, GenericEventsViewModelSource.OpcodeColumnId},
+                {GenericEventsViewModelSource.LevelColumnId, Guid.Empty},
+                {GenericEventsViewModelSource.LevelNameColumnId, GenericEventsViewModelSource.LevelColumnId},
+                {GenericEventsViewModelSource.KeywordColumnId, Guid.Empty},
+                {GenericEventsViewModelSource.ProcessIdColumnId, Guid.Empty},
+                {GenericEventsViewModelSource.ThreadIdColumnId, Guid.Empty},
+                {GenericEventsViewModelSource.DecodingSourceColumnId, Guid.Empty},
+            };
+            private static readonly Dictionary<Guid, string> columnToFieldMap = new Dictionary<Guid, string> {
+                {GenericEventsViewModelSource.ProviderIdColumnId, "ProviderId"},
+                {GenericEventsViewModelSource.IdColumnId, "Id"},
+                {GenericEventsViewModelSource.VersionColumnId, "Version"},
+                {GenericEventsViewModelSource.ChannelColumnId, "Channel"},
+                {GenericEventsViewModelSource.TaskColumnId, "Task"},
+                {GenericEventsViewModelSource.OpcodeColumnId, "Opcode"},
+                {GenericEventsViewModelSource.LevelColumnId, "Level"},
+                {GenericEventsViewModelSource.KeywordColumnId, "Keyword"},
+                {GenericEventsViewModelSource.ProcessIdColumnId, "ProcessId"},
+                {GenericEventsViewModelSource.ThreadIdColumnId, "ThreadId"},
+                {GenericEventsViewModelSource.DecodingSourceColumnId, "DecodingSource"},
+            };
+
+
             private readonly TraceEventsDataView view;
             private readonly int? rowIndex;
             private readonly int? columnIndex;
+            private readonly DataColumnView<Guid> providerIdColumn;
 
             public WorkflowProvider(TraceEventsDataView view, int? rowIndex, int? columnIndex)
             {
                 this.view = view;
                 this.rowIndex = rowIndex;
                 this.columnIndex = columnIndex;
+
+                providerIdColumn = (DataColumnView<Guid>)view.Columns.First(
+                    x => x.ColumnId == GenericEventsViewModelSource.ProviderIdColumnId);
+
             }
 
             public T GetWorkflow<T>() where T : class
@@ -42,6 +81,10 @@ namespace EventTraceKit.VsExtension.Views
                 if (typeof(T) == typeof(IContextMenuWorkflow))
                     return this as T;
                 return null;
+            }
+
+            private void Foo()
+            {
             }
 
             public IEnumerable<object> GetItems()
@@ -59,6 +102,7 @@ namespace EventTraceKit.VsExtension.Views
 
                 var includeCommand = new DelegateCommand(IncludeValue, CanFilter);
                 var excludeCommand = new DelegateCommand(ExcludeValue, CanFilter);
+                var copyCommand = new DelegateCommand(CopyValue, CanCopy);
 
                 yield return new MenuItem {
                     Header = $"Include '{valuePreview}'",
@@ -70,12 +114,12 @@ namespace EventTraceKit.VsExtension.Views
                 };
                 yield return new MenuItem {
                     Header = $"Copy '{valuePreview}'",
-                    Command = new DelegateCommand(CopyValue)
+                    Command = copyCommand
                 };
 
                 yield return new Separator();
 
-                var filterableColumns = view.Columns.Where(x => x.Column.FilterSelector != null)
+                var filterableColumns = view.Columns.Where(x => filterableColumnsMap.ContainsKey(x.ColumnId))
                     .OrderBy(x => x.Name).ToList();
 
                 var includeMenu = new MenuItem { Header = "Include" };
@@ -97,32 +141,55 @@ namespace EventTraceKit.VsExtension.Views
                     });
                 }
                 yield return excludeMenu;
+
+                var copyMenu = new MenuItem { Header = "Copy" };
+                foreach (var column in view.Columns) {
+                    copyMenu.Items.Add(new MenuItem {
+                        Header = column.Name,
+                        Command = copyCommand,
+                        CommandParameter = column
+                    });
+                }
+                yield return copyMenu;
+            }
+
+            private DataColumnView GetColumn(object obj)
+            {
+                if (obj is DataColumnView column)
+                    return column;
+                if (columnIndex != null)
+                    return view.GetDataColumnView(columnIndex.Value);
+                return null;
             }
 
             private bool CanFilter(object obj)
             {
-                var column = obj as DataColumnView ?? view.GetDataColumnView(columnIndex.Value);
-                return column.Column.FilterSelector != null;
+                if (rowIndex == null)
+                    return false;
+                var column = GetColumn(obj);
+                if (column == null)
+                    return false;
+                return filterableColumnsMap.ContainsKey(column.ColumnId);
             }
 
             private void IncludeValue(object obj)
             {
-                var column = obj as DataColumnView ?? view.GetDataColumnView(columnIndex.Value);
-                ModifyFilter(column, FilterConditionAction.Include);
+                ModifyFilter(GetColumn(obj), FilterConditionAction.Include);
             }
 
             private void ExcludeValue(object obj)
             {
-                var column = obj as DataColumnView ?? view.GetDataColumnView(columnIndex.Value);
-                ModifyFilter(column, FilterConditionAction.Exclude);
+                ModifyFilter(GetColumn(obj), FilterConditionAction.Exclude);
+            }
+
+            private bool CanCopy(object obj)
+            {
+                return rowIndex != null && GetColumn(obj) != null;
             }
 
             private void CopyValue(object obj)
             {
-                Debug.Assert(rowIndex != null);
-                Debug.Assert(columnIndex != null);
-
-                var value = view.GetCellValue(rowIndex.Value, columnIndex.Value).ToString();
+                var value = GetColumn(obj).GetCellValue(rowIndex.Value).ToString();
                 ClipboardUtils.SetText(value);
             }
 
@@ -137,12 +204,34 @@ namespace EventTraceKit.VsExtension.Views
                 TraceLogFilter filter, DataColumnView column, FilterConditionAction action)
             {
                 Debug.Assert(rowIndex != null);
-                Debug.Assert(column.Column.FilterSelector != null);
 
-                var value = column.UntypedGetValue(rowIndex.Value);
-                filter.Conditions.Add(new TraceLogFilterCondition(
-                    column.Column.FilterSelector, true, FilterRelationKind.Equal,
-                    action, value));
+                var columnId = filterableColumnsMap[column.ColumnId];
+                if (columnId != Guid.Empty)
+                    column = view.Columns.First(x => x.ColumnId == columnId);
+                else
+                    columnId = column.ColumnId;
+
+                var providerId = providerIdColumn[rowIndex.Value];
+
+                string expr;
+                if (columnId == providerIdColumn.ColumnId) {
+                    expr = $"ProviderId == {providerId:B}";
+                } else {
+                    var field = columnToFieldMap[columnId];
+                    var value = FormatValue(column.UntypedGetValue(rowIndex.Value));
+                    expr = $"ProviderId == {providerId:B} && {field} == {value}";
+                }
+
+                filter.Conditions.Add(new TraceLogFilterCondition(expr, true, action));
+            }
+
+            private string FormatValue(object value)
+            {
+                if (value is Guid guid)
+                    return guid.ToString("B");
+                if (value is string str)
+                    return "\"" + str.Replace("\"", "\"\"") + "\"";
+                return value?.ToString();
             }
 
             //private bool HasStackTrace(object obj)

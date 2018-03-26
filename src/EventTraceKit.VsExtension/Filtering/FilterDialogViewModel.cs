@@ -1,22 +1,26 @@
 namespace EventTraceKit.VsExtension.Filtering
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
+    using System.ComponentModel;
     using System.Linq;
     using System.Threading.Tasks;
     using System.Windows.Input;
     using EventTraceKit.VsExtension.Extensions;
 
-    public class FilterDialogViewModel : ObservableModel
+    public class FilterDialogViewModel : ObservableModel, INotifyDataErrorInfo
     {
         private readonly TraceLogFilterBuilder builder = TraceLogFilterBuilder.Instance;
 
+        private bool advancedMode;
         private bool? dialogResult;
 
         private IModelProperty selectedProperty;
         private FilterRelation selectedRelation;
         private ValueHolder valueHolder;
+        private string expression;
         private FilterConditionAction selectedAction;
         private FilterConditionViewModel selectedCondition;
 
@@ -103,6 +107,12 @@ namespace EventTraceKit.VsExtension.Filtering
         public ICommand AcceptCommand { get; }
         public ICommand ApplyCommand { get; }
 
+        public bool AdvancedMode
+        {
+            get => advancedMode;
+            set => SetProperty(ref advancedMode, value);
+        }
+
         public bool? DialogResult
         {
             get => dialogResult;
@@ -128,10 +138,7 @@ namespace EventTraceKit.VsExtension.Filtering
         public TraceLogFilter GetFilter()
         {
             var filter = new TraceLogFilter();
-            filter.Conditions.AddRange(Conditions.Select(
-                x => new TraceLogFilterCondition(
-                    x.Property.Expression, x.IsEnabled, x.Relation.Kind,
-                    x.Action, x.Value)));
+            filter.Conditions.AddRange(Conditions.Select(x => x.CreateCondition()));
             return filter;
         }
 
@@ -144,8 +151,10 @@ namespace EventTraceKit.VsExtension.Filtering
 
         private FilterConditionViewModel CreateCondition(TraceLogFilterCondition condition)
         {
+            if (condition.Expression != null)
+                return new AdvancedFilterConditionViewModel(condition);
             var property = Properties.Single(x => x.Expression == condition.Property);
-            return new FilterConditionViewModel(property, condition);
+            return new SimpleFilterConditionViewModel(property, condition);
         }
 
         private Task ResetConditions()
@@ -156,6 +165,8 @@ namespace EventTraceKit.VsExtension.Filtering
 
         private bool CanAddCondition()
         {
+            if (AdvancedMode)
+                return Expression != null;
             return
                 SelectedProperty != null &&
                 SelectedRelation != null &&
@@ -167,12 +178,21 @@ namespace EventTraceKit.VsExtension.Filtering
             if (!CanAddCondition())
                 return Task.CompletedTask;
 
-            var condition = new FilterConditionViewModel(SelectedProperty) {
-                IsEnabled = true,
-                Relation = SelectedRelation,
-                Value = ValueHolder.RawValue,
-                Action = SelectedAction
-            };
+            FilterConditionViewModel condition;
+            if (AdvancedMode) {
+                condition = new AdvancedFilterConditionViewModel {
+                    IsEnabled = true,
+                    Expression = Expression,
+                    Action = SelectedAction
+                };
+            } else {
+                condition = new SimpleFilterConditionViewModel(SelectedProperty) {
+                    IsEnabled = true,
+                    Relation = SelectedRelation,
+                    Value = ValueHolder.RawValue,
+                    Action = SelectedAction
+                };
+            }
 
             int idx = Conditions.BinarySearch(condition, CompareCondition);
             if (idx < 0)
@@ -187,6 +207,9 @@ namespace EventTraceKit.VsExtension.Filtering
         {
             if (x.Action != y.Action)
                 return x.Action == FilterConditionAction.Include ? -1 : 1;
+
+            if (x.GetType() != y.GetType())
+                return x is SimpleFilterConditionViewModel ? -1 : 1;
 
             int cmp = string.Compare(x.DisplayName, y.DisplayName, StringComparison.OrdinalIgnoreCase);
             if (cmp != 0)
@@ -203,12 +226,26 @@ namespace EventTraceKit.VsExtension.Filtering
         private Task RemoveCondition()
         {
             if (SelectedCondition != null) {
-                SelectedProperty = SelectedCondition.Property;
-                SelectedRelation = SelectedCondition.Relation;
-                var value = SelectedProperty.CreateValue();
-                value.RawValue = SelectedCondition.Value;
-                ValueHolder = value;
-                SelectedAction = SelectedCondition.Action;
+                SelectedProperty = null;
+                SelectedRelation = null;
+                ValueHolder = null;
+                Expression = null;
+
+                switch (SelectedCondition) {
+                    case AdvancedFilterConditionViewModel advanced:
+                        AdvancedMode = true;
+                        Expression = advanced.Expression;
+                        break;
+                    case SimpleFilterConditionViewModel simple:
+                        AdvancedMode = false;
+                        SelectedProperty = simple.Property;
+                        SelectedRelation = simple.Relation;
+                        var value = SelectedProperty.CreateValue();
+                        value.RawValue = simple.Value;
+                        ValueHolder = value;
+                        SelectedAction = simple.Action;
+                        break;
+                }
             }
 
             Conditions.Remove(SelectedCondition);
@@ -263,10 +300,45 @@ namespace EventTraceKit.VsExtension.Filtering
             set => SetProperty(ref valueHolder, value);
         }
 
+        public string Expression
+        {
+            get => expression;
+            set
+            {
+                if (SetProperty(ref expression, value))
+                    CheckExpression();
+            }
+        }
+
+        private string expressionError;
+
+        private void CheckExpression()
+        {
+            expressionError = null;
+            try {
+                new ExpressionFactoryVisitor().Visit(
+                    FilterSyntaxFactory.ParseExpression(expression));
+            } catch (Exception ex) {
+                expressionError = ex.Message;
+            }
+
+            ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(nameof(Expression)));
+        }
+
         public FilterConditionViewModel SelectedCondition
         {
             get => selectedCondition;
             set => SetProperty(ref selectedCondition, value);
         }
+
+        public IEnumerable GetErrors(string propertyName)
+        {
+            if (propertyName == nameof(Expression) && expressionError != null)
+                return new[] { expressionError };
+            return null;
+        }
+
+        public bool HasErrors => expressionError != null;
+        public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
     }
 }

@@ -65,7 +65,6 @@ private:
     EventsChangedDelegate^ onEventsChangedCallback;
     etk::ITraceLog* nativeLog;
     etk::IFilteredTraceLog* filteredLog;
-    TraceLogFilterPredicate^ filter;
 };
 
 } // namespace EventTraceKit::Tracing

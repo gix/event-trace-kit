@@ -184,7 +184,6 @@ namespace EventTraceKit.VsExtension.UITests
             dialog.DataContext = viewModel;
             dialog.Owner = Application.Current.MainWindow;
             try {
-                viewModel.Attach();
                 if (dialog.ShowDialog() != true)
                     return;
             } finally {

@@ -31,11 +31,23 @@ namespace EventTraceKit.VsExtension.Views
         private uint? minimumBuffers;
         private uint? maximumBuffers;
         private EventProviderViewModel selectedProvider;
+        private ITraceSettingsContext context;
 
         public EventCollectorViewModel()
         {
             Providers = new AcqRelObservableCollection<EventProviderViewModel>(
                 x => x.Context = null, x => x.Context = Context);
+        }
+
+        public override ITraceSettingsContext Context
+        {
+            get => context;
+            set
+            {
+                context = value;
+                foreach (var provider in Providers)
+                    provider.Context = value;
+            }
         }
 
         public override CollectorViewModel DeepClone()
@@ -182,9 +194,11 @@ namespace EventTraceKit.VsExtension.Views
             }
 
             if (newProviders.Count != 0) {
+                var usedNames = Providers.Select(x => x.Name).ToHashSet();
                 foreach (var newProvider in newProviders) {
-                    newProvider.Name = MakeNumberedCopy(
-                        string.IsNullOrEmpty(newProvider.Name) ? newProvider.Id.ToString() : newProvider.Name);
+                    var newName = string.IsNullOrEmpty(newProvider.Name) ? newProvider.Id.ToString() : newProvider.Name;
+                    newProvider.Name = newName.MakeNumberedCopy(usedNames);
+                    usedNames.Add(newProvider.Name);
                     Providers.Add(newProvider);
                 }
 
@@ -192,17 +206,6 @@ namespace EventTraceKit.VsExtension.Views
             }
 
             return Task.CompletedTask;
-        }
-
-        private static string MakeNumberedCopy(string fullString)
-        {
-            var match = Regex.Match(fullString, @"\A(?<str>.*) \(Copy(?: (?<num>\d+))?\)\z");
-            if (!match.Success)
-                return fullString + " (Copy)";
-
-            var str = match.Groups["str"].Value;
-            int num = match.Groups["num"].Success ? int.Parse(match.Groups["num"].Value) : 1;
-            return str + $" (Copy {num + 1})";
         }
 
         private Task ImportProviders()
@@ -298,6 +301,31 @@ namespace EventTraceKit.VsExtension.Views
                 from x in Providers where x.IsEnabled select x.CreateDescriptor());
             //descriptor.CustomFlushPeriod = 100;
             return descriptor;
+        }
+    }
+
+    public static class StringExtensions
+    {
+        public static string MakeNumberedCopy(this string fullString, ISet<string> usedStrings = null)
+        {
+            var match = Regex.Match(fullString, @"\A(?<str>.*) \(Copy(?: (?<num>\d+))?\)\z");
+
+            string str;
+            int num;
+            if (match.Success) {
+                str = match.Groups["str"].Value;
+                num = match.Groups["num"].Success ? int.Parse(match.Groups["num"].Value) : 1;
+            } else {
+                str = fullString;
+                num = 0;
+            }
+
+            while (true) {
+                ++num;
+                string copiedStr = str + (num == 1 ? " (Copy)" : $" (Copy {num})");
+                if (usedStrings == null || !usedStrings.Contains(copiedStr))
+                    return copiedStr;
+            }
         }
     }
 }

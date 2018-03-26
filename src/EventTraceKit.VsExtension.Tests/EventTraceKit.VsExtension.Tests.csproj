@@ -9,6 +9,7 @@
     <RootNamespace>EventTraceKit.VsExtension.Tests</RootNamespace>
     <AssemblyName>EventTraceKit.VsExtension.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <LangVersion>latest</LangVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <NuGetPackageImportStamp>
@@ -51,7 +52,9 @@
   <ItemGroup>
     <Compile Include="Extensions\StringBuilderExtensionsTest.cs" />
     <Compile Include="FileCacheTest.cs" />
-    <Compile Include="FilterTest.cs" />
+    <Compile Include="Filtering\ExpressionConverterVisitorTest.cs" />
+    <Compile Include="Filtering\FilterExpressionParserTest.cs" />
+    <Compile Include="Filtering\TraceLogFilterTest.cs" />
     <Compile Include="Formatting\FormatProviderTest.cs" />
     <Compile Include="MessageFormatterTest.cs" />
     <Compile Include="MultiRangeTest.cs" />
@@ -80,6 +83,9 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper">
       <Version>6.2.2</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp">
+      <Version>2.6.1</Version>
     </PackageReference>
     <PackageReference Include="xunit">
       <Version>2.3.1</Version>

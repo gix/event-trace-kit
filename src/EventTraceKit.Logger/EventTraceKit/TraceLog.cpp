@@ -9,6 +9,30 @@ using msclr::interop::marshal_as;
 namespace EventTraceKit::Tracing
 {
 
+namespace
+{
+
+etk::TraceLogFilterEvent* GetNativeFunctionPtr(TraceLogFilterPredicate^ filter)
+{
+    if (!filter) return nullptr;
+    return static_cast<etk::TraceLogFilterEvent*>(
+        Marshal::GetFunctionPointerForDelegate(filter).ToPointer());
+}
+
+class ManagedTraceLogFilter : public etk::TraceLogFilter
+{
+public:
+    ManagedTraceLogFilter(TraceLogFilterPredicate^ filter)
+        : etk::TraceLogFilter(GetNativeFunctionPtr(filter)), predicate(filter)
+    {
+    }
+
+private:
+    gcroot<TraceLogFilterPredicate^> predicate;
+};
+
+} // namespace
+
 TraceLog::TraceLog()
 {
     onEventsChangedCallback = gcnew EventsChangedDelegate(this, &TraceLog::OnEventsChanged);
@@ -29,17 +53,11 @@ void TraceLog::OnEventsChanged(UIntPtr newCount)
     EventsChanged(newCount);
 }
 
-static etk::TraceLogFilterEvent* GetNativeFunctionPtr(TraceLogFilterPredicate^ filter)
-{
-    if (!filter) return nullptr;
-    return static_cast<etk::TraceLogFilterEvent*>(
-        Marshal::GetFunctionPointerForDelegate(filter).ToPointer());
-}
-
 void TraceLog::SetFilter(TraceLogFilterPredicate^ filter)
 {
-    this->filteredLog->SetFilter(GetNativeFunctionPtr(filter));
-    this->filter = filter; // Keep the managed delegate alive.
+    auto t = std::make_unique<ManagedTraceLogFilter>(filter);
+    this->filteredLog->SetFilter(t.get());
+    t.release();
 }
 
 

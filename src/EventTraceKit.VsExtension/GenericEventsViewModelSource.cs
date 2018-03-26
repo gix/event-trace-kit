@@ -8,11 +8,9 @@ namespace EventTraceKit.VsExtension
     using System.Windows;
     using EventTraceKit.VsExtension.Controls;
     using EventTraceKit.VsExtension.Extensions;
-    using EventTraceKit.VsExtension.Filtering;
     using EventTraceKit.VsExtension.Native;
     using EventTraceKit.VsExtension.Utilities;
     using EventTraceKit.VsExtension.Windows;
-    using Expression = System.Linq.Expressions.Expression;
 
     public sealed class GenericEventsViewModelSource
     {
@@ -53,95 +51,115 @@ namespace EventTraceKit.VsExtension
         private readonly ColumnViewModelPreset threadStartModulePreset;
         private readonly ColumnViewModelPreset threadStartFunctionPreset;
 
+        public static readonly Guid ProviderIdColumnId = new Guid("9B9DAF0F-EAC6-43FE-B68F-EAF0D9A4AFB9");
+        public static readonly Guid ProviderNameColumnId = new Guid("934D2438-65F3-4AE9-8FEA-94B81AA5A4A6");
+        public static readonly Guid IdColumnId = new Guid("0FE03A19-FBCB-4514-9441-2D0B1AB5E2E1");
+        public static readonly Guid VersionColumnId = new Guid("215AB0D7-BEC9-4A70-96C4-028EE3404F09");
+        public static readonly Guid ChannelColumnId = new Guid("CF9373E2-5876-4F84-BB3A-F6C878D36F86");
+        public static readonly Guid ChannelNameColumnId = new Guid("FAC4B329-DD59-41D2-8AA8-83B66DFBAECC");
+        public static readonly Guid LevelColumnId = new Guid("388591F3-43B2-4E68-B080-0B1A48D33559");
+        public static readonly Guid LevelNameColumnId = new Guid("1B2ADB63-7C73-4330-927D-4FF37A60B249");
+        public static readonly Guid TaskColumnId = new Guid("CE90F4D8-0FDE-4324-8D39-5BF74C8F4D9B");
+        public static readonly Guid TaskNameColumnId = new Guid("730765B3-2E42-43E7-8B26-BAB7F4999E69");
+        public static readonly Guid OpcodeColumnId = new Guid("F08CCD14-FE1E-4D9E-BE6C-B527EA4B25DA");
+        public static readonly Guid OpcodeNameColumnId = new Guid("99C0A192-174F-4DD5-AFD8-32F513506E88");
+        public static readonly Guid KeywordColumnId = new Guid("62DC8843-C7BF-45F0-AC61-644395D53409");
+        public static readonly Guid ThreadIdColumnId = new Guid("6BEB4F24-53DC-4A9D-8EEA-ED8F69990349");
+        public static readonly Guid ProcessIdColumnId = new Guid("7600E8FD-D7C2-4BA4-9DE4-AADE5230DC53");
+        public static readonly Guid DecodingSourceColumnId = new Guid("D06EBF0F-A744-4E27-B635-F2E4A56B9B50");
+        public static readonly Guid MessageColumnId = new Guid("89F731F6-D4D2-40E8-9615-6EB5A5A68A75");
+        public static readonly Guid TimeAbsoluteColumnId = new Guid("FC87155E-AD2A-4294-A425-55E914FA1821");
+        public static readonly Guid TimeRelativeColumnId = new Guid("8823874B-917D-4D64-ABDF-EA29E6C87789");
+
         public GenericEventsViewModelSource()
         {
             providerIdPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("9B9DAF0F-EAC6-43FE-B68F-EAF0D9A4AFB9"),
+                    Id = ProviderIdColumnId,
                     Name = "Provider Id",
                     IsVisible = false,
                     Width = 100
                 }.EnsureFrozen();
             providerNamePreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("934D2438-65F3-4AE9-8FEA-94B81AA5A4A6"),
+                    Id = ProviderNameColumnId,
                     Name = "Provider",
                     IsVisible = true,
                     Width = 150
                 }.EnsureFrozen();
             idPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("0FE03A19-FBCB-4514-9441-2D0B1AB5E2E1"),
+                    Id = IdColumnId,
                     Name = "Id",
                     IsVisible = true,
                     Width = 50
                 }.EnsureFrozen();
             versionPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("215AB0D7-BEC9-4A70-96C4-028EE3404F09"),
+                    Id = VersionColumnId,
                     Name = "Version",
                     IsVisible = false,
                     Width = 80
                 }.EnsureFrozen();
             channelPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("CF9373E2-5876-4F84-BB3A-F6C878D36F86"),
+                    Id = ChannelColumnId,
                     Name = "Channel",
                     IsVisible = false,
                     Width = 80
                 }.EnsureFrozen();
             channelNamePreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("FAC4B329-DD59-41D2-8AA8-83B66DFBAECC"),
+                    Id = ChannelNameColumnId,
                     Name = "Channel Name",
                     IsVisible = false,
                     Width = 80
                 }.EnsureFrozen();
             levelPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("388591F3-43B2-4E68-B080-0B1A48D33559"),
+                    Id = LevelColumnId,
                     Name = "Level",
                     IsVisible = false,
                     Width = 80
                 }.EnsureFrozen();
             levelNamePreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("1B2ADB63-7C73-4330-927D-4FF37A60B249"),
+                    Id = LevelNameColumnId,
                     Name = "Level Name",
                     IsVisible = false,
                     Width = 80
                 }.EnsureFrozen();
             taskPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("CE90F4D8-0FDE-4324-8D39-5BF74C8F4D9B"),
+                    Id = TaskColumnId,
                     Name = "Task",
                     IsVisible = false,
                     Width = 80
                 }.EnsureFrozen();
             taskNamePreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("730765B3-2E42-43E7-8B26-BAB7F4999E69"),
+                    Id = TaskNameColumnId,
                     Name = "Task Name",
                     IsVisible = true,
                     Width = 80
                 }.EnsureFrozen();
             opcodeOrTypePreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("F08CCD14-FE1E-4D9E-BE6C-B527EA4B25DA"),
+                    Id = OpcodeColumnId,
                     Name = "Opcode/Type",
                     IsVisible = false,
                     Width = 80
                 }.EnsureFrozen();
             opcodeNamePreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("99C0A192-174F-4DD5-AFD8-32F513506E88"),
+                    Id = OpcodeNameColumnId,
                     Name = "Opcode Name",
                     IsVisible = true,
                     Width = 80
                 }.EnsureFrozen();
             keywordPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("62DC8843-C7BF-45F0-AC61-644395D53409"),
+                    Id = KeywordColumnId,
                     Name = "Keyword",
                     IsVisible = false,
                     Width = 80,
@@ -150,7 +168,7 @@ namespace EventTraceKit.VsExtension
                 }.EnsureFrozen();
             messagePreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("89F731F6-D4D2-40E8-9615-6EB5A5A68A75"),
+                    Id = MessageColumnId,
                     Name = "Message",
                     IsVisible = true,
                     Width = 500
@@ -185,7 +203,7 @@ namespace EventTraceKit.VsExtension
                 }.EnsureFrozen();
             threadIdPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("6BEB4F24-53DC-4A9D-8EEA-ED8F69990349"),
+                    Id = ThreadIdColumnId,
                     Name = "TID",
                     IsVisible = true,
                     Width = 40,
@@ -194,7 +212,7 @@ namespace EventTraceKit.VsExtension
                 }.EnsureFrozen();
             processIdPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("7600E8FD-D7C2-4BA4-9DE4-AADE5230DC53"),
+                    Id = ProcessIdColumnId,
                     Name = "PID",
                     IsVisible = true,
                     Width = 40,
@@ -261,7 +279,7 @@ namespace EventTraceKit.VsExtension
                 }.EnsureFrozen();
             timeAbsoluteGeneratorPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("FC87155E-AD2A-4294-A425-55E914FA1821"),
+                    Id = TimeAbsoluteColumnId,
                     Name = "Time",
                     IsVisible = false,
                     Width = 100,
@@ -269,7 +287,7 @@ namespace EventTraceKit.VsExtension
                 }.EnsureFrozen();
             timeRelativeGeneratorPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("8823874B-917D-4D64-ABDF-EA29E6C87789"),
+                    Id = TimeRelativeColumnId,
                     Name = "Time Elapsed",
                     IsVisible = true,
                     Width = 120,
@@ -277,7 +295,7 @@ namespace EventTraceKit.VsExtension
                 }.EnsureFrozen();
             decodingSourcePreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("D06EBF0F-A744-4E27-B635-F2E4A56B9B50"),
+                    Id = DecodingSourceColumnId,
                     Name = "Decoding Source",
                     Width = 150,
                 }.EnsureFrozen();
@@ -322,91 +340,91 @@ namespace EventTraceKit.VsExtension
         {
             var providerIdPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("9B9DAF0F-EAC6-43FE-B68F-EAF0D9A4AFB9"),
+                    Id = ProviderIdColumnId,
                     Name = "Provider Id",
                     IsVisible = false,
                     Width = 100
                 }.EnsureFrozen();
             var providerNamePreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("934D2438-65F3-4AE9-8FEA-94B81AA5A4A6"),
+                    Id = ProviderNameColumnId,
                     Name = "Provider",
                     IsVisible = true,
                     Width = 150
                 }.EnsureFrozen();
             var idPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("0FE03A19-FBCB-4514-9441-2D0B1AB5E2E1"),
+                    Id = IdColumnId,
                     Name = "Id",
                     IsVisible = true,
                     Width = 50
                 }.EnsureFrozen();
             var versionPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("215AB0D7-BEC9-4A70-96C4-028EE3404F09"),
+                    Id = VersionColumnId,
                     Name = "Version",
                     IsVisible = false,
                     Width = 80
                 }.EnsureFrozen();
             var channelPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("CF9373E2-5876-4F84-BB3A-F6C878D36F86"),
+                    Id = ChannelColumnId,
                     Name = "Channel",
                     IsVisible = false,
                     Width = 80
                 }.EnsureFrozen();
             var channelNamePreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("FAC4B329-DD59-41D2-8AA8-83B66DFBAECC"),
+                    Id = ChannelNameColumnId,
                     Name = "Channel Name",
                     IsVisible = false,
                     Width = 80
                 }.EnsureFrozen();
             var levelPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("388591F3-43B2-4E68-B080-0B1A48D33559"),
+                    Id = LevelColumnId,
                     Name = "Level",
                     IsVisible = false,
                     Width = 80
                 }.EnsureFrozen();
             var levelNamePreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("1B2ADB63-7C73-4330-927D-4FF37A60B249"),
+                    Id = LevelNameColumnId,
                     Name = "Level Name",
                     IsVisible = false,
                     Width = 80
                 }.EnsureFrozen();
             var taskPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("CE90F4D8-0FDE-4324-8D39-5BF74C8F4D9B"),
+                    Id = TaskColumnId,
                     Name = "Task",
                     IsVisible = false,
                     Width = 80
                 }.EnsureFrozen();
             var taskNamePreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("730765B3-2E42-43E7-8B26-BAB7F4999E69"),
+                    Id = TaskNameColumnId,
                     Name = "Task Name",
                     IsVisible = true,
                     Width = 80
                 }.EnsureFrozen();
             var opcodeOrTypePreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("F08CCD14-FE1E-4D9E-BE6C-B527EA4B25DA"),
+                    Id = OpcodeColumnId,
                     Name = "Opcode/Type",
                     IsVisible = false,
                     Width = 80
                 }.EnsureFrozen();
             var opcodeNamePreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("99C0A192-174F-4DD5-AFD8-32F513506E88"),
+                    Id = OpcodeNameColumnId,
                     Name = "Opcode Name",
                     IsVisible = true,
                     Width = 80
                 }.EnsureFrozen();
             var keywordPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("62DC8843-C7BF-45F0-AC61-644395D53409"),
+                    Id = KeywordColumnId,
                     Name = "Keyword",
                     IsVisible = false,
                     Width = 80,
@@ -415,23 +433,23 @@ namespace EventTraceKit.VsExtension
                 }.EnsureFrozen();
             var messagePreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("89F731F6-D4D2-40E8-9615-6EB5A5A68A75"),
+                    Id = MessageColumnId,
                     Name = "Message",
                     IsVisible = true,
                     Width = 500
                 }.EnsureFrozen();
             var processIdPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("7600E8FD-D7C2-4BA4-9DE4-AADE5230DC53"),
+                    Id = ProcessIdColumnId,
                     Name = "PID",
                     IsVisible = true,
                     Width = 40,
                     TextAlignment = TextAlignment.Right,
-                    HelpText = "Process ID (0 = PID Not Found)"
+                    HelpText = "Process ID"
                 }.EnsureFrozen();
             var threadIdPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("6BEB4F24-53DC-4A9D-8EEA-ED8F69990349"),
+                    Id = ThreadIdColumnId,
                     Name = "TID",
                     IsVisible = true,
                     Width = 40,
@@ -440,7 +458,7 @@ namespace EventTraceKit.VsExtension
                 }.EnsureFrozen();
             var timeAbsoluteGeneratorPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("FC87155E-AD2A-4294-A425-55E914FA1821"),
+                    Id = TimeAbsoluteColumnId,
                     Name = "Time",
                     IsVisible = false,
                     Width = 120,
@@ -448,34 +466,37 @@ namespace EventTraceKit.VsExtension
                 }.EnsureFrozen();
             var timeRelativeGeneratorPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("8823874B-917D-4D64-ABDF-EA29E6C87789"),
+                    Id = TimeRelativeColumnId,
                     Name = "Time Elapsed",
                     IsVisible = true,
                     Width = 120,
                     CellFormat = "G"
                 }.EnsureFrozen();
 
-            var preset = new AsyncDataViewModelPreset();
-            preset.Name = "Default";
-            preset.ConfigurableColumns.Add(timeAbsoluteGeneratorPreset);
-            preset.ConfigurableColumns.Add(timeRelativeGeneratorPreset);
-            preset.ConfigurableColumns.Add(providerIdPreset);
-            preset.ConfigurableColumns.Add(providerNamePreset);
-            preset.ConfigurableColumns.Add(idPreset);
-            preset.ConfigurableColumns.Add(versionPreset);
-            preset.ConfigurableColumns.Add(channelPreset);
-            preset.ConfigurableColumns.Add(channelNamePreset);
-            preset.ConfigurableColumns.Add(taskPreset);
-            preset.ConfigurableColumns.Add(taskNamePreset);
-            preset.ConfigurableColumns.Add(opcodeNamePreset);
-            preset.ConfigurableColumns.Add(opcodeOrTypePreset);
-            preset.ConfigurableColumns.Add(levelPreset);
-            preset.ConfigurableColumns.Add(levelNamePreset);
-            preset.ConfigurableColumns.Add(keywordPreset);
-            preset.ConfigurableColumns.Add(processIdPreset);
-            preset.ConfigurableColumns.Add(threadIdPreset);
-            preset.ConfigurableColumns.Add(messagePreset);
-            preset.LeftFrozenColumnCount = 2;
+            var preset = new AsyncDataViewModelPreset {
+                Name = "Default",
+                LeftFrozenColumnCount = 2,
+                ConfigurableColumns = {
+                    timeAbsoluteGeneratorPreset,
+                    timeRelativeGeneratorPreset,
+                    providerIdPreset,
+                    providerNamePreset,
+                    idPreset,
+                    versionPreset,
+                    channelPreset,
+                    channelNamePreset,
+                    taskPreset,
+                    taskNamePreset,
+                    opcodeNamePreset,
+                    opcodeOrTypePreset,
+                    levelPreset,
+                    levelNamePreset,
+                    keywordPreset,
+                    processIdPreset,
+                    threadIdPreset,
+                    messagePreset,
+                }
+            };
             preset.Freeze();
 
             return preset;
@@ -489,27 +510,26 @@ namespace EventTraceKit.VsExtension
 
             var table = new DataTable("Generic Events");
             var templatePreset = new AsyncDataViewModelPreset();
-            var filter = TraceLogFilterBuilder.Instance;
 
             AddColumn(table, templatePreset, timePointGeneratorPreset, DataColumn.Create(info.ProjectTimePoint));
             AddColumn(table, templatePreset, timeAbsoluteGeneratorPreset, DataColumn.Create(info.ProjectTimeAbsolute));
             AddColumn(table, templatePreset, timeRelativeGeneratorPreset, DataColumn.Create(info.ProjectTimeRelative));
-            AddColumn(table, templatePreset, providerIdPreset, DataColumn.Create(info.ProjectProviderId), filter.ProviderId);
+            AddColumn(table, templatePreset, providerIdPreset, DataColumn.Create(info.ProjectProviderId));
             AddColumn(table, templatePreset, providerNamePreset, DataColumn.Create(info.ProjectProviderName));
-            AddColumn(table, templatePreset, idPreset, DataColumn.Create(info.ProjectId), filter.Id);
-            AddColumn(table, templatePreset, versionPreset, DataColumn.Create(info.ProjectVersion), filter.Version);
+            AddColumn(table, templatePreset, idPreset, DataColumn.Create(info.ProjectId));
+            AddColumn(table, templatePreset, versionPreset, DataColumn.Create(info.ProjectVersion));
             AddColumn(table, templatePreset, symbolPreset, DataColumn.Create(info.ProjectSymbol));
-            AddColumn(table, templatePreset, channelPreset, DataColumn.Create(info.ProjectChannel), filter.Channel);
-            AddColumn(table, templatePreset, channelNamePreset, DataColumn.Create(info.ProjectChannelName), filter.Channel);
-            AddColumn(table, templatePreset, taskPreset, DataColumn.Create(info.ProjectTask), filter.Task);
-            AddColumn(table, templatePreset, taskNamePreset, DataColumn.Create(info.ProjectTaskName), filter.Task);
-            AddColumn(table, templatePreset, opcodeNamePreset, DataColumn.Create(info.ProjectOpCodeName), filter.Opcode);
-            AddColumn(table, templatePreset, opcodeOrTypePreset, DataColumn.Create(info.ProjectOpCode), filter.Opcode);
-            AddColumn(table, templatePreset, levelPreset, DataColumn.Create(info.ProjectLevel), filter.Level);
-            AddColumn(table, templatePreset, levelNamePreset, DataColumn.Create(info.ProjectLevelName), filter.Level);
+            AddColumn(table, templatePreset, channelPreset, DataColumn.Create(info.ProjectChannel));
+            AddColumn(table, templatePreset, channelNamePreset, DataColumn.Create(info.ProjectChannelName));
+            AddColumn(table, templatePreset, taskPreset, DataColumn.Create(info.ProjectTask));
+            AddColumn(table, templatePreset, taskNamePreset, DataColumn.Create(info.ProjectTaskName));
+            AddColumn(table, templatePreset, opcodeOrTypePreset, DataColumn.Create(info.ProjectOpCode));
+            AddColumn(table, templatePreset, opcodeNamePreset, DataColumn.Create(info.ProjectOpCodeName));
+            AddColumn(table, templatePreset, levelPreset, DataColumn.Create(info.ProjectLevel));
+            AddColumn(table, templatePreset, levelNamePreset, DataColumn.Create(info.ProjectLevelName));
             AddColumn(table, templatePreset, keywordPreset, DataColumn.Create(info.ProjectKeyword));
-            AddColumn(table, templatePreset, processIdPreset, DataColumn.Create(info.ProjectProcessId), filter.ProcessId);
-            AddColumn(table, templatePreset, threadIdPreset, DataColumn.Create(info.ProjectThreadId), filter.ThreadId);
+            AddColumn(table, templatePreset, processIdPreset, DataColumn.Create(info.ProjectProcessId));
+            AddColumn(table, templatePreset, threadIdPreset, DataColumn.Create(info.ProjectThreadId));
             AddColumn(table, templatePreset, messagePreset, DataColumn.Create(info.ProjectMessage));
             AddColumn(table, templatePreset, eventNamePreset, DataColumn.Create(info.ProjectEventName));
             AddColumn(table, templatePreset, eventTypePreset, DataColumn.Create(info.ProjectEventType));
@@ -521,7 +541,7 @@ namespace EventTraceKit.VsExtension
             AddColumn(table, templatePreset, userSecurityIdentifierPreset, DataColumn.Create(info.ProjectUserSecurityIdentifier));
             AddColumn(table, templatePreset, sessionIdPreset, DataColumn.Create(info.ProjectSessionId));
             AddColumn(table, templatePreset, eventKeyPreset, DataColumn.Create(info.ProjectEventKey));
-            AddColumn(table, templatePreset, decodingSourcePreset, DataColumn.Create(info.ProjectDecodingSource), filter.DecodingSource);
+            AddColumn(table, templatePreset, decodingSourcePreset, DataColumn.Create(info.ProjectDecodingSource));
             //AddColumn(table, templatePreset, modernProcessDataPreset, DataColumn.Create<object>());
             //AddColumn(table, templatePreset, processNamePreset, DataColumn.Create<string>());
             //AddColumn(table, templatePreset, stackTopPreset, DataColumn.Create<object>());
@@ -533,8 +553,7 @@ namespace EventTraceKit.VsExtension
 
         private void AddColumn(
             DataTable table, AsyncDataViewModelPreset templatePreset,
-            ColumnViewModelPreset preset, DataColumn column,
-            Expression filterExpr = null)
+            ColumnViewModelPreset preset, DataColumn column)
         {
             column.Id = preset.Id;
             column.Name = preset.Name;
@@ -542,7 +561,6 @@ namespace EventTraceKit.VsExtension
             column.IsVisible = preset.IsVisible;
             column.TextAlignment = preset.TextAlignment;
             column.IsResizable = true;
-            column.FilterSelector = filterExpr;
             table.Add(column);
             templatePreset.ConfigurableColumns.Add(preset);
         }

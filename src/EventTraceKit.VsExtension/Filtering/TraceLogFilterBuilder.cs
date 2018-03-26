@@ -128,6 +128,9 @@ namespace EventTraceKit.VsExtension.Filtering
 
         private Expression CreateComparisonExpr(TraceLogFilterCondition condition)
         {
+            if (condition.Expression != null)
+                return ConvertExpr(condition.Expression);
+
             var property = condition.Property;
             var value = CreateValueExpression(condition.Value);
             switch (condition.Relation) {
@@ -174,6 +177,12 @@ namespace EventTraceKit.VsExtension.Filtering
             }
 
             return Expression.Constant(value);
+        }
+
+        private static Expression ConvertExpr(string expr)
+        {
+            var tree = FilterSyntaxFactory.ParseExpression(expr);
+            return ExpressionFactoryVisitor.Convert(tree);
         }
     }
 }

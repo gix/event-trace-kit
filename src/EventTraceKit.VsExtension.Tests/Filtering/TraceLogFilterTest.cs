@@ -1,4 +1,4 @@
-namespace EventTraceKit.VsExtension.Tests
+namespace EventTraceKit.VsExtension.Tests.Filtering
 {
     using System;
     using System.Runtime.InteropServices;
@@ -6,7 +6,7 @@ namespace EventTraceKit.VsExtension.Tests
     using EventTraceKit.VsExtension.Native;
     using Xunit;
 
-    public class FilterTest
+    public class TraceLogFilterTest
     {
         [Theory]
         [InlineData("E53CD252-C0DA-49DD-93B0-28744D498D0F", 1, false)]
@@ -17,10 +17,13 @@ namespace EventTraceKit.VsExtension.Tests
             var builder = TraceLogFilterBuilder.Instance;
 
             var filter = new TraceLogFilter();
+            //filter.Conditions.Add(new TraceLogFilterCondition(
+            //    builder.ProviderId, true, FilterRelationKind.NotEqual, FilterConditionAction.Exclude, new Guid("E53CD252-C0DA-49DD-93B0-28744D498D0F")));
+            //filter.Conditions.Add(new TraceLogFilterCondition(
+            //    builder.Id, true, FilterRelationKind.Equal, FilterConditionAction.Exclude, (ushort)1));
+
             filter.Conditions.Add(new TraceLogFilterCondition(
-                builder.ProviderId, true, FilterRelationKind.NotEqual, FilterConditionAction.Exclude, new Guid("E53CD252-C0DA-49DD-93B0-28744D498D0F")));
-            filter.Conditions.Add(new TraceLogFilterCondition(
-                builder.Id, true, FilterRelationKind.Equal, FilterConditionAction.Exclude, (ushort)1));
+                "ProviderId == {FF4B1F18-0D41-4DE6-A576-7FD58477A869} || id != 1", true, FilterConditionAction.Include));
 
             var record = new EVENT_RECORD();
             var tei = new TRACE_EVENT_INFO();

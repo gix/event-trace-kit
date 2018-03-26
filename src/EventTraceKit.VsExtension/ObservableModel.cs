@@ -20,12 +20,18 @@ namespace EventTraceKit.VsExtension
 
         protected void RaisePropertyChanged([CallerMemberName] string propertyName = null)
         {
+            OnPropertyChanged(propertyName);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         protected void RaisePropertyChanged(PropertyChangedEventArgs args)
         {
+            OnPropertyChanged(args.PropertyName);
             PropertyChanged?.Invoke(this, args);
+        }
+
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
         }
     }
 }

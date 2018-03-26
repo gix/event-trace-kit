@@ -101,10 +101,15 @@ namespace EventTraceKit.VsExtension
 
     public sealed class DataColumnView<T> : DataColumnView
     {
-        public DataColumnView(DataColumn column, DataColumnViewInfo info)
+        public DataColumnView(DataColumn<T> column, DataColumnViewInfo info)
             : base(column, info)
         {
+            Column = column;
         }
+
+        public new DataColumn<T> Column { get; }
+
+        public T this[int index] => Column[index];
 
         protected sealed override CellValue GetCellValueCore(int index)
         {
@@ -127,7 +132,6 @@ namespace EventTraceKit.VsExtension
         public bool IsResizable { get; set; }
         public TextAlignment TextAlignment { get; set; }
         public Type DataType { get; }
-        public Expression FilterSelector { get; set; }
 
         public DataColumnView CreateView(DataColumnViewInfo info)
         {

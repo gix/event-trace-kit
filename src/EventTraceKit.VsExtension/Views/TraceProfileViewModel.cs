@@ -36,7 +36,16 @@ namespace EventTraceKit.VsExtension.Views
             set => SetProperty(ref name, value);
         }
 
-        public ITraceSettingsContext Context { get; set; }
+        public ITraceSettingsContext Context
+        {
+            get => context;
+            set
+            {
+                context = value;
+                foreach (var collector in Collectors)
+                    collector.Context = value;
+            }
+        }
 
         public ObservableCollection<CollectorViewModel> Collectors { get; }
 
@@ -47,6 +56,8 @@ namespace EventTraceKit.VsExtension.Views
         }
 
         private ICommand addOrRemoveSystemCollectorCommand;
+        private ITraceSettingsContext context;
+
         public ICommand AddOrRemoveSystemCollectorCommand =>
             addOrRemoveSystemCollectorCommand ??
             (addOrRemoveSystemCollectorCommand = new AsyncDelegateCommand(AddOrRemoveSystemCollector));

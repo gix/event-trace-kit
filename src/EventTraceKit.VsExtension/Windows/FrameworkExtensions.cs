@@ -223,5 +223,42 @@ namespace EventTraceKit.VsExtension.Windows
             var wih = new WindowInteropHelper(window);
             return new HandleRef(window, wih.Handle);
         }
+
+        public static Binding Clone(this Binding source)
+        {
+            var clone = new Binding {
+                AsyncState = source.AsyncState,
+                BindingGroupName = source.BindingGroupName,
+                BindsDirectlyToSource = source.BindsDirectlyToSource,
+                Converter = source.Converter,
+                ConverterCulture = source.ConverterCulture,
+                ConverterParameter = source.ConverterParameter,
+                FallbackValue = source.FallbackValue,
+                IsAsync = source.IsAsync,
+                Mode = source.Mode,
+                NotifyOnSourceUpdated = source.NotifyOnSourceUpdated,
+                NotifyOnTargetUpdated = source.NotifyOnTargetUpdated,
+                NotifyOnValidationError = source.NotifyOnValidationError,
+                Path = source.Path,
+                StringFormat = source.StringFormat,
+                TargetNullValue = source.TargetNullValue,
+                UpdateSourceExceptionFilter = source.UpdateSourceExceptionFilter,
+                UpdateSourceTrigger = source.UpdateSourceTrigger,
+                ValidatesOnDataErrors = source.ValidatesOnDataErrors,
+                ValidatesOnExceptions = source.ValidatesOnExceptions,
+                XPath = source.XPath
+            };
+            if (source.Source != null)
+                clone.Source = source.Source;
+            else if (source.RelativeSource != null)
+                clone.RelativeSource = source.RelativeSource;
+            else if (source.ElementName != null)
+                clone.ElementName = source.ElementName;
+
+            foreach (var validationRule in source.ValidationRules)
+                clone.ValidationRules.Add(validationRule);
+
+            return clone;
+        }
     }
 }

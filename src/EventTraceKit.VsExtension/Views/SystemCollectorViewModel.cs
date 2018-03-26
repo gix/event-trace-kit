@@ -9,13 +9,15 @@ namespace EventTraceKit.VsExtension.Views
     [SerializedShape(typeof(Settings.Persistence.SystemCollector))]
     public class SystemCollectorViewModel : CollectorViewModel
     {
+        private string name = "System Collector";
+
         public SystemCollectorViewModel()
         {
             KernelFlags.Add(new KernelFlag(false, "Process", "Process create/delete", 0x00000001));
             KernelFlags.Add(new KernelFlag(false, "Image Load", "Kernel and user mode Image Load/Unload events", 0x00000004));
         }
 
-        private string name = "System Collector";
+        public override ITraceSettingsContext Context { get; set; }
 
         public string Name
         {
