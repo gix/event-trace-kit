@@ -24,6 +24,7 @@ namespace EventTraceKit.VsExtension
         private readonly ManualResetEvent asyncReadQueueComplete;
         private readonly object asyncReadWorkQueueLock;
         private bool allowBackgroundThreads;
+        private int countReadOperationInProgress;
 
         public AsyncDataViewModel(
             WorkManager workManager,
@@ -201,7 +202,6 @@ namespace EventTraceKit.VsExtension
         internal WorkManager WorkManager => workManager;
 
         public IDataView DataView => dataView;
-        private int countReadOperationInProgress;
         internal object DataValidityToken => DataView.DataValidityToken;
 
         public event EventHandler DataInvalidated;
@@ -360,17 +360,9 @@ namespace EventTraceKit.VsExtension
 
         internal CellValue GetCellValue(int rowIndex, int visibleColumnIndex)
         {
-            if (workManager.UIThread.CheckAccess()) {
-                return workManager.BackgroundTaskFactory.StartNew(() => {
-                    var value = dataView.GetCellValue(rowIndex, visibleColumnIndex);
-                    value.PrecomputeString();
-                    return value;
-                }).Result;
-            } else {
-                var value = dataView.GetCellValue(rowIndex, visibleColumnIndex);
-                value.PrecomputeString();
-                return value;
-            }
+            var value = dataView.GetCellValue(rowIndex, visibleColumnIndex);
+            value.PrecomputeString();
+            return value;
         }
 
         public void VerifyIsReady()

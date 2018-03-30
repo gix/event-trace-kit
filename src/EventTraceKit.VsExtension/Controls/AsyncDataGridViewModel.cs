@@ -30,6 +30,20 @@ namespace EventTraceKit.VsExtension.Controls
 
         public int FocusIndex => CellsPresenter.FocusIndex;
 
+        public static readonly DependencyProperty AutoScrollProperty =
+            DependencyProperty.Register(
+                nameof(AutoScroll),
+                typeof(bool),
+                typeof(AsyncDataGridViewModel),
+                new FrameworkPropertyMetadata(
+                    false, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
+
+        public bool AutoScroll
+        {
+            get => (bool)GetValue(AutoScrollProperty);
+            set => SetValue(AutoScrollProperty, value);
+        }
+
         public event ItemEventHandler<bool> Updated;
 
         public event EventHandler DataInvalidated
@@ -53,11 +67,6 @@ namespace EventTraceKit.VsExtension.Controls
                 this.advModel = advModel;
                 this.behavior = behavior;
                 switch (behavior) {
-                    case CopyBehavior.Cell:
-                        Header = "Copy Cell";
-                        InputGestureText = "Ctrl+Shift+C";
-                        return;
-
                     case CopyBehavior.Selection:
                         Header = "Copy Selection";
                         InputGestureText = "Ctrl+C";
@@ -94,22 +103,14 @@ namespace EventTraceKit.VsExtension.Controls
         public void CopyToClipboard(CopyBehavior copyBehavior)
         {
             switch (copyBehavior) {
-                case CopyBehavior.Cell:
-                    CopyCell();
-                    break;
-
                 case CopyBehavior.Selection:
                     CopySelection().Forget();
                     break;
-
-                default:
-                    throw new InvalidOperationException();
             }
         }
 
         private async Task CopySelection()
         {
-            var advModel = ColumnsModel.Model;
             var visibleColumns = ColumnsModel.VisibleColumns;
             var rowSelection = RowSelection.GetSnapshot();
 
@@ -123,7 +124,6 @@ namespace EventTraceKit.VsExtension.Controls
 
             var text = await advModel.WorkManager.BackgroundTaskFactory.RunWithProgress(
                 "Copying…",
-                Application.Current.MainWindow,
                 (cancel, progress) => {
                     var buffer = new StringBuilder();
                     foreach (var column in columns)
@@ -158,19 +158,6 @@ namespace EventTraceKit.VsExtension.Controls
                 });
 
             ClipboardUtils.SetText(text);
-        }
-
-        private void CopyCell()
-        {
-            //var clickedColumn = this.ColumnsViewModel.ClickedColumn;
-            //if (clickedColumn != null) {
-            //    int focusIndex = this.FocusIndex;
-            //    this.ColumnsViewModel.HdvViewModel.WorkManager.BackgroundThread.Send(delegate {
-            //        CellValue cellValue = clickedColumn.GetCellValueNotCached(focusIndex);
-            //        clipboardText = CellValueToClipboardString(cellValue, true, false);
-            //        clipboardHTML = CellValueToClipboardHtmlString(cellValue);
-            //    });
-            //}
         }
     }
 

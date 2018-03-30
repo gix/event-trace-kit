@@ -33,6 +33,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         private bool queueRenderWhenVisible;
 
         private Point computedOffset;
+        private DragSelectionContext dragSelectionCtx;
 
         public AsyncDataGridCellsPresenter()
         {
@@ -157,6 +158,39 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 InvalidateRowCache();
                 InvalidateVisual();
             }
+        }
+
+        #endregion
+
+        #region public bool AutoScroll { get; set; }
+
+        /// <summary>
+        ///   Identifies the <see cref="AutoScroll"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty AutoScrollProperty =
+            DependencyProperty.Register(
+                nameof(AutoScroll),
+                typeof(bool),
+                typeof(AsyncDataGridCellsPresenter),
+                new FrameworkPropertyMetadata(
+                    false,
+                    FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
+                    (d, e) => ((AsyncDataGridCellsPresenter)d).OnAutoScrollChanged(
+                        (bool)e.OldValue, (bool)e.NewValue)));
+
+        /// <summary>
+        ///   Gets or sets whether the view is auto-scrolling to the bottom.
+        /// </summary>
+        public bool AutoScroll
+        {
+            get => (bool)GetValue(AutoScrollProperty);
+            set => SetValue(AutoScrollProperty, value);
+        }
+
+        private void OnAutoScrollChanged(bool oldValue, bool newValue)
+        {
+            if (newValue)
+                ScrollToEnd();
         }
 
         #endregion
@@ -865,13 +899,43 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 nameof(ScrollOwner),
                 typeof(ScrollViewer),
                 typeof(AsyncDataGridCellsPresenter),
-                new FrameworkPropertyMetadata(null));
+                new FrameworkPropertyMetadata(OnScrollOwnerChanged));
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ScrollViewer ScrollOwner
         {
             get => (ScrollViewer)GetValue(ScrollOwnerProperty);
             set => SetValue(ScrollOwnerProperty, value);
+        }
+
+        private static void OnScrollOwnerChanged(
+            DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var source = (AsyncDataGridCellsPresenter)d;
+            var oldValue = (ScrollViewer)e.OldValue;
+            var newValue = (ScrollViewer)e.NewValue;
+            if (oldValue != null)
+                oldValue.ScrollChanged -= source.OnScrollOwnerScrollChanged;
+            if (newValue != null)
+                newValue.ScrollChanged += source.OnScrollOwnerScrollChanged;
+        }
+
+        private void OnScrollOwnerScrollChanged(object sender, ScrollChangedEventArgs args)
+        {
+            // Ignore any extend changes so autoscrolling stays enabled when
+            // resizing or clearing.
+            if (args.ViewportHeightChange != 0 || args.ExtentHeightChange != 0)
+                return;
+
+            if (args.VerticalChange < 0) {
+                AutoScroll = false;
+            }
+            //else if (args.VerticalChange > 0) {
+            //    const double autoScrollThreshold = 5.0;
+            //    double bottomEdge = args.VerticalOffset + args.ViewportHeight;
+            //    if (Math.Abs(bottomEdge - args.ExtentHeight) < autoScrollThreshold)
+            //        AutoScroll = true;
+            //}
         }
 
         #endregion
@@ -1084,6 +1148,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         public void LineUp()
         {
             VerticalOffset -= RowHeight;
+            AutoScroll = false;
         }
 
         public void LineDown()
@@ -1104,6 +1169,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         public void PageUp()
         {
             VerticalOffset -= ViewportHeight;
+            AutoScroll = false;
         }
 
         public void PageDown()
@@ -1123,18 +1189,24 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public void MouseWheelUp()
         {
-            if (Keyboard.IsKeyDown(Key.LeftShift) | Keyboard.IsKeyDown(Key.RightShift))
+            if (Keyboard.IsKeyDown(Key.LeftShift) | Keyboard.IsKeyDown(Key.RightShift)) {
                 MouseWheelLeft();
-            else
-                VerticalOffset -= RowHeight * SystemParameters.WheelScrollLines;
+                return;
+            }
+
+            VerticalOffset -= RowHeight * SystemParameters.WheelScrollLines;
+            AutoScroll = false;
         }
 
         public void MouseWheelDown()
         {
-            if (Keyboard.IsKeyDown(Key.LeftShift) | Keyboard.IsKeyDown(Key.RightShift))
+            if (Keyboard.IsKeyDown(Key.LeftShift) | Keyboard.IsKeyDown(Key.RightShift)) {
                 MouseWheelRight();
-            else
-                VerticalOffset += RowHeight * SystemParameters.WheelScrollLines;
+                return;
+            }
+
+            VerticalOffset += RowHeight * SystemParameters.WheelScrollLines;
+            AutoScroll = false;
         }
 
         public void MouseWheelLeft()
@@ -1202,9 +1274,6 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         #endregion
 
-        private int? prevFirst;
-        private int? prevLast;
-
         public AsyncDataGridColumn GetColumnFromPosition(double x)
         {
             // Check right-frozen columns.
@@ -1256,7 +1325,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         public void QueueRender(bool forceUpdate = true)
         {
             renderNeeded = true;
-            if (queuedRender || !IsVisible)
+            if (queuedRender)
                 return;
 
             if (!IsVisible) {
@@ -1280,25 +1349,15 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         public void PerformRender(bool forceUpdate)
         {
             renderNeeded = false;
-            if (ViewModel != null && ViewModel.IsReady) {
-                UpdateScrollInfo();
+            if (ViewModel == null || !ViewModel.IsReady)
+                return;
 
-                bool updateDrawing =
-                    prevFirst == null ||
-                    prevLast == null ||
-                    (ViewModel.RowCount >= prevFirst && ViewModel.RowCount <= prevLast);
-                updateDrawing = true;
+            UpdateScrollInfo();
 
-                if (updateDrawing) {
-                    renderedCellsVisual.Update(
-                        new Rect(HorizontalOffset, VerticalOffset, ViewportWidth, ViewportHeight),
-                        new Size(ExtentWidth, ExtentHeight),
-                        forceUpdate);
-
-                    prevFirst = FirstVisibleRowIndex;
-                    prevLast = LastAvailableRowIndex;
-                }
-            }
+            renderedCellsVisual.Update(
+                new Rect(HorizontalOffset, VerticalOffset, ViewportWidth, ViewportHeight),
+                new Size(ExtentWidth, ExtentHeight),
+                forceUpdate);
         }
 
         private void OnSizeChanged(object sender, EventArgs e)
@@ -1339,28 +1398,31 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             source.renderedCellsVisual.InvalidateRowCache();
         }
 
-        private void VerifyScrollData(Size viewportSize, Size extentSize)
+        private void VerifyScrollData(Size newViewportSize, Size newExtentSize)
         {
-            if (double.IsInfinity(viewportSize.Width))
-                viewportSize.Width = extentSize.Width;
-            if (double.IsInfinity(viewportSize.Height))
-                viewportSize.Height = extentSize.Height;
+            if (double.IsInfinity(newViewportSize.Width))
+                newViewportSize.Width = newExtentSize.Width;
+            if (double.IsInfinity(newViewportSize.Height))
+                newViewportSize.Height = newExtentSize.Height;
 
-            bool valid = true;
-            valid &= SizeUtils.AreClose(viewportSize, new Size(ViewportWidth, ViewportHeight));
-            valid &= SizeUtils.AreClose(extentSize, new Size(ExtentWidth, ExtentHeight));
+            bool similar = true;
+            similar &= SizeUtils.AreClose(newViewportSize, new Size(ViewportWidth, ViewportHeight));
+            similar &= SizeUtils.AreClose(newExtentSize, new Size(ExtentWidth, ExtentHeight));
 
-            ViewportWidth = viewportSize.Width;
-            ViewportHeight = viewportSize.Height;
-            ExtentWidth = extentSize.Width;
-            ExtentHeight = extentSize.Height;
+            ViewportWidth = newViewportSize.Width;
+            ViewportHeight = newViewportSize.Height;
+            ExtentWidth = newExtentSize.Width;
+            ExtentHeight = newExtentSize.Height;
 
-            //if (this.ViewModel != null)
-            //    this.ViewModel.VerticalScrollExtent = extentSize.Height;
+            if (AutoScroll) {
+                var newVerticalOffset = ExtentHeight - ViewportHeight;
+                similar &= DoubleUtils.AreClose(newVerticalOffset, VerticalOffset);
+                VerticalOffset = newVerticalOffset;
+            }
 
-            valid &= CoerceOffsets();
+            similar &= CoerceOffsets();
 
-            if (!valid)
+            if (!similar)
                 ScrollOwner?.InvalidateScrollInfo();
         }
 
@@ -1370,9 +1432,9 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 CoerceOffset(HorizontalOffset, ExtentWidth, ViewportWidth),
                 CoerceOffset(VerticalOffset, ExtentHeight, ViewportHeight));
 
-            bool valid = PointUtils.AreClose(computedOffset, point);
+            bool similar = PointUtils.AreClose(computedOffset, point);
             computedOffset = point;
-            return valid;
+            return similar;
         }
 
         private static double CoerceOffset(double offset, double extent, double viewport)
@@ -1482,7 +1544,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                     EnsureVisible(rowIndex);
 
                     if (!viewModel.RowSelection.Contains(rowIndex)) {
-                        viewModel.RowSelection.ToggleSingle(rowIndex, false);
+                        viewModel.RowSelection.ToggleSingle(rowIndex);
                         viewModel.RequestUpdate(false);
                     }
                 } else {
@@ -1528,8 +1590,6 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             public int? LastTargetedRow;
         }
 
-        private DragSelectionContext dragSelectionCtx;
-
         private void BeginDragging(int rowIndex)
         {
             if (Mouse.Capture(this, CaptureMode.SubTree)) {
@@ -1556,7 +1616,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         protected override void OnKeyDown(KeyEventArgs e)
         {
             var viewModel = ViewModel;
-            if (viewModel != null && /*viewModel.IsReady &&*/ !e.Handled &&
+            if (viewModel != null && !e.Handled &&
                 (e.KeyboardDevice.Modifiers & (ModifierKeys.Windows | ModifierKeys.Alt)) == ModifierKeys.None) {
 
                 switch (e.Key) {
@@ -1606,10 +1666,10 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
             switch (e.KeyboardDevice.Modifiers) {
                 case ModifierKeys.None:
-                    rowSelection.ToggleSingle(viewModel.FocusIndex, false);
+                    rowSelection.ToggleSingle(viewModel.FocusIndex);
                     break;
                 case ModifierKeys.Shift:
-                    rowSelection.ToggleExtent(viewModel.FocusIndex, false);
+                    rowSelection.ToggleExtent(viewModel.FocusIndex);
                     break;
                 case ModifierKeys.Control:
                     rowSelection.ToggleSingle(viewModel.FocusIndex, true);
@@ -1627,18 +1687,20 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         private void OnHomeOrEndKeyDown(KeyEventArgs e)
         {
             var viewModel = ViewModel;
+            var rowSelection = viewModel.RowSelection;
             int firstRow = 0;
             int lastRow = viewModel.RowCount - 1;
 
             switch (e.Key) {
                 case Key.Home:
+                    AutoScroll = false;
                     switch (e.KeyboardDevice.Modifiers) {
                         case ModifierKeys.None:
-                            viewModel.RowSelection.ToggleSingle(firstRow, false);
+                            rowSelection.ToggleSingle(firstRow);
                             e.Handled = true;
                             break;
                         case ModifierKeys.Shift:
-                            viewModel.RowSelection.ToggleExtent(firstRow, false);
+                            rowSelection.ToggleExtent(firstRow);
                             e.Handled = true;
                             break;
                         case ModifierKeys.Control:
@@ -1655,11 +1717,11 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 case Key.End:
                     switch (e.KeyboardDevice.Modifiers) {
                         case ModifierKeys.None:
-                            viewModel.RowSelection.ToggleSingle(lastRow, false);
+                            rowSelection.ToggleSingle(lastRow, false);
                             e.Handled = true;
                             break;
                         case ModifierKeys.Shift:
-                            viewModel.RowSelection.ToggleExtent(lastRow, false);
+                            rowSelection.ToggleExtent(lastRow, false);
                             e.Handled = true;
                             break;
                         case ModifierKeys.Control:
@@ -1678,7 +1740,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         private void OnPageUpOrDownKeyDown(KeyEventArgs e)
         {
             var viewModel = ViewModel;
-
+            var rowSelection = viewModel.RowSelection;
             int firstRow = 0;
             int lastRow = viewModel.RowCount - 1;
 
@@ -1688,13 +1750,14 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
             switch (e.Key) {
                 case Key.Prior:
+                    AutoScroll = false;
                     switch (e.KeyboardDevice.Modifiers) {
                         case ModifierKeys.None:
-                            viewModel.RowSelection.ToggleSingle(prevPageRow, false);
+                            rowSelection.ToggleSingle(prevPageRow, false);
                             e.Handled = true;
                             break;
                         case ModifierKeys.Shift:
-                            viewModel.RowSelection.ToggleExtent(prevPageRow, false);
+                            rowSelection.ToggleExtent(prevPageRow, false);
                             e.Handled = true;
                             break;
                         case ModifierKeys.Control:
@@ -1711,11 +1774,11 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 case Key.Next:
                     switch (e.KeyboardDevice.Modifiers) {
                         case ModifierKeys.None:
-                            viewModel.RowSelection.ToggleSingle(nextPageRow, false);
+                            rowSelection.ToggleSingle(nextPageRow, false);
                             e.Handled = true;
                             break;
                         case ModifierKeys.Shift:
-                            viewModel.RowSelection.ToggleExtent(nextPageRow, false);
+                            rowSelection.ToggleExtent(nextPageRow, false);
                             e.Handled = true;
                             break;
                         case ModifierKeys.Control:
@@ -1734,6 +1797,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         private void OnArrowKeyDown(KeyEventArgs e)
         {
             var viewModel = ViewModel;
+            var rowSelection = viewModel.RowSelection;
 
             int firstRow = 0;
             int lastRow = viewModel.RowCount - 1;
@@ -1769,14 +1833,15 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                     break;
 
                 case Key.Up:
+                    AutoScroll = false;
                     switch (e.KeyboardDevice.Modifiers) {
                         case ModifierKeys.None:
-                            viewModel.RowSelection.ToggleSingle(prevRow, false);
+                            rowSelection.ToggleSingle(prevRow, false);
                             BringRowIntoView(prevRow);
                             e.Handled = true;
                             break;
                         case ModifierKeys.Shift:
-                            viewModel.RowSelection.ToggleExtent(prevRow, false);
+                            rowSelection.ToggleExtent(prevRow, false);
                             BringRowIntoView(prevRow);
                             e.Handled = true;
                             break;
@@ -1795,12 +1860,12 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 case Key.Down:
                     switch (e.KeyboardDevice.Modifiers) {
                         case ModifierKeys.None:
-                            viewModel.RowSelection.ToggleSingle(nextRow, false);
+                            rowSelection.ToggleSingle(nextRow, false);
                             BringRowIntoView(nextRow);
                             e.Handled = true;
                             break;
                         case ModifierKeys.Shift:
-                            viewModel.RowSelection.ToggleExtent(nextRow, false);
+                            rowSelection.ToggleExtent(nextRow, false);
                             BringRowIntoView(nextRow);
                             e.Handled = true;
                             break;
@@ -1859,6 +1924,12 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 return;
 
             QueueRender(true);
+        }
+
+        private void ScrollToEnd()
+        {
+            if (ViewModel != null)
+                EnsureVisible(ViewModel.RowCount);
         }
 
         internal void EnsureVisible(int rowIndex)

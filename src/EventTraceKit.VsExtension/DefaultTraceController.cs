@@ -6,7 +6,6 @@ namespace EventTraceKit.VsExtension
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using EnvDTE;
     using EventTraceKit.Tracing;
     using EventTraceKit.VsExtension.Debugging;
     using Microsoft.VisualStudio.Threading;
@@ -36,7 +35,7 @@ namespace EventTraceKit.VsExtension
     {
     }
 
-    public class DefaultTraceController : ITraceControllerInternal
+    public class DefaultTraceController : ITraceControllerInternal, IDisposable
     {
         private readonly object mutex = new object();
 
@@ -77,10 +76,11 @@ namespace EventTraceKit.VsExtension
             var traceLog = new TraceLog();
             var session = new EventSession(descriptor, traceLog);
             SessionStarting?.Invoke(traceLog);
-            session.Start();
-
             runningSession = session;
+
+            session.Start();
             SessionStarted?.Invoke(runningSession);
+
             return session;
         }
 
@@ -186,39 +186,10 @@ namespace EventTraceKit.VsExtension
 
             StopSession();
         }
-    }
 
-    internal static class PropertiesExtensions
-    {
-        public static T GetValue<T>(this Properties properties, string name)
+        public void Dispose()
         {
-            try {
-                var property = properties.Item(name);
-                if (property?.Value is T val) {
-                    return val;
-                }
-
-                return default;
-            } catch (Exception) {
-                return default;
-            }
-        }
-
-        public static bool TryGetProperty<T>(this Properties properties, string name, out T value)
-        {
-            try {
-                var property = properties.Item(name);
-                if (property?.Value is T val) {
-                    value = val;
-                    return true;
-                }
-
-                value = default;
-                return false;
-            } catch (Exception) {
-                value = default;
-                return false;
-            }
+            StopSession();
         }
     }
 }

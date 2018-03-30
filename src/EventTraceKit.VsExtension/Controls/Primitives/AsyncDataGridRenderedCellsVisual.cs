@@ -64,6 +64,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         private AsyncDataGrid ParentGrid =>
             parentGrid ?? (parentGrid = cellsPresenter.FindAncestor<AsyncDataGrid>());
 
+        private bool IsSelectionActive => ParentGrid?.IsSelectionActive ?? false;
+
         public Rect RenderedViewport { get; private set; }
 
         internal void Update(Rect viewport, Size extentSize, bool forceUpdate)
@@ -73,7 +75,6 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             Rect rect = Rect.Intersect(viewport, new Rect(extentSize));
             if (!forceUpdate && RenderedViewport.Contains(rect)) {
                 Offset = RenderedViewport.Location - rect.Location;
-                //cellsPresenter.SetOffsetForAllUIElements(Offset);
                 return;
             }
 
@@ -160,7 +161,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 Brush selectionForeground = cellsPresenter.SelectionForeground;
                 Brush selectionBackground = cellsPresenter.SelectionBackground;
                 Pen selectionBorderPen = cellsPresenter.SelectionBorderPen;
-                if (!ParentGrid.IsSelectionActive) {
+                if (!IsSelectionActive) {
                     selectionForeground = cellsPresenter.InactiveSelectionForeground;
                     selectionBackground = cellsPresenter.InactiveSelectionBackground;
                     selectionBorderPen = cellsPresenter.InactiveSelectionBorderPen;
@@ -246,7 +247,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
                 int focusIndex = viewModel.FocusIndex;
                 Pen focusBorderPen = cellsPresenter.FocusBorderPen;
-                if (ParentGrid.IsSelectionActive
+                if (IsSelectionActive
                     && focusBorderPen != null
                     && focusIndex >= firstVisibleRow
                     && focusIndex <= lastVisibleRow) {
@@ -306,7 +307,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             Brush keySeparatorBrush = cellsPresenter.KeySeparatorBrush;
             Brush freezableAreaSeparatorBrush = cellsPresenter.FreezableAreaSeparatorBrush;
             Brush selectionForeground = cellsPresenter.SelectionForeground;
-            if (!ParentGrid.IsSelectionActive)
+            if (!IsSelectionActive)
                 selectionForeground = cellsPresenter.InactiveSelectionForeground;
             var rowSelection = cellsPresenter.ViewModel.RowSelection;
 

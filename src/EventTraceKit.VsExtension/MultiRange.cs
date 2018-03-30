@@ -4,8 +4,9 @@ namespace EventTraceKit.VsExtension
     using System.Collections;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Linq;
 
-    public sealed class MultiRange : IEnumerable<int>
+    public sealed class MultiRange : IEnumerable<int>, IEquatable<MultiRange>
     {
         private readonly List<Range> ranges = new List<Range>(5);
 
@@ -33,6 +34,9 @@ namespace EventTraceKit.VsExtension
 
         public void Add(Range range)
         {
+            if (range.Length == 0)
+                return;
+
             bool containsAll =
                 ranges.Count > 0
                 && range.Begin <= ranges[0].Begin
@@ -50,6 +54,78 @@ namespace EventTraceKit.VsExtension
 
             Count += range.Length;
             Merge();
+        }
+
+        public void Remove(Range range)
+        {
+            if (range.Length == 0)
+                return;
+
+            bool containsNothing =
+                ranges.Count > 0
+                && (range.End <= ranges[0].Begin
+                    || range.Begin >= ranges[ranges.Count - 1].End);
+            if (containsNothing)
+                return;
+
+            bool containsAll =
+                ranges.Count > 0
+                && range.Begin <= ranges[0].Begin
+                && range.End >= ranges[ranges.Count - 1].End;
+            if (containsAll) {
+                Count = 0;
+                ranges.Clear();
+                return;
+            }
+
+            for (int i = ranges.Count - 1; i >= 0; --i) {
+                var curr = ranges[i];
+
+                // If the range to be removed lies past our end we are done.
+                if (range.Begin >= curr.End)
+                    break;
+
+                if (range.End <= curr.Begin)
+                    continue; // The range to be removed lies before the current range, skip.
+
+                // The current range and range to be removed overlap.
+                Debug.Assert(range.Begin < curr.End && range.End > curr.Begin);
+
+                // If the current range is fully contained, just remove it.
+                //   |-- range[i] -|
+                // |----- range -----|
+                if (curr.Begin >= range.Begin && curr.End <= range.End) {
+                    ranges.RemoveAt(i);
+                    Count -= curr.Length;
+                    continue;
+                }
+
+                // |----|-- range[i] -|
+                // |--- range ---|
+                if (curr.Begin >= range.Begin && curr.End >= range.End) {
+                    ranges[i] = new Range(range.End, curr.End);
+                    Count -= range.End - curr.Begin;
+                    continue;
+                }
+
+                // |-- range[i] -|
+                //      |--- range ---|
+                if (curr.Begin <= range.Begin && curr.End <= range.End) {
+                    ranges[i] = new Range(curr.Begin, range.Begin);
+                    Count -= curr.End - range.Begin;
+                    continue;
+                }
+
+                // If the current range is a superset, split it.
+                // |-- range[i] --|
+                //   |- range -|
+                if (curr.Begin < range.Begin && curr.End > range.End) {
+                    ranges[i] = new Range(curr.Begin, range.Begin);
+                    ranges.Insert(i + 1, new Range(range.End, curr.End));
+                    Count -= range.Length;
+                    continue;
+                }
+            }
         }
 
         public void Add(int value)
@@ -118,6 +194,25 @@ namespace EventTraceKit.VsExtension
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is MultiRange range && Equals(range);
+        }
+
+        public bool Equals(MultiRange other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Count == other.Count && ranges.SequenceEqual(other.ranges);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked {
+                return ((ranges != null ? ranges.GetHashCode() : 0) * 397) ^ Count;
+            }
         }
 
         private int BinarySearch(int value)

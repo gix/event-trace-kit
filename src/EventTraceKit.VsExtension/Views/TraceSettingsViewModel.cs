@@ -202,12 +202,15 @@ namespace EventTraceKit.VsExtension.Views
 
         private async Task Save()
         {
-            var settings = settingsStore.GetValue(SettingsKeys.Tracing) ?? new TraceSettings();
-            settings.Profiles.SetRange(GetProfiles());
-            settings.ActiveProfile = ActiveProfile?.Name;
-            settingsStore.SetValue(SettingsKeys.Tracing, settings);
+            if (settingsStore != null) {
+                var settings = settingsStore.GetValue(SettingsKeys.Tracing) ?? new TraceSettings();
+                settings.Profiles.SetRange(GetProfiles());
+                settings.ActiveProfile = ActiveProfile?.Name;
+                settingsStore.SetValue(SettingsKeys.Tracing, settings);
 
-            await TaskEx.RunWithProgress(() => settingsStore.Save(), "Saving");
+                await TaskEx.RunWithProgress(() => settingsStore.Save(), "Saving");
+            }
+
             DialogResult = true;
         }
 

@@ -271,10 +271,9 @@ EtwTraceLog::EtwTraceLog(TraceDataToken traceDataToken)
 
 void EtwTraceLog::ProcessEvent(EVENT_RECORD const& record)
 {
-    EVENT_RECORD* eventCopy = CopyEvent(eventRecordAllocator, &record);
-
     {
         ExclusiveLock lock(mutex);
+        EVENT_RECORD* eventCopy = CopyEvent(eventRecordAllocator, &record);
         events.push_back(eventInfoCache.Get(*eventCopy));
     }
 
@@ -286,7 +285,7 @@ void EtwTraceLog::Clear()
 {
     eventCount = 0;
     {
-        std::unique_lock<decltype(mutex)> lock(mutex);
+        ExclusiveLock lock(mutex);
         events.clear();
         events.shrink_to_fit();
         eventInfoCache.Clear();

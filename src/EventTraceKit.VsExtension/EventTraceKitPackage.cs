@@ -89,6 +89,7 @@ namespace EventTraceKit.VsExtension
 
         protected override void Dispose(bool disposing)
         {
+            traceController.Dispose();
             vsSolutionManager?.Dispose();
 
             base.Dispose(disposing);

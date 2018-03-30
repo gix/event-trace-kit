@@ -1,0 +1,125 @@
+namespace PerfRunner
+{
+    using System;
+    using System.Diagnostics;
+    using System.Threading;
+    using System.Windows;
+    using System.Windows.Threading;
+    using BenchmarkDotNet.Attributes;
+    using BenchmarkDotNet.Attributes.Jobs;
+    using BenchmarkDotNet.Engines;
+    using BenchmarkDotNet.Running;
+    using EventTraceKit.VsExtension;
+    using EventTraceKit.VsExtension.Controls;
+    using EventTraceKit.VsExtension.Controls.Primitives;
+    using EventTraceKit.VsExtension.Formatting;
+    using EventTraceKit.VsExtension.Windows;
+
+    [SimpleJob(RunStrategy.ColdStart, launchCount: 1, warmupCount: 0, targetCount: 1)]
+    public class XBenchmark
+    {
+        private AsyncDataViewModel advModel;
+        private AsyncDataGridCellsPresenterViewModel presenterViewModel;
+        private AsyncDataGridCellsPresenter presenter;
+        private DataView dataView;
+
+        [GlobalSetup]
+        public void Setup()
+        {
+            var dataTable = new DataTable("Stub");
+
+            var templatePreset = new AsyncDataViewModelPreset();
+            for (int i = 0; i < 8; ++i) {
+                int columnId = i + 1;
+
+                var preset = new ColumnViewModelPreset {
+                    Id = new Guid($"{columnId:X8}-0000-0000-0000-000000000000"),
+                    Name = $"Column{columnId}",
+                    IsVisible = true,
+                    Width = 200
+                }.EnsureFrozen();
+
+                var column = DataColumn.Create(x => (x << 16 | columnId));
+                column.Id = preset.Id;
+                column.Name = preset.Name;
+                column.IsVisible = preset.IsVisible;
+                column.Width = preset.Width;
+
+                dataTable.Columns.Add(column);
+
+                templatePreset.ConfigurableColumns.Add(preset);
+            }
+
+            dataView = new DataView(dataTable, new DefaultFormatProviderSource());
+
+            var workManager = new WorkManager(Dispatcher.CurrentDispatcher);
+            var defaultPreset = templatePreset.Clone();
+            var presetCollection = new AdvmPresetCollection();
+
+            advModel = new AsyncDataViewModel(
+                workManager, dataView, templatePreset, defaultPreset,
+                presetCollection);
+
+            presenterViewModel = new AsyncDataGridCellsPresenterViewModel(advModel);
+
+            presenter = new AsyncDataGridCellsPresenter();
+            presenter.ViewModel = presenterViewModel;
+            presenter.VisibleColumns = advModel.GridViewModel.ColumnsModel.VisibleColumns;
+            presenter.HorizontalGridLinesThickness = 0;
+            presenter.VerticalGridLinesThickness = 0;
+            presenter.AutoScroll = true;
+            presenter.Arrange(new Rect(0, 0, 1200, 200));
+
+            while (!advModel.IsReady)
+                Dispatcher.CurrentDispatcher.DoEvents();
+        }
+
+        [Benchmark]
+        [STAThread]
+        public void Foo()
+        {
+            int eventCount = 5000;
+
+            var sw = new Stopwatch();
+            sw.Start();
+            for (int i = 0; i < eventCount; ++i) {
+                dataView.UpdateRowCount(i);
+                presenter.PerformRender(true);
+                if (i % 100 == 0)
+                    Console.WriteLine(i);
+            }
+            sw.Stop();
+            Console.WriteLine("{0:ss\\.ffffff}", sw.Elapsed);
+        }
+    }
+
+    public static class DispatcherExtensions
+    {
+        public static void DoEvents(this Dispatcher dispatcher)
+        {
+            var frame = new DispatcherFrame();
+            dispatcher.InvokeAsync(
+                () => frame.Continue = false, DispatcherPriority.ContextIdle);
+            Dispatcher.PushFrame(frame);
+        }
+    }
+
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            //var summary = BenchmarkRunner.Run<TdhFormatter>();
+            //BenchmarkRunner.Run<TraceLogFilterBenchmark>();
+            //BenchmarkRunner.Run<XBenchmark>();
+
+            var thread = new Thread(() => {
+                var b = new XBenchmark();
+                b.Setup();
+                b.Foo();
+            });
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+            thread.Join();
+        }
+    }
+}

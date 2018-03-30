@@ -1,20 +1,21 @@
 namespace EventTraceKit.VsExtension.UITests
 {
-    using System.Windows;
-    using EventTraceKit.VsExtension.Controls;
+    using System.ComponentModel;
 
     public partial class TraceLogTestWindow
     {
+        private readonly DefaultTraceController traceController = new DefaultTraceController();
+
         public TraceLogTestWindow()
         {
             InitializeComponent();
-            DataContext = new TraceLogTestViewModel();
-            Loaded += OnLoaded;
+            DataContext = new TraceLogTestViewModel(traceController);
         }
 
-        private void OnLoaded(object sender, RoutedEventArgs e)
+        protected override void OnClosing(CancelEventArgs e)
         {
-            TryFindResource(typeof(TransitioningControl));
+            base.OnClosing(e);
+            traceController.StopSession();
         }
     }
 }

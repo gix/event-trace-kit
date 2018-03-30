@@ -3,15 +3,10 @@ namespace EventTraceKit.VsExtension.UITests
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
-    using System.Linq;
-    using System.Threading;
-    using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Input;
-    using EventTraceKit.Tracing;
     using EventTraceKit.VsExtension;
     using EventTraceKit.VsExtension.Settings;
-    using EventTraceKit.VsExtension.Settings.Persistence;
     using EventTraceKit.VsExtension.Views;
     using EventTraceKit.VsExtension.Views.PresetManager;
     using Microsoft.VisualStudio.PlatformUI;
@@ -21,9 +16,8 @@ namespace EventTraceKit.VsExtension.UITests
     {
         private string selectedTheme;
 
-        public TraceLogTestViewModel()
-            : base(new StubGlobalSettings(),
-                   new DefaultTraceController())
+        public TraceLogTestViewModel(ITraceController traceController)
+            : base(new StubGlobalSettings(), traceController)
         {
             StartCommand = new AsyncDelegateCommand(Start, CanStart);
             StopCommand = new AsyncDelegateCommand(Stop, CanStop);

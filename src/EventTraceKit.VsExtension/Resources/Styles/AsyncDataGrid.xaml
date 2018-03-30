@@ -78,7 +78,8 @@
                   Focusable="True"
                   ToolTipService.IsEnabled="False"
                   ViewModel="{Binding ViewModel.CellsPresenter, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
-                  VisibleColumns="{Binding ViewModel.ColumnsModel.VisibleColumns, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}">
+                  VisibleColumns="{Binding ViewModel.ColumnsModel.VisibleColumns, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
+                  AutoScroll="{Binding ViewModel.AutoScroll, RelativeSource={RelativeSource TemplatedParent}}">
                   <!--<Primitives:AsyncDataGridCellsPresenter.ToolTip>
                   <ToolTip>
                     <TextBlock

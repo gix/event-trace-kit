@@ -1,24 +1,20 @@
 namespace EventTraceKit.VsExtension.Controls
 {
     using System;
-    using System.Collections.Generic;
-    using System.Collections.Specialized;
 
     public class AsyncDataGridRowSelection
     {
-        private readonly AsyncDataGridCellsPresenterViewModel cellsViewModel;
-        private readonly List<int> selectionChanges = new List<int>();
+        private readonly IVirtualCollection collection;
         private readonly MultiRange selectedIndices = new MultiRange();
         private int anchorRowIndex;
         private bool selectionRemoves;
 
-        public AsyncDataGridRowSelection(
-            AsyncDataGridCellsPresenterViewModel cellsViewModel)
+        public AsyncDataGridRowSelection(IVirtualCollection collection)
         {
-            this.cellsViewModel = cellsViewModel;
+            this.collection = collection;
         }
 
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
+        public event EventHandler SelectionChanged;
 
         public int Count => selectedIndices.Count;
 
@@ -31,14 +27,9 @@ namespace EventTraceKit.VsExtension.Controls
         public void RestoreSnapshot(MultiRange selectedRows)
         {
             lock (selectedIndices) {
-                Reset();
+                UnselectAll();
                 selectedIndices.UnionWith(selectedRows);
-
-                // FIXME
-                //selectionChanges.Clear();
-                //selectionChanges.AddRange(selectedRows);
-                //OnCollectionChanged(NotifyCollectionChangedAction.Add, selectionChanges);
-                //selectionChanges.Clear();
+                RaiseSelectionChanged();
             }
         }
 
@@ -50,108 +41,100 @@ namespace EventTraceKit.VsExtension.Controls
 
         public void Clear()
         {
-            lock (selectedIndices)
-                Reset();
+            lock (selectedIndices) {
+                UnselectAll();
+                RaiseSelectionChanged();
+            }
         }
 
         public void SelectAll()
         {
             lock (selectedIndices) {
-                Reset();
-                ToggleRange(0, cellsViewModel.RowCount - 1, false, true);
-                // FIXME
-                //OnCollectionChanged(NotifyCollectionChangedAction.Add, selectionChanges);
+                UnselectAll();
+                SetRangeInternal(0, collection.RowCount - 1, true);
+                RaiseSelectionChanged();
             }
         }
 
-        public void ToggleSingle(int rowIndex, bool extend)
+        public void ToggleSingle(int rowIndex, bool extend = false)
         {
             lock (selectedIndices) {
-                NotifyCollectionChangedAction action;
                 if (!extend) {
-                    Reset();
-                    Select(rowIndex);
-                    action = NotifyCollectionChangedAction.Add;
+                    UnselectAll();
+                    SelectIdx(rowIndex);
                     selectionRemoves = false;
                 } else {
                     selectionRemoves = IsSelected(rowIndex);
-                    if (selectionRemoves) {
-                        Unselect(rowIndex);
-                        action = NotifyCollectionChangedAction.Remove;
-                    } else {
-                        Select(rowIndex);
-                        action = NotifyCollectionChangedAction.Add;
-                    }
+                    if (selectionRemoves)
+                        UnselectIdx(rowIndex);
+                    else
+                        SelectIdx(rowIndex);
                 }
 
                 anchorRowIndex = rowIndex;
-                cellsViewModel.FocusIndex = rowIndex;
+                collection.FocusIndex = rowIndex;
 
-                if (action != NotifyCollectionChangedAction.Reset)
-                    OnCollectionChanged(action, rowIndex);
+                RaiseSelectionChanged();
             }
         }
 
-        public void ToggleExtent(int rowIndex, bool extend)
+        public void ToggleExtent(int rowIndex, bool extend = false)
         {
             lock (selectedIndices) {
                 int min = Math.Min(anchorRowIndex, rowIndex);
                 int max = Math.Max(anchorRowIndex, rowIndex);
                 if (!extend)
-                    Reset();
-                ToggleRange(min, max, selectionRemoves, !selectionRemoves);
-                cellsViewModel.FocusIndex = rowIndex;
+                    UnselectAll();
+                ToggleRangeInternal(min, max, selectionRemoves, !selectionRemoves);
+                collection.FocusIndex = rowIndex;
             }
         }
 
-        public void Select(int rowIndex, bool extend)
+        public void Select(int rowIndex, bool extend = false)
         {
             lock (selectedIndices) {
-                if (!extend)
-                    Reset();
+                if (rowIndex >= collection.RowCount)
+                    return;
 
-                Select(rowIndex);
+                if (!extend)
+                    UnselectAll();
+
+                SelectIdx(rowIndex);
                 selectionRemoves = false;
                 anchorRowIndex = rowIndex;
-                cellsViewModel.FocusIndex = rowIndex;
-                OnCollectionChanged(NotifyCollectionChangedAction.Add, rowIndex);
+                collection.FocusIndex = rowIndex;
+                RaiseSelectionChanged();
             }
         }
 
-        public void SelectExtent(int rowIndex, bool extend)
+        public void SelectExtent(int rowIndex, bool extend = false)
         {
             lock (selectedIndices) {
                 if (!extend)
-                    Reset();
+                    UnselectAll();
 
                 int min = Math.Min(anchorRowIndex, rowIndex);
                 int max = Math.Max(anchorRowIndex, rowIndex);
-                ToggleRange(min, max, false, true);
-                cellsViewModel.FocusIndex = rowIndex;
+                SetRangeInternal(min, max, true);
+                collection.FocusIndex = rowIndex;
             }
         }
 
-        public void SelectRange(int min, int max)
-        {
-            lock (selectedIndices) {
-                Reset();
-                ToggleRange(min, max, false, true);
-            }
-        }
-
-        public void SelectRange(int min, int max, bool extend)
+        public void SelectRange(int min, int max, bool extend = false)
         {
             lock (selectedIndices) {
                 if (!extend)
-                    Reset();
-                ToggleRange(min, max, false, true);
+                    UnselectAll();
+
+                SetRangeInternal(min, max, true);
+                RaiseSelectionChanged();
             }
         }
 
         public void SetRange(int min, int max, bool selected)
         {
             lock (selectedIndices)
-                ToggleRange(min, max, !selected, selected);
+                SetRangeInternal(min, max, selected);
         }
 
         private bool IsSelected(int rowIndex)
@@ -159,12 +142,12 @@ namespace EventTraceKit.VsExtension.Controls
             return selectedIndices.Contains(rowIndex);
         }
 
-        private void Select(int rowIndex)
+        private void SelectIdx(int rowIndex)
         {
             selectedIndices.Add(rowIndex);
         }
 
-        private void Unselect(int rowIndex)
+        private void UnselectIdx(int rowIndex)
         {
             selectedIndices.Remove(rowIndex);
         }
@@ -174,57 +157,44 @@ namespace EventTraceKit.VsExtension.Controls
             selectedIndices.Clear();
         }
 
-        private void ToggleRange(int min, int max, bool shouldRemove, bool shouldAdd)
+        private void SetRangeInternal(int min, int max, bool selected)
         {
-            min = Math.Max(0, min);
-            max = Math.Min(max, cellsViewModel.RowCount - 1);
+            min = Math.Max(min, 0);
+            max = Math.Min(max, collection.RowCount - 1);
 
-            selectionChanges.Clear();
+            if (selected)
+                selectedIndices.Add(new Range(min, max + 1));
+            else
+                selectedIndices.Remove(new Range(min, max + 1));
+        }
+
+        private void ToggleRangeInternal(int min, int max, bool shouldRemove, bool shouldAdd)
+        {
+            min = Math.Max(min, 0);
+            max = Math.Min(max, collection.RowCount - 1);
+
+            bool changed = false;
             for (int index = min; index <= max; ++index) {
                 bool selected = IsSelected(index);
 
                 if (shouldRemove && selected) {
-                    Unselect(index);
-                    selectionChanges.Add(index);
+                    UnselectIdx(index);
+                    changed = true;
                 }
 
                 if (shouldAdd && !selected) {
-                    Select(index);
-                    selectionChanges.Add(index);
+                    SelectIdx(index);
+                    changed = true;
                 }
             }
 
-            if (selectionChanges.Count > 0)
-                OnCollectionChanged(
-                    NotifyCollectionChangedAction.Remove, selectionChanges);
-
-            selectionChanges.Clear();
+            if (changed)
+                RaiseSelectionChanged();
         }
 
-        private void Reset()
+        private void RaiseSelectionChanged()
         {
-            UnselectAll();
-            OnCollectionChanged(NotifyCollectionChangedAction.Reset);
-        }
-
-        private void OnCollectionChanged(NotifyCollectionChangedAction action)
-        {
-            CollectionChanged?.Invoke(
-                this, new NotifyCollectionChangedEventArgs(action));
-        }
-
-        private void OnCollectionChanged(
-            NotifyCollectionChangedAction action, int item)
-        {
-            CollectionChanged?.Invoke(
-                this, new NotifyCollectionChangedEventArgs(action, item));
-        }
-
-        private void OnCollectionChanged(
-            NotifyCollectionChangedAction action, IList<int> changes)
-        {
-            CollectionChanged?.Invoke(
-                this, new NotifyCollectionChangedEventArgs(action, changes));
+            SelectionChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }

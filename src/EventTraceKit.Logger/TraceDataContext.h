@@ -22,9 +22,16 @@ public:
     HRESULT AddRefManifest(std::wstring const& manifestPath) noexcept;
     HRESULT ReleaseManifest(std::wstring const& manifestPath) noexcept;
 
-    static std::shared_ptr<TraceDataContext> const& GlobalContext()
+    static std::shared_ptr<TraceDataContext> GlobalContext()
     {
-        return globalContext;
+        std::unique_lock<std::mutex> lock(globalContextLock);
+        auto context = globalContext.lock();
+        if (context)
+            return context;
+
+        context = std::make_shared<TraceDataContext>();
+        globalContext = context;
+        return context;
     }
 
 private:
@@ -36,15 +43,21 @@ private:
         std::wstring ManifestPath;
         unsigned RefCount;
 
-        bool operator<(std::wstring const& other) const
+        friend bool operator<(Entry const& lhs, std::wstring const& rhs)
         {
-            return ManifestPath < other;
+            return lhs.ManifestPath < rhs;
+        }
+
+        friend bool operator<(std::wstring const& lhs, Entry const& rhs)
+        {
+            return lhs < rhs.ManifestPath;
         }
     };
 
     std::vector<Entry> loadedManifests;
 
-    static std::shared_ptr<TraceDataContext> globalContext;
+    static std::mutex globalContextLock;
+    static std::weak_ptr<TraceDataContext> globalContext;
 };
 
 class TraceDataToken
@@ -63,8 +76,7 @@ public:
     TraceDataToken& operator=(TraceDataToken&&) = default;
 
     static HRESULT Create(std::shared_ptr<TraceDataContext> context,
-                          ArrayRef<std::wstring> eventManifests,
-                          TraceDataToken& token)
+                          ArrayRef<std::wstring> eventManifests, TraceDataToken& token)
     {
         HRESULT hr = S_OK;
         for (auto const& manifest : eventManifests) {

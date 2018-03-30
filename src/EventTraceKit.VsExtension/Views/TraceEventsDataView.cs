@@ -59,7 +59,6 @@ namespace EventTraceKit.VsExtension.Views
                 {GenericEventsViewModelSource.DecodingSourceColumnId, "DecodingSource"},
             };
 
-
             private readonly TraceEventsDataView view;
             private readonly int? rowIndex;
             private readonly int? columnIndex;
@@ -81,10 +80,6 @@ namespace EventTraceKit.VsExtension.Views
                 if (typeof(T) == typeof(IContextMenuWorkflow))
                     return this as T;
                 return null;
-            }
-
-            private void Foo()
-            {
             }
 
             public IEnumerable<object> GetItems()

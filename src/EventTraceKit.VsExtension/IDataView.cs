@@ -4,7 +4,6 @@ namespace EventTraceKit.VsExtension
     using System.Collections;
     using System.Collections.Generic;
     using System.Windows;
-    using Expression = System.Linq.Expressions.Expression;
 
     public interface IDataView
     {

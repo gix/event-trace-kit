@@ -9,7 +9,6 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
     public class BindableScrollBar : ScrollBar
     {
-        private readonly ScrollEventHandler scrollBarScrollHandler;
         private readonly RoutedPropertyChangedEventHandler<double> scrollBarValueChangedHandler;
         private readonly ScrollChangedEventHandler scrollViewerScrollChangedHandler;
 
@@ -20,14 +19,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public BindableScrollBar()
         {
-            scrollBarScrollHandler = OnScrollBarScroll;
             scrollBarValueChangedHandler = OnScrollBarValueChanged;
             scrollViewerScrollChangedHandler = OnScrollViewerScrollChanged;
-        }
-
-        protected override void OnContextMenuOpening(ContextMenuEventArgs e)
-        {
-            base.OnContextMenuOpening(e);
         }
 
         #region public ScrollViewer ScrollViewer { get; set; }
@@ -47,8 +40,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         /// </summary>
         public ScrollViewer ScrollViewer
         {
-            get { return (ScrollViewer)GetValue(ScrollViewerProperty); }
-            set { SetValue(ScrollViewerProperty, value); }
+            get => (ScrollViewer)GetValue(ScrollViewerProperty);
+            set => SetValue(ScrollViewerProperty, value);
         }
 
         private static void OnScrollViewerChanged(
@@ -86,7 +79,6 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
             oldViewer.RemoveHandler(ScrollViewer.ScrollChangedEvent, scrollViewerScrollChangedHandler);
             RemoveHandler(ValueChangedEvent, scrollBarValueChangedHandler);
-            //RemoveHandler(ScrollEvent, scrollBarScrollHandler);
         }
 
         private void BindToScrollViewer(ScrollViewer newViewer)
@@ -94,7 +86,6 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             // NB: Using only ScrollEvent works for every action except shift-
             // clicking the scrollbar track. ValueChangedEvent seems to work for
             // everything.
-            //AddHandler(ScrollEvent, scrollBarScrollHandler);
             AddHandler(ValueChangedEvent, scrollBarValueChangedHandler);
             newViewer.AddHandler(ScrollViewer.ScrollChangedEvent, scrollViewerScrollChangedHandler);
 
@@ -186,22 +177,10 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         {
             // Forward all scrollbar events to the bound scroll viewer which
             // then can handle them properly using its scroll info. Without
-            // forwarding these events will not reach the scroll viewer via
+            // forwarding, these events will not reach the scroll viewer via
             // bubbling when we are not a descendant element of the viewer.
             var scrollBar = target as BindableScrollBar;
             scrollBar?.ScrollViewer?.RaiseEvent(args);
-        }
-
-        private void OnScrollBarScroll(object sender, ScrollEventArgs e)
-        {
-            switch (Orientation) {
-                case Orientation.Horizontal:
-                    ScrollViewer.ScrollToHorizontalOffset(e.NewValue);
-                    break;
-                case Orientation.Vertical:
-                    ScrollViewer.ScrollToVerticalOffset(e.NewValue);
-                    break;
-            }
         }
 
         private void OnScrollBarValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)

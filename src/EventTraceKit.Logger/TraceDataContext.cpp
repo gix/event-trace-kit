@@ -18,8 +18,8 @@ static HRESULT UnloadManifest(std::wstring const& manifest)
     return HResultFromWin32(TdhUnloadManifest(const_cast<wchar_t*>(manifest.c_str())));
 }
 
-std::shared_ptr<TraceDataContext> TraceDataContext::globalContext =
-    std::make_shared<TraceDataContext>();
+std::mutex TraceDataContext::globalContextLock;
+std::weak_ptr<TraceDataContext> TraceDataContext::globalContext;
 
 TraceDataContext::~TraceDataContext() noexcept
 {

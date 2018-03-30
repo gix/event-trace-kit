@@ -326,9 +326,11 @@ HRESULT EtwTraceSession::Stop()
     if (customFlushTimer)
         customFlushTimer.Stop();
 
-    HR(HResultFromWin32(ControlTraceW(traceHandle, nullptr, traceProperties.get(),
-                                      EVENT_TRACE_CONTROL_STOP)));
-    traceHandle = 0;
+    if (traceHandle != 0) {
+        HR(HResultFromWin32(ControlTraceW(traceHandle, nullptr, traceProperties.get(),
+                                          EVENT_TRACE_CONTROL_STOP)));
+        traceHandle = 0;
+    }
     return S_OK;
 }
 

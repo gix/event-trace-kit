@@ -545,6 +545,14 @@ namespace EventTraceKit.VsExtension.Controls
         public override void OnApplyTemplate()
         {
             base.OnApplyTemplate();
+
+            if (CellsPresenter != null) {
+                CellsPresenter.MouseDown -= OnCellsPresenterMouseDown;
+            }
+
+            if (CellsScrollViewer != null)
+                BindingOperations.ClearBinding(this, HorizontalScrollOffsetProperty);
+
             ColumnHeadersPresenter = GetTemplateChild(PART_ColumnHeadersPresenter) as AsyncDataGridColumnHeadersPresenter;
             CellsScrollViewer = GetTemplateChild(PART_CellsScrollViewer) as ScrollViewer;
             CellsPresenter = GetTemplateChild(PART_CellsPresenter) as AsyncDataGridCellsPresenter;
@@ -556,8 +564,9 @@ namespace EventTraceKit.VsExtension.Controls
                 SetBinding(HorizontalScrollOffsetProperty, binding);
             }
 
-            if (CellsPresenter != null)
+            if (CellsPresenter != null) {
                 CellsPresenter.MouseDown += OnCellsPresenterMouseDown;
+            }
 
             UpdateStates(false);
         }

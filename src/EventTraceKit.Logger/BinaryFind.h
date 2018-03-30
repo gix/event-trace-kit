@@ -9,7 +9,7 @@ ForwardIterator binary_find(ForwardIterator first, ForwardIterator last, T const
                             Predicate pred)
 {
     auto it = std::lower_bound(first, last, value, pred);
-    return (it != last && pred(*it, value)) ? it : last;
+    return (it != last && !pred(value, *it)) ? it : last;
 }
 
 template<typename ForwardIterator, typename T>

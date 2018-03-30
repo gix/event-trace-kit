@@ -27,6 +27,7 @@
       <Button Margin="7,1,1,1" Content="Configure" Command="{Binding ConfigureCommand}"/>
       <Button Margin="7,1,1,1" Content="Filters" Command="{Binding OpenFilterCommand}"/>
       <Button Margin="7,1,1,1" Content="Open View Editor" Command="{Binding OpenViewEditorCommand}"/>
+      <ToggleButton Margin="7,1,1,1" Content="AutoScroll" IsChecked="{Binding GridModel.AutoScroll}"/>
       <TextBlock Margin="7,1,1,1" Text="{Binding EventsDataView.RowCount}"/>
       <etkc:ActivityRing IsActive="{Binding IsCollecting}" Margin="10,0,0,0"
                              Width="16" Height="16"/>

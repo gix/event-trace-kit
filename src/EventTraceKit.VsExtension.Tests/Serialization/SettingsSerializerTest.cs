@@ -7,7 +7,7 @@ namespace EventTraceKit.VsExtension.Tests.Serialization
     using System.Windows;
     using System.Xml;
     using System.Xml.Linq;
-    using Controls;
+    using EventTraceKit.VsExtension.Controls;
     using EventTraceKit.VsExtension.Views;
     using VsExtension.Serialization;
     using Xunit;

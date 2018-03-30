@@ -107,6 +107,7 @@
     <Compile Include="MessageHelper.cs" />
     <Compile Include="Native\DebuggingNativeMethods.cs" />
     <Compile Include="ISolutionBrowser.cs" />
+    <Compile Include="PropertiesExtensions.cs" />
     <Compile Include="Resources\ResourceKeys.cs" />
     <Compile Include="Resources\ThemeResourceManager.cs" />
     <Compile Include="Controls\TransitioningControl.cs" />

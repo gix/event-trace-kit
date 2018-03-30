@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Tests
+namespace EventTraceKit.VsExtension.Tests
 {
     using System;
     using System.Collections.Generic;
@@ -63,7 +63,7 @@
         }
 
         [Fact]
-        public void AddOutOfOrder()
+        public void Add_OutOfOrder()
         {
             var range = new MultiRange();
 
@@ -81,7 +81,7 @@
         }
 
         [Fact]
-        public void AddBegin()
+        public void Add_Begin()
         {
             var range = new MultiRange { 11 };
 
@@ -93,7 +93,7 @@
         }
 
         [Fact]
-        public void AddEnd()
+        public void Add_End()
         {
             var range = new MultiRange { 11 };
 
@@ -106,7 +106,7 @@
         }
 
         [Fact]
-        public void AddMid()
+        public void Add_Mid()
         {
             var range = new MultiRange();
 
@@ -119,7 +119,7 @@
         }
 
         [Fact]
-        public void Add_Range()
+        public void AddRange_Empty()
         {
             var range = new MultiRange();
 
@@ -130,7 +130,40 @@
         }
 
         [Fact]
-        public void Add_Ranges()
+        public void AddRange_Super()
+        {
+            var range = new MultiRange { 10, 11 };
+
+            range.Add(new Range(5, 15));
+
+            Assert.Equal(10, range.Count);
+            Assert.Equal(new[] { R(5, 15) }, range.GetRanges());
+        }
+
+        [Fact]
+        public void AddRange_OverlappedBegin()
+        {
+            var range = new MultiRange { 7, 8, 9 };
+
+            range.Add(new Range(5, 8));
+
+            Assert.Equal(5, range.Count);
+            Assert.Equal(new[] { R(5, 10) }, range.GetRanges());
+        }
+
+        [Fact]
+        public void AddRange_OverlappedEnd()
+        {
+            var range = new MultiRange { 10, 11, 12 };
+
+            range.Add(new Range(11, 15));
+
+            Assert.Equal(5, range.Count);
+            Assert.Equal(new[] { R(10, 15) }, range.GetRanges());
+        }
+
+        [Fact]
+        public void AddRange_Multiple()
         {
             var range = new MultiRange();
 
@@ -147,7 +180,7 @@
         }
 
         [Fact]
-        public void RemoveNotContained()
+        public void Remove_NotContained()
         {
             var range = new MultiRange { 10, 11, 12 };
 
@@ -158,7 +191,7 @@
         }
 
         [Fact]
-        public void RemoveBegin()
+        public void Remove_Begin()
         {
             var range = new MultiRange { 10, 11, 12 };
 
@@ -169,7 +202,7 @@
         }
 
         [Fact]
-        public void RemoveMid()
+        public void Remove_Mid()
         {
             var range = new MultiRange { 10, 11, 12, 13, 14 };
 
@@ -180,7 +213,7 @@
         }
 
         [Fact]
-        public void RemoveEnd()
+        public void Remove_End()
         {
             var range = new MultiRange { 10, 11, 12 };
 
@@ -188,6 +221,100 @@
 
             Assert.Equal(2, range.Count);
             Assert.Equal(new[] { R(10, 12) }, range.GetRanges());
+        }
+
+        [Fact]
+        public void RemoveRange_NotContained()
+        {
+            var range = new MultiRange { 10, 11, 12 };
+
+            range.Remove(new Range(13, 14));
+
+            Assert.Equal(3, range.Count);
+            Assert.Equal(new[] { R(10, 13) }, range.GetRanges());
+        }
+
+        [Fact]
+        public void RemoveRange_Begin()
+        {
+            var range = new MultiRange { 10, 11, 12, 13, 14 };
+
+            range.Remove(new Range(10, 12));
+
+            Assert.Equal(3, range.Count);
+            Assert.Equal(new[] { R(12, 15) }, range.GetRanges());
+        }
+
+        [Fact]
+        public void RemoveRange_Mid()
+        {
+            var range = new MultiRange { 10, 11, 12, 13, 14 };
+
+            range.Remove(new Range(11, 14));
+
+            Assert.Equal(2, range.Count);
+            Assert.Equal(new[] { R(10), R(14) }, range.GetRanges());
+        }
+
+        [Fact]
+        public void RemoveRange_End()
+        {
+            var range = new MultiRange { 10, 11, 12, 13, 14 };
+
+            range.Remove(new Range(13, 15));
+
+            Assert.Equal(3, range.Count);
+            Assert.Equal(new[] { R(10, 13) }, range.GetRanges());
+        }
+
+        [Fact]
+        public void RemoveRange_All()
+        {
+            var range = new MultiRange { 10, 11, 12, 13, 14 };
+
+            range.Remove(new Range(10, 15));
+
+            Assert.Equal(0, range.Count);
+            Assert.Equal(new Range[0], range.GetRanges());
+        }
+
+        [Fact]
+        public void RemoveRange_Super()
+        {
+            var range = new MultiRange { 10, 11, 12, 13, 14 };
+
+            range.Remove(new Range(8, 16));
+
+            Assert.Equal(0, range.Count);
+            Assert.Equal(new Range[0], range.GetRanges());
+        }
+
+        public static IEnumerable<object[]> RemoveRange_Multiple_Cases
+        {
+            get
+            {
+                for (int b = 10; b <= 17; ++b) {
+                    for (int e = 11; e <= 18; ++e) {
+                        if (b <= e)
+                            yield return new object[] { b, e };
+                    }
+                }
+            }
+        }
+
+        [Theory]
+        [MemberData(nameof(RemoveRange_Multiple_Cases))]
+        public void RemoveRange_Multiple(int begin, int end)
+        {
+            var range = new MultiRange { 10, 11, 13, 14, 16, 17 };
+            var expected = new MultiRange(range);
+            for (int i = begin; i < end; ++i)
+                expected.Remove(i);
+
+            range.Remove(new Range(begin, end));
+
+            Assert.Equal(expected.Count, range.Count);
+            Assert.Equal(expected.GetRanges(), range.GetRanges());
         }
 
         [Fact]
@@ -269,50 +396,21 @@
         }
 
         [Fact]
-        public void Perf()
+        public void Equality()
         {
-            var values = new List<int>();
-            for (int i = 0; i < 100; ++i) {
-                for (int j = 0; j < 5; ++j)
-                    values.Add(6 * i + j);
-            }
+            var range = new MultiRange { 1, 2, 10, 100 };
+            var equalRange = new MultiRange { 1, 2, 10, 100 };
+            var differentRange = new MultiRange { 1, 2, 11, 100 };
 
-            var list = new List<bool>();
-            var range = new MultiRange();
-            foreach (var value in values) {
-                range.Add(value);
-                while (list.Count < value + 1)
-                    list.Add(false);
-                list[value] = true;
-            }
+            Assert.True(range.Equals(range));
+            Assert.True(range.Equals(equalRange));
+            Assert.True(!range.Equals(differentRange));
+            Assert.True(!range.Equals(null));
 
-            Shuffle(values, new Random());
-
-            var sw = new Stopwatch();
-            sw.Restart();
-
-            bool rangeResult = true;
-            for (int i = 0; i < 1000; i++) {
-                foreach (var value in values)
-                    rangeResult &= range.Contains(value);
-            }
-
-            sw.Stop();
-            var rangeDuration = sw.Elapsed;
-
-            sw.Restart();
-
-            bool listResult = true;
-            for (int i = 0; i < 1000; i++) {
-                foreach (var value in values)
-                    listResult &= list[value];
-            }
-
-            sw.Stop();
-            var listDuration = sw.Elapsed;
-
-            output.WriteLine("Range: {0} {1}", rangeDuration, rangeResult);
-            output.WriteLine("List:  {0} {1}", listDuration, listResult);
+            Assert.True(range.Equals((object)range));
+            Assert.True(range.Equals((object)equalRange));
+            Assert.True(!range.Equals((object)differentRange));
+            Assert.True(!range.Equals((object)null));
         }
 
         private static void Shuffle<T>(List<T> list, Random rng)

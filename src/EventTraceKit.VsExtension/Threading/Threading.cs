@@ -3,10 +3,8 @@ namespace EventTraceKit.VsExtension.Threading
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using System.Windows;
     using System.Windows.Threading;
     using EventTraceKit.VsExtension.Views;
-    using EventTraceKit.VsExtension.Windows;
     using Microsoft.Windows.TaskDialogs;
     using Microsoft.Windows.TaskDialogs.Controls;
 
@@ -46,17 +44,7 @@ namespace EventTraceKit.VsExtension.Threading
                 }
             };
 
-            var currentScheduler = TaskScheduler.FromCurrentSynchronizationContext();
-            var delay = TimeSpan.FromMilliseconds(250);
-
-            var dialogTask = Task.Delay(delay, dialogCts.Token)
-                .ContinueWith(t => {
-                    if (!dialogCts.IsCancellationRequested)
-                        dialog.ShowModal();
-                }, dialogCts.Token, TaskContinuationOptions.None, currentScheduler)
-                .IgnoreCancellation();
-
-            await Task.WhenAny(task, dialogTask);
+            await Task.WhenAny(task, dialog.ShowModalDelayed(dialogCts.Token));
 
             dialogCts.Cancel();
             if (dialog.IsShown)
@@ -64,20 +52,29 @@ namespace EventTraceKit.VsExtension.Threading
         }
 
         public static async Task<T> RunWithProgress<T>(
-            this TaskFactory taskFactory, string caption, Window owner,
+            this TaskFactory taskFactory, string caption,
             Func<CancellationToken, IProgress<ProgressState>, T> action)
         {
-            var cts = new CancellationTokenSource();
+            var cts = (CancellationTokenSource)null;
+            var dialogCts = new CancellationTokenSource();
 
             var dialog = new TaskDialog {
                 Caption = caption,
-                Content = string.Empty,
-                OwnerWindow = owner.GetHandleRef()
+                Content = string.Empty
             };
+            if (cts != null) {
+                dialog.IsCancelable = true;
+                dialog.CommonButtons = TaskDialogButtons.Cancel;
+            }
 
-            dialog.Controls.Add(new TaskDialogButton(
-                TaskDialogButtonId.Cancel, "Cancel", (s, e) => cts.Cancel()));
             dialog.Controls.Add(new TaskDialogProgressBar(0, 100, 0));
+
+            dialog.Closing += (s, e) => {
+                if (e.Button == TaskDialogButtonId.Cancel) {
+                    dialogCts.Cancel();
+                    cts?.Cancel();
+                }
+            };
 
             IProgress<ProgressState> progress = new PeriodicProgress<ProgressState>(
                 TimeSpan.FromMilliseconds(100),
@@ -86,23 +83,31 @@ namespace EventTraceKit.VsExtension.Threading
                     dialog.Content = $"{x.Delta}/{x.Total}";
                 });
 
-            var currentScheduler = TaskScheduler.FromCurrentSynchronizationContext();
-            var delay = TimeSpan.FromMilliseconds(250);
+            var dialogTask = ShowModalDelayed(dialog, dialogCts.Token);
 
-            var dialogTask = Task.Delay(delay, cts.Token)
-                .ContinueWith(t => {
-                    if (!cts.IsCancellationRequested)
-                        dialog.ShowModal();
-                }, cts.Token, TaskContinuationOptions.None, currentScheduler);
+            var result = await taskFactory.StartNew(() => action(dialogCts.Token, progress), dialogCts.Token);
 
-            var result = await taskFactory.StartNew(() => action(cts.Token, progress), cts.Token);
-            cts.Cancel();
+            dialogCts.Cancel();
             if (dialog.IsShown)
-                dialog.Close(TaskDialogResult.Close);
+                dialog.Abort();
 
             await dialogTask.IgnoreCancellation();
 
             return result;
+        }
+
+        public static Task ShowModalDelayed(
+            this TaskDialog dialog, CancellationToken cancellationToken)
+        {
+            var scheduler = TaskScheduler.FromCurrentSynchronizationContext();
+            var delay = TimeSpan.FromMilliseconds(250);
+
+            return Task.Delay(delay, cancellationToken)
+                .ContinueWith(t => {
+                    if (!cancellationToken.IsCancellationRequested)
+                        dialog.ShowModal();
+                }, cancellationToken, TaskContinuationOptions.None, scheduler)
+                .IgnoreCancellation();
         }
 
         public static Task IgnoreCancellation(this Task task)

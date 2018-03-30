@@ -308,9 +308,9 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         private static TranslateTransform GetTranslation(UIElement element)
         {
-            var translation = element.RenderTransform as TranslateTransform;
-            if (translation == null)
-                element.RenderTransform = translation = new TranslateTransform();
+            if (element.RenderTransform is TranslateTransform translation)
+                return translation;
+            element.RenderTransform = translation = new TranslateTransform();
             return translation;
         }
 
@@ -482,8 +482,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         ///   Encapsulates the animation of a header moving aside (or back) to
         ///   make room for the dragged header. Headers have just two resting
         ///   places: the initial position, or the alternate position. The
-        ///   latter only depends depends on the actual width of the dragged
-        ///   column.
+        ///   latter only depends on the actual width of the dragged column.
         ///
         ///   Initial position:
         ///     | Header1   | Dragged | Header3       | Header4     |
@@ -545,6 +544,11 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 animation.Completed += OnCompleted;
 
                 clock = animation.CreateClock();
+            }
+
+            public void Reset()
+            {
+                element.RenderTransform = null;
             }
 
             public void MoveToAlternate()
@@ -631,11 +635,6 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                         Debug.Fail("Wrong state in OnCompleted callback: " + state + ".");
                         break;
                 }
-            }
-
-            public void Reset()
-            {
-                element.RenderTransform = null;
             }
         }
     }

@@ -50,12 +50,9 @@ namespace EventTraceKit.VsExtension.Controls
 
         public ReadOnlyObservableCollection<AsyncDataGridColumn> VisibleColumns
         {
-            get
-            {
-                return (ReadOnlyObservableCollection<AsyncDataGridColumn>)
-                    GetValue(VisibleColumnsProperty);
-            }
-            private set { SetValue(VisibleColumnsPropertyKey, value); }
+            get => (ReadOnlyObservableCollection<AsyncDataGridColumn>)
+                GetValue(VisibleColumnsProperty);
+            private set => SetValue(VisibleColumnsPropertyKey, value);
         }
 
         #endregion
@@ -77,12 +74,9 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public ReadOnlyObservableCollection<AsyncDataGridColumn> ConfigurableColumns
         {
-            get
-            {
-                return (ReadOnlyObservableCollection<AsyncDataGridColumn>)
-                  GetValue(ConfigurableColumnsProperty);
-            }
-            private set { SetValue(ConfigurableColumnsProperty, value); }
+            get => (ReadOnlyObservableCollection<AsyncDataGridColumn>)
+                GetValue(ConfigurableColumnsProperty);
+            private set => SetValue(ConfigurableColumnsProperty, value);
         }
 
         #endregion
@@ -107,8 +101,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public Visibility Visibility
         {
-            get { return (Visibility)GetValue(VisibilityProperty); }
-            set { SetValue(VisibilityPropertyKey, value); }
+            get => (Visibility)GetValue(VisibilityProperty);
+            set => SetValue(VisibilityPropertyKey, value);
         }
 
         #endregion
@@ -133,8 +127,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         protected AsyncDataGridColumn ExpanderHeaderColumn
         {
-            get { return (AsyncDataGridColumn)GetValue(ExpanderHeaderColumnProperty); }
-            set { SetValue(ExpanderHeaderColumnPropertyKey, value); }
+            get => (AsyncDataGridColumn)GetValue(ExpanderHeaderColumnProperty);
+            set => SetValue(ExpanderHeaderColumnPropertyKey, value);
         }
 
         #endregion
@@ -156,8 +150,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public int LeftFrozenColumnCount
         {
-            get { return (int)GetValue(LeftFrozenColumnCountProperty); }
-            set { SetValue(LeftFrozenColumnCountProperty, value); }
+            get => (int)GetValue(LeftFrozenColumnCountProperty);
+            set => SetValue(LeftFrozenColumnCountProperty, value);
         }
 
         #endregion
@@ -179,8 +173,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public int RightFrozenColumnCount
         {
-            get { return (int)GetValue(RightFrozenColumnCountProperty); }
-            set { SetValue(RightFrozenColumnCountProperty, value); }
+            get => (int)GetValue(RightFrozenColumnCountProperty);
+            set => SetValue(RightFrozenColumnCountProperty, value);
         }
 
         #endregion
@@ -202,8 +196,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public int LeftFrozenVisibleColumnCount
         {
-            get { return (int)GetValue(LeftFrozenVisibleColumnCountProperty); }
-            set { SetValue(LeftFrozenVisibleColumnCountProperty, value); }
+            get => (int)GetValue(LeftFrozenVisibleColumnCountProperty);
+            set => SetValue(LeftFrozenVisibleColumnCountProperty, value);
         }
 
         #endregion
@@ -225,20 +219,16 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public int RightFrozenVisibleColumnCount
         {
-            get { return (int)GetValue(RightFrozenVisibleColumnCountProperty); }
-            set { SetValue(RightFrozenVisibleColumnCountProperty, value); }
+            get => (int)GetValue(RightFrozenVisibleColumnCountProperty);
+            set => SetValue(RightFrozenVisibleColumnCountProperty, value);
         }
 
         #endregion
 
         private void RefreshColumnCollections()
         {
-            visibleColumns.Clear();
-            visibleColumns.AddRange(columns.Where(x => x.IsVisible));
-
-            configurableColumns.Clear();
-            configurableColumns.AddRange(columns.Where(x => x.IsConfigurable));
-
+            visibleColumns.SetRange(columns.Where(x => x.IsVisible));
+            configurableColumns.SetRange(columns.Where(x => x.IsConfigurable));
             ColumnsChanged?.Invoke(this, EventArgs.Empty);
         }
 

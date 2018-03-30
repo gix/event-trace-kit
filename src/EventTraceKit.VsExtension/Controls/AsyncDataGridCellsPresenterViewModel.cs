@@ -6,8 +6,14 @@ namespace EventTraceKit.VsExtension.Controls
     using EventTraceKit.VsExtension.Windows;
     using Primitives;
 
+    public interface IVirtualCollection
+    {
+        int FocusIndex { get; set; }
+        int RowCount { get; }
+    }
+
     public sealed class AsyncDataGridCellsPresenterViewModel
-        : DependencyObject
+        : DependencyObject, IVirtualCollection
     {
         private readonly AsyncDataViewModel advModel;
 
@@ -54,7 +60,7 @@ namespace EventTraceKit.VsExtension.Controls
 
         #endregion
 
-        internal bool IsReady
+        public bool IsReady
         {
             get
             {
@@ -63,7 +69,7 @@ namespace EventTraceKit.VsExtension.Controls
             }
         }
 
-        internal object DataValidityToken => null;
+        public object DataValidityToken => null;
 
         public void RequestUpdate(bool updateFromViewModel)
         {

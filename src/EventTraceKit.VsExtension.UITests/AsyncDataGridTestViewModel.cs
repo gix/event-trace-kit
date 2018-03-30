@@ -5,23 +5,22 @@ namespace EventTraceKit.VsExtension.UITests
     using System.Collections.ObjectModel;
     using System.Linq;
     using System.Reflection;
-    using System.Runtime.InteropServices;
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Input;
     using System.Windows.Media;
     using System.Windows.Threading;
     using Controls;
-    using EventTraceKit.VsExtension.Views;
     using EventTraceKit.VsExtension.Views.PresetManager;
     using Formatting;
-    using Native;
 
     public class AsyncDataGridTestViewModel : ObservableModel
     {
-        private bool isRunning;
+        private readonly DataView dataView;
+        private readonly AsyncDataViewModel adv;
         private AsyncDataGridViewModel gridModel;
         private int rowCount;
+        private bool isRunning;
 
         private FontFamily rowFontFamily;
         private double rowFontSize;
@@ -34,8 +33,6 @@ namespace EventTraceKit.VsExtension.UITests
         private Brush rowInactiveSelectionForeground;
         private Brush rowInactiveSelectionBackground;
         private Brush rowFocusBorderBrush;
-        private DataView dataView;
-        private AsyncDataViewModel adv;
 
         public AsyncDataGridTestViewModel()
         {
