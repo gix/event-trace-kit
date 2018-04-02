@@ -10,6 +10,10 @@
     <DocumentationFile Condition="'$(IsWpfTempProject)' == 'true'"></DocumentationFile>
     <DocumentationFile Condition="'$(IsWpfTempProject)' != 'true'">$(OutputPath)$(AssemblyName).xml</DocumentationFile>
 
+    <!-- The XAML compiler generates a temporary project with a randomized name.
+         Without setting a hardcoded name every build will leave a new file behind. -->
+    <GeneratedAssemblyInfoFile Condition="'$(IsWpfTempProject)' == 'true'">$(IntermediateOutputPath)_WpfTemporaryTarget.AssemblyInfo$(DefaultLanguageSourceExtension)</GeneratedAssemblyInfoFile>
+
     <TargetFrameworkMonikerAssemblyAttributesPath>$([System.IO.Path]::Combine('$(IntermediateOutputPath)','$(TargetFrameworkMoniker).AssemblyAttributes$(DefaultLanguageSourceExtension)'))</TargetFrameworkMonikerAssemblyAttributesPath>
   </PropertyGroup>
 
