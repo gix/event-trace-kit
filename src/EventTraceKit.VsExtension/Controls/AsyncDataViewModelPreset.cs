@@ -35,8 +35,8 @@ namespace EventTraceKit.VsExtension.Controls
         [Serialize]
         public string Name
         {
-            get { return (string)GetValue(NameProperty); }
-            set { SetValue(NameProperty, value); }
+            get => (string)GetValue(NameProperty);
+            set => SetValue(NameProperty, value);
         }
 
         #endregion
@@ -52,8 +52,8 @@ namespace EventTraceKit.VsExtension.Controls
 
         public bool IsModified
         {
-            get { return (bool)GetValue(IsModifiedProperty); }
-            set { SetValue(IsModifiedProperty, Boxed.Bool(value)); }
+            get => (bool)GetValue(IsModifiedProperty);
+            set => SetValue(IsModifiedProperty, Boxed.Bool(value));
         }
 
         #endregion
@@ -69,8 +69,8 @@ namespace EventTraceKit.VsExtension.Controls
 
         public bool IsUIModified
         {
-            get { return (bool)GetValue(IsUIModifiedProperty); }
-            set { SetValue(IsUIModifiedProperty, Boxed.Bool(value)); }
+            get => (bool)GetValue(IsUIModifiedProperty);
+            set => SetValue(IsUIModifiedProperty, Boxed.Bool(value));
         }
 
         #endregion
@@ -87,8 +87,8 @@ namespace EventTraceKit.VsExtension.Controls
         [Serialize]
         public int LeftFrozenColumnCount
         {
-            get { return (int)GetValue(LeftFrozenColumnCountProperty); }
-            set { SetValue(LeftFrozenColumnCountProperty, Boxed.Int32(value)); }
+            get => (int)GetValue(LeftFrozenColumnCountProperty);
+            set => SetValue(LeftFrozenColumnCountProperty, Boxed.Int32(value));
         }
 
         #endregion
@@ -105,8 +105,8 @@ namespace EventTraceKit.VsExtension.Controls
         [Serialize]
         public int RightFrozenColumnCount
         {
-            get { return (int)GetValue(RightFrozenColumnCountProperty); }
-            set { SetValue(RightFrozenColumnCountProperty, Boxed.Int32(value)); }
+            get => (int)GetValue(RightFrozenColumnCountProperty);
+            set => SetValue(RightFrozenColumnCountProperty, Boxed.Int32(value));
         }
 
         #endregion
@@ -120,15 +120,11 @@ namespace EventTraceKit.VsExtension.Controls
                 typeof(AsyncDataViewModelPreset),
                 PropertyMetadataUtils.DefaultNull);
 
-        [Serialize(serializedName: nameof(ViewPreset.Columns))]
+        [Serialize(nameof(ViewPreset.Columns))]
         public FreezableCollection<ColumnViewModelPreset> ConfigurableColumns
         {
-            get
-            {
-                return
-                    (FreezableCollection<ColumnViewModelPreset>)GetValue(ConfigurableColumnsProperty);
-            }
-            private set { SetValue(ConfigurableColumnsProperty, value); }
+            get => (FreezableCollection<ColumnViewModelPreset>)GetValue(ConfigurableColumnsProperty);
+            private set => SetValue(ConfigurableColumnsProperty, value);
         }
 
         #endregion

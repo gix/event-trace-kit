@@ -10,9 +10,6 @@ namespace EventTraceKit.VsExtension.Settings
         ISettingsStore GetProjectStore(ProjectInfo project);
         ISettingsStore GetAmbientStore();
 
-        AdvmPresetCollection GetViewPresets();
-        void SaveViewPresets(AdvmPresetCollection presets);
-
         void SaveAmbient();
     }
 }

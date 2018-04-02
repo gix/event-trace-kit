@@ -158,9 +158,11 @@
     <Compile Include="Settings\ProjectSettingsStore.cs" />
     <Compile Include="Settings\SettingsServiceImpl.cs" />
     <Compile Include="Settings\SettingsStore.cs" />
+    <Compile Include="Settings\SettingsStoreExtensions.cs" />
     <Compile Include="Settings\SettingsStoreWrapper.cs" />
     <Compile Include="Settings\XamlFileSettingsStorage.cs" />
     <Compile Include="Settings\Persistence\Settings.cs" />
+    <Compile Include="TraceProfileUtils.cs" />
     <Compile Include="Views\AcqRelObservableCollection.cs" />
     <Compile Include="AsyncLazy.cs" />
     <Compile Include="Views\VsModalExtensions.cs" />

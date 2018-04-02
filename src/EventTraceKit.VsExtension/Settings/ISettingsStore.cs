@@ -31,6 +31,7 @@ namespace EventTraceKit.VsExtension.Settings
     public static class SettingsKeys
     {
         public static SettingsKey<bool> AutoLog => new SettingsKey<bool>("AutoLog");
+        public static SettingsKey<bool> AutoScroll => new SettingsKey<bool>("AutoScroll");
         public static SettingsKey<bool> ShowColumnHeaders => new SettingsKey<bool>("ShowColumnHeaders");
         public static SettingsKey<bool> ShowStatusBar => new SettingsKey<bool>("ShowStatusBar");
         public static SettingsKey<bool> IsFilterEnabled => new SettingsKey<bool>("IsFilterEnabled");

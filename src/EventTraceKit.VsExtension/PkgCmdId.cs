@@ -13,6 +13,7 @@ namespace EventTraceKit.VsExtension
         public const int cmdidAutoLog = 0x100;
         public const int cmdidCaptureLog = 0x200;
         public const int cmdidClearLog = 0x300;
+        public const int cmdidAutoScroll = 0x350;
         public const int cmdidConfigureSession = 0x400;
         public const int cmdidOpenViewEditor = 0x500;
         public const int cmdidViewPresetCombo = 0x600;

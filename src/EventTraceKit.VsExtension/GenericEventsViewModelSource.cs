@@ -8,6 +8,7 @@ namespace EventTraceKit.VsExtension
     using System.Windows;
     using EventTraceKit.VsExtension.Controls;
     using EventTraceKit.VsExtension.Extensions;
+    using EventTraceKit.VsExtension.Formatting;
     using EventTraceKit.VsExtension.Native;
     using EventTraceKit.VsExtension.Utilities;
     using EventTraceKit.VsExtension.Windows;
@@ -208,7 +209,8 @@ namespace EventTraceKit.VsExtension
                     IsVisible = true,
                     Width = 40,
                     TextAlignment = TextAlignment.Right,
-                    HelpText = "Thread ID"
+                    HelpText = "Thread ID",
+                    CellFormat = NumericalFormatProvider.Decimal
                 }.EnsureFrozen();
             processIdPreset =
                 new ColumnViewModelPreset {
@@ -217,7 +219,8 @@ namespace EventTraceKit.VsExtension
                     IsVisible = true,
                     Width = 40,
                     TextAlignment = TextAlignment.Right,
-                    HelpText = "Process ID (0 = PID Not Found)"
+                    HelpText = "Process ID (0 = PID Not Found)",
+                    CellFormat = NumericalFormatProvider.Decimal
                 }.EnsureFrozen();
             userDataPreset =
                 new ColumnViewModelPreset {
@@ -445,7 +448,8 @@ namespace EventTraceKit.VsExtension
                     IsVisible = true,
                     Width = 40,
                     TextAlignment = TextAlignment.Right,
-                    HelpText = "Process ID"
+                    HelpText = "Process ID",
+                    CellFormat = NumericalFormatProvider.Decimal
                 }.EnsureFrozen();
             var threadIdPreset =
                 new ColumnViewModelPreset {
@@ -454,7 +458,8 @@ namespace EventTraceKit.VsExtension
                     IsVisible = true,
                     Width = 40,
                     TextAlignment = TextAlignment.Right,
-                    HelpText = "Thread ID"
+                    HelpText = "Thread ID",
+                    CellFormat = NumericalFormatProvider.Decimal
                 }.EnsureFrozen();
             var timeAbsoluteGeneratorPreset =
                 new ColumnViewModelPreset {

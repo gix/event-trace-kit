@@ -126,15 +126,6 @@ namespace EventTraceKit.VsExtension
             }
         }
 
-        private static bool IsUsableProfile(TraceProfileDescriptor descriptor)
-        {
-            return
-                descriptor != null &&
-                descriptor.Collectors.Count == 1 &&
-                descriptor.Collectors[0] is EventCollectorDescriptor collector &&
-                collector.Providers.Count > 0;
-        }
-
         private TraceProfileDescriptor AugmentTraceProfile(
             TraceProfileDescriptor descriptor, IReadOnlyList<TraceLaunchTarget> targets)
         {
@@ -147,8 +138,11 @@ namespace EventTraceKit.VsExtension
                         var target = targets.FirstOrDefault(
                             x => string.Equals(x.ProjectPath, project, StringComparison.OrdinalIgnoreCase));
 
-                        if (target != null)
+                        if (target != null) {
+                            if (provider.ProcessIds == null)
+                                provider.ProcessIds = new List<uint>();
                             provider.ProcessIds.Add(target.ProcessId);
+                        }
                     }
                 }
             }
@@ -158,7 +152,7 @@ namespace EventTraceKit.VsExtension
 
         public void LaunchTraceTargets(IReadOnlyList<TraceLaunchTarget> targets)
         {
-            if (!autoLogEnabled || runningSession != null || !IsUsableProfile(autoLogProfile))
+            if (!autoLogEnabled || runningSession != null || !autoLogProfile.IsUsable())
                 return;
 
             autoLogExitCts?.Cancel();

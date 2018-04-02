@@ -14,21 +14,21 @@ public:
         MatchAnyKeyword = 0xFFFFFFFFFFFFFFFFULL;
         MatchAllKeyword = 0;
 
-        using namespace System::Collections::Generic;
-        ProcessIds = gcnew List<unsigned>();
-        EventIds = gcnew List<System::UInt16>();
         EventIdsFilterIn = true;
-        StackWalkEventIds = gcnew List<System::UInt16>();
         StackWalkEventIdsFilterIn = true;
+
+        FilterStackWalkLevelKeyword = false;
+        StackWalkFilterIn = true;
+        StackWalkLevel = 0;
         StackWalkMatchAnyKeyword = 0;
         StackWalkMatchAllKeyword = 0;
-        StackWalkLevel = 0;
-        StackWalkFilterIn = true;
-        EnableStackWalkFilter = false;
     }
 
     EventProviderDescriptor(EventProviderDescriptor^ source)
     {
+        using namespace System;
+        using namespace System::Collections::Generic;
+
         if (!source)
             throw gcnew System::ArgumentNullException("source");
 
@@ -41,22 +41,27 @@ public:
         IncludeTerminalSessionId = source->IncludeTerminalSessionId;
         IncludeStackTrace = source->IncludeStackTrace;
 
-        using namespace System::Collections::Generic;
         ExecutableName = source->ExecutableName;
-        ProcessIds = gcnew List<unsigned>(source->ProcessIds);
-        EventIds = gcnew List<System::UInt16>(source->EventIds);
+        if (source->ProcessIds)
+            ProcessIds = gcnew List<unsigned>(source->ProcessIds);
+
         EventIdsFilterIn = source->EventIdsFilterIn;
-        StackWalkEventIds = gcnew List<System::UInt16>(source->StackWalkEventIds);
+        if (source->EventIds)
+            EventIds = gcnew List<UInt16>(source->EventIds);
+
         StackWalkEventIdsFilterIn = source->StackWalkEventIdsFilterIn;
+        if (source->StackWalkEventIds)
+            StackWalkEventIds = gcnew List<UInt16>(source->StackWalkEventIds);
+
+        FilterStackWalkLevelKeyword = source->FilterStackWalkLevelKeyword;
+        StackWalkFilterIn = source->StackWalkFilterIn;
+        StackWalkLevel = source->StackWalkLevel;
         StackWalkMatchAnyKeyword = source->StackWalkMatchAnyKeyword;
         StackWalkMatchAllKeyword = source->StackWalkMatchAllKeyword;
-        StackWalkLevel = source->StackWalkLevel;
-        StackWalkFilterIn = source->StackWalkFilterIn;
-        EnableStackWalkFilter = source->EnableStackWalkFilter;
 
         Manifest = source->Manifest;
         if (source->StartupProjects)
-            StartupProjects = gcnew List<System::String^>(source->StartupProjects);
+            StartupProjects = gcnew List<String^>(source->StartupProjects);
     }
 
     property System::Guid Id;
@@ -70,15 +75,18 @@ public:
 
     property System::String^ ExecutableName;
     property System::Collections::Generic::List<unsigned>^ ProcessIds;
-    property System::Collections::Generic::List<System::UInt16>^ EventIds;
+
     property bool EventIdsFilterIn;
-    property System::Collections::Generic::List<System::UInt16>^ StackWalkEventIds;
+    property System::Collections::Generic::List<System::UInt16>^ EventIds;
+
     property bool StackWalkEventIdsFilterIn;
+    property System::Collections::Generic::List<System::UInt16>^ StackWalkEventIds;
+
+    property bool FilterStackWalkLevelKeyword;
+    property bool StackWalkFilterIn;
+    property System::Byte StackWalkLevel;
     property System::UInt64 StackWalkMatchAnyKeyword;
     property System::UInt64 StackWalkMatchAllKeyword;
-    property System::Byte StackWalkLevel;
-    property bool StackWalkFilterIn;
-    property bool EnableStackWalkFilter;
 
     property System::String^ Manifest;
     property System::Collections::Generic::List<System::String^>^ StartupProjects;
@@ -91,12 +99,11 @@ public:
     property System::Nullable<unsigned> MinimumBuffers;
     property System::Nullable<unsigned> MaximumBuffers;
     property System::String^ LogFileName;
-    property System::UInt32 CustomFlushPeriod;
+    property System::Nullable<System::TimeSpan> FlushPeriod;
 
 protected:
     CollectorDescriptor()
     {
-        CustomFlushPeriod = 0;
     }
 
     CollectorDescriptor(CollectorDescriptor^ source)
@@ -108,7 +115,7 @@ protected:
         MinimumBuffers = source->MinimumBuffers;
         MaximumBuffers = source->MaximumBuffers;
         LogFileName = source->LogFileName;
-        CustomFlushPeriod = source->CustomFlushPeriod;
+        FlushPeriod = source->FlushPeriod;
     }
 };
 

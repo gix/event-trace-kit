@@ -16,6 +16,31 @@ namespace etk
 namespace
 {
 
+using PFNGetSystemTimeAsFileTime = void(WINAPI*)(LPFILETIME);
+
+PFNGetSystemTimeAsFileTime WINAPI InitializeGetSystemTimeAsFileTime()
+{
+    // GetSystemTimePreciseAsFileTime requires Windows 8 or later.
+    auto const kernel32 = LoadLibraryW(L"kernel32.dll");
+    auto const func = reinterpret_cast<PFNGetSystemTimeAsFileTime>(
+        GetProcAddress(kernel32, "GetSystemTimePreciseAsFileTime"));
+    if (func)
+        return func;
+
+    return &::GetSystemTimeAsFileTime;
+}
+
+PFNGetSystemTimeAsFileTime const g_pGetSystemTimeAsFileTime =
+    InitializeGetSystemTimeAsFileTime();
+
+void GetSystemTimePrecise(LARGE_INTEGER* systemTime)
+{
+    FILETIME ft;
+    g_pGetSystemTimeAsFileTime(&ft);
+    systemTime->u.HighPart = static_cast<LONG>(ft.dwHighDateTime);
+    systemTime->u.LowPart = ft.dwLowDateTime;
+}
+
 bool IsEventTraceHeader(EVENT_RECORD const& record)
 {
     return record.EventHeader.ProviderId == EventTraceGuid &&
@@ -24,7 +49,7 @@ bool IsEventTraceHeader(EVENT_RECORD const& record)
 
 //! Wrap emplaces to back of container as output iterator
 template<typename Container>
-class string_back_inserter
+class string_back_insert_iterator
 {
 public:
     using iterator_category = std::output_iterator_tag;
@@ -35,46 +60,39 @@ public:
 
     using container_type = Container;
 
-    explicit string_back_inserter(Container& container)
+    explicit string_back_insert_iterator(Container& container)
         : container(std::addressof(container))
     {
     }
 
     template<typename T>
-    string_back_inserter& operator=(T const& value)
+    string_back_insert_iterator& operator=(T const& value)
     {
         container->push_back(static_cast<typename Container::value_type>(value));
         return *this;
     }
 
-    string_back_inserter& operator*() { return *this; }
-    string_back_inserter& operator++() { return *this; }
-    string_back_inserter operator++(int) { return *this; }
+    string_back_insert_iterator& operator*() { return *this; }
+    string_back_insert_iterator& operator++() { return *this; }
+    string_back_insert_iterator operator++(int) { return *this; }
 
 protected:
     Container* container;
 };
 
 template<typename Container>
-string_back_inserter<Container> sting_back_inserter(Container& c)
+string_back_insert_iterator<Container> string_back_inserter(Container& c)
 {
-    return string_back_inserter<Container>(c);
+    return string_back_insert_iterator<Container>(c);
 }
 
 } // namespace
 
-EtwTraceProcessor::EtwTraceProcessor(ArrayRef<std::wstring_view> loggerNames,
-                                     ArrayRef<std::wstring_view> eventManifests,
-                                     ArrayRef<std::wstring_view> providerBinaries)
+EtwTraceProcessor::EtwTraceProcessor(ArrayRef<std::wstring_view> loggerNames)
 {
     std::copy(std::begin(loggerNames), std::end(loggerNames),
-              sting_back_inserter(this->loggerNames));
+              string_back_inserter(this->loggerNames));
     traceHandles.reserve(this->loggerNames.size());
-
-    std::copy(std::begin(eventManifests), std::end(eventManifests),
-              sting_back_inserter(this->manifests));
-    std::copy(std::begin(providerBinaries), std::end(providerBinaries),
-              sting_back_inserter(this->providerBinaries));
 
     for (auto const& name : this->loggerNames) {
         auto& logFile = traceLogFiles.emplace_back();
@@ -98,27 +116,50 @@ void EtwTraceProcessor::SetEventSink(IEventSink* sink)
     this->sink = sink;
 }
 
+static void EnsureStartTime(EVENT_TRACE_LOGFILEW& traceLogFile,
+                            LARGE_INTEGER& cachedQpcStartTime,
+                            LARGE_INTEGER& cachedSystemStartTime)
+{
+    if (traceLogFile.LogfileHeader.StartTime.QuadPart != 0)
+        return;
+
+    if (traceLogFile.ProcessTraceMode & PROCESS_TRACE_MODE_RAW_TIMESTAMP) {
+        // The log uses raw timestamps for which we always use QPC.
+        if (cachedQpcStartTime.QuadPart == 0)
+            QueryPerformanceCounter(&cachedQpcStartTime);
+
+        traceLogFile.LogfileHeader.StartTime = cachedQpcStartTime;
+    } else {
+        // Timestamps have system time resolution.
+        if (cachedSystemStartTime.QuadPart == 0)
+            GetSystemTimePrecise(&traceLogFile.LogfileHeader.StartTime);
+
+        traceLogFile.LogfileHeader.StartTime = cachedSystemStartTime;
+    }
+}
+
 void EtwTraceProcessor::StartProcessing()
 {
     if (!traceHandles.empty())
         return;
 
-    RegisterManifests();
-
+    LARGE_INTEGER cachedQpcStartTime = {};
+    LARGE_INTEGER cachedSystemStartTime = {};
     for (auto& traceLogFile : traceLogFiles) {
         TraceHandle traceHandle{OpenTraceW(&traceLogFile)};
         if (!traceHandle) {
             DWORD const ec = GetLastError();
-            UnregisterManifests();
             throw std::system_error(ec, std::system_category());
         }
 
         traceHandles.push_back(std::move(traceHandle));
-        if (traceLogFile.LogfileHeader.StartTime.QuadPart == 0)
-            QueryPerformanceCounter(&traceLogFile.LogfileHeader.StartTime);
 
-        processorThreads.emplace_back(
-            &EtwTraceProcessor::ProcessTraceProc, traceHandles.back().Get());
+        // The start time seems to never be set automatically for real-time
+        // sessions.
+        EnsureStartTime(traceLogFile, cachedQpcStartTime, cachedSystemStartTime);
+
+        processorThreads.emplace_back(&EtwTraceProcessor::ProcessTraceProc,
+                                      traceHandles.back().Get());
     }
 }
 
@@ -133,8 +174,6 @@ void EtwTraceProcessor::StopProcessing()
         if (thread.joinable())
             thread.join();
     }
-
-    UnregisterManifests();
 }
 
 void EtwTraceProcessor::ProcessTraceProc(TRACEHANDLE traceHandle)
@@ -142,8 +181,7 @@ void EtwTraceProcessor::ProcessTraceProc(TRACEHANDLE traceHandle)
     SetCurrentThreadName("ETW Trace Processor");
 
     try {
-        HRESULT hr = HResultFromWin32(
-            ProcessTrace(&traceHandle, 1, nullptr, nullptr));
+        HRESULT hr = HResultFromWin32(ProcessTrace(&traceHandle, 1, nullptr, nullptr));
         (void)ETK_TRACE_HR(hr);
     } catch (...) {
         fprintf(stderr, "Suppressing unhandled exception in ProcessTraceProc\n");
@@ -175,7 +213,8 @@ bool EtwTraceProcessor::IsEndOfTracing()
     for (auto& thread : processorThreads)
         threadHandles.push_back(thread.native_handle());
 
-    DWORD const st = WaitForMultipleObjects(threadHandles.size(), threadHandles.data(), TRUE, 0);
+    DWORD const st =
+        WaitForMultipleObjects(threadHandles.size(), threadHandles.data(), TRUE, 0);
     return st == WAIT_OBJECT_0;
 }
 
@@ -186,31 +225,10 @@ TRACE_LOGFILE_HEADER const* EtwTraceProcessor::GetLogFileHeader() const
     return &traceLogFiles.front().LogfileHeader;
 }
 
-void EtwTraceProcessor::RegisterManifests()
-{
-    TDHSTATUS ec = 0;
-    for (std::wstring& manifest : manifests)
-        ec = TdhLoadManifest(&manifest[0]);
-    for (std::wstring& providerBinary : providerBinaries)
-        ec = TdhLoadManifestFromBinary(&providerBinary[0]);
-}
-
-void EtwTraceProcessor::UnregisterManifests()
-{
-    TDHSTATUS ec = 0;
-    for (std::wstring& manifest : manifests)
-        ec = TdhUnloadManifest(&manifest[0]);
-    // for (std::wstring& providerBinary : providerBinaries)
-    //    ec = TdhUnloadManifest(&providerBinary[0]);
-}
-
 std::unique_ptr<ITraceProcessor>
-CreateEtwTraceProcessor(ArrayRef<std::wstring_view> loggerName,
-                        ArrayRef<std::wstring_view> eventManifests,
-                        ArrayRef<std::wstring_view> providerBinaries)
+CreateEtwTraceProcessor(ArrayRef<std::wstring_view> loggerName)
 {
-    return std::make_unique<EtwTraceProcessor>(loggerName, eventManifests,
-                                               providerBinaries);
+    return std::make_unique<EtwTraceProcessor>(loggerName);
 }
 
 } // namespace etk

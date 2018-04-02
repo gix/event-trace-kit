@@ -5,14 +5,21 @@ namespace EventTraceKit.VsExtension.Formatting
     using Extensions;
 
     [DefaultFormat("N0")]
-    [SupportedFormat(1, "N0", "Number", HelpText = "Decimal number with digit grouping\nExample: 10.000")]
-    [SupportedFormat(2, "D0", "Decimal", HelpText = "Decimal number\nExample: 10000")]
-    [SupportedFormat(3, "X", "Hexadecimal", HelpText = "Hexadecimal number with prefix\nExample: 0xABCDE")]
-    [SupportedFormat(4, "Xs", "Hexadecimal (w/o prefix)", HelpText = "Hexadecimal number without prefix\nExample: ABCDE")]
-    [SupportedFormat(5, "PX", "Padded Hex", HelpText = "Hexadecimal number padded with prefix\nExample: 0x000ABCDE")]
-    [SupportedFormat(6, "PXs", "Padded Hex (w/o prefix)", HelpText = "Hexadecimal number padded without prefix\nExample: 000ABCDE")]
+    [SupportedFormat(1, Number, "Number", HelpText = "Decimal number with digit grouping\nExample: 10.000")]
+    [SupportedFormat(2, Decimal, "Decimal", HelpText = "Decimal number\nExample: 10000")]
+    [SupportedFormat(3, Hex, "Hexadecimal", HelpText = "Hexadecimal number with prefix\nExample: 0xABCDE")]
+    [SupportedFormat(4, HexUnprefixed, "Hexadecimal (w/o prefix)", HelpText = "Hexadecimal number without prefix\nExample: ABCDE")]
+    [SupportedFormat(5, PaddedHex, "Padded Hex", HelpText = "Hexadecimal number padded with prefix\nExample: 0x000ABCDE")]
+    [SupportedFormat(6, PaddedHexUnprefixed, "Padded Hex (w/o prefix)", HelpText = "Hexadecimal number padded without prefix\nExample: 000ABCDE")]
     public class NumericalFormatProvider : IFormatProvider, ICustomFormatter
     {
+        public const string Number = "N0";
+        public const string Decimal = "D0";
+        public const string Hex = "X";
+        public const string HexUnprefixed = "Xs";
+        public const string PaddedHex = "PX";
+        public const string PaddedHexUnprefixed = "PXs";
+
         public NumericalFormatProvider()
         {
         }

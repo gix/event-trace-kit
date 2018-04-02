@@ -19,7 +19,6 @@
     <ClCompile Include="EventTraceKit\ManifestInfo.cpp" />
     <ClCompile Include="EventTraceKit\EventSession.cpp" />
     <ClCompile Include="TraceDataContext.cpp" />
-    <ClCompile Include="BinaryFind.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EtwTraceProcessor.h" />
@@ -58,5 +57,7 @@
     <ClInclude Include="Support\Rtl.h" />
     <ClInclude Include="TraceDataContext.h" />
     <ClInclude Include="ManualResetEventSlim.h" />
+    <ClInclude Include="BinaryFind.h" />
+    <ClInclude Include="Support\ThreadpoolTimer.h" />
   </ItemGroup>
 </Project>

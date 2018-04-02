@@ -150,9 +150,9 @@ namespace EventTraceKit.VsExtension.Settings
                     entries = settings.Entries;
             } catch (Exception) {
             } finally {
+                state = State.Unmodified;
                 if (entries == null)
                     entries = new Dictionary<string, object>();
-                state = State.Unmodified;
             }
         }
     }

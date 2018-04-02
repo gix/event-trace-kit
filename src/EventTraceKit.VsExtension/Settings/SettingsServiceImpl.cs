@@ -2,15 +2,11 @@ namespace EventTraceKit.VsExtension.Settings
 {
     using System;
     using System.Linq;
-    using AutoMapper;
-    using EventTraceKit.VsExtension.Serialization;
-    using EventTraceKit.VsExtension.Settings.Persistence;
 
     internal class SettingsServiceImpl : ISettingsService
     {
         private readonly IVsSolutionManager solutionManager;
         private readonly string appDataDirectory;
-        private readonly IMapper mapper = SettingsSerializer.CreateMapper();
 
         private readonly ISettingsStore globalStore;
         private ISettingsStore ambientStore;
@@ -62,18 +58,6 @@ namespace EventTraceKit.VsExtension.Settings
         public void SaveAmbient()
         {
             ambientStore.Save();
-        }
-
-        public AdvmPresetCollection GetViewPresets()
-        {
-            var viewPresets = globalStore.GetValue(SettingsKeys.Views) ?? new ViewPresets();
-            return mapper.Map<AdvmPresetCollection>(viewPresets);
-        }
-
-        public void SaveViewPresets(AdvmPresetCollection presets)
-        {
-            globalStore.SetValue(SettingsKeys.Views, mapper.Map<ViewPresets>(presets));
-            globalStore.Save();
         }
     }
 }

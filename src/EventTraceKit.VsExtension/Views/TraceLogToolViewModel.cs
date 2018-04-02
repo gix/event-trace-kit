@@ -7,29 +7,35 @@ namespace EventTraceKit.VsExtension.Views
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows;
+    using System.Windows.Data;
     using System.Windows.Threading;
     using Controls;
     using EventTraceKit.Tracing;
     using EventTraceKit.VsExtension.Filtering;
+    using EventTraceKit.VsExtension.Serialization;
     using EventTraceKit.VsExtension.Settings;
     using EventTraceKit.VsExtension.Views.PresetManager;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
     using Task = System.Threading.Tasks.Task;
+    using TraceLogFilter = EventTraceKit.VsExtension.Filtering.TraceLogFilter;
 
     public interface IFilterable
     {
         TraceLogFilter Filter { get; set; }
     }
 
-    public class TraceLogToolViewModel : ObservableModel, IEventInfoSource, IFilterable
+    public class TraceLogToolViewModel
+        : ObservableModel, IEventInfoSource, IFilterable
     {
         private readonly ISettingsService settings;
         private readonly ITraceController traceController;
         private readonly ISolutionBrowser solutionBrowser;
         private readonly IVsUIShell uiShell;
 
-        private SettingsStoreWrapper settingsStore;
+        private SettingsStoreWrapper globalStore;
+        private SettingsStoreWrapper ambientStore;
+
         private readonly TaskFactory taskFactory;
         private readonly EventSymbolSource eventSymbolSource = new EventSymbolSource();
 
@@ -55,8 +61,9 @@ namespace EventTraceKit.VsExtension.Views
 
         private TraceSettingsViewModel settingsViewModel;
         private bool autoLog;
+        private bool autoScroll;
         private bool showStatusBar;
-        private bool showColumnHeaders;
+        private bool showColumnHeaders = true;
         private bool isFilterEnabled;
         private TraceLogFilter currentFilter;
 
@@ -90,7 +97,7 @@ namespace EventTraceKit.VsExtension.Views
             var templatePreset = tableTuple.Item2;
 
             var defaultPreset = GenericEventsViewModelSource.CreateDefaultPreset();
-            var viewPresets = settings.GetViewPresets();
+            var viewPresets = settings.GetGlobalStore().GetViewPresets(SettingsSerializer.Mapper);
             viewPresets.BuiltInPresets.Add(defaultPreset);
 
             var preset = viewPresets.TryGetPersistedPresetByName(defaultPreset.Name);
@@ -104,6 +111,9 @@ namespace EventTraceKit.VsExtension.Views
 
             GridModel = AdvModel.GridViewModel;
             AdvModel.PresetChanged += OnViewPresetChanged;
+            BindingOperations.SetBinding(GridModel, AsyncDataGridViewModel.AutoScrollProperty, new Binding(nameof(AutoScroll)) {
+                Source = this
+            });
 
             if (SynchronizationContext.Current == null) {
                 SynchronizationContext.SetSynchronizationContext(
@@ -117,28 +127,54 @@ namespace EventTraceKit.VsExtension.Views
             updateStatsTimer.Interval = TimeSpan.FromSeconds(1);
             updateStatsTimer.Tick += (s, e) => UpdateStats();
 
-            LoadSettings();
+            LoadGlobalSettings();
+            LoadAmbientSettings();
         }
 
-        private void LoadSettings()
+        public void OnClose()
         {
-            settingsStore = settings.GetAmbientStoreWrapper();
+            if (AdvModel != null) {
+                globalStore.SetViewPresets(AdvModel.PresetCollection, SettingsSerializer.Mapper);
+                globalStore.Save();
+            }
 
-            AutoLog = settingsStore.AutoLog;
-            ShowColumnHeaders = settingsStore.ShowColumnHeaders;
-            ShowStatusBar = settingsStore.ShowStatusBar;
-            IsFilterEnabled = settingsStore.IsFilterEnabled;
+            settings.SaveAmbient();
+        }
 
-            string activeViewPreset = settingsStore.ActiveViewPreset;
+        private void LoadGlobalSettings()
+        {
+            globalStore = settings.GetGlobalStore().AsWrapper();
+            AutoLog = globalStore.AutoLog;
+            AutoScroll = globalStore.AutoScroll;
+            ShowColumnHeaders = globalStore.ShowColumnHeaders;
+            ShowStatusBar = globalStore.ShowStatusBar;
+        }
+
+        private void LoadAmbientSettings()
+        {
+            ambientStore = settings.GetAmbientStore().AsWrapper();
+            IsFilterEnabled = ambientStore.IsFilterEnabled;
+
+            traceProfile = GetActiveProfile(ambientStore);
+            PropagateAutoLog();
+
+            string activeViewPreset = ambientStore.ActiveViewPreset;
             var activePreset = AdvModel.PresetCollection.TryGetCurrentPresetByName(activeViewPreset);
             if (activePreset != null)
                 AdvModel.Preset = activePreset;
         }
 
+        private static TraceProfileDescriptor GetActiveProfile(ISettingsStore store)
+        {
+            var tracing = store.GetValue(SettingsKeys.Tracing);
+            var profile = tracing?.Profiles.FirstOrDefault(x => x.Id == tracing.ActiveProfile);
+            return profile?.GetDescriptor();
+        }
+
         private void OnSettingsLayerChanged(object sender, EventArgs eventArgs)
         {
             settingsViewModel = null;
-            LoadSettings();
+            LoadAmbientSettings();
         }
 
         private void OnViewPresetChanged(
@@ -146,9 +182,9 @@ namespace EventTraceKit.VsExtension.Views
         {
             string name = args.NewValue?.Name;
             if (!string.IsNullOrEmpty(name))
-                settingsStore.SetValue(SettingsKeys.ActiveViewPreset, args.NewValue?.Name);
+                ambientStore.SetValue(SettingsKeys.ActiveViewPreset, args.NewValue?.Name);
             else
-                settingsStore.ClearValue(SettingsKeys.ActiveViewPreset);
+                ambientStore.ClearValue(SettingsKeys.ActiveViewPreset);
 
             uiShell?.UpdateCommandUI(0);
         }
@@ -172,15 +208,31 @@ namespace EventTraceKit.VsExtension.Views
             get => autoLog;
             set
             {
-                if (SetProperty(ref autoLog, value))
+                if (SetProperty(ref autoLog, value)) {
+                    globalStore.AutoLog = value;
                     PropagateAutoLog();
+                }
+            }
+        }
+
+        public bool AutoScroll
+        {
+            get => autoScroll;
+            set
+            {
+                if (SetProperty(ref autoScroll, value))
+                    globalStore.AutoScroll = value;
             }
         }
 
         public bool ShowStatusBar
         {
             get => showStatusBar;
-            set => SetProperty(ref showStatusBar, value);
+            set
+            {
+                if (SetProperty(ref showStatusBar, value))
+                    globalStore.ShowStatusBar = value;
+            }
         }
 
         public bool ShowColumnHeaders
@@ -188,8 +240,10 @@ namespace EventTraceKit.VsExtension.Views
             get => showColumnHeaders;
             set
             {
-                if (SetProperty(ref showColumnHeaders, value))
+                if (SetProperty(ref showColumnHeaders, value)) {
+                    globalStore.ShowColumnHeaders = value;
                     GridModel.ColumnsModel.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
+                }
             }
         }
 
@@ -207,11 +261,7 @@ namespace EventTraceKit.VsExtension.Views
 
         private bool CanStartCapture()
         {
-            return
-                !AutoLog &&
-                traceProfile != null &&
-                traceProfile.Collectors.Count > 0 &&
-                traceProfile.Collectors.OfType<EventCollectorDescriptor>().All(x => x.Providers.Count > 0);
+            return !AutoLog && traceProfile.IsUsable();
         }
 
         private async void ToggleCapture()
@@ -326,7 +376,7 @@ namespace EventTraceKit.VsExtension.Views
         {
             if (settingsViewModel == null)
                 settingsViewModel = new TraceSettingsViewModel(
-                    settings.GetAmbientStore(), solutionBrowser);
+                    ambientStore, solutionBrowser);
 
             var window = new TraceSettingsWindow();
             window.DataContext = settingsViewModel;
@@ -340,16 +390,13 @@ namespace EventTraceKit.VsExtension.Views
                 settingsViewModel.DialogResult = null;
             }
 
-            traceProfile = settingsViewModel.GetDescriptor();
-
-            eventSymbolSource.Update(settingsViewModel.GetEventSymbols());
-
+            traceProfile = GetActiveProfile(ambientStore);
             PropagateAutoLog();
         }
 
         private void PropagateAutoLog()
         {
-            if (AutoLog)
+            if (traceProfile != null && AutoLog)
                 traceController.EnableAutoLog(traceProfile);
             else
                 traceController.DisableAutoLog();
@@ -358,7 +405,8 @@ namespace EventTraceKit.VsExtension.Views
         private void OpenViewEditor()
         {
             PresetManagerDialog.ShowModalDialog(AdvModel);
-            settings.SaveViewPresets(AdvModel.PresetCollection);
+            globalStore.SetViewPresets(AdvModel.PresetCollection, SettingsSerializer.Mapper);
+            globalStore.Save();
         }
 
         protected void OpenFilterEditor()
@@ -412,6 +460,10 @@ namespace EventTraceKit.VsExtension.Views
             id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidClearLog);
             commandService.AddCommand(new OleMenuCommand((s, e) => Clear(), id));
 
+            id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidAutoScroll);
+            commandService.AddCommand(
+                new OleMenuCommand(OnToggleAutoScroll, null, OnQueryToggleAutoScroll, id));
+
             id = new CommandID(PkgCmdId.TraceLogCmdSet, PkgCmdId.cmdidAutoLog);
             commandService.AddCommand(
                 new OleMenuCommand(OnToggleAutoLog, null, OnQueryToggleAutoLog, id));
@@ -444,23 +496,33 @@ namespace EventTraceKit.VsExtension.Views
                 new OleMenuCommand(OnToggleStatusBar, null, OnQueryToggleStatusBar, id));
         }
 
-        private void OnQueryToggleCaptureLog(object sender, EventArgs e)
+        private void OnQueryToggleCaptureLog(object sender, EventArgs args)
         {
             var command = (MenuCommand)sender;
             command.Enabled = !AutoLog && (state == LoggerState.Started || (state == LoggerState.Stopped && CanStartCapture()));
             command.Checked = IsCollecting;
         }
 
-        private void OnQueryToggleAutoLog(object sender, EventArgs e)
+        private void OnQueryToggleAutoLog(object sender, EventArgs args)
         {
             var command = (MenuCommand)sender;
             command.Checked = AutoLog;
         }
 
-        private void OnToggleAutoLog(object sender, EventArgs e)
+        private void OnToggleAutoLog(object sender, EventArgs args)
         {
             AutoLog = !AutoLog;
-            settingsStore.AutoLog = AutoLog;
+        }
+
+        private void OnQueryToggleAutoScroll(object sender, EventArgs args)
+        {
+            var command = (MenuCommand)sender;
+            command.Checked = AutoScroll;
+        }
+
+        private void OnToggleAutoScroll(object sender, EventArgs args)
+        {
+            AutoScroll = !AutoScroll;
         }
 
         public bool IsFilterEnabled
@@ -469,6 +531,7 @@ namespace EventTraceKit.VsExtension.Views
             set
             {
                 if (isFilterEnabled != value) {
+                    ambientStore.IsFilterEnabled = value;
                     isFilterEnabled = value;
                     RefreshFilter();
                 }
@@ -486,40 +549,37 @@ namespace EventTraceKit.VsExtension.Views
                 traceLog.SetFilter(currentFilter.CreatePredicate());
         }
 
-        private void OnQueryToggleEnableFilter(object sender, EventArgs e)
+        private void OnQueryToggleEnableFilter(object sender, EventArgs args)
         {
             var command = (MenuCommand)sender;
             command.Checked = IsFilterEnabled;
         }
 
-        private void OnToggleEnableFilter(object sender, EventArgs e)
+        private void OnToggleEnableFilter(object sender, EventArgs args)
         {
             IsFilterEnabled = !IsFilterEnabled;
-            settingsStore.IsFilterEnabled = IsFilterEnabled;
         }
 
-        private void OnQueryToggleColumnHeaders(object sender, EventArgs e)
+        private void OnQueryToggleColumnHeaders(object sender, EventArgs args)
         {
             var command = (MenuCommand)sender;
             command.Checked = ShowColumnHeaders;
         }
 
-        private void OnToggleColumnHeaders(object sender, EventArgs e)
+        private void OnToggleColumnHeaders(object sender, EventArgs args)
         {
             ShowColumnHeaders = !ShowColumnHeaders;
-            settingsStore.ShowColumnHeaders = ShowColumnHeaders;
         }
 
-        private void OnQueryToggleStatusBar(object sender, EventArgs e)
+        private void OnQueryToggleStatusBar(object sender, EventArgs args)
         {
             var command = (MenuCommand)sender;
             command.Checked = ShowStatusBar;
         }
 
-        private void OnToggleStatusBar(object sender, EventArgs e)
+        private void OnToggleStatusBar(object sender, EventArgs args)
         {
             ShowStatusBar = !ShowStatusBar;
-            settingsStore.ShowStatusBar = ShowStatusBar;
         }
 
         private void OnViewPresetCombo(object sender, EventArgs args)
@@ -553,18 +613,14 @@ namespace EventTraceKit.VsExtension.Views
             cmdArgs.SetOutValue(items);
         }
 
-        public EventSessionInfo GetInfo()
+        EventSessionInfo IEventInfoSource.GetInfo()
         {
-            if (session != null)
-                return session.GetInfo();
-            return new EventSessionInfo();
+            return traceLog?.GetInfo() ?? default;
         }
 
-        public EventInfo GetEvent(int index)
+        EventInfo IEventInfoSource.GetEvent(int index)
         {
-            if (traceLog != null)
-                return traceLog.GetEvent(index);
-            return new EventInfo();
+            return traceLog?.GetEvent(index) ?? default;
         }
     }
 

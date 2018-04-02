@@ -64,6 +64,7 @@
     <Compile Include="TestExtensions.cs" />
     <Compile Include="Serialization\SettingsSerializerTest.cs" />
     <Compile Include="TimePointTest.cs" />
+    <Compile Include="TraceProfileUtilsTest.cs" />
     <Compile Include="TypeHelperTest.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -96,12 +96,6 @@ namespace EventTraceKit.VsExtension.Views
 
         public ObservableCollection<EventProviderViewModel> Providers { get; }
 
-        public Guid Id
-        {
-            get => id;
-            set => SetProperty(ref id, value);
-        }
-
         public string Name
         {
             get => name;
@@ -299,7 +293,7 @@ namespace EventTraceKit.VsExtension.Views
             descriptor.MaximumBuffers = MaximumBuffers;
             descriptor.Providers.AddRange(
                 from x in Providers where x.IsEnabled select x.CreateDescriptor());
-            //descriptor.CustomFlushPeriod = 100;
+            //descriptor.FlushPeriod = 100;
             return descriptor;
         }
     }

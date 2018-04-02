@@ -26,7 +26,7 @@ struct TraceProperties
         , BufferSize(256)
         , MinimumBuffers(4)
         , MaximumBuffers(MinimumBuffers + 20)
-        , FlushTimer(1)
+        , FlushPeriod(std::chrono::seconds(1))
         , ClockResolution(ClockResolutionType::QPC)
     {
     }
@@ -35,8 +35,7 @@ struct TraceProperties
     unsigned BufferSize;
     unsigned MinimumBuffers;
     unsigned MaximumBuffers;
-    std::chrono::duration<unsigned> FlushTimer;
-    std::chrono::duration<unsigned, std::milli> CustomFlushTimer;
+    std::chrono::duration<unsigned, std::milli> FlushPeriod;
     ClockResolutionType ClockResolution;
     std::wstring LogFileName;
 };
@@ -99,7 +98,7 @@ public:
     uint64_t StackWalkMatchAllKeyword = 0;
     uint8_t StackWalkLevel = 0;
     bool StackWalkFilterIn = true;
-    bool EnableStackWalkFilter = false;
+    bool FilterStackWalkLevelKeyword = false;
 
     std::wstring_view GetManifest() const
     {

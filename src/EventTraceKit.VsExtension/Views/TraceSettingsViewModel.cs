@@ -91,7 +91,7 @@ namespace EventTraceKit.VsExtension.Views
     public class TraceSettingsViewModel : ObservableModel
     {
         private readonly ISettingsStore settingsStore;
-        private readonly IMapper mapper = SettingsSerializer.CreateMapper();
+        private readonly IMapper mapper = SettingsSerializer.Mapper;
         private ITraceSettingsContext context;
 
         private bool? dialogResult;
@@ -205,7 +205,7 @@ namespace EventTraceKit.VsExtension.Views
             if (settingsStore != null) {
                 var settings = settingsStore.GetValue(SettingsKeys.Tracing) ?? new TraceSettings();
                 settings.Profiles.SetRange(GetProfiles());
-                settings.ActiveProfile = ActiveProfile?.Name;
+                settings.ActiveProfile = ActiveProfile?.Id;
                 settingsStore.SetValue(SettingsKeys.Tracing, settings);
 
                 await TaskEx.RunWithProgress(() => settingsStore.Save(), "Saving");
@@ -225,8 +225,8 @@ namespace EventTraceKit.VsExtension.Views
             var traceSettings = settingsStore.GetValue(SettingsKeys.Tracing);
             if (traceSettings != null) {
                 Profiles.SetRange(traceSettings.Profiles.Select(
-                    x => mapper.Map(x, new TraceProfileViewModel())));
-                ActiveProfile = Profiles.FirstOrDefault(x => x.Name == traceSettings.ActiveProfile);
+                    x => mapper.Map(x, new TraceProfileViewModel(x.Id))));
+                ActiveProfile = Profiles.FirstOrDefault(x => x.Id == traceSettings.ActiveProfile);
             }
         }
 
@@ -256,13 +256,12 @@ namespace EventTraceKit.VsExtension.Views
             provider.IncludeStackTrace = true;
 
             var collector = new EventCollectorViewModel();
-            collector.Id = new Guid("381F7EC1-AE97-41F9-8C48-727C49D3E210");
             collector.Name = "Design Collector";
             collector.Providers.Add(provider);
 
-            var preset = new TraceProfileViewModel();
+            var preset = new TraceProfileViewModel(
+                new Guid("7DB6B9B1-9ACF-42C8-B6B1-CEEB6F783689"));
             preset.Name = "Design Profile";
-            preset.Id = new Guid("7DB6B9B1-9ACF-42C8-B6B1-CEEB6F783689");
             preset.Collectors.Add(collector);
             preset.SelectedCollector = collector;
 

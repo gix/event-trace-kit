@@ -1,14 +1,14 @@
 #pragma once
-#include "ADT/SmallVector.h"
 #include "ADT/ArrayRef.h"
 #include "ADT/Handle.h"
+#include "ADT/SmallVector.h"
 #include "ITraceProcessor.h"
 
 #include <atomic>
 #include <thread>
 
-#include <windows.h>
 #include <evntcons.h>
+#include <windows.h>
 
 namespace etk
 {
@@ -16,7 +16,10 @@ namespace etk
 struct TraceHandleTraits
 {
     using HandleType = TRACEHANDLE;
-    constexpr static HandleType InvalidHandle() noexcept { return INVALID_PROCESSTRACE_HANDLE; }
+    constexpr static HandleType InvalidHandle() noexcept
+    {
+        return -1; // INVALID_PROCESSTRACE_HANDLE
+    }
     constexpr static bool IsValid(HandleType h) noexcept { return h != InvalidHandle(); }
     static void Close(HandleType h) noexcept { ::CloseTrace(h); }
 };
@@ -27,9 +30,7 @@ class IEventSink;
 class EtwTraceProcessor : public ITraceProcessor
 {
 public:
-    EtwTraceProcessor(ArrayRef<std::wstring_view> loggerNames,
-                      ArrayRef<std::wstring_view> eventManifests,
-                      ArrayRef<std::wstring_view> providerBinaries);
+    EtwTraceProcessor(ArrayRef<std::wstring_view> loggerNames);
     virtual ~EtwTraceProcessor();
 
     virtual void SetEventSink(IEventSink* sink) override;
@@ -44,9 +45,6 @@ private:
 
     static void ProcessTraceProc(TRACEHANDLE traceHandle);
 
-    void RegisterManifests();
-    void UnregisterManifests();
-
     struct X
     {
         std::wstring LoggerName;
@@ -59,9 +57,6 @@ private:
     SmallVector<EVENT_TRACE_LOGFILEW, 2> traceLogFiles;
     SmallVector<TraceHandle, 2> traceHandles;
     SmallVector<std::thread, 2> processorThreads;
-
-    std::vector<std::wstring> manifests;
-    std::vector<std::wstring> providerBinaries;
 
     IEventSink* sink = nullptr;
 };

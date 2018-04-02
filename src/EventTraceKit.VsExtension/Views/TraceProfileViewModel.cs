@@ -14,21 +14,22 @@ namespace EventTraceKit.VsExtension.Views
     [SerializedShape(typeof(TraceProfile))]
     public class TraceProfileViewModel : ObservableModel
     {
-        private Guid id;
         private string name;
         private CollectorViewModel selectedCollector;
 
         public TraceProfileViewModel()
+            : this(Guid.NewGuid())
         {
+        }
+
+        public TraceProfileViewModel(Guid id)
+        {
+            Id = id;
             Collectors = new AcqRelObservableCollection<CollectorViewModel>(
                 x => x.Context = null, x => x.Context = Context);
         }
 
-        public Guid Id
-        {
-            get => id;
-            set => SetProperty(ref id, value);
-        }
+        public Guid Id { get; }
 
         public string Name
         {
@@ -80,7 +81,6 @@ namespace EventTraceKit.VsExtension.Views
         public TraceProfileViewModel DeepClone()
         {
             var clone = new TraceProfileViewModel();
-            clone.id = Guid.NewGuid();
             clone.name = name;
             clone.Collectors.AddRange(Collectors.Select(x => x.DeepClone()));
             return clone;

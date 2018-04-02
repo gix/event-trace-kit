@@ -81,16 +81,40 @@ public:
                                          LOBYTE(_WIN32_WINNT_WINBLUE), 0);
     }
 
-    bool IsWindowsThresholdOrGreater() const
-    {
-        return IsWindowsVersionOrGreater(HIBYTE(_WIN32_WINNT_WINTHRESHOLD),
-                                         LOBYTE(_WIN32_WINNT_WINTHRESHOLD), 0);
-    }
-
     bool IsWindows10OrGreater() const
     {
-        return IsWindowsVersionOrGreater(HIBYTE(_WIN32_WINNT_WINTHRESHOLD),
-                                         LOBYTE(_WIN32_WINNT_WINTHRESHOLD), 0);
+        return IsWindowsVersionOrGreater(HIBYTE(_WIN32_WINNT_WIN10),
+                                         LOBYTE(_WIN32_WINNT_WIN10), 0);
+    }
+
+    bool IsWindows10Version1507OrGreater() const
+    {
+        return IsWindowsVersionOrGreater(HIBYTE(_WIN32_WINNT_WIN10),
+                                         LOBYTE(_WIN32_WINNT_WIN10), 10240);
+    }
+
+    bool IsWindows10Version1703OrGreater() const
+    {
+        return IsWindowsVersionOrGreater(HIBYTE(_WIN32_WINNT_WIN10),
+                                         LOBYTE(_WIN32_WINNT_WIN10), 15063);
+    }
+
+    bool IsWindows10Version1607OrGreater() const
+    {
+        return IsWindowsVersionOrGreater(HIBYTE(_WIN32_WINNT_WIN10),
+                                         LOBYTE(_WIN32_WINNT_WIN10), 14393);
+    }
+
+    bool IsWindows10Version1511OrGreater() const
+    {
+        return IsWindowsVersionOrGreater(HIBYTE(_WIN32_WINNT_WIN10),
+                                         LOBYTE(_WIN32_WINNT_WIN10), 10586);
+    }
+
+    bool IsWindows10Version1709OrGreater() const
+    {
+        return IsWindowsVersionOrGreater(HIBYTE(_WIN32_WINNT_WIN10),
+                                         LOBYTE(_WIN32_WINNT_WIN10), 16299);
     }
 
 private:
@@ -98,9 +122,9 @@ private:
     bool IsWindowsVersionOrGreater(WORD majorVersion, WORD minorVersion,
                                    WORD servicePackMajor) const
     {
-        return std::make_tuple(majorVersion, minorVersion, servicePackMajor) >=
-               std::make_tuple(versionInfo.dwMajorVersion, versionInfo.dwMinorVersion,
-                               versionInfo.wServicePackMajor);
+        return std::make_tuple(versionInfo.dwMajorVersion, versionInfo.dwMinorVersion,
+                               versionInfo.wServicePackMajor) >=
+               std::make_tuple(majorVersion, minorVersion, servicePackMajor);
     }
 
     OSVERSIONINFOEXW versionInfo;

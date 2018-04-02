@@ -52,6 +52,8 @@ public:
         return info;
     }
 
+    EventSessionInfo GetInfo() { return sessionInfo; }
+
     void SetFilter(TraceLogFilterPredicate^ filter);
 
     void UpdateTraceData(TraceProfileDescriptor^ profile);
@@ -59,9 +61,15 @@ public:
 internal:
     etk::ITraceLog* Native() { return nativeLog; }
 
+    void SetSessionInfo(EventSessionInfo sessionInfo)
+    {
+        this->sessionInfo = sessionInfo;
+    }
+
 private:
     void OnEventsChanged(System::UIntPtr newCount);
 
+    EventSessionInfo sessionInfo;
     EventsChangedDelegate^ onEventsChangedCallback;
     etk::ITraceLog* nativeLog;
     etk::IFilteredTraceLog* filteredLog;

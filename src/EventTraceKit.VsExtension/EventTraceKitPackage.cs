@@ -83,8 +83,7 @@ namespace EventTraceKit.VsExtension
             string appDataDirectory = GetAppDataDirectory(shell);
             settings = new SettingsServiceImpl(vsSolutionManager, appDataDirectory);
 
-            traceLogPane = new Lazy<TraceLogToolWindow>(
-                () => new TraceLogToolWindow(TraceLogWindowFactory, TraceLogWindowClose));
+            traceLogPane = new Lazy<TraceLogToolWindow>(CreateTraceLogToolWindow);
         }
 
         protected override void Dispose(bool disposing)
@@ -113,21 +112,27 @@ namespace EventTraceKit.VsExtension
             return Path.Combine(directory, fileName);
         }
 
-        private TraceLogToolContent TraceLogWindowFactory(IServiceProvider sp)
+        private TraceLogToolWindow CreateTraceLogToolWindow()
         {
-            var traceLog = new TraceLogToolViewModel(
-                settings, traceController, solutionBrowser, vsUiShell);
+            TraceLogToolContent ContentFactory(IServiceProvider sp)
+            {
+                var traceLog = new TraceLogToolViewModel(
+                    settings, traceController, solutionBrowser, vsUiShell);
 
-            var commandService = sp.GetService<IMenuCommandService>();
-            if (commandService != null)
-                traceLog.InitializeMenuCommands(commandService);
+                var commandService = sp.GetService<IMenuCommandService>();
+                if (commandService != null)
+                    traceLog.InitializeMenuCommands(commandService);
 
-            return new TraceLogToolContent { DataContext = traceLog };
-        }
+                return new TraceLogToolContent { DataContext = traceLog };
+            }
 
-        private void TraceLogWindowClose()
-        {
-            settings.SaveAmbient();
+            void OnClose(object context)
+            {
+                if (context is TraceLogToolViewModel viewModel)
+                    viewModel.OnClose();
+            }
+
+            return new TraceLogToolWindow(ContentFactory, OnClose);
         }
 
         private static string GetAppDataDirectory(IVsShell shell)
@@ -184,7 +189,7 @@ namespace EventTraceKit.VsExtension
         protected override WindowPane InstantiateToolWindow(Type toolWindowType)
         {
             if (toolWindowType == typeof(TraceLogToolWindow))
-                return new TraceLogToolWindow(TraceLogWindowFactory, TraceLogWindowClose);
+                return CreateTraceLogToolWindow();
             return base.InstantiateToolWindow(toolWindowType);
         }
 

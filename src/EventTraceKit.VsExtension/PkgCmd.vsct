@@ -22,7 +22,10 @@
       <Group guid="guidTraceLogCmdSet" id="idTraceLogToolbarConfigGroup" priority="0x2">
         <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbar"/>
       </Group>
-      <Group guid="guidTraceLogCmdSet" id="idTraceLogToolbarOptionsGroup" priority="0x3">
+      <Group guid="guidTraceLogCmdSet" id="idTraceLogToolbarFilterGroup" priority="0x3">
+        <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbar"/>
+      </Group>
+      <Group guid="guidTraceLogCmdSet" id="idTraceLogToolbarOptionsGroup" priority="0x4">
         <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbar"/>
       </Group>
     </Groups>
@@ -57,15 +60,7 @@
           <ButtonText>Ca&amp;pture</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidTraceLogCmdSet" id="cmdidClearLog" priority="0x2" type="Button">
-        <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarCaptureGroup"/>
-        <Icon guid="ImageCatalogGuid" id="ClearWindowContent"/>
-        <CommandFlag>IconIsMoniker</CommandFlag>
-        <Strings>
-          <ButtonText>&amp;Clear Log</ButtonText>
-        </Strings>
-      </Button>
-      <Button guid="guidTraceLogCmdSet" id="cmdidAutoLog" priority="0x3" type="Button">
+      <Button guid="guidTraceLogCmdSet" id="cmdidAutoLog" priority="0x2" type="Button">
         <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarCaptureGroup"/>
         <Icon guid="ImageCatalogGuid" id="RunUpdate"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
@@ -74,15 +69,32 @@
           <ToolTipText>&amp;Automatically Log When Debugging or Running</ToolTipText>
         </Strings>
       </Button>
-      <Button guid="guidTraceLogCmdSet" id="cmdidConfigureSession" priority="0x4" type="Button">
+      <Button guid="guidTraceLogCmdSet" id="cmdidAutoScroll" priority="0x3" type="Button">
         <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarCaptureGroup"/>
+        <Icon guid="ImageCatalogGuid" id="GoToBottom"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>&amp;Auto-Scroll</ButtonText>
+          <ToolTipText>&amp;Automatically Scroll to Bottom</ToolTipText>
+        </Strings>
+      </Button>
+      <Button guid="guidTraceLogCmdSet" id="cmdidClearLog" priority="0x4" type="Button">
+        <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarCaptureGroup"/>
+        <Icon guid="ImageCatalogGuid" id="ClearWindowContent"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>&amp;Clear Log</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidTraceLogCmdSet" id="cmdidConfigureSession" priority="0x1" type="Button">
+        <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarConfigGroup"/>
         <Icon guid="ImageCatalogGuid" id="Settings"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>C&amp;onfigure Tracing Session</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidTraceLogCmdSet" id="cmdidOpenViewEditor" priority="0x2" type="Button">
+      <Button guid="guidTraceLogCmdSet" id="cmdidOpenViewEditor" priority="0x3" type="Button">
         <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarConfigGroup"/>
         <Icon guid="ImageCatalogGuid" id="ColumnSettings"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
@@ -91,7 +103,7 @@
         </Strings>
       </Button>
       <Button guid="guidTraceLogCmdSet" id="cmdidEnableFilter" priority="0x3" type="Button">
-        <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarConfigGroup"/>
+        <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarFilterGroup"/>
         <Icon guid="ImageCatalogGuid" id="Filter"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
@@ -99,7 +111,7 @@
         </Strings>
       </Button>
       <Button guid="guidTraceLogCmdSet" id="cmdidOpenFilterEditor" priority="0x4" type="Button">
-        <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarConfigGroup"/>
+        <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarFilterGroup"/>
         <Icon guid="ImageCatalogGuid" id="EditFilter"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
@@ -129,7 +141,7 @@
     <Combos>
       <Combo guid="guidTraceLogCmdSet" id="cmdidViewPresetCombo"
              idCommandList="cmdidViewPresetComboGetList" type="DropDownCombo"
-             priority="0x1" defaultWidth="200">
+             priority="0x2" defaultWidth="200">
         <Parent guid="guidTraceLogCmdSet" id="idTraceLogToolbarConfigGroup"/>
         <CommandFlag>DefaultDisabled</CommandFlag>
         <Strings>
@@ -162,9 +174,11 @@
       <IDSymbol name="idTraceLogToolbarCaptureGroup" value="0x2000"/>
       <IDSymbol name="idTraceLogToolbarConfigGroup" value="0x3000"/>
       <IDSymbol name="idTraceLogToolbarOptionsGroup" value="0x4000"/>
+      <IDSymbol name="idTraceLogToolbarFilterGroup" value="0x5000"/>
       <IDSymbol name="cmdidAutoLog" value="0x0100"/>
       <IDSymbol name="cmdidCaptureLog" value="0x0200"/>
       <IDSymbol name="cmdidClearLog" value="0x0300"/>
+      <IDSymbol name="cmdidAutoScroll" value="0x0350"/>
       <IDSymbol name="cmdidConfigureSession" value="0x0400"/>
       <IDSymbol name="cmdidOpenViewEditor" value="0x0500"/>
       <IDSymbol name="cmdidViewPresetCombo" value="0x0600"/>

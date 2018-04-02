@@ -173,6 +173,7 @@ namespace EventTraceKit.VsExtension.Views
             set => SetProperty(ref includeStackTrace, value);
         }
 
+        [Serialize("StartupProjects")]
         public string StartupProject
         {
             get => startupProject;
@@ -277,10 +278,10 @@ namespace EventTraceKit.VsExtension.Views
                 descriptor.ExecutableName = ExecutableNames;
 
             if (FilterProcessIds && !string.IsNullOrWhiteSpace(ProcessIds))
-                descriptor.ProcessIds.AddRange(ParseUInt32List(ProcessIds).Distinct().OrderBySelf());
+                descriptor.ProcessIds = ParseUInt32List(ProcessIds).Distinct().OrderBySelf().ToList();
 
             if (FilterEventIds && !string.IsNullOrWhiteSpace(EventIds)) {
-                descriptor.EventIds.AddRange(ParseUInt16List(EventIds).Distinct().OrderBySelf());
+                descriptor.EventIds = ParseUInt16List(EventIds).Distinct().OrderBySelf().ToList();
                 descriptor.EventIdsFilterIn = EventIdsFilterIn;
             }
 

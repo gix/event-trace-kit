@@ -8,8 +8,17 @@ namespace EventTraceKit.VsExtension.Serialization
 
     public class SettingsSerializer : ShapingXamlSerializer<SettingsElement>
     {
+        private static readonly Lazy<IMapper> LazyMapper = new Lazy<IMapper>(() => {
+            var cfg = new MapperConfiguration(c => {
+                c.Mappers.Insert(0, new CommaSeparatedValuesToCollectionMapper());
+                c.Mappers.Insert(0, new CollectionToCommaSeparatedValuesMapper());
+                c.AddProfile(new SerializationProfile());
+            });
+            return cfg.CreateMapper();
+        });
+
         public SettingsSerializer()
-            : base(CreateXamlSerializer(), CreateMapper())
+            : base(CreateXamlSerializer(), Mapper)
         {
         }
 
@@ -24,6 +33,8 @@ namespace EventTraceKit.VsExtension.Serialization
 
             return serializer;
         }
+
+        public static IMapper Mapper => LazyMapper.Value;
 
         private sealed class SerializationProfile : Profile
         {
@@ -46,6 +57,18 @@ namespace EventTraceKit.VsExtension.Serialization
             private IMappingExpression CreateMapHierarchy(Type sourceType, Type targetType)
             {
                 var m = CreateMap(sourceType, targetType);
+
+                foreach (var sourceProperty in sourceType.GetProperties()) {
+                    var serializedName = sourceProperty.GetCustomAttribute<SerializeAttribute>()?.SerializedName;
+                    if (serializedName != null)
+                        m.ForMember(serializedName, x => x.MapFrom(sourceProperty.Name));
+                }
+
+                foreach (var targetProperty in targetType.GetProperties()) {
+                    var serializedName = targetProperty.GetCustomAttribute<SerializeAttribute>()?.SerializedName;
+                    if (serializedName != null)
+                        m.ForMember(targetProperty.Name, x => x.MapFrom(serializedName));
+                }
 
                 sourceType = sourceType.BaseType;
                 targetType = targetType.BaseType;
@@ -84,16 +107,6 @@ namespace EventTraceKit.VsExtension.Serialization
                     return shape;
                 return null;
             }
-        }
-
-        public static IMapper CreateMapper()
-        {
-            var cfg = new MapperConfiguration(c => {
-                c.Mappers.Insert(0, new CommaSeparatedValuesToCollectionMapper());
-                c.Mappers.Insert(0, new CollectionToCommaSeparatedValuesMapper());
-                c.AddProfile(new SerializationProfile());
-            });
-            return cfg.CreateMapper();
         }
     }
 }

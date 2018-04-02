@@ -176,6 +176,7 @@
     <ClInclude Include="ManualResetEventSlim.h" />
     <ClInclude Include="Support\OSVersionInfo.h" />
     <ClInclude Include="Support\Rtl.h" />
+    <ClInclude Include="Support\ThreadpoolTimer.h" />
     <ClInclude Include="TdhMessageFormatter.h" />
     <ClInclude Include="EventTraceKit\InteropHelper.h" />
     <ClInclude Include="ITraceLog.h" />

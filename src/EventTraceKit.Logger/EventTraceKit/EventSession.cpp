@@ -37,22 +37,29 @@ inline etk::TraceProviderDescriptor marshal_as(EventProviderDescriptor^ const& p
     etk::TraceProviderDescriptor native(
         marshal_as<GUID>(provider->Id), provider->Level, provider->MatchAnyKeyword,
         provider->MatchAllKeyword);
+
     native.IncludeSecurityId = provider->IncludeSecurityId;
     native.IncludeTerminalSessionId = provider->IncludeTerminalSessionId;
     native.IncludeStackTrace = provider->IncludeStackTrace;
 
     if (provider->ExecutableName)
         native.ExecutableName = marshal_as<std::wstring>(provider->ExecutableName);
-    native.ProcessIds = marshal_as_vector(provider->ProcessIds);
-    native.EventIds = marshal_as_vector(provider->EventIds);
+    if (provider->ProcessIds)
+        native.ProcessIds = marshal_as_vector(provider->ProcessIds);
+
     native.EventIdsFilterIn = provider->EventIdsFilterIn;
-    native.StackWalkEventIds = marshal_as_vector(provider->StackWalkEventIds);
+    if (provider->EventIds)
+        native.EventIds = marshal_as_vector(provider->EventIds);
+
     native.StackWalkEventIdsFilterIn = provider->StackWalkEventIdsFilterIn;
+    if (provider->StackWalkEventIds)
+        native.StackWalkEventIds = marshal_as_vector(provider->StackWalkEventIds);
+
+    native.FilterStackWalkLevelKeyword = provider->FilterStackWalkLevelKeyword;
+    native.StackWalkFilterIn = provider->StackWalkFilterIn;
+    native.StackWalkLevel = provider->StackWalkLevel;
     native.StackWalkMatchAnyKeyword = provider->StackWalkMatchAnyKeyword;
     native.StackWalkMatchAllKeyword = provider->StackWalkMatchAllKeyword;
-    native.StackWalkLevel = provider->StackWalkLevel;
-    native.StackWalkFilterIn = provider->StackWalkFilterIn;
-    native.EnableStackWalkFilter = provider->EnableStackWalkFilter;
 
     if (provider->Manifest) {
         auto manifest = marshal_as<std::wstring>(provider->Manifest);
@@ -95,8 +102,6 @@ public:
     void Flush();
     TraceStatistics^ Query();
 
-    EventSessionInfo GetInfo() { return sessionInfo; }
-
 private:
     ref struct StartAsyncHelper
     {
@@ -114,13 +119,11 @@ private:
     TraceProfileDescriptor^ profile;
     TraceLog^ traceLog;
     std::wstring* loggerName = nullptr;
-    std::vector<etk::TraceProviderDescriptor>* nativeProviders = nullptr;
     WatchDog^ watchDog;
 
     etk::ITraceSession* session = nullptr;
     etk::ITraceSession* kernelSession = nullptr;
     etk::ITraceProcessor* processor = nullptr;
-    EventSessionInfo sessionInfo;
 };
 
 static std::wstring LoggerNameBase = L"EventTraceKit_54644792-9281-48E9-B69D-E82A86F98960";
@@ -142,7 +145,10 @@ static etk::TraceProperties CreateTraceProperties(CollectorDescriptor^ profile)
         properties.MaximumBuffers = profile->MaximumBuffers.Value;
     if (profile->LogFileName)
         properties.LogFileName = marshal_as<std::wstring>(profile->LogFileName);
-    properties.CustomFlushTimer = std::chrono::duration<unsigned, std::milli>(profile->CustomFlushPeriod);
+    if (profile->FlushPeriod.HasValue) {
+        properties.FlushPeriod = std::chrono::duration<unsigned, std::milli>(
+            static_cast<unsigned>(profile->FlushPeriod.Value.TotalMilliseconds));
+    }
     return properties;
 }
 
@@ -165,21 +171,21 @@ EventSession::EventSession(TraceProfileDescriptor^ profile, TraceLog^ traceLog)
             auto session = etk::CreateEtwTraceSession(L"NT Kernel Logger", traceProperties);
             session->SetKernelProviders(systemCollector->KernelFlags, true);
             this->kernelSession = session.release();
-        } else {
-            auto eventCollector = static_cast<EventCollectorDescriptor^>(collector);
+            continue;
+        }
+        
+        if (auto eventCollector = dynamic_cast<EventCollectorDescriptor^>(collector)) {
             auto traceProperties = CreateTraceProperties(eventCollector);
             auto session = etk::CreateEtwTraceSession(*loggerName, traceProperties);
 
-            nativeProviders = new std::vector<etk::TraceProviderDescriptor>();
-            for each (auto provider in eventCollector->Providers)
-                nativeProviders->push_back(marshal_as<etk::TraceProviderDescriptor>(provider));
-
-            for (auto const& provider : *nativeProviders) {
-                session->AddProvider(provider);
-                session->EnableProvider(provider.Id);
+            for each (auto provider in eventCollector->Providers) {
+                auto nativeProvider = marshal_as<etk::TraceProviderDescriptor>(provider);
+                session->AddProvider(nativeProvider);
+                session->EnableProvider(nativeProvider.Id);
             }
 
             this->session = session.release();
+            continue;
         }
     }
 }
@@ -190,7 +196,6 @@ EventSession::!EventSession()
     delete session;
     delete kernelSession;
     delete watchDog;
-    delete nativeProviders;
     delete loggerName;
 }
 
@@ -220,16 +225,18 @@ void EventSession::Start()
     if (kernelSession)
         loggerNames.push_back(L"NT Kernel Logger");
 
-    auto processor = etk::CreateEtwTraceProcessor(loggerNames, *nativeProviders);
+    auto processor = etk::CreateEtwTraceProcessor(loggerNames);
     processor->SetEventSink(traceLog->Native());
 
     this->processor = processor.release();
     this->processor->StartProcessing();
 
     auto logFileHeader = this->processor->GetLogFileHeader();
+    EventSessionInfo sessionInfo;
     sessionInfo.StartTime = logFileHeader->StartTime.QuadPart;
     sessionInfo.PerfFreq = logFileHeader->PerfFreq.QuadPart;
     sessionInfo.PointerSize = logFileHeader->PointerSize;
+    traceLog->SetSessionInfo(sessionInfo);
 }
 
 Task^ EventSession::StartAsync()

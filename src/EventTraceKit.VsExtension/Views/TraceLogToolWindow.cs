@@ -10,14 +10,16 @@ namespace EventTraceKit.VsExtension.Views
     public class TraceLogToolWindow : ToolWindowPane
     {
         private readonly Func<IServiceProvider, TraceLogToolContent> traceLogFactory;
-        private readonly Action onClose;
+        private readonly Action<object> onClose;
         private TraceLogToolContent content;
 
         /// <summary>
         ///   Initializes a new instance of the <see cref="TraceLogToolWindow"/>
         ///   class.
         /// </summary>
-        public TraceLogToolWindow(Func<IServiceProvider, TraceLogToolContent> traceLogFactory, Action onClose)
+        public TraceLogToolWindow(
+            Func<IServiceProvider, TraceLogToolContent> traceLogFactory,
+            Action<object> onClose)
         {
             this.traceLogFactory = traceLogFactory;
             this.onClose = onClose;
@@ -32,7 +34,7 @@ namespace EventTraceKit.VsExtension.Views
         protected override void OnClose()
         {
             base.OnClose();
-            onClose();
+            onClose(content?.DataContext);
         }
 
         public override IVsSearchTask CreateSearch(

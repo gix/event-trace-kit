@@ -8,27 +8,37 @@
 #include "Support/Hashing.h"
 #include "Support/OSVersionInfo.h"
 #include "Support/RangeAdaptors.h"
+#include "Support/ThreadpoolTimer.h"
 
 #include <algorithm>
+#include <chrono>
 #include <memory>
 #include <string_view>
 #include <unordered_set>
 
-#include <chrono>
 #include <evntcons.h>
 #include <evntrace.h>
 #include <windows.h>
 
-static bool operator<(GUID const& x, GUID const& y)
-{
-    return std::memcmp(&x, &y, sizeof(GUID)) < 0;
-}
+using namespace std::chrono_literals;
 
 namespace etk
 {
 
 namespace
 {
+
+template<typename T, typename U>
+ETK_ALWAYS_INLINE T OffsetPtr(U* ptr, size_t offset)
+{
+    return reinterpret_cast<T>(reinterpret_cast<uint8_t*>(ptr) + offset);
+}
+
+void ZStringCopy(std::wstring_view str, wchar_t* dst)
+{
+    size_t const numChars = str.copy(dst, str.length());
+    dst[numChars] = 0;
+}
 
 using FilterPtr = std::unique_ptr<std::byte[]>;
 
@@ -110,58 +120,6 @@ void AddStackWalkLevelKeywordFilter(SmallVectorBase<EVENT_FILTER_DESCRIPTOR>& fi
     descriptor.Type = EVENT_FILTER_TYPE_STACKWALK_LEVEL_KW;
 }
 
-struct EqualProviderId
-{
-    GUID const& id;
-
-    EqualProviderId(GUID const& id)
-        : id(id)
-    {
-    }
-
-    EqualProviderId& operator=(EqualProviderId const&) = delete;
-
-    bool operator()(TraceProviderDescriptor const& provider) const
-    {
-        return provider.Id == id;
-    }
-};
-
-struct ThreadpoolTimerTraits : NullIsInvalidHandleTraits<PTP_TIMER>
-{
-    static void Close(HandleType h) noexcept { CloseThreadpoolTimer(h); }
-};
-
-class ThreadpoolTimer : public Handle<ThreadpoolTimerTraits>
-{
-public:
-    using Handle<ThreadpoolTimerTraits>::Handle;
-    ThreadpoolTimer() = default;
-
-    ThreadpoolTimer(PTP_TIMER_CALLBACK callback, void* context,
-                    PTP_CALLBACK_ENVIRON cbe = nullptr)
-        : ThreadpoolTimer(CreateThreadpoolTimer(callback, context, cbe))
-    {
-    }
-
-    void Start(std::chrono::duration<unsigned, std::milli> period)
-    {
-        if (!IsValid())
-            return;
-
-        FILETIME dueTime = {};
-        SetThreadpoolTimer(Get(), &dueTime, period.count(), 0);
-    }
-
-    void Stop()
-    {
-        if (!IsValid())
-            return;
-
-        SetThreadpoolTimer(Get(), nullptr, 0, 0);
-    }
-};
-
 class EventTraceProperties : public EVENT_TRACE_PROPERTIES
 {
 public:
@@ -216,18 +174,6 @@ private:
     std::chrono::duration<unsigned, std::milli> customFlushPeriod{};
 };
 
-template<typename T, typename U>
-ETK_ALWAYS_INLINE T OffsetPtr(U* ptr, size_t offset)
-{
-    return reinterpret_cast<T>(reinterpret_cast<uint8_t*>(ptr) + offset);
-}
-
-void ZStringCopy(std::wstring_view str, wchar_t* dst)
-{
-    size_t const numChars = str.copy(dst, str.length());
-    dst[numChars] = 0;
-}
-
 } // namespace
 
 std::unique_ptr<EventTraceProperties>
@@ -277,11 +223,6 @@ EtwTraceSession::EtwTraceSession(std::wstring_view name,
         // Reinitialize.
         SetProperties(properties);
     }
-
-    if (properties.CustomFlushTimer.count() != 0) {
-        customFlushTimer = ThreadpoolTimer(FlushTimerCallback, this);
-        customFlushPeriod = properties.CustomFlushTimer;
-    }
 }
 
 EtwTraceSession::~EtwTraceSession()
@@ -301,8 +242,21 @@ void EtwTraceSession::SetProperties(TraceProperties const& properties)
     traceProperties->MaximumFileSize = 0;
     traceProperties->LogFileMode =
         EVENT_TRACE_REAL_TIME_MODE | EVENT_TRACE_STOP_ON_HYBRID_SHUTDOWN;
-    traceProperties->FlushTimer = static_cast<ULONG>(properties.FlushTimer.count());
+    traceProperties->FlushTimer = 0;
     traceProperties->EnableFlags = 0;
+
+    if (properties.FlushPeriod == 0ms) {
+        // Default 1 second.
+        traceProperties->FlushTimer = 1;
+    } else if ((properties.FlushPeriod % 1000) == 0ms) {
+        // Flush period with second resolution can use the buildt-in timer.
+        traceProperties->FlushTimer = properties.FlushPeriod.count() / 1000ul;
+    } else {
+        // Custom timer for higher resolution periods.
+        traceProperties->FlushTimer = 0;
+        customFlushTimer = ThreadpoolTimer(FlushTimerCallback, this);
+        customFlushPeriod = properties.FlushPeriod;
+    }
 }
 
 HRESULT EtwTraceSession::Start()
@@ -363,7 +317,8 @@ HRESULT EtwTraceSession::Query(TraceStatistics& stats)
 
 bool EtwTraceSession::AddProvider(TraceProviderDescriptor const& provider)
 {
-    auto entry = find_if(providers, [&](auto const& p) { return p.Id == provider.Id; });
+    auto const entry =
+        find_if(providers, [&](auto const& p) { return p.Id == provider.Id; });
     if (entry == providers.end()) {
         providers.push_back(provider);
         return true;
@@ -381,7 +336,8 @@ bool EtwTraceSession::AddProvider(TraceProviderDescriptor const& provider)
 
 bool EtwTraceSession::RemoveProvider(GUID const& providerId)
 {
-    auto const entry = find_if(providers, EqualProviderId(providerId));
+    auto const entry =
+        find_if(providers, [&](auto const& p) { return p.Id == providerId; });
     if (entry == providers.end())
         return false;
 
@@ -392,7 +348,8 @@ bool EtwTraceSession::RemoveProvider(GUID const& providerId)
 
 bool EtwTraceSession::EnableProvider(GUID const& providerId)
 {
-    auto const provider = find_if(providers, EqualProviderId(providerId));
+    auto const provider =
+        find_if(providers, [&](auto const& p) { return p.Id == providerId; });
     if (provider == providers.end())
         return false;
 
@@ -434,30 +391,24 @@ EtwTraceSession::StartEventProvider(TraceProviderDescriptor const& provider) con
 
     if (OSVersion.IsWindows8Point1OrGreater() && !provider.ExecutableName.empty())
         AddExecutableNameFilter(filters, provider.ExecutableName);
+
     if (!provider.ProcessIds.empty())
         AddProcessIdFilter(filters, provider.ProcessIds);
+
     if (!provider.EventIds.empty())
         AddEventFilter(filters, buffers, provider.EventIds, provider.EventIdsFilterIn);
-    if (OSVersion.IsWindows8Point1OrGreater() && !provider.StackWalkEventIds.empty())
+
+    if (OSVersion.IsWindows10Version1709OrGreater() &&
+        !provider.StackWalkEventIds.empty())
         AddStackWalkFilter(filters, buffers, provider.StackWalkEventIds,
                            provider.StackWalkEventIdsFilterIn);
-    if (OSVersion.IsWindows8Point1OrGreater() && provider.EnableStackWalkFilter) {
+
+    if (OSVersion.IsWindows10Version1709OrGreater() &&
+        provider.FilterStackWalkLevelKeyword) {
         AddStackWalkLevelKeywordFilter(
             filters, buffers, provider.StackWalkMatchAnyKeyword,
             provider.StackWalkMatchAllKeyword, provider.StackWalkLevel,
             provider.StackWalkFilterIn);
-    }
-
-    {
-        struct CustomFilter
-        {
-            int value1;
-            int value2;
-        } customFilter = {23, 42};
-        auto& descriptor = filters.emplace_back();
-        descriptor.Ptr = reinterpret_cast<uintptr_t>(&customFilter);
-        descriptor.Size = static_cast<ULONG>(sizeof(CustomFilter));
-        descriptor.Type = EVENT_FILTER_TYPE_SCHEMATIZED;
     }
 
     ENABLE_TRACE_PARAMETERS parameters = {};

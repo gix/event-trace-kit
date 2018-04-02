@@ -12,7 +12,8 @@
     <ItemsControl x:Name="ItemList">
       <ItemsControl.ItemTemplate>
         <DataTemplate DataType="{x:Type etkv:KeywordItem}">
-          <CheckBox IsChecked="{Binding IsEnabled}" Content="{Binding Name}" Margin="3"/>
+          <CheckBox IsChecked="{Binding IsEnabled}" Content="{Binding Name}" Margin="3"
+                    HorizontalAlignment="Stretch"/>
         </DataTemplate>
       </ItemsControl.ItemTemplate>
       <ItemsControl.ItemsPanel>
