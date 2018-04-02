@@ -1,0 +1,27 @@
+﻿<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>EventManifestCompiler.Build.Tasks</id>
+    <version>0.0.0.0</version>
+    <authors>Nico Rieck</authors>
+    <owners>nrieck</owners>
+    <licenseUrl>https://raw.github.com/gix/etk/master/LICENSE.txt</licenseUrl>
+    <projectUrl>http://github.com/gix/etk</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <releaseNotes></releaseNotes>
+    <description>MSBuild tasks to compile event/instrumentation manifests and generate ETW (Event Tracing for Windows) logging code.</description>
+    <tags>etw tracing logging events msbuild</tags>
+    <developmentDependency>true</developmentDependency>
+  </metadata>
+  <files>
+    <file src="..\build\any\bin\emc.exe" target="build\native\emc.exe" />
+    <file src="..\build\any\bin\emc.exe.config" target="build\native\emc.exe.config" />
+    <file src="..\build\any\bin\EventManifestFramework.dll" target="build\native\EventManifestFramework.dll" />
+    <file src="..\build\any\bin\EventManifestCompiler.Build.Tasks.dll" target="build\native\EventManifestCompiler.Build.Tasks.dll" />
+    <file src="..\build\any\bin\NOption.dll" target="build\native\NOption.dll" />
+    <file src="EventManifestCompiler.Build.Tasks\Resources\MSBuild\1033\emc.xml" target="build\native\1033\emc.xml" />
+    <file src="EventManifestCompiler.Build.Tasks\Resources\MSBuild\1033\ProjectItemsSchema.xml" target="build\native\1033\ProjectItemsSchema.xml" />
+    <file src="EventManifestCompiler.Build.Tasks\Resources\MSBuild\emc.targets" target="build\native\EventManifestCompiler.Build.Tasks.targets" />
+    <file src="EventManifestCompiler.Build.Tasks\Resources\MSBuild\emc.props" target="build\native\EventManifestCompiler.Build.Tasks.props" />
+  </files>
+</package>
