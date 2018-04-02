@@ -20,8 +20,8 @@ namespace EventManifestCompiler.Build.Tasks
 
         internal static string GetTemporaryFile(string directory, string extension)
         {
-            if (string.IsNullOrEmpty(directory))
-                throw new ArgumentNullException(nameof(directory));
+            if (directory != null && directory.Length == 0)
+                throw new ArgumentException("Parameter must not be empty", nameof(directory));
             if (string.IsNullOrEmpty(extension))
                 throw new ArgumentNullException(nameof(extension));
 
@@ -35,7 +35,7 @@ namespace EventManifestCompiler.Build.Tasks
                     Directory.CreateDirectory(directory);
                 path = Path.Combine(directory, "tmp" + Guid.NewGuid().ToString("N") + extension);
                 ErrorUtilities.VerifyThrow(!File.Exists(path), "Guid should be unique");
-                File.WriteAllText(path, String.Empty);
+                File.WriteAllText(path, string.Empty);
             } catch (Exception ex) when (!ExceptionHandling.NotExpectedException(ex)) {
                 throw new IOException(
                     //ResourceUtilities.FormatResourceString("Shared.FailedCreatingTempFile", ex.Message),
@@ -59,17 +59,15 @@ namespace EventManifestCompiler.Build.Tasks
             foreach (ITaskItem item in items) {
                 try {
                     var info = new FileInfo(item.ItemSpec);
-                    if (info.Exists && info.Length <= 4L) {
+                    if (info.Exists && info.Length <= 4) {
                         info.Delete();
                         ++deleted;
                     }
-                } catch (Exception exception) {
-                    if (!(exception is SecurityException) &&
-                        !(exception is ArgumentException) &&
-                        !(exception is UnauthorizedAccessException) &&
-                        !(exception is PathTooLongException) &&
-                        !(exception is NotSupportedException))
-                        throw;
+                } catch (SecurityException) {
+                } catch (ArgumentException) {
+                } catch (UnauthorizedAccessException) {
+                } catch (PathTooLongException) {
+                } catch (NotSupportedException) {
                 }
             }
 
