@@ -1,6 +1,6 @@
 #include "TdhMessageFormatter.h"
 
-#include "ADT/ArrayRef.h"
+#include "ADT/Span.h"
 #include "Support/ErrorHandling.h"
 #include <evntcons.h>
 #include <in6addr.h>
@@ -174,7 +174,7 @@ ULONG GetEventMapInfo(EventInfo info, EVENT_PROPERTY_INFO const& propertyInfo,
 
 ULONG FormatProperty(TRACE_EVENT_INFO const& tei, EVENT_MAP_INFO const& emi,
                      unsigned pointerSize, EVENT_PROPERTY_INFO const& pi,
-                     USHORT propertyLength, ArrayRef<std::byte> userData,
+                     USHORT propertyLength, cspan<std::byte> userData,
                      ULONG* bufferSize, wchar_t* buffer, USHORT* userDataConsumed)
 {
     return TdhFormatProperty(
@@ -186,7 +186,7 @@ ULONG FormatProperty(TRACE_EVENT_INFO const& tei, EVENT_MAP_INFO const& emi,
 }
 
 ULONG FormatProperty(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
-                     size_t pointerSize, ArrayRef<std::byte>& userData,
+                     size_t pointerSize, cspan<std::byte>& userData,
                      std::wstring& sink, std::vector<wchar_t>& buffer,
                      std::vector<BYTE>& mapBuffer)
 {
@@ -263,11 +263,11 @@ bool TdhMessageFormatter::FormatEventMessage(EventInfo const info,
     if (!info)
         return false;
 
-    ArrayRef<std::byte> userData = info.UserData();
+    cspan<std::byte> userData = info.UserData();
     if (info.IsStringOnly()) {
         (void)StringCchCopyNW(buffer, bufferSize,
                               reinterpret_cast<wchar_t const*>(userData.data()),
-                              userData.length() / sizeof(wchar_t));
+                              userData.size() / sizeof(wchar_t));
         return true;
     }
 
@@ -356,7 +356,7 @@ bool TdhMessageFormatter::FormatEventMessage(EventInfo const info,
 bool TdhMessageFormatter::FormatMofEvent(EventInfo const& info, size_t const pointerSize,
                                          wchar_t* const buffer, size_t const bufferSize)
 {
-    ArrayRef<std::byte> userData = info.UserData();
+    cspan<std::byte> userData = info.UserData();
 
     for (ULONG i = 0; i < info->TopLevelPropertyCount; ++i) {
         auto const& pi = info->EventPropertyInfoArray[i];

@@ -28,7 +28,6 @@
     <ClInclude Include="Support\Debug.h" />
     <ClInclude Include="Support\ByteCount.h" />
     <ClInclude Include="Support\ErrorHandling.h" />
-    <ClInclude Include="ADT\ArrayRef.h" />
     <ClInclude Include="Support\CountOf.h" />
     <ClInclude Include="Support\RangeAdaptors.h" />
     <ClInclude Include="ADT\Guid.h" />
@@ -59,5 +58,7 @@
     <ClInclude Include="ManualResetEventSlim.h" />
     <ClInclude Include="BinaryFind.h" />
     <ClInclude Include="Support\ThreadpoolTimer.h" />
+    <ClInclude Include="ADT\Span.h" />
+    <ClInclude Include="Support\IsComplete.h" />
   </ItemGroup>
 </Project>

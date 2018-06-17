@@ -1,5 +1,5 @@
 #pragma once
-#include "ADT/ArrayRef.h"
+#include "ADT/Span.h"
 #include "Support/ErrorHandling.h"
 
 #include <algorithm>
@@ -76,7 +76,7 @@ public:
     TraceDataToken& operator=(TraceDataToken&&) = default;
 
     static HRESULT Create(std::shared_ptr<TraceDataContext> context,
-                          ArrayRef<std::wstring> eventManifests, TraceDataToken& token)
+                          cspan<std::wstring> eventManifests, TraceDataToken& token)
     {
         HRESULT hr = S_OK;
         for (auto const& manifest : eventManifests) {
@@ -105,7 +105,7 @@ public:
         eventManifests.clear();
     }
 
-    HRESULT Update(ArrayRef<std::wstring> newEventManifests)
+    HRESULT Update(cspan<std::wstring> newEventManifests)
     {
         if (!context)
             return E_FAIL;
@@ -122,7 +122,7 @@ public:
 
 private:
     TraceDataToken(std::shared_ptr<TraceDataContext> context,
-                   ArrayRef<std::wstring> eventManifests)
+                   cspan<std::wstring> eventManifests)
         : context(std::move(context))
         , eventManifests(eventManifests.begin(), eventManifests.end())
     {

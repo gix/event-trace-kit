@@ -1,7 +1,7 @@
 #pragma once
-#include "ADT/ArrayRef.h"
 #include "ADT/Handle.h"
 #include "ADT/SmallVector.h"
+#include "ADT/Span.h"
 #include "ITraceProcessor.h"
 
 #include <atomic>
@@ -30,7 +30,7 @@ class IEventSink;
 class EtwTraceProcessor : public ITraceProcessor
 {
 public:
-    EtwTraceProcessor(ArrayRef<std::wstring_view> loggerNames);
+    EtwTraceProcessor(cspan<std::wstring_view> loggerNames);
     virtual ~EtwTraceProcessor();
 
     virtual void SetEventSink(IEventSink* sink) override;

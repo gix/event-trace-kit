@@ -1,8 +1,8 @@
 #include "ITraceSession.h"
 
-#include "ADT/ArrayRef.h"
 #include "ADT/Handle.h"
 #include "ADT/SmallVector.h"
+#include "ADT/Span.h"
 #include "Support/ByteCount.h"
 #include "Support/ErrorHandling.h"
 #include "Support/Hashing.h"
@@ -43,7 +43,7 @@ void ZStringCopy(std::wstring_view str, wchar_t* dst)
 using FilterPtr = std::unique_ptr<std::byte[]>;
 
 void AddProcessIdFilter(SmallVectorBase<EVENT_FILTER_DESCRIPTOR>& filters,
-                        ArrayRef<unsigned> processIds)
+                        cspan<unsigned> processIds)
 {
     auto& descriptor = filters.emplace_back();
     descriptor.Ptr = reinterpret_cast<uintptr_t>(processIds.data());
@@ -68,7 +68,7 @@ size_t ComputeEventIdFilterSize(uint16_t eventCount)
 }
 
 void AddEventIdFilter(SmallVectorBase<EVENT_FILTER_DESCRIPTOR>& filters,
-                      SmallVectorBase<FilterPtr>& buffers, ArrayRef<uint16_t> eventIds,
+                      SmallVectorBase<FilterPtr>& buffers, cspan<uint16_t> eventIds,
                       bool filterIn, ULONG type)
 {
     uint16_t const eventCount = static_cast<uint16_t>(eventIds.size());
@@ -87,14 +87,14 @@ void AddEventIdFilter(SmallVectorBase<EVENT_FILTER_DESCRIPTOR>& filters,
 }
 
 void AddEventFilter(SmallVectorBase<EVENT_FILTER_DESCRIPTOR>& filters,
-                    SmallVectorBase<FilterPtr>& buffers, ArrayRef<uint16_t> eventIds,
+                    SmallVectorBase<FilterPtr>& buffers, cspan<uint16_t> eventIds,
                     bool filterIn)
 {
     AddEventIdFilter(filters, buffers, eventIds, filterIn, EVENT_FILTER_TYPE_EVENT_ID);
 }
 
 void AddStackWalkFilter(SmallVectorBase<EVENT_FILTER_DESCRIPTOR>& filters,
-                        SmallVectorBase<FilterPtr>& buffers, ArrayRef<uint16_t> eventIds,
+                        SmallVectorBase<FilterPtr>& buffers, cspan<uint16_t> eventIds,
                         bool filterIn)
 {
     AddEventIdFilter(filters, buffers, eventIds, filterIn, EVENT_FILTER_TYPE_STACKWALK);

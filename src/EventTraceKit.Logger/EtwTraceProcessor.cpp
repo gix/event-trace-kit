@@ -88,7 +88,7 @@ string_back_insert_iterator<Container> string_back_inserter(Container& c)
 
 } // namespace
 
-EtwTraceProcessor::EtwTraceProcessor(ArrayRef<std::wstring_view> loggerNames)
+EtwTraceProcessor::EtwTraceProcessor(cspan<std::wstring_view> loggerNames)
 {
     std::copy(std::begin(loggerNames), std::end(loggerNames),
               string_back_inserter(this->loggerNames));
@@ -226,7 +226,7 @@ TRACE_LOGFILE_HEADER const* EtwTraceProcessor::GetLogFileHeader() const
 }
 
 std::unique_ptr<ITraceProcessor>
-CreateEtwTraceProcessor(ArrayRef<std::wstring_view> loggerName)
+CreateEtwTraceProcessor(cspan<std::wstring_view> loggerName)
 {
     return std::make_unique<EtwTraceProcessor>(loggerName);
 }

@@ -1,5 +1,5 @@
 #pragma once
-#include "ADT/ArrayRef.h"
+#include "ADT/Span.h"
 #include "Support/CompilerSupport.h"
 
 #include <windows.h>
@@ -29,7 +29,7 @@ public:
     TRACE_EVENT_INFO const* Info() const { return info; }
     size_t InfoSize() const { return infoSize; }
 
-    ArrayRef<std::byte> UserData() const
+    cspan<std::byte> UserData() const
     {
         return {static_cast<std::byte*>(record->UserData),
                 static_cast<size_t>(record->UserDataLength)};

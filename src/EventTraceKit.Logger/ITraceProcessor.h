@@ -1,5 +1,5 @@
 #pragma once
-#include "ADT/ArrayRef.h"
+#include "ADT/Span.h"
 #include "ITraceSession.h"
 
 #include <evntrace.h>
@@ -24,6 +24,6 @@ public:
 };
 
 std::unique_ptr<ITraceProcessor>
-CreateEtwTraceProcessor(ArrayRef<std::wstring_view> loggerNames);
+CreateEtwTraceProcessor(cspan<std::wstring_view> loggerNames);
 
 } // namespace etk

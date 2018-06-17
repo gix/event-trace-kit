@@ -1,6 +1,6 @@
 #pragma once
-#include "ADT/ArrayRef.h"
 #include "ADT/Handle.h"
+#include "ADT/Span.h"
 #include <windows.h>
 
 #include <algorithm>
@@ -64,7 +64,7 @@ private:
 namespace details
 {
 
-unsigned WaitFor(WaitTimeoutDuration const& timeout, ArrayRef<HANDLE> handles, bool waitAll);
+unsigned WaitFor(WaitTimeoutDuration const& timeout, cspan<HANDLE> handles, bool waitAll);
 
 template<typename Rep, typename Period>
 WaitTimeoutDuration GetWaitTimeout(std::chrono::duration<Rep, Period> const& timeout)

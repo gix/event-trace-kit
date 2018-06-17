@@ -211,7 +211,7 @@ HRESULT WaitEvent::Wait(WaitTimeoutDuration timeout /*= InfiniteWaitTimeout*/) c
     }
 }
 
-unsigned details::WaitFor(WaitTimeoutDuration const& timeout, ArrayRef<HANDLE> handles,
+unsigned details::WaitFor(WaitTimeoutDuration const& timeout, cspan<HANDLE> handles,
                           bool waitAll)
 {
     if (handles.size() > MAXIMUM_WAIT_OBJECTS)

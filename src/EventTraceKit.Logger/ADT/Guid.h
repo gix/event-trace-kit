@@ -1,5 +1,5 @@
 #pragma once
-#include "ADT/ArrayRef.h"
+#include "ADT/Span.h"
 #include "Support/CompilerSupport.h"
 
 #include <cstring>
@@ -221,14 +221,14 @@ std::wostream& operator<<(std::wostream& os, TaggedGuid<T> const& guid)
     return details::StreamGuid(os, guid.hi, guid.lo);
 }
 
-bool GuidToString(GUID const& guid, MutableArrayRef<wchar_t> buffer);
+bool GuidToString(GUID const& guid, span<wchar_t> buffer);
 
 template<size_t N>
 ETK_ALWAYS_INLINE void GuidToString(GUID const& guid,
                                     _Out_writes_z_(39) wchar_t (&buffer)[N])
 {
     static_assert(N >= Guid::StringBufSize, "Buffer too small");
-    (void)GuidToString(guid, MutableArrayRef<wchar_t>(buffer, N));
+    (void)GuidToString(guid, span<wchar_t>(buffer, N));
 }
 
 ETK_ALWAYS_INLINE
@@ -236,7 +236,7 @@ void GuidToString(GUID const& guid, std::wstring& sink)
 {
     size_t s = sink.size();
     sink.resize(s + Guid::StringLength);
-    (void)GuidToString(guid, MutableArrayRef<wchar_t>(&sink[s], Guid::StringLength + 1));
+    (void)GuidToString(guid, span<wchar_t>(&sink[s], Guid::StringLength + 1));
 }
 
 class GuidString
@@ -251,6 +251,6 @@ private:
     wchar_t buffer[Guid::StringBufSize];
 };
 
-} // namespace ffmf
+} // namespace etk
 
 #define ETK_MAKE_GUID(high, low) Guid::Construct((uint64_t)high##LL, (uint64_t)low##LL)

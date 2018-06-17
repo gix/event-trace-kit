@@ -85,6 +85,7 @@
   <ItemGroup>
     <ClCompile Include="ADT\Guid.cpp" />
     <ClCompile Include="ADT\WaitEvent.cpp" />
+    <ClInclude Include="ADT\Span.h" />
     <ClInclude Include="BinaryFind.h" />
     <ClCompile Include="EventTraceKit\IMessageFormatter.h" />
     <ClCompile Include="EventTraceKit\ParseTdhContext.cpp">
@@ -168,12 +169,12 @@
     <ClCompile Include="Win32Exception.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ADT\ArrayRef.h" />
     <ClInclude Include="ADT\SmallVector.h" />
     <ClInclude Include="EventTraceKit\Descriptors.h" />
     <ClInclude Include="EventTraceKit\ParseTdhContext.h" />
     <ClInclude Include="EventTraceKit\TraceLog.h" />
     <ClInclude Include="ManualResetEventSlim.h" />
+    <ClInclude Include="Support\IsComplete.h" />
     <ClInclude Include="Support\OSVersionInfo.h" />
     <ClInclude Include="Support\Rtl.h" />
     <ClInclude Include="Support\ThreadpoolTimer.h" />

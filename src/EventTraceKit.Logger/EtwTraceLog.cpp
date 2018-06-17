@@ -35,7 +35,7 @@ public:
 
     virtual EventInfo GetEvent(size_t index) const override;
 
-    virtual HRESULT UpdateTraceData(ArrayRef<std::wstring> eventManifests) override;
+    virtual HRESULT UpdateTraceData(cspan<std::wstring> eventManifests) override;
 
 private:
     EventInfoCache eventInfoCache;
@@ -307,7 +307,7 @@ EventInfo EtwTraceLog::GetEvent(size_t index) const
     return events[index];
 }
 
-HRESULT EtwTraceLog::UpdateTraceData(ArrayRef<std::wstring> eventManifests)
+HRESULT EtwTraceLog::UpdateTraceData(cspan<std::wstring> eventManifests)
 {
     return traceDataToken.Update(eventManifests);
 }

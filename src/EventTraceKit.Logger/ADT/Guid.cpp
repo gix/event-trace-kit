@@ -163,7 +163,7 @@ std::wostream& details::StreamGuid(std::wostream& os, uint64_t const& hi, uint64
     return os;
 }
 
-bool GuidToString(GUID const& guid, MutableArrayRef<wchar_t> buffer)
+bool GuidToString(GUID const& guid, span<wchar_t> buffer)
 {
     return SUCCEEDED(StringFromGUID2(guid, buffer.data(),
                                      static_cast<int>(buffer.size())));
