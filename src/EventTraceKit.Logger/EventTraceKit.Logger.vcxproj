@@ -136,6 +136,7 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(AdditionalOptions) -Zc:twoPhase-</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(AdditionalOptions) -Zc:twoPhase-</AdditionalOptions>
     </ClCompile>
+    <ClCompile Include="Support\StringConversions.cpp" />
     <ClCompile Include="TdhMessageFormatter.cpp" />
     <ClCompile Include="EtwTraceLog.cpp" />
     <ClCompile Include="EtwTraceProcessor.cpp" />
@@ -152,7 +153,7 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(AdditionalOptions) -Zc:twoPhase- </AdditionalOptions>
     </ClCompile>
     <ClCompile Include="Support\ErrorHandling.cpp" />
-    <ClCompile Include="Support\SetThreadName.cpp" />
+    <ClCompile Include="Support\SetThreadDescription.cpp" />
     <ClCompile Include="EventTraceKit\WatchDog.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</CompileAsManaged>
@@ -177,6 +178,7 @@
     <ClInclude Include="Support\IsComplete.h" />
     <ClInclude Include="Support\OSVersionInfo.h" />
     <ClInclude Include="Support\Rtl.h" />
+    <ClInclude Include="Support\StringConversions.h" />
     <ClInclude Include="Support\ThreadpoolTimer.h" />
     <ClInclude Include="TdhMessageFormatter.h" />
     <ClInclude Include="EventTraceKit\InteropHelper.h" />
@@ -201,7 +203,7 @@
     <ClInclude Include="Support\Debug.h" />
     <ClInclude Include="Support\ErrorHandling.h" />
     <ClInclude Include="Support\RangeAdaptors.h" />
-    <ClInclude Include="Support\SetThreadName.h" />
+    <ClInclude Include="Support\SetThreadDescription.h" />
     <ClInclude Include="Support\StringFormat.h" />
     <ClInclude Include="EventTraceKit\WatchDog.h" />
     <ClInclude Include="TraceDataContext.h" />

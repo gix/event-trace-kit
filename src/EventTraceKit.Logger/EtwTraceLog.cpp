@@ -3,7 +3,7 @@
 #include "EventInfoCache.h"
 #include "ManualResetEventSlim.h"
 #include "Support/Allocator.h"
-#include "Support/SetThreadName.h"
+#include "Support/SetThreadDescription.h"
 #include "TraceDataContext.h"
 
 #include <atomic>
@@ -145,7 +145,7 @@ public:
 private:
     void ThreadProc()
     {
-        SetCurrentThreadName("ETW Filter Thread");
+        SetCurrentThreadDescription(L"ETW Filter Thread");
 
         for (;;) {
             changedEvent.Wait();

@@ -5,7 +5,7 @@
 #include "IEventSink.h"
 #include "ITraceSession.h"
 #include "Support/ErrorHandling.h"
-#include "Support/SetThreadName.h"
+#include "Support/SetThreadDescription.h"
 
 #include <system_error>
 
@@ -178,7 +178,7 @@ void EtwTraceProcessor::StopProcessing()
 
 void EtwTraceProcessor::ProcessTraceProc(TRACEHANDLE traceHandle)
 {
-    SetCurrentThreadName("ETW Trace Processor");
+    SetCurrentThreadDescription(L"ETW Trace Processor");
 
     try {
         HRESULT hr = HResultFromWin32(ProcessTrace(&traceHandle, 1, nullptr, nullptr));
