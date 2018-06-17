@@ -60,7 +60,7 @@
 
 #define ETK_MULTILINE_MACRO_END            \
     ETK_DIAGNOSTIC_PUSH_DISABLE_MSVC(4127) \
-    } while (false)                         \
+    } while (false)                        \
     ETK_DIAGNOSTIC_POP_MSVC()
 
 #ifdef ETK_CLANG
@@ -86,9 +86,7 @@
   #error Not supported.
 #endif
 
-#ifdef ETK_CLANG
-  #define ETK_NOVTABLE
-#elif defined(ETK_MSVC)
+#if defined(ETK_CLANG) || defined(ETK_MSVC)
   #define ETK_NOVTABLE __declspec(novtable)
 #else
   #error Not supported.
@@ -108,10 +106,4 @@
   #define ETK_BUILTIN_UNREACHABLE __assume(false)
 #else
   #error Not supported.
-#endif
-
-#ifdef ETK_CLANG
-  #define ETK_CXX14_CONSTEXPR constexpr
-#else
-  #define ETK_CXX14_CONSTEXPR
 #endif

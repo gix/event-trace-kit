@@ -29,11 +29,11 @@ public:
 
     virtual void ProcessEvent(EVENT_RECORD const& record) override;
 
-    virtual void Clear() override;
-
-    virtual size_t GetEventCount() override { return eventCount; }
+    virtual size_t GetEventCount() const override { return eventCount; }
 
     virtual EventInfo GetEvent(size_t index) const override;
+
+    virtual void Clear() override;
 
     virtual HRESULT UpdateTraceData(cspan<std::wstring> eventManifests) override;
 
@@ -290,7 +290,6 @@ void EtwTraceLog::Clear()
         events.shrink_to_fit();
         eventInfoCache.Clear();
         eventRecordAllocator.Reset();
-        traceDataToken.Invalidate();
     }
 
     changedCallback(0, changedCallbackState);

@@ -28,7 +28,10 @@ struct Guid
 
     bool operator==(Guid const& other) const { return hi == other.hi && lo == other.lo; }
     bool operator!=(Guid const& other) const { return hi != other.hi || lo != other.lo; }
-    bool operator < (Guid const& other) const { return hi == other.hi ? lo < other.lo : hi < other.hi; }
+    bool operator<(Guid const& other) const
+    {
+        return hi == other.hi ? lo < other.lo : hi < other.hi;
+    }
 
     static Guid Create();
     static Guid Construct();
@@ -131,92 +134,7 @@ inline std::wstring Guid::ToString(Guid const& guid)
     return details::ToString(guid.hi, guid.lo);
 }
 
-template<typename Tag>
-struct TaggedGuid
-{
-    uint64_t hi;
-    uint64_t lo;
-
-    bool operator ==(TaggedGuid const& other) const { return hi == other.hi && lo == other.lo; }
-    bool operator !=(TaggedGuid const& other) const { return hi != other.hi || lo != other.lo; }
-    bool operator < (TaggedGuid const& other) const { return hi == other.hi ? lo < other.lo : hi < other.hi; }
-
-    static TaggedGuid Construct();
-    static TaggedGuid Construct(uint64_t const& hi, uint64_t const& lo);
-    static TaggedGuid Construct(Guid const& source);
-    static TaggedGuid Construct(GUID const& source);
-    static TaggedGuid Construct(std::wstring const& str);
-    static TaggedGuid Create();
-    static std::wstring ToString(TaggedGuid const& guid);
-
-    Guid ToGuid() const
-    {
-        Guid guid = {hi, lo};
-        return guid;
-    }
-};
-
-template<typename T>
-TaggedGuid<T> TaggedGuid<T>::Create()
-{
-    TaggedGuid guid;
-    details::CreateGuid(guid.hi, guid.lo);
-    return guid;
-}
-
-template<typename T>
-TaggedGuid<T> TaggedGuid<T>::Construct()
-{
-    static_assert(std::is_pod<TaggedGuid>::value, "TaggedGuid must be a POD.");
-    return TaggedGuid();
-}
-
-template<typename T>
-TaggedGuid<T> TaggedGuid<T>::Construct(uint64_t const& hi, uint64_t const& lo)
-{
-    TaggedGuid guid;
-    guid.hi = hi;
-    guid.lo = lo;
-    return guid;
-}
-
-template<typename T>
-TaggedGuid<T> TaggedGuid<T>::Construct(Guid const& source)
-{
-    TaggedGuid guid = {source.hi, source.lo};
-    return guid;
-}
-
-template<typename T>
-TaggedGuid<T> TaggedGuid<T>::Construct(GUID const& source)
-{
-    TaggedGuid guid;
-    static_assert(sizeof(source) == sizeof(guid), "Guid size mismatch.");
-    std::memcpy(&guid, &source, sizeof(guid));
-    return guid;
-}
-
-template<typename T>
-TaggedGuid<T> TaggedGuid<T>::Construct(std::wstring const& str)
-{
-    TaggedGuid guid;
-    details::ParseGuid(str, guid.hi, guid.lo);
-    return guid;
-}
-
-template<typename T>
-std::wstring TaggedGuid<T>::ToString(TaggedGuid<T> const& guid)
-{
-    return details::ToString(guid.hi, guid.lo);
-}
-
 inline std::wostream& operator<<(std::wostream& os, Guid const& guid)
-{
-    return details::StreamGuid(os, guid.hi, guid.lo);
-}
-
-template<typename T>
-std::wostream& operator<<(std::wostream& os, TaggedGuid<T> const& guid)
 {
     return details::StreamGuid(os, guid.hi, guid.lo);
 }

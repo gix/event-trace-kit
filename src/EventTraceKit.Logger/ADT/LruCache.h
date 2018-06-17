@@ -23,7 +23,7 @@ public:
     size_t Size() const { return valueMap.size(); }
 
     template<typename ValueFactory>
-    T& operator ()(K const& key, ValueFactory factory)
+    T& operator()(K const& key, ValueFactory factory)
     {
         return GetOrCreate(key, factory);
     }
@@ -34,10 +34,7 @@ public:
         auto it = valueMap.find(key);
         if (it != valueMap.end()) {
             // Move accessed key to the end of the LRU list.
-            lruKeys.splice(
-                lruKeys.end(),
-                lruKeys,
-                it->second.second);
+            lruKeys.splice(lruKeys.end(), lruKeys, it->second.second);
             return it->second.first;
         }
 
@@ -72,7 +69,7 @@ private:
             Evict();
 
         auto lruIt = lruKeys.insert(lruKeys.end(), key);
-        auto result = valueMap.insert({ key, MapEntry(std::move(value), lruIt) });
+        auto result = valueMap.insert({key, MapEntry(std::move(value), lruIt)});
         return result.first->second.first;
     }
 

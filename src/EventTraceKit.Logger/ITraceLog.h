@@ -11,9 +11,9 @@ namespace etk
 class ITraceLog : public IEventSink
 {
 public:
-    virtual void Clear() = 0;
-    virtual size_t GetEventCount() = 0;
+    virtual size_t GetEventCount() const = 0;
     virtual EventInfo GetEvent(size_t index) const = 0;
+    virtual void Clear() = 0;
     virtual HRESULT UpdateTraceData(cspan<std::wstring> eventManifests) = 0;
 };
 

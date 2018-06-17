@@ -1,7 +1,6 @@
 #define INITGUID
 #include "EtwTraceProcessor.h"
 
-#include "ADT/WaitEvent.h"
 #include "IEventSink.h"
 #include "ITraceSession.h"
 #include "Support/ErrorHandling.h"
@@ -21,7 +20,7 @@ using PFNGetSystemTimeAsFileTime = void(WINAPI*)(LPFILETIME);
 PFNGetSystemTimeAsFileTime WINAPI InitializeGetSystemTimeAsFileTime()
 {
     // GetSystemTimePreciseAsFileTime requires Windows 8 or later.
-    auto const kernel32 = LoadLibraryW(L"kernel32.dll");
+    auto const kernel32 = GetModuleHandleW(L"kernel32.dll");
     auto const func = reinterpret_cast<PFNGetSystemTimeAsFileTime>(
         GetProcAddress(kernel32, "GetSystemTimePreciseAsFileTime"));
     if (func)

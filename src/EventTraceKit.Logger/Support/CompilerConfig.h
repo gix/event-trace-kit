@@ -1,7 +1,7 @@
 #pragma once
 #include <boost/config.hpp>
 
-#if defined(__clang__)
+#if defined(BOOST_CLANG)
   #define ETK_CLANG __clang__
 #elif defined(BOOST_MSVC)
   #define ETK_MSVC _MSC_VER

@@ -18,7 +18,7 @@ struct TraceHandleTraits
     using HandleType = TRACEHANDLE;
     constexpr static HandleType InvalidHandle() noexcept
     {
-        return -1; // INVALID_PROCESSTRACE_HANDLE
+        return static_cast<HandleType>(-1); // INVALID_PROCESSTRACE_HANDLE
     }
     constexpr static bool IsValid(HandleType h) noexcept { return h != InvalidHandle(); }
     static void Close(HandleType h) noexcept { ::CloseTrace(h); }

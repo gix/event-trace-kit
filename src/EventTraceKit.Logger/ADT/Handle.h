@@ -114,7 +114,7 @@ template<typename T = HANDLE>
 struct MinusOneIsInvalidHandleTraits
 {
     using HandleType = T;
-    constexpr static HandleType InvalidHandle() noexcept { return INVALID_HANDLE_VALUE; }
+    constexpr static HandleType InvalidHandle() noexcept { return static_cast<HandleType>(-1); }
     constexpr static bool IsValid(HandleType h) noexcept { return h != InvalidHandle(); }
     static void Close(HandleType h) noexcept { ::CloseHandle(h); }
 };
