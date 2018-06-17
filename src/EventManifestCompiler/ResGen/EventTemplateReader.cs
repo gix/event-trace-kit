@@ -29,9 +29,6 @@ namespace EventManifestCompiler.ResGen
         private readonly IDiagnostics diags;
         private readonly IEventManifestMetadata metadata;
 
-        private TextWriter logWriter = Console.Out;
-        private bool log;
-
         private Dictionary<uint, Message> messageMap;
 
         public EventTemplateReader(IDiagnostics diags, IEventManifestMetadata metadata = null)
@@ -42,12 +39,6 @@ namespace EventManifestCompiler.ResGen
             var nsmgr = new XmlNamespaceManager(new NameTable());
             nsmgr.AddNamespace("win", WinEventSchema.Namespace);
             nsr = nsmgr;
-        }
-
-        public TextWriter LogWriter
-        {
-            get => logWriter;
-            set => logWriter = value ?? Console.Out;
         }
 
         public IEnumerable<Message> ReadMessageTable(Stream input)
@@ -74,7 +65,6 @@ namespace EventManifestCompiler.ResGen
             var messages = new List<Message>();
 
             uint blockCount = r.ReadUInt32();
-            LogMessage("MESSAGE_RESOURCE_DATA ({0} blocks)", blockCount);
 
             var resourceBlocks = new List<MESSAGE_RESOURCE_BLOCK>();
             for (uint i = 0; i < blockCount; ++i) {
@@ -91,7 +81,6 @@ namespace EventManifestCompiler.ResGen
 
             for (int i = 0; i < resourceBlocks.Count; i++) {
                 var block = resourceBlocks[i];
-                LogMessage("  [{0}] MESSAGE_RESOURCE_BLOCK (0x{1:X}-0x{2:X})", i, block.LowId, block.HighId);
                 r.BaseStream.Position = block.Offset;
 
                 for (uint id = block.LowId; id <= block.HighId; ++id) {
@@ -110,24 +99,11 @@ namespace EventManifestCompiler.ResGen
                         encoding = Encoding.ASCII;
                     string text = encoding.GetString(bytes).TrimEnd('\r', '\n', '\0');
 
-                    LogMessage("    0x{0:X8}: {1}", id, text);
                     messages.Add(new Message(id, text));
                 }
             }
 
             return messages;
-        }
-
-        private void LogMessage(object value)
-        {
-            if (log)
-                logWriter.WriteLine(value);
-        }
-
-        private void LogMessage(string format, params object[] args)
-        {
-            if (log)
-                logWriter.WriteLine(format, args);
         }
 
         private string FormatMagic(uint magic)
@@ -170,7 +146,6 @@ namespace EventManifestCompiler.ResGen
 
             var manifest = new EventManifest();
             foreach (var offset in providerEntries) {
-                LogMessage("ProviderGuid: {0}", offset.Item1);
                 r.BaseStream.Position = offset.Item2;
                 var provider = ReadWevtBlock(offset.Item1, r);
                 manifest.Providers.Add(provider);
@@ -236,8 +211,8 @@ namespace EventManifestCompiler.ResGen
                     case EventFieldKind.Filter:
                         provider.Filters.AddRange(ReadFilters(r));
                         break;
-                    default:
-                        LogMessage("Unknown item type {0} at offset {1}.", list.Type, list.Offset);
+                    default: {
+                    }
                         break;
                 }
             }
@@ -272,13 +247,6 @@ namespace EventManifestCompiler.ResGen
                 uint keywordsOffset = r.ReadUInt32();
                 uint channelOffset = r.ReadUInt32();
                 uint[] keywordOffsets = ReadUInt32At(r, keywordsOffset, keywordCount);
-
-                LogMessage(
-                    "Event({0}, Msg=0x{1:X} T=0x{2:X} O=0x{3:X} L=0x{4:X} T=0x{5:X} K={6}@0x{7:X}[{8}] C=0x{9:X}",
-                    desc, messageId, templateOffset, opcodeOffset, levelOffset,
-                    taskOffset, keywordCount, keywordsOffset,
-                    string.Join(", ", keywordOffsets),
-                    channelOffset);
 
                 var @event = new Event(Located.Create((uint)desc.EventId), Located.Create(desc.Version));
                 @event.Channel = GetObject<Channel>(channelOffset);
@@ -352,8 +320,8 @@ namespace EventManifestCompiler.ResGen
                 channels.Add(channel);
             }
 
-            foreach (var channel in channelEntries)
-                LogMessage(channel);
+            foreach (var channel in channelEntries) {
+            }
 
             return channels;
         }
@@ -386,8 +354,8 @@ namespace EventManifestCompiler.ResGen
                 levels.Add(level);
             }
 
-            foreach (var level in levelEntries)
-                LogMessage(level);
+            foreach (var level in levelEntries) {
+            }
 
             return levels;
         }
@@ -423,8 +391,8 @@ namespace EventManifestCompiler.ResGen
                 tasks.Add(task);
             }
 
-            foreach (var task in taskEntries)
-                LogMessage(task);
+            foreach (var task in taskEntries) {
+            }
 
             return tasks;
         }
@@ -459,8 +427,8 @@ namespace EventManifestCompiler.ResGen
                 opcodes.Add(Tuple.Create(taskId, opcode));
             }
 
-            foreach (var opcode in opcodeEntries)
-                LogMessage(opcode);
+            foreach (var opcode in opcodeEntries) {
+            }
 
             return opcodes;
         }
@@ -493,8 +461,8 @@ namespace EventManifestCompiler.ResGen
                 keywords.Add(keyword);
             }
 
-            foreach (var keyword in keywordEntries)
-                LogMessage(keyword);
+            foreach (var keyword in keywordEntries) {
+            }
 
             return keywords;
         }
@@ -519,8 +487,8 @@ namespace EventManifestCompiler.ResGen
                 mapEntries.Add(tuple.Item2);
             }
 
-            foreach (var m in mapEntries)
-                LogMessage(m);
+            foreach (var m in mapEntries) {
+            }
 
             return maps;
         }
@@ -607,9 +575,6 @@ namespace EventManifestCompiler.ResGen
                 CultureInfo.InvariantCulture, "template{0:X16}", offset);
             var template = new Template(id);
 
-            LogMessage(doc);
-            LogMessage("Template({0}-{1}, {2}, Flags={3})", paramCount, dataCount, guid, flags);
-
             long structPropertyOffset = propertyOffset + paramCount * Marshal.SizeOf<PropertyEntry>();
             for (uint i = 0; i < paramCount; ++i) {
                 r.BaseStream.Position = propertyOffset + i * Marshal.SizeOf<PropertyEntry>();
@@ -677,16 +642,6 @@ namespace EventManifestCompiler.ResGen
                 uint nameOffset = r.ReadUInt32();
                 string name = ReadStringAt(r, nameOffset).TrimEnd('\0');
 
-                LogMessage(
-                    "  Struct({0}, flags={6} (0x{6:X}), props={1}@{2}, count={3}, length={4}, map=0x{5:X})",
-                    name,
-                    propertyCount,
-                    firstPropertyIndex,
-                    count,
-                    length,
-                    mapOffset,
-                    flags);
-
                 var property = new StructProperty(name);
 
                 if ((flags & PropertyFlags.VarLength) != 0)
@@ -716,17 +671,6 @@ namespace EventManifestCompiler.ResGen
                 ushort length = r.ReadUInt16();
                 uint nameOffset = r.ReadUInt32();
                 string name = ReadStringAt(r, nameOffset).TrimEnd('\0');
-
-                LogMessage(
-                    "{7}  Data({0}, flags={6} (0x{6:X}), in={1:D} ({1}), out={2:D} ({2}), count={3}, length={4}, map=0x{5:X})",
-                    name,
-                    (InTypeKind)inputType,
-                    (OutTypeKind)outputType,
-                    count,
-                    length,
-                    mapOffset,
-                    flags,
-                    isNested ? "  " : "");
 
                 DataProperty property;
                 if (metadata != null) {
@@ -787,8 +731,8 @@ namespace EventManifestCompiler.ResGen
                 filters.Add(filter);
             }
 
-            foreach (var filter in filterEntries)
-                LogMessage(filter);
+            foreach (var filter in filterEntries) {
+            }
 
             return filters;
         }
