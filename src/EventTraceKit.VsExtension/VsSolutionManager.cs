@@ -4,6 +4,7 @@ namespace EventTraceKit.VsExtension
     using System.Collections.Generic;
     using System.Linq;
     using Microsoft.VisualStudio;
+    using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
 
     public class VsSolutionManager
@@ -24,7 +25,8 @@ namespace EventTraceKit.VsExtension
             IVsSolutionBuildManager solutionBuildManager,
             IDiagLog log)
         {
-            this.solutionBrowser = solutionBrowser;
+            ThreadHelper.ThrowIfNotOnUIThread();
+            this.solutionBrowser = solutionBrowser ?? throw new ArgumentNullException(nameof(solutionBrowser));
             this.monitorSelection = monitorSelection ?? throw new ArgumentNullException(nameof(monitorSelection));
             this.solutionBuildManager = solutionBuildManager ?? throw new ArgumentNullException(nameof(solutionBuildManager));
             this.log = log ?? throw new ArgumentNullException(nameof(log));

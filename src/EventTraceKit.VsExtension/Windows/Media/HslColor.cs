@@ -1,4 +1,4 @@
-namespace EventTraceKit.VsExtension
+namespace EventTraceKit.VsExtension.Windows.Media
 {
     using System;
     using System.Windows.Media;

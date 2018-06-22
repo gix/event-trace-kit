@@ -67,7 +67,7 @@
                 ItemsSource="{Binding Relations}"
                 SelectedValue="{Binding SelectedRelation, UpdateSourceTrigger=PropertyChanged}"
                 DisplayMemberPath="DisplayName"/>
-              <TextBox Grid.Column="2" Margin="7,1,1,1" Text="{Binding ValueHolder.Value, UpdateSourceTrigger=PropertyChanged}"/>
+              <TextBox Grid.Column="2" Margin="7,1,1,1" Text="{Binding TargetValue.Value, UpdateSourceTrigger=PropertyChanged}"/>
               <ComboBox Grid.Column="3" Margin="7,1,1,1"
                 ItemsSource="{Binding Source={StaticResource ActionValues}}"
                 SelectedValue="{Binding SelectedAction}"/>

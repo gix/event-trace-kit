@@ -16,14 +16,6 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         private AsyncDataGrid parentGrid;
 
-        private int cachedFirstVisibleColumn;
-        private int cachedLastVisibleColumn;
-        private int cachedFirstVisibleRow;
-        private int cachedLastVisibleRow;
-        private bool lastPrefetchCancelled;
-        private bool isAsyncPrefetchInProgress;
-        private object cachedDataValidityToken;
-
         private bool rowCacheInvalid;
         private bool frozenRowCacheInvalid;
         private bool prevHasFrozenColumns;
@@ -108,11 +100,6 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                     break;
                 }
             }
-
-            if (!EnsureReadyForViewport(
-                viewModel, firstVisibleColumn, lastVisibleColumn, firstVisibleRow,
-                lastVisibleRow))
-                return;
 
             Offset = new Vector();
             RenderedViewport = Rect.Empty;
@@ -358,7 +345,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 if (rowSelection.Contains(row))
                     foreground = selectionForeground;
 
-                int styleHash = ComputeHash(rowHeight, flowDirection, typeface, fontSize, foreground);
+                int styleHash = ComputeRowStyleHash(rowHeight, flowDirection, typeface, fontSize, foreground);
 
                 if (!TryGetCachedRow(row, styleHash, out var rowVisual)) {
                     var rowContext = rowVisual.RenderOpen();
@@ -366,8 +353,6 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                     for (int col = firstNonFrozenColumn; col <= lastNonFrozenColumn; ++col) {
                         var column = visibleColumns[col];
                         if (column.IsKeySeparator || column.IsFreezableAreaSeparator)
-                            continue;
-                        if (!column.IsSafeToReadCellValuesFromUIThread)
                             continue;
 
                         double topEdge = 0;
@@ -425,8 +410,6 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                         for (int col = firstVisibleColumn; col <= lastVisibleColumn; ++col) {
                             var column = visibleColumns[col];
                             if (column.IsKeySeparator || column.IsFreezableAreaSeparator)
-                                continue;
-                            if (!column.IsSafeToReadCellValuesFromUIThread)
                                 continue;
                             if (col >= firstNonFrozenColumn && col <= lastNonFrozenColumn)
                                 continue;
@@ -524,20 +507,20 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 renderedRowCache.RemoveRange(begin, count);
         }
 
-        private int ComputeHash(
-            double value1,
-            FlowDirection value2,
-            Typeface value3,
-            double value4,
-            Brush value5)
+        private static int ComputeRowStyleHash(
+            double rowHeight,
+            FlowDirection flowDirection,
+            Typeface typeface,
+            double fontSize,
+            Brush foreground)
         {
             const int primeFactor = 397;
             unchecked {
-                int hash = value1.GetHashCode();
-                hash = (hash * primeFactor) ^ value2.GetHashCode();
-                hash = (hash * primeFactor) ^ (value3?.GetHashCode() ?? 0);
-                hash = (hash * primeFactor) ^ value4.GetHashCode();
-                hash = (hash * primeFactor) ^ (value5?.GetHashCode() ?? 0);
+                int hash = rowHeight.GetHashCode();
+                hash = (hash * primeFactor) ^ flowDirection.GetHashCode();
+                hash = (hash * primeFactor) ^ (typeface?.GetHashCode() ?? 0);
+                hash = (hash * primeFactor) ^ fontSize.GetHashCode();
+                hash = (hash * primeFactor) ^ (foreground?.GetHashCode() ?? 0);
                 return hash;
             }
         }
@@ -631,52 +614,6 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             }
 
             return width;
-        }
-
-        private bool EnsureReadyForViewport(
-            AsyncDataGridCellsPresenterViewModel dataViewModel,
-            int firstVisibleColumn, int lastVisibleColumn,
-            int firstVisibleRow, int lastVisibleRow)
-        {
-            VerifyAccess();
-            if (isAsyncPrefetchInProgress)
-                return true;
-
-            if (cachedFirstVisibleColumn == firstVisibleColumn &&
-                cachedLastVisibleColumn == lastVisibleColumn &&
-                cachedFirstVisibleRow == firstVisibleRow &&
-                cachedLastVisibleRow == lastVisibleRow &&
-                //dataViewModel.IsValidDataValidityToken(cachedDataValidityToken) &&
-                //!dataViewModel.RowSelection.IsRefreshNecessary() &&
-                !lastPrefetchCancelled) {
-                return true;
-            }
-
-            lastPrefetchCancelled = false;
-            cachedFirstVisibleColumn = firstVisibleColumn;
-            cachedLastVisibleColumn = lastVisibleColumn;
-            cachedFirstVisibleRow = firstVisibleRow;
-            cachedLastVisibleRow = lastVisibleRow;
-            cachedDataValidityToken = dataViewModel.DataValidityToken;
-            isAsyncPrefetchInProgress = true;
-
-            Action<bool> callBackWhenFinished = wasCancelled => {
-                lastPrefetchCancelled = wasCancelled;
-                isAsyncPrefetchInProgress = false;
-                if (!wasCancelled) {
-                    cellsPresenter.QueueRender(true);
-                }
-            };
-            Action<bool> highlightAndSelectionPrefetched = wasCancelled => {
-                if (!wasCancelled) {
-                    cellsPresenter.QueueRender(true);
-                }
-            };
-
-            dataViewModel.PrefetchAllDataAndQueueUpdateRender(
-                cellsPresenter, firstVisibleColumn, lastVisibleColumn,
-                firstVisibleRow, lastVisibleRow, highlightAndSelectionPrefetched, callBackWhenFinished);
-            return true; //FIXME: false
         }
     }
 }

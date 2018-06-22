@@ -3,13 +3,16 @@ namespace EventTraceKit.VsExtension.UITests
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
+    using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Input;
+    using EventManifestFramework.Schema;
     using EventTraceKit.VsExtension;
     using EventTraceKit.VsExtension.Settings;
     using EventTraceKit.VsExtension.Views;
     using EventTraceKit.VsExtension.Views.PresetManager;
     using Microsoft.VisualStudio.PlatformUI;
+    using Microsoft.VisualStudio.Threading;
     using Task = System.Threading.Tasks.Task;
 
     public class TraceLogTestViewModel : TraceLogToolViewModel
@@ -17,7 +20,7 @@ namespace EventTraceKit.VsExtension.UITests
         private string selectedTheme;
 
         public TraceLogTestViewModel(ITraceController traceController)
-            : base(new StubGlobalSettings(), traceController)
+            : base(new StubGlobalSettings(), traceController, x => new TraceSettingsViewModel(new StubSettingsContext()))
         {
             StartCommand = new AsyncDelegateCommand(Start, CanStart);
             StopCommand = new AsyncDelegateCommand(Stop, CanStop);
@@ -31,7 +34,7 @@ namespace EventTraceKit.VsExtension.UITests
 
             SelectedTheme = App.Current.ActiveTheme;
 
-            viewModel = new TraceSettingsViewModel();
+            viewModel = new TraceSettingsViewModel(null);
 
             var knownProviders = new Dictionary<Guid, string> {
                 {new Guid("A0386E75-F70C-464C-A9CE-33C44E091623"), "DXVA2"},
@@ -171,7 +174,7 @@ namespace EventTraceKit.VsExtension.UITests
         private void Configure(object obj)
         {
             if (viewModel == null) {
-                viewModel = new TraceSettingsViewModel();
+                viewModel = new TraceSettingsViewModel(null);
             }
 
             var dialog = new TraceSettingsWindow();
@@ -232,6 +235,21 @@ namespace EventTraceKit.VsExtension.UITests
 
             public void SaveAmbient()
             {
+            }
+        }
+
+        private class StubSettingsContext : ITraceSettingsContext
+        {
+            public AsyncLazy<IReadOnlyList<ProjectInfo>> ProjectsInSolution { get; } =
+                new AsyncLazy<IReadOnlyList<ProjectInfo>>(() => Task.FromResult<IReadOnlyList<ProjectInfo>>(new ProjectInfo[0]));
+
+            public AsyncLazy<IReadOnlyList<string>> ManifestsInSolution { get; } =
+                new AsyncLazy<IReadOnlyList<string>>(() => Task.FromResult<IReadOnlyList<string>>(new string[0]));
+
+            public Task<EventManifest> GetManifest(string manifestFile)
+            {
+                var manifest = new EventManifest();
+                return Task.FromResult(manifest);
             }
         }
     }

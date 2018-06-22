@@ -2,28 +2,19 @@ namespace EventTraceKit.VsExtension
 {
     using System;
     using System.Collections.Generic;
-    using System.ComponentModel;
     using System.Linq;
-    using System.Runtime.CompilerServices;
-    using System.Threading.Tasks;
-    using System.Windows;
     using Formatting;
 
-    public class DataView : DependencyObject, IDataView, INotifyPropertyChanged
+    public class DataView : IDataView
     {
         private readonly DataTable table;
         private readonly IFormatProviderSource formatProviderSource;
-
-        private readonly PropertyChangedEventArgs rowCountChangedEventArgs =
-            new PropertyChangedEventArgs(nameof(RowCount));
 
         private int deferredUpdateNestingDepth;
 
         public DataView(DataTable table, IFormatProviderSource formatProviderSource)
         {
-            if (table == null)
-                throw new ArgumentNullException(nameof(table));
-            this.table = table;
+            this.table = table ?? throw new ArgumentNullException(nameof(table));
             this.formatProviderSource = formatProviderSource;
 
             ClearCache();
@@ -31,16 +22,12 @@ namespace EventTraceKit.VsExtension
 
         public event EventHandler RowCountChanged;
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
         public DataViewColumnsCollection Columns => new DataViewColumnsCollection(this);
-
         public DataViewColumnsCollection VisibleColumns => new DataViewColumnsCollection(this);
 
         public bool DeferUpdates => deferredUpdateNestingDepth > 0;
 
         public int RowCount { get; private set; }
-
         public int ColumnCount => DataColumnViews?.Length ?? 0;
 
         protected DataColumnViewInfo[] DataColumnViewInfos { get; set; }
@@ -84,9 +71,8 @@ namespace EventTraceKit.VsExtension
         private void RefreshDataColumnViewFromViewInfos()
         {
             DataColumnViews = new DataColumnView[DataColumnViewInfos.Length];
-            Parallel.For(0, DataColumnViewInfos.Length, i => {
+            for (int i = 0; i < DataColumnViewInfos.Length; ++i)
                 DataColumnViews[i] = CreateDataColumnViewFromInfo(DataColumnViewInfos[i]);
-            });
         }
 
         public DataColumnView CreateDataColumnViewFromInfo(DataColumnViewInfo info)
@@ -128,7 +114,6 @@ namespace EventTraceKit.VsExtension
                 ClearCache();
 
             RowCount = newCount;
-            RaisePropertyChanged(rowCountChangedEventArgs);
             RowCountChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -144,6 +129,7 @@ namespace EventTraceKit.VsExtension
 
         private void ClearCache()
         {
+            DataValidityToken = new object();
         }
 
         public object DataValidityToken { get; private set; }
@@ -158,17 +144,6 @@ namespace EventTraceKit.VsExtension
             if (DataColumnViews == null)
                 return -1;
             return Array.IndexOf(DataColumnViews, column);
-        }
-
-        private void RaisePropertyChanged(
-            [CallerMemberName] string propertyName = null)
-        {
-            RaisePropertyChanged(new PropertyChangedEventArgs(propertyName));
-        }
-
-        private void RaisePropertyChanged(PropertyChangedEventArgs eventArgs)
-        {
-            PropertyChanged?.Invoke(this, eventArgs);
         }
     }
 }

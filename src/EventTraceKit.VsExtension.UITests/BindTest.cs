@@ -3,15 +3,12 @@ namespace EventTraceKit.VsExtension.UITests
     using System;
     using System.Collections;
     using System.Collections.Generic;
-    using System.Collections.ObjectModel;
     using System.Linq;
-    using System.Runtime.CompilerServices;
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
-    using System.Windows.Controls.Primitives;
-    using System.Windows.Data;
     using EventTraceKit.VsExtension.Windows;
+    using Microsoft.VisualStudio.Threading;
     using Xunit;
 
     public class BindTest
@@ -95,7 +92,7 @@ namespace EventTraceKit.VsExtension.UITests
             }
 
             var lazySource = new AsyncLazy<IEnumerable>(() => Task.Run(Source));
-            Bind.SetItemsSourceProviderAsync(comboBox, async () => await lazySource);
+            Bind.SetItemsSourceProviderAsync(comboBox, async () => await lazySource.GetValueAsync());
 
             DisplayElement(comboBox);
         }

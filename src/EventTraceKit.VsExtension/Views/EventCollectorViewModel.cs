@@ -19,14 +19,15 @@ namespace EventTraceKit.VsExtension.Views
         private ICommand importProvidersCommand;
         private ICommand removeProviderCommand;
         private ICommand toggleProvidersCommand;
+        private ICommand cutProvidersCommand;
         private ICommand copyProvidersCommand;
         private ICommand pasteProvidersCommand;
         private ICommand addManifestCommand;
         private ICommand browseLogFileCommand;
 
-        private Guid id = Guid.NewGuid();
         private string name;
         private string logFileName;
+        private uint? flushPeriod;
         private uint? bufferSize;
         private uint? minimumBuffers;
         private uint? maximumBuffers;
@@ -52,12 +53,14 @@ namespace EventTraceKit.VsExtension.Views
 
         public override CollectorViewModel DeepClone()
         {
-            var clone = new EventCollectorViewModel();
-            clone.Name = Name;
-            clone.LogFileName = LogFileName;
-            clone.BufferSize = BufferSize;
-            clone.MinimumBuffers = MinimumBuffers;
-            clone.MaximumBuffers = MaximumBuffers;
+            var clone = new EventCollectorViewModel {
+                Name = Name,
+                LogFileName = LogFileName,
+                BufferSize = BufferSize,
+                MinimumBuffers = MinimumBuffers,
+                MaximumBuffers = MaximumBuffers,
+                FlushPeriod = FlushPeriod
+            };
             clone.Providers.AddRange(Providers.Select(x => x.DeepClone()));
             return clone;
         }
@@ -77,6 +80,10 @@ namespace EventTraceKit.VsExtension.Views
         public ICommand ToggleProvidersCommand =>
             toggleProvidersCommand ??
             (toggleProvidersCommand = new AsyncDelegateCommand(ToggleProviders));
+
+        public ICommand CutProvidersCommand =>
+            cutProvidersCommand ??
+            (cutProvidersCommand = new AsyncDelegateCommand(CutProviders));
 
         public ICommand CopyProvidersCommand =>
             copyProvidersCommand ??
@@ -106,6 +113,12 @@ namespace EventTraceKit.VsExtension.Views
         {
             get => logFileName;
             set => SetProperty(ref logFileName, value);
+        }
+
+        public uint? FlushPeriod
+        {
+            get => flushPeriod;
+            set => SetProperty(ref flushPeriod, value);
         }
 
         public uint? BufferSize
@@ -159,6 +172,22 @@ namespace EventTraceKit.VsExtension.Views
             return Task.CompletedTask;
         }
 
+        private Task CutProviders()
+        {
+            var providers = SelectedProviders.ToList();
+            var serializer = new SettingsSerializer();
+            try {
+                var text = serializer.SaveToString(providers);
+                ClipboardUtils.SetText(text);
+            } catch (Exception ex) {
+                MessageHelper.ReportException(ex, "Failed to cut providers.");
+                return Task.CompletedTask;
+            }
+
+            Providers.RemoveRange(providers);
+            return Task.CompletedTask;
+        }
+
         private Task CopyProviders()
         {
             var providers = SelectedProviders.ToList();
@@ -167,7 +196,7 @@ namespace EventTraceKit.VsExtension.Views
                 var text = serializer.SaveToString(providers);
                 ClipboardUtils.SetText(text);
             } catch (Exception ex) {
-                MessageHelper.ReportException(ex, "Failed to copy provider.");
+                MessageHelper.ReportException(ex, "Failed to copy providers.");
             }
 
             return Task.CompletedTask;
@@ -183,7 +212,7 @@ namespace EventTraceKit.VsExtension.Views
             try {
                 newProviders = serializer.LoadFromStringMultiple<EventProviderViewModel>(text);
             } catch (Exception ex) {
-                MessageHelper.ReportDebugException(ex, "Failed to paste provider.");
+                MessageHelper.ReportDebugException(ex, "Failed to paste providers.");
                 return Task.CompletedTask;
             }
 
@@ -293,33 +322,9 @@ namespace EventTraceKit.VsExtension.Views
             descriptor.MaximumBuffers = MaximumBuffers;
             descriptor.Providers.AddRange(
                 from x in Providers where x.IsEnabled select x.CreateDescriptor());
-            //descriptor.FlushPeriod = 100;
+            if (FlushPeriod != null)
+                descriptor.FlushPeriod = TimeSpan.FromMilliseconds(FlushPeriod.Value);
             return descriptor;
-        }
-    }
-
-    public static class StringExtensions
-    {
-        public static string MakeNumberedCopy(this string fullString, ISet<string> usedStrings = null)
-        {
-            var match = Regex.Match(fullString, @"\A(?<str>.*) \(Copy(?: (?<num>\d+))?\)\z");
-
-            string str;
-            int num;
-            if (match.Success) {
-                str = match.Groups["str"].Value;
-                num = match.Groups["num"].Success ? int.Parse(match.Groups["num"].Value) : 1;
-            } else {
-                str = fullString;
-                num = 0;
-            }
-
-            while (true) {
-                ++num;
-                string copiedStr = str + (num == 1 ? " (Copy)" : $" (Copy {num})");
-                if (usedStrings == null || !usedStrings.Contains(copiedStr))
-                    return copiedStr;
-            }
         }
     }
 }

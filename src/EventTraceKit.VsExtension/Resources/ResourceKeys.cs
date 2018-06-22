@@ -1,7 +1,7 @@
 namespace EventTraceKit.VsExtension.Resources
 {
     using System;
-    using EventTraceKit.VsExtension.Styles;
+    using EventTraceKit.VsExtension.Resources.Styles;
 
     public static class ResourceKeys
     {

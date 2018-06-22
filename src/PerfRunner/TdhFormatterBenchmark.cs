@@ -5,7 +5,6 @@ namespace PerfRunner
     using BenchmarkDotNet.Attributes;
     using BenchmarkDotNet.Attributes.Jobs;
     using EventTraceKit;
-    using EventTraceKit.VsExtension;
     using EventTraceKit.VsExtension.Native;
 
     [ClrJob(true)]
@@ -50,14 +49,6 @@ namespace PerfRunner
         public void Cleanup()
         {
             allocator.Dispose();
-        }
-
-        [Benchmark]
-        public void Managed()
-        {
-            var message = TdhHelper.GetMessageForEventRecord(
-                recordPtr, infoPtr, context, formatProvider);
-            Debug.Assert(message == "Foo 32 Bar");
         }
 
         [Benchmark]

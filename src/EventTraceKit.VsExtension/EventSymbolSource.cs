@@ -1,7 +1,7 @@
 namespace EventTraceKit.VsExtension
 {
     using System;
-    using System.Collections.Generic;
+    using System.Collections.Concurrent;
     using System.Threading;
 
     public interface IEventSymbolSource
@@ -11,7 +11,7 @@ namespace EventTraceKit.VsExtension
 
     public class EventSymbolSource : IEventSymbolSource
     {
-        private Dictionary<EventKey, string> symbols = new Dictionary<EventKey, string>();
+        private ConcurrentDictionary<EventKey, string> symbols = new ConcurrentDictionary<EventKey, string>();
 
         public string TryGetSymbol(EventKey eventKey)
         {
@@ -19,7 +19,7 @@ namespace EventTraceKit.VsExtension
             return symbol;
         }
 
-        public void Update(Dictionary<EventKey, string> newSymbols)
+        public void Update(ConcurrentDictionary<EventKey, string> newSymbols)
         {
             Interlocked.Exchange(ref symbols, newSymbols);
         }
@@ -43,8 +43,7 @@ namespace EventTraceKit.VsExtension
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            return obj is EventKey && Equals((EventKey)obj);
+            return obj is EventKey key && Equals(key);
         }
 
         public override int GetHashCode()

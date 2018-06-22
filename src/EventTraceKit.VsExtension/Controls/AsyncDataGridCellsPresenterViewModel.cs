@@ -1,10 +1,8 @@
 namespace EventTraceKit.VsExtension.Controls
 {
     using System;
-    using System.Collections.Generic;
     using System.Windows;
     using EventTraceKit.VsExtension.Windows;
-    using Primitives;
 
     public interface IVirtualCollection
     {
@@ -69,57 +67,17 @@ namespace EventTraceKit.VsExtension.Controls
             }
         }
 
-        public object DataValidityToken => null;
-
-        public void RequestUpdate(bool updateFromViewModel)
+        public void RequestUpdate()
         {
             VerifyAccess();
             ValidateIsReady();
-            advModel.RequestUpdate(updateFromViewModel);
+            advModel.RequestUpdate();
         }
 
         private void ValidateIsReady()
         {
             if (!IsReady)
                 throw new InvalidOperationException();
-        }
-
-        internal void PrefetchAllDataAndQueueUpdateRender(
-            AsyncDataGridCellsPresenter cellPresenter, int firstVisibleColumn,
-            int lastVisibleColumn, int firstVisibleRow, int lastVisibleRow,
-            Action<bool> selectionPrefetched, Action<bool> callBackWhenFinished)
-        {
-            advModel.VerifyIsReady();
-
-            IList<AsyncDataGridColumn> visibleColumns = cellPresenter.VisibleColumns;
-            for (int i = firstVisibleColumn; i <= lastVisibleColumn; ++i) {
-                AsyncDataGridColumn column = visibleColumns[i];
-                column.IsSafeToReadCellValuesFromUIThread = true; // FIXME: false
-            }
-
-            advModel.PerformAsyncReadOperation(cancellationToken => {
-                selectionPrefetched(cancellationToken.IsCancellationRequested);
-                if (!cancellationToken.IsCancellationRequested) {
-                    var list = new List<AsyncDataGridColumn>();
-                    for (int m = firstVisibleColumn; m <= lastVisibleColumn; m++) {
-                        AsyncDataGridColumn item = visibleColumns[m];
-                        list.Add(item);
-                    }
-
-                    int viewportSizeHint = (lastVisibleRow - firstVisibleRow) + 1;
-                    foreach (AsyncDataGridColumn column in list) {
-                        for (int i = firstVisibleRow; i <= lastVisibleRow; ++i) {
-                            if (cancellationToken.IsCancellationRequested)
-                                break;
-                            column.GetCellValue(i, viewportSizeHint);
-                        }
-                        column.IsSafeToReadCellValuesFromUIThread = true;
-                        cellPresenter.QueueRender(true);
-                    }
-                }
-
-                callBackWhenFinished(cancellationToken.IsCancellationRequested);
-            });
         }
     }
 }

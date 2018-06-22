@@ -2,8 +2,9 @@ namespace EventTraceKit.VsExtension.Native
 {
     using System;
 
+    /// <native>MOVEFILE_FLAGS</native>
     [Flags]
-    public enum MOVEFILE_FLAGS
+    public enum MoveFileFlags
     {
         NONE = 0x0,
         REPLACE_EXISTING = 0x1,

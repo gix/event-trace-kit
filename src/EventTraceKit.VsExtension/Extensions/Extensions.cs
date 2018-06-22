@@ -1,43 +1,6 @@
 namespace EventTraceKit.VsExtension.Extensions
 {
     using System;
-    using System.Linq;
-    using System.Windows;
-    using System.Windows.Controls;
-
-    public static class DataObjectExtensions
-    {
-        public static bool TryGetArray<T>(this IDataObject data, out T[] payload)
-        {
-            if (data.GetDataPresent(typeof(T))) {
-                payload = new[] { (T)data.GetData(typeof(T)) };
-                return true;
-            }
-
-            if (data.GetDataPresent(typeof(T[]))) {
-                payload = (T[])data.GetData(typeof(T[]));
-                return true;
-            }
-
-            payload = null;
-            return false;
-        }
-    }
-
-    public static class ItemsControlExtensions
-    {
-        public static object[] GetOrderedSelectedItemsArray(
-            this ListBox listBox)
-        {
-            return listBox.SelectedItems.Cast<object>().OrderBy(x => listBox.Items.IndexOf(x)).ToList().ConvertToTypedArray();
-        }
-
-        public static ListBox GetParentListBox(
-            this ListBoxItem item)
-        {
-            return (ListBox)ItemsControl.ItemsControlFromItemContainer(item);
-        }
-    }
 
     public static class Extensions
     {
@@ -45,5 +8,43 @@ namespace EventTraceKit.VsExtension.Extensions
         {
             return new DateTime(((long)time.dwHighDateTime << 32) | time.dwLowDateTime);
         }
+
+        public static bool IsArithmetic(this Type type)
+        {
+            if (type.IsEnum)
+                return false;
+            switch (Type.GetTypeCode(type)) {
+                case TypeCode.SByte:
+                case TypeCode.Byte:
+                case TypeCode.Int16:
+                case TypeCode.UInt16:
+                case TypeCode.Int32:
+                case TypeCode.UInt32:
+                case TypeCode.Int64:
+                case TypeCode.UInt64:
+                case TypeCode.Single:
+                case TypeCode.Double:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        public static bool IsUnsignedInt(this Type type)
+        {
+            if (type.IsEnum)
+                return false;
+            switch (Type.GetTypeCode(type)) {
+                case TypeCode.SByte:
+                case TypeCode.Byte:
+                case TypeCode.UInt16:
+                case TypeCode.UInt32:
+                case TypeCode.UInt64:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
     }
 }

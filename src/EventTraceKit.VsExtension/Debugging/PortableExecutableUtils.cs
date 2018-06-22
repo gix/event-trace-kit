@@ -1,4 +1,4 @@
-namespace EventTraceKit.VsExtension
+namespace EventTraceKit.VsExtension.Debugging
 {
     using System.IO;
     using System.Reflection;

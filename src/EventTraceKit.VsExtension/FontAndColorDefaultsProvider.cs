@@ -6,7 +6,6 @@ namespace EventTraceKit.VsExtension
     using EventTraceKit.VsExtension.Resources.Styles;
     using Microsoft.VisualStudio;
     using Microsoft.VisualStudio.Shell.Interop;
-    using Styles;
 
     [Guid(ServiceId)]
     public class FontAndColorDefaultsProvider : IVsFontAndColorDefaultsProvider

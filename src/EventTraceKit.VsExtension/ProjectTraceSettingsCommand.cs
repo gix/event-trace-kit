@@ -3,25 +3,28 @@ namespace EventTraceKit.VsExtension
     using System;
     using System.ComponentModel.Design;
     using System.Globalization;
+    using EventTraceKit.VsExtension.Extensions;
     using EventTraceKit.VsExtension.Views;
+    using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
 
-    internal sealed class ProjectTraceSettingsCommand : MenuCommand
+    internal sealed class ProjectTraceSettingsCommand : OleMenuCommand
     {
-        private readonly IVsMonitorSelection vsMonitorSelection;
+        private readonly Func<IVsMonitorSelection> vsMonitorSelectionFactory;
         private readonly Func<ProjectInfo, TraceSettingsViewModel> viewModelFactory;
 
         public ProjectTraceSettingsCommand(
-            IVsMonitorSelection vsMonitorSelection, Func<ProjectInfo, TraceSettingsViewModel> viewModelFactory)
+            Func<IVsMonitorSelection> vsMonitorSelectionFactory,
+            Func<ProjectInfo, TraceSettingsViewModel> viewModelFactory)
             : base(null, new CommandID(PkgCmdId.ProjectContextMenuCmdSet, PkgCmdId.cmdidTraceSettings))
         {
-            this.vsMonitorSelection = vsMonitorSelection;
-            this.viewModelFactory = viewModelFactory;
+            this.vsMonitorSelectionFactory = vsMonitorSelectionFactory ?? throw new ArgumentNullException(nameof(vsMonitorSelectionFactory));
+            this.viewModelFactory = viewModelFactory ?? throw new ArgumentNullException(nameof(viewModelFactory));
         }
 
         public override void Invoke()
         {
-            var project = vsMonitorSelection.GetSelectedProject();
+            var project = vsMonitorSelectionFactory()?.GetSelectedProject();
             if (project == null || !IsSupported(project)) {
                 var projectName = project != null ? project.Name : string.Empty;
                 var errorMessage = string.IsNullOrEmpty(projectName)

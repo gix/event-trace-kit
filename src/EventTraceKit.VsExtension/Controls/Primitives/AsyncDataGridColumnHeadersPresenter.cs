@@ -57,8 +57,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         /// </summary>
         public AsyncDataGridColumnsViewModel ViewModel
         {
-            get { return (AsyncDataGridColumnsViewModel)GetValue(ViewModelProperty); }
-            set { SetValue(ViewModelProperty, value); }
+            get => (AsyncDataGridColumnsViewModel)GetValue(ViewModelProperty);
+            set => SetValue(ViewModelProperty, value);
         }
 
         #endregion
@@ -80,8 +80,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         /// </summary>
         public AsyncDataGridColumn ExpanderHeader
         {
-            get { return (AsyncDataGridColumn)GetValue(ExpanderHeaderProperty); }
-            set { SetValue(ExpanderHeaderProperty, value); }
+            get => (AsyncDataGridColumn)GetValue(ExpanderHeaderProperty);
+            set => SetValue(ExpanderHeaderProperty, value);
         }
 
         #endregion

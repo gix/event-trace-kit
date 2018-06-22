@@ -2,6 +2,7 @@ namespace EventTraceKit.VsExtension.Windows
 {
     using System;
     using System.Windows.Media;
+    using EventTraceKit.VsExtension.Windows.Media;
 
     public static class ColorExtensions
     {

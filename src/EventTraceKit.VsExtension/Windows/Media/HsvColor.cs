@@ -1,4 +1,4 @@
-namespace EventTraceKit.VsExtension
+namespace EventTraceKit.VsExtension.Windows.Media
 {
     public struct HsvColor
     {

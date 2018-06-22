@@ -1,5 +1,6 @@
 namespace EventTraceKit.VsExtension.Serialization
 {
+    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
@@ -20,12 +21,12 @@ namespace EventTraceKit.VsExtension.Serialization
 
         public void Save(object element, Stream stream)
         {
-            serializer.Save(ConvertToSerializedShape<TSerializedBaseType>(element), stream);
+            serializer.Save(ConvertToSerializedShape<TSerializedBaseType, object>(element), stream);
         }
 
-        public void Save(IEnumerable<object> elements, Stream stream)
+        public void Save<T>(IEnumerable<T> elements, Stream stream)
         {
-            serializer.Save(elements.Select(ConvertToSerializedShape<TSerializedBaseType>), stream);
+            serializer.Save(elements.Select(ConvertToSerializedShape<TSerializedBaseType, T>), stream);
         }
 
         public T Load<T>(Stream stream)
@@ -40,7 +41,7 @@ namespace EventTraceKit.VsExtension.Serialization
                 .Select(ConvertFromSerializedShape<T>).ToList();
         }
 
-        public TSerialized ConvertToSerializedShape<TSerialized>(object element)
+        public TSerialized ConvertToSerializedShape<TSerialized, T>(T element)
             where TSerialized : class, TSerializedBaseType
         {
             if (element is TSerialized serializedType)
@@ -50,6 +51,9 @@ namespace EventTraceKit.VsExtension.Serialization
 
             var sourceType = element.GetType();
             var targetType = sourceType.GetCustomAttribute<SerializedShapeAttribute>()?.Shape;
+            if (targetType == null)
+                throw new InvalidOperationException("Source type '{sourceType}' has no serialized shape");
+
             return (TSerialized)mapper.Map(element, sourceType, targetType);
         }
 

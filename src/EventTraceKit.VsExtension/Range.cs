@@ -1,7 +1,7 @@
 namespace EventTraceKit.VsExtension
 {
     using System;
-    
+
     /// <summary>Half-open interval <c>[Begin, End)</c>.</summary>
     public readonly struct Range
         : IEquatable<Range>, IComparable<Range>, IComparable<int>

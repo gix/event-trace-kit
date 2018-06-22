@@ -329,11 +329,10 @@ namespace EventTraceKit.VsExtension.Controls
             AsyncDataGridColumn column, DependencyPropertyChangedEventArgs args)
         {
             if (!isApplyingPreset)
-                Model.RequestUpdate(false);
+                Model.RequestUpdate();
 
-            if (args.Property == AsyncDataGridColumn.WidthProperty) {
+            if (args.Property == AsyncDataGridColumn.WidthProperty)
                 ColumnsChanged?.Invoke(this, EventArgs.Empty);
-            }
         }
 
         public bool IsFrozenVisibleColumn(AsyncDataGridColumn column)

@@ -60,6 +60,7 @@
           <ContextMenu>
             <MenuItem Command="v:ExtensionCommands.Toggle"/>
             <Separator/>
+            <MenuItem Command="ApplicationCommands.Cut"/>
             <MenuItem Command="ApplicationCommands.Copy"/>
             <MenuItem Command="ApplicationCommands.Paste"/>
             <MenuItem Command="ApplicationCommands.Delete"/>
@@ -97,7 +98,7 @@
                 <KeyBinding Key="Enter" Command="{Binding SaveAndSwitchFromRenamingModeCommand}"/>
                 <KeyBinding Key="Escape" Command="{Binding DiscardAndSwitchFromRenamingModeCommand}"/>
               </Grid.InputBindings>
-              <TextBox x:Name="ProfileNameTextBox" Grid.Column="0"
+              <TextBox Grid.Column="0"
                        Text="{Binding NewName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=true}"
                        Margin="1" Padding="0"
                        TextAlignment="Left"
@@ -110,7 +111,7 @@
                        AcceptsReturn="False"
                        AcceptsTab="False"
                        AllowDrop="False"
-                       Loaded="ProfileNameTextBox_OnLoaded"/>
+                       Loaded="ProviderNameTextBox_OnLoaded"/>
             </Grid>
           </DataTemplate>
         </c:ToggleContentControl.CheckedTemplate>
@@ -118,15 +119,21 @@
     </DataTemplate>
   </FrameworkElement.Resources>
 
+  <!-- This list must be focusable via tab navigation and mouse clicks since it
+       supports pasting and may be empty. -->
   <ListBox x:Name="ProvidersListBox"
            ItemsSource="{Binding Source={StaticResource SortedProviders}}"
            BorderThickness="1"
            SelectionMode="Extended"
            SelectedItem="{Binding SelectedProvider}"
            SelectionChanged="OnSelectionChanged"
-           FocusVisualStyle="{x:Null}"
-           ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+           ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+           Focusable="True"
+           IsTabStop="True"
+           MouseDown="ProvidersListBox_OnMouseDown">
     <i:Interaction.Behaviors>
+      <w:CommandBridge SourceCommand="ApplicationCommands.Cut"
+                       TargetCommand="{Binding CutProvidersCommand}"/>
       <w:CommandBridge SourceCommand="ApplicationCommands.Copy"
                        TargetCommand="{Binding CopyProvidersCommand}"/>
       <w:CommandBridge SourceCommand="ApplicationCommands.Paste"

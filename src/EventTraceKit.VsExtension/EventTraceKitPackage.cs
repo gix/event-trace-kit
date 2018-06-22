@@ -5,6 +5,7 @@ namespace EventTraceKit.VsExtension
     using System.IO;
     using System.Runtime.InteropServices;
     using System.Threading;
+    using System.Threading.Tasks;
     using System.Windows;
     using EventTraceKit.VsExtension.Resources;
     using EventTraceKit.VsExtension.Settings;
@@ -15,25 +16,22 @@ namespace EventTraceKit.VsExtension
     using Microsoft.VisualStudio.Shell.Interop;
     using Task = System.Threading.Tasks.Task;
 
+    [Guid(PackageGuidString)]
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
-    [InstalledProductRegistration("#110", "#112", productId: "1.0", IconResourceID = 400)]
+    [InstalledProductRegistration("#110", "#112", "0.1.1", IconResourceID = 400)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [ProvideToolWindow(typeof(TraceLogToolWindow),
         Style = VsDockStyle.Tabbed,
         Window = VsGuids.OutputWindowFrameString,
         Orientation = ToolWindowOrientation.Right)]
-    [ProvideProfile(typeof(EventTraceKitProfileManager), "EventTraceKit", "General",
-                    1001, 1002, false, DescriptionResourceID = 1003)]
     //[FontAndColorsRegistration(
     //    "Trace Log", FontAndColorDefaultsProvider.ServiceId,
     //    TraceLogFontAndColorDefaults.CategoryIdString)]
-    [Guid(PackageGuidString)]
-    [ProvideService(typeof(STraceController))]
+    [ProvideService(typeof(STraceController), IsAsyncQueryable = true)]
     public class EventTraceKitPackage : AsyncPackage, IDiagLog
     {
         public const string PackageGuidString = "7867DA46-69A8-40D7-8B8F-92B0DE8084D8";
 
-        private Lazy<TraceLogToolWindow> traceLogPane;
         private IVsUIShell vsUiShell;
 
         private DefaultTraceController traceController;
@@ -57,49 +55,48 @@ namespace EventTraceKit.VsExtension
             //resourceSynchronizer = new ResourceSynchronizer(
             //    fncStorage, Application.Current.Resources.MergedDictionaries);
 
-            IServiceContainer container = this;
             //container.AddService(
             //    typeof(SVsFontAndColorDefaultsProvider), CreateService, true);
-            container.AddService(typeof(STraceController), CreateService, false);
+            AddService(typeof(STraceController), CreateServiceAsync);
 
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            // -----------------------------------------------------------------
+            await JoinableTaskFactory.SwitchToMainThreadAsync();
 
             Application.Current.Resources.MergedDictionaries.Add(
                 new TraceLogResourceDictionary());
 
+            outputWindow = this.GetService<SVsOutputWindow, IVsOutputWindow>();
             vsUiShell = this.GetService<SVsUIShell, IVsUIShell>();
             var shell = this.GetService<SVsShell, IVsShell>();
-
-            outputWindow = this.GetService<SVsOutputWindow, IVsOutputWindow>();
 
             var monitorSelection = this.GetService<SVsShellMonitorSelection, IVsMonitorSelection>();
             var solutionBuildManager = this.GetService<SVsSolutionBuildManager, IVsSolutionBuildManager>();
             var dte = this.GetService<SDTE, EnvDTE.DTE>();
-            solutionBrowser = new DteSolutionBrowser(dte);
 
+            solutionBrowser = new DteSolutionBrowser(dte);
             vsSolutionManager = new VsSolutionManager(
                 solutionBrowser, monitorSelection, solutionBuildManager, this);
 
             string appDataDirectory = GetAppDataDirectory(shell);
             settings = new SettingsServiceImpl(vsSolutionManager, appDataDirectory);
-
-            traceLogPane = new Lazy<TraceLogToolWindow>(CreateTraceLogToolWindow);
         }
 
         protected override void Dispose(bool disposing)
         {
-            traceController.Dispose();
+            traceController?.Dispose();
             vsSolutionManager?.Dispose();
 
             base.Dispose(disposing);
         }
 
-        private object CreateService(IServiceContainer container, Type service)
+        private Task<object> CreateServiceAsync(
+            IAsyncServiceContainer asyncServiceContainer,
+            CancellationToken cancellationToken, Type serviceType)
         {
             //if (service.IsEquivalentTo(typeof(SVsFontAndColorDefaultsProvider)))
             //    return new SVsFontAndColorDefaultsProvider(resourceSynchronizer);
-            if (service.IsEquivalentTo(typeof(STraceController)))
-                return traceController;
+            if (serviceType.IsEquivalentTo(typeof(STraceController)))
+                return Task.FromResult<object>(traceController);
 
             return null;
         }
@@ -117,7 +114,11 @@ namespace EventTraceKit.VsExtension
             TraceLogToolContent ContentFactory(IServiceProvider sp)
             {
                 var traceLog = new TraceLogToolViewModel(
-                    settings, traceController, solutionBrowser, vsUiShell);
+                    settings,
+                    traceController,
+                    store => new TraceSettingsViewModel(
+                        new SolutionTraceSettingsContext(solutionBrowser), store),
+                    vsUiShell);
 
                 var commandService = sp.GetService<IMenuCommandService>();
                 if (commandService != null)
@@ -148,8 +149,6 @@ namespace EventTraceKit.VsExtension
             if (menuCommandService == null)
                 return;
 
-            var vsMonitorSelection = await this.GetServiceAsync<IVsMonitorSelection>();
-
             menuCommandService.AddCommand(
                 new MenuCommand(
                     (s, e) => this.ShowToolWindow<TraceLogToolWindow>(),
@@ -157,9 +156,10 @@ namespace EventTraceKit.VsExtension
 
             menuCommandService.AddCommand(
                 new ProjectTraceSettingsCommand(
-                    vsMonitorSelection,
+                    this.GetService<IVsMonitorSelection>,
                     x => new TraceSettingsViewModel(
-                        settings.GetProjectStore(x), solutionBrowser)));
+                        new SolutionTraceSettingsContext(solutionBrowser),
+                        settings.GetProjectStore(x))));
         }
 
         void IDiagLog.WriteLine(string format, params object[] args)

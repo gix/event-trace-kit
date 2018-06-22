@@ -6,6 +6,7 @@ namespace EventTraceKit.VsExtension
     using System.Linq;
     using EnvDTE;
     using EnvDTE80;
+    using EventTraceKit.VsExtension.Extensions;
     using Microsoft.VisualStudio;
     using Microsoft.VisualStudio.VCProjectEngine;
     using VSLangProj;

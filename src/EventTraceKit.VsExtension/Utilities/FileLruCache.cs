@@ -1,18 +1,33 @@
-namespace EventTraceKit.VsExtension
+namespace EventTraceKit.VsExtension.Utilities
 {
     using System;
     using System.Diagnostics;
     using System.IO;
     using System.Threading;
 
-    internal class FileCache<T> : IDisposable
+    /// <summary>
+    ///   Represets a thread-safe LRU-cache using file paths as keys. Cache entries
+    ///   are invalided whenever the associated file changes. Discards the least
+    ///   recently used items first.
+    /// </summary>
+    /// <typeparam name="T">The cached value type.</typeparam>
+    internal sealed class FileLruCache<T> : IDisposable
         where T : class
     {
         private readonly object mutex = new object();
         private readonly Entry[] entries;
         private readonly Func<string, T> factory;
 
-        public FileCache(int cacheSlots, Func<string, T> factory)
+        /// <summary>
+        ///   Initializes a new instance of the <see cref="FileLruCache{T}"/>
+        ///   class.
+        /// </summary>
+        /// <param name="cacheSlots">The number of available cache slots.</param>
+        /// <param name="factory">
+        ///   The value factory used by the cache to create new entries. Receives
+        ///   the file path passed to <see cref="Get"/>.
+        /// </param>
+        public FileLruCache(int cacheSlots, Func<string, T> factory)
         {
             if (cacheSlots < 1)
                 throw new ArgumentOutOfRangeException(nameof(cacheSlots));
@@ -23,6 +38,11 @@ namespace EventTraceKit.VsExtension
             entries = new Entry[cacheSlots];
         }
 
+        /// <summary>Gets the cached value for the specified file path.</summary>
+        /// <param name="filePath">
+        ///   The file path identifying the cache entry.
+        /// </param>
+        /// <returns>The cached value associated with the file path.</returns>
         public T Get(string filePath)
         {
             if (filePath == null)
@@ -37,6 +57,16 @@ namespace EventTraceKit.VsExtension
             return entry.GetValue();
         }
 
+        /// <summary>
+        ///   Removes the cache entry associated with the specified file path.
+        /// </summary>
+        /// <param name="filePath">
+        ///   The file path identifying the cache entry.
+        /// </param>
+        /// <returns>
+        ///   <see langword="true"/> if the entry is successfully found and removed;
+        ///   otherwise <see langword="false"/>.
+        /// </returns>
         public bool Remove(string filePath)
         {
             if (filePath == null)
@@ -57,6 +87,7 @@ namespace EventTraceKit.VsExtension
             return false;
         }
 
+        /// <summary>Removes all entries from the cache.</summary>
         public void Clear()
         {
             lock (mutex) {
@@ -111,7 +142,7 @@ namespace EventTraceKit.VsExtension
 
         private sealed class Entry : IDisposable
         {
-            private readonly FileCache<T> cache;
+            private readonly FileLruCache<T> cache;
             private readonly Func<string, T> factory;
             private readonly FileSystemWatcher watcher;
             private readonly Lazy<T> lazyValue;
@@ -119,7 +150,7 @@ namespace EventTraceKit.VsExtension
             private T value;
             private DateTime lastAccessTime;
 
-            public Entry(string filePath, FileCache<T> cache, int slot, Func<string, T> factory)
+            public Entry(string filePath, FileLruCache<T> cache, int slot, Func<string, T> factory)
             {
                 this.cache = cache;
                 this.factory = factory;
@@ -162,8 +193,8 @@ namespace EventTraceKit.VsExtension
 
             public static int Compare(Entry lhs, Entry rhs)
             {
-                if (ReferenceEquals(null, lhs)) return 1;
-                if (ReferenceEquals(null, rhs)) return -1;
+                if (lhs is null) return 1;
+                if (rhs is null) return -1;
                 if (ReferenceEquals(lhs, rhs)) return 0;
                 return lhs.lastAccessTime.CompareTo(rhs.lastAccessTime);
             }

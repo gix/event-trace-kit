@@ -86,10 +86,6 @@ EVENT_RECORD* CopyEvent(Allocator& alloc, EVENT_RECORD const* record)
 void NullCallback(size_t, void*)
 {
 }
-bool AlwaysFilter(void*, void*, size_t)
-{
-    return true;
-}
 
 class FilteredTraceLog : public IFilteredTraceLog
 {
@@ -97,7 +93,7 @@ public:
     explicit FilteredTraceLog(TraceLogEventsChangedCallback* callback = nullptr,
                               TraceLogFilter* filter = nullptr)
         : filterObj(filter)
-        , filter(filter ? filter->Filter : &AlwaysFilter)
+        , filter(filter ? filter->Filter : nullptr)
         , changedCallback(callback ? callback : &NullCallback)
         , changedCallbackState(nullptr)
     {
@@ -140,8 +136,6 @@ public:
         static_cast<FilteredTraceLog*>(state)->changedEvent.Set();
     }
 
-    ManualResetEventSlim changedEvent;
-
 private:
     void ThreadProc()
     {
@@ -156,7 +150,7 @@ private:
             auto const newFilter = pendingFilter.exchange(nullptr);
             if (newFilter) {
                 filterObj = std::unique_ptr<TraceLogFilter>(newFilter);
-                filter = filterObj->Filter ? filterObj->Filter : &AlwaysFilter;
+                filter = filterObj->Filter;
                 Rebuild();
                 continue;
             }
@@ -211,7 +205,8 @@ private:
 
     bool MatchesFilter(EventInfo const& evt) const
     {
-        return filter(const_cast<void*>(static_cast<void const*>(evt.Record())),
+        return !filter ||
+               filter(const_cast<void*>(static_cast<void const*>(evt.Record())),
                       const_cast<void*>(static_cast<void const*>(evt.Info())),
                       evt.InfoSize());
     }
@@ -250,6 +245,7 @@ private:
     std::deque<EventInfo> events;
     std::atomic<size_t> eventCount{};
     std::atomic<TraceLogFilter*> pendingFilter{};
+    ManualResetEventSlim changedEvent;
 
     std::atomic<bool> running{};
     std::thread filterThread;
@@ -320,8 +316,7 @@ std::unique_ptr<ITraceLog> CreateEtwTraceLog(TraceLogEventsChangedCallback* call
 }
 
 std::tuple<std::unique_ptr<ITraceLog>, std::unique_ptr<IFilteredTraceLog>>
-CreateFilteredTraceLog(TraceLogEventsChangedCallback* callback,
-                       TraceLogFilter* filter)
+CreateFilteredTraceLog(TraceLogEventsChangedCallback* callback, TraceLogFilter* filter)
 {
     auto filteredLog = std::make_unique<FilteredTraceLog>(callback, filter);
     auto token = TraceDataToken(TraceDataContext::GlobalContext());

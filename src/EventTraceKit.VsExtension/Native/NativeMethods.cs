@@ -24,7 +24,7 @@ namespace EventTraceKit.VsExtension.Native
         [return: MarshalAs(UnmanagedType.Bool)]
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         public static extern bool MoveFileEx(
-            string lpExistingFilename, string lpNewFileName, MOVEFILE_FLAGS flags);
+            string lpExistingFilename, string lpNewFileName, MoveFileFlags flags);
 
         public static int HResultFromWin32(int errorCode)
         {

@@ -508,7 +508,7 @@ namespace EventTraceKit.VsExtension
         }
 
         public Tuple<DataTable, AsyncDataViewModelPreset> CreateTable(
-            IEventInfoSource eventInfoSource, EventSymbolSource symbolSource)
+            IEventInfoSource eventInfoSource, EventSymbolSource symbolSource = null)
         {
             var formatterPool = new ObjectPool<IMessageFormatter>(() => new NativeTdhFormatter(), 10);
             var info = new CrimsonEventsInfo(eventInfoSource, formatterPool, symbolSource);
@@ -749,6 +749,8 @@ namespace EventTraceKit.VsExtension
 
             public string ProjectSymbol(int index)
             {
+                if (eventSymbolSource == null)
+                    return null;
                 var info = GetTraceEventInfo(index);
                 var key = new EventKey(info.ProviderId, info.Id, info.Version);
                 return eventSymbolSource.TryGetSymbol(key);

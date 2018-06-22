@@ -29,6 +29,7 @@ namespace EventTraceKit.VsExtension.Views
 
         public static IntPtr GetDialogOwnerHwnd()
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             var shell = ServiceProvider.GlobalProvider?.GetService<SVsUIShell, IVsUIShell>();
             if (shell != null && shell.GetDialogOwnerHwnd(out var owner) >= 0)
                 return owner;

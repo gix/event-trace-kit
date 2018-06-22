@@ -5,7 +5,6 @@ namespace EventTraceKit.VsExtension.Views
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Threading;
-    using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Data;
     using System.Windows.Threading;
@@ -18,7 +17,6 @@ namespace EventTraceKit.VsExtension.Views
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
     using Task = System.Threading.Tasks.Task;
-    using TraceLogFilter = EventTraceKit.VsExtension.Filtering.TraceLogFilter;
 
     public interface IFilterable
     {
@@ -30,14 +28,11 @@ namespace EventTraceKit.VsExtension.Views
     {
         private readonly ISettingsService settings;
         private readonly ITraceController traceController;
-        private readonly ISolutionBrowser solutionBrowser;
+        private readonly Func<ISettingsStore, TraceSettingsViewModel> traceSettingsViewModelFactory;
         private readonly IVsUIShell uiShell;
 
         private SettingsStoreWrapper globalStore;
         private SettingsStoreWrapper ambientStore;
-
-        private readonly TaskFactory taskFactory;
-        private readonly EventSymbolSource eventSymbolSource = new EventSymbolSource();
 
         private readonly DispatcherTimer updateStatsTimer;
         protected TraceProfileDescriptor traceProfile = new TraceProfileDescriptor();
@@ -67,23 +62,15 @@ namespace EventTraceKit.VsExtension.Views
         private bool isFilterEnabled;
         private TraceLogFilter currentFilter;
 
-        public TraceLogFilter Filter
-        {
-            get => currentFilter;
-            set
-            {
-                currentFilter = value;
-                RefreshFilter();
-            }
-        }
-
         public TraceLogToolViewModel(
             ISettingsService settings, ITraceController traceController,
-            ISolutionBrowser solutionBrowser = null, IVsUIShell uiShell = null)
+            Func<ISettingsStore, TraceSettingsViewModel> traceSettingsViewModelFactory,
+            IVsUIShell uiShell = null)
         {
             this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
             this.traceController = traceController ?? throw new ArgumentNullException(nameof(traceController));
-            this.solutionBrowser = solutionBrowser;
+            this.traceSettingsViewModelFactory = traceSettingsViewModelFactory ??
+                                                 throw new ArgumentNullException(nameof(traceSettingsViewModelFactory));
             this.uiShell = uiShell;
 
             settings.SettingsLayerChanged += OnSettingsLayerChanged;
@@ -92,7 +79,7 @@ namespace EventTraceKit.VsExtension.Views
             traceController.SessionStarted += OnSessionStarted;
             traceController.SessionStopped += OnSessionStopped;
 
-            var tableTuple = new GenericEventsViewModelSource().CreateTable(this, eventSymbolSource);
+            var tableTuple = new GenericEventsViewModelSource().CreateTable(this);
             var dataTable = tableTuple.Item1;
             var templatePreset = tableTuple.Item2;
 
@@ -119,9 +106,6 @@ namespace EventTraceKit.VsExtension.Views
                 SynchronizationContext.SetSynchronizationContext(
                     new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
             }
-
-            var scheduler = TaskScheduler.FromCurrentSynchronizationContext();
-            taskFactory = new TaskFactory(scheduler);
 
             updateStatsTimer = new DispatcherTimer(DispatcherPriority.Background);
             updateStatsTimer.Interval = TimeSpan.FromSeconds(1);
@@ -220,8 +204,10 @@ namespace EventTraceKit.VsExtension.Views
             get => autoScroll;
             set
             {
-                if (SetProperty(ref autoScroll, value))
+                if (SetProperty(ref autoScroll, value)) {
                     globalStore.AutoScroll = value;
+                    uiShell?.UpdateCommandUI(0);
+                }
             }
         }
 
@@ -375,8 +361,7 @@ namespace EventTraceKit.VsExtension.Views
         private void Configure()
         {
             if (settingsViewModel == null)
-                settingsViewModel = new TraceSettingsViewModel(
-                    ambientStore, solutionBrowser);
+                settingsViewModel = traceSettingsViewModelFactory(ambientStore);
 
             var window = new TraceSettingsWindow();
             window.DataContext = settingsViewModel;
@@ -411,16 +396,14 @@ namespace EventTraceKit.VsExtension.Views
 
         protected void OpenFilterEditor()
         {
-            var viewModel = new FilterDialogViewModel();
+            var viewModel = new FilterDialogViewModel(this);
             viewModel.SetFilter(currentFilter);
 
             var dialog = new FilterDialog { DataContext = viewModel };
             if (dialog.ShowModal() != true)
                 return;
 
-            currentFilter = viewModel.GetFilter();
-            IsFilterEnabled = true;
-            RefreshFilter();
+            Filter = viewModel.GetFilter();
         }
 
         private void UpdateStats()
@@ -525,14 +508,24 @@ namespace EventTraceKit.VsExtension.Views
             AutoScroll = !AutoScroll;
         }
 
+        public TraceLogFilter Filter
+        {
+            get => currentFilter;
+            set
+            {
+                currentFilter = value;
+                EnsureFilter();
+            }
+        }
+
         public bool IsFilterEnabled
         {
             get => isFilterEnabled;
             set
             {
                 if (isFilterEnabled != value) {
-                    ambientStore.IsFilterEnabled = value;
                     isFilterEnabled = value;
+                    ambientStore.IsFilterEnabled = value;
                     RefreshFilter();
                 }
             }
@@ -543,10 +536,24 @@ namespace EventTraceKit.VsExtension.Views
             if (traceLog == null)
                 return;
 
-            if (!isFilterEnabled)
+            if (IsFilterEnabled && currentFilter != null) {
+                TraceLogFilterPredicate predicate;
+                try {
+                    predicate = currentFilter.CreatePredicate();
+                } catch (Exception) {
+                    predicate = null;
+                }
+                traceLog.SetFilter(predicate);
+            } else
                 traceLog.SetFilter(null);
-            else if (currentFilter != null)
-                traceLog.SetFilter(currentFilter.CreatePredicate());
+        }
+
+        private void EnsureFilter()
+        {
+            if (!IsFilterEnabled)
+                IsFilterEnabled = true;
+            else
+                RefreshFilter();
         }
 
         private void OnQueryToggleEnableFilter(object sender, EventArgs args)

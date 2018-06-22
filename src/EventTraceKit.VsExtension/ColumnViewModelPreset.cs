@@ -177,10 +177,5 @@ namespace EventTraceKit.VsExtension
 
             return cmp;
         }
-
-        protected override void CloneCore(Freezable sourceFreezable)
-        {
-            base.CloneCore(sourceFreezable);
-        }
     }
 }

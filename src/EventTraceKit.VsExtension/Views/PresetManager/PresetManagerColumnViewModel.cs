@@ -71,8 +71,8 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
         /// </summary>
         public Guid Id
         {
-            get { return (Guid)GetValue(IdProperty); }
-            private set { SetValue(IdPropertyKey, value); }
+            get => (Guid)GetValue(IdProperty);
+            private set => SetValue(IdPropertyKey, value);
         }
 
         #endregion
@@ -97,8 +97,8 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
         /// </summary>
         public string Name
         {
-            get { return (string)GetValue(NameProperty); }
-            private set { SetValue(NamePropertyKey, value); }
+            get => (string)GetValue(NameProperty);
+            private set => SetValue(NamePropertyKey, value);
         }
 
         #endregion
@@ -123,8 +123,8 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
         /// </summary>
         public int Width
         {
-            get { return (int)GetValue(WidthProperty); }
-            set { SetValue(WidthProperty, value); }
+            get => (int)GetValue(WidthProperty);
+            set => SetValue(WidthProperty, value);
         }
 
         private object CoerceWidth(object baseValue)
@@ -147,8 +147,8 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
 
         public bool IsVisible
         {
-            get { return (bool)GetValue(IsVisibleProperty); }
-            set { SetValue(IsVisibleProperty, value); }
+            get => (bool)GetValue(IsVisibleProperty);
+            set => SetValue(IsVisibleProperty, value);
         }
 
         #endregion
@@ -172,8 +172,8 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
         /// </summary>
         public TextAlignment TextAlignment
         {
-            get { return (TextAlignment)GetValue(TextAlignmentProperty); }
-            set { SetValue(TextAlignmentProperty, value); }
+            get => (TextAlignment)GetValue(TextAlignmentProperty);
+            set => SetValue(TextAlignmentProperty, value);
         }
 
         #endregion
@@ -195,8 +195,8 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
         /// </summary>
         public bool IsFrozen
         {
-            get { return (bool)GetValue(IsFrozenProperty); }
-            set { SetValue(IsFrozenProperty, value); }
+            get => (bool)GetValue(IsFrozenProperty);
+            set => SetValue(IsFrozenProperty, value);
         }
 
         #endregion
@@ -214,8 +214,8 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
 
         public SupportedFormat CellFormat
         {
-            get { return (SupportedFormat)GetValue(CellFormatProperty); }
-            private set { SetValue(CellFormatProperty, value); }
+            get => (SupportedFormat)GetValue(CellFormatProperty);
+            private set => SetValue(CellFormatProperty, value);
         }
 
         #endregion

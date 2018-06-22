@@ -1,4 +1,4 @@
-namespace EventTraceKit.VsExtension
+namespace EventTraceKit.VsExtension.Native
 {
     using System;
 

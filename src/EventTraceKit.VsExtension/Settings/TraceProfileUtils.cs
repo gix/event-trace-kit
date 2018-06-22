@@ -1,4 +1,4 @@
-namespace EventTraceKit.VsExtension
+namespace EventTraceKit.VsExtension.Settings
 {
     using System;
     using System.Collections.Generic;

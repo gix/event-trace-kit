@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Native
+namespace EventTraceKit.VsExtension.Native
 {
     using Microsoft.Win32.SafeHandles;
     using System;
@@ -90,7 +90,7 @@
         public static bool GetProcessTimes(
             this Process process, out TimeSpan kernelTime, out TimeSpan userTime)
         {
-            if (!GetProcessTimes(process.SafeHandle, out var _, out var _, out var rawKernelTime, out var rawUserTime)) {
+            if (!GetProcessTimes(process.SafeHandle, out _, out _, out var rawKernelTime, out var rawUserTime)) {
                 kernelTime = TimeSpan.Zero;
                 userTime = TimeSpan.Zero;
                 return false;

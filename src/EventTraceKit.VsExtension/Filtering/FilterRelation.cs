@@ -2,7 +2,7 @@ namespace EventTraceKit.VsExtension.Filtering
 {
     using System;
 
-    public class FilterRelation : IEquatable<FilterRelation>
+    public sealed class FilterRelation : IEquatable<FilterRelation>
     {
         public FilterRelation(string displayName, FilterRelationKind kind)
         {

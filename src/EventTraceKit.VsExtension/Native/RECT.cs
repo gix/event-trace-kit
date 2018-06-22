@@ -35,14 +35,14 @@ namespace EventTraceKit.VsExtension.Native
 
         public int Height
         {
-            get { return Bottom - Top; }
-            set { Bottom = Top + value; }
+            get => Bottom - Top;
+            set => Bottom = Top + value;
         }
 
         public int Width
         {
-            get { return Right - Left; }
-            set { Right = Left + value; }
+            get => Right - Left;
+            set => Right = Left + value;
         }
 
         public void Offset(int dx, int dy)

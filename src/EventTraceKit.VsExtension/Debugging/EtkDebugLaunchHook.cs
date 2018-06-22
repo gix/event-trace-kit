@@ -11,6 +11,7 @@ namespace EventTraceKit.VsExtension.Debugging
     using System.Threading;
     using System.Threading.Tasks;
     using EventTraceKit.VsExtension.Extensions;
+    using Microsoft;
     using Microsoft.VisualStudio;
     using Microsoft.VisualStudio.Debugger.Internal;
     using Microsoft.VisualStudio.Shell.Interop;
@@ -44,6 +45,7 @@ namespace EventTraceKit.VsExtension.Debugging
         {
             log = package;
             traceController = package.GetService<STraceController, ITraceControllerInternal>();
+            Assumes.Present(traceController);
             solutionBrowser = new DteSolutionBrowser(package.GetService<SDTE, EnvDTE.DTE>());
         }
 
@@ -187,7 +189,7 @@ namespace EventTraceKit.VsExtension.Debugging
         {
             try {
                 var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-                WhenAllProcessesExit(launchResults).ContinueWith(t => cts.Cancel(), cts.Token);
+                WhenAllProcessesExit(launchResults).ContinueWith(t => cts.Cancel(), cts.Token, 0, TaskScheduler.Default);
 
                 var processIds = Task.Run(
                     async () => await ctx.GatherRealProcessIdsAsync(launchResults, cts.Token),
@@ -271,21 +273,6 @@ namespace EventTraceKit.VsExtension.Debugging
                 log.WriteLine("  ProjectPath: {0}", target.ProjectPath);
                 log.WriteLine("}}");
             }
-        }
-
-        private static IReadOnlyList<uint> GatherRealProcessIds(
-            IEnumerable<NamedPipeServerStream> pipes,
-            VsDebugTargetProcessInfo[] launchResults)
-        {
-            uint ReadPipe(NamedPipeServerStream pipe, int index)
-            {
-                if (pipe == null)
-                    return launchResults[index].dwProcessId;
-                pipe.WaitForConnection();
-                return pipe.ReadUInt32();
-            }
-
-            return pipes.Select(ReadPipe).ToArray();
         }
 
         private static NamedPipeServerStream CreateLaunchPipe(string pipeName)

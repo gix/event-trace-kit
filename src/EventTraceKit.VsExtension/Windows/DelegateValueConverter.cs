@@ -25,16 +25,16 @@ namespace EventTraceKit.VsExtension.Windows
         public object Convert(
             object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is TValue)
-                return converter((TValue)value);
+            if (value is TValue tv)
+                return converter(tv);
             return DependencyProperty.UnsetValue;
 
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (convertBack != null && value is TResult)
-                return convertBack((TResult)value);
+            if (convertBack != null && value is TResult result)
+                return convertBack(result);
             return DependencyProperty.UnsetValue;
 
         }
@@ -60,16 +60,16 @@ namespace EventTraceKit.VsExtension.Windows
         public object Convert(
             object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is TValue && parameter is TParam)
-                return converter((TValue)value, (TParam)parameter);
+            if (value is TValue tv && parameter is TParam param)
+                return converter(tv, param);
             return DependencyProperty.UnsetValue;
 
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (convertBack != null && value is TResult && parameter is TParam)
-                return convertBack((TResult)value, (TParam)parameter);
+            if (convertBack != null && value is TResult result && parameter is TParam param)
+                return convertBack(result, param);
             return DependencyProperty.UnsetValue;
 
         }

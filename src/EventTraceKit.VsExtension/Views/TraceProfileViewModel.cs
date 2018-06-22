@@ -14,8 +14,11 @@ namespace EventTraceKit.VsExtension.Views
     [SerializedShape(typeof(TraceProfile))]
     public class TraceProfileViewModel : ObservableModel
     {
-        private string name;
         private CollectorViewModel selectedCollector;
+        private ICommand addOrRemoveSystemCollectorCommand;
+        private ITraceSettingsContext context;
+
+        private string name;
 
         public TraceProfileViewModel()
             : this(Guid.NewGuid())
@@ -56,9 +59,6 @@ namespace EventTraceKit.VsExtension.Views
             set => SetProperty(ref selectedCollector, value);
         }
 
-        private ICommand addOrRemoveSystemCollectorCommand;
-        private ITraceSettingsContext context;
-
         public ICommand AddOrRemoveSystemCollectorCommand =>
             addOrRemoveSystemCollectorCommand ??
             (addOrRemoveSystemCollectorCommand = new AsyncDelegateCommand(AddOrRemoveSystemCollector));
@@ -91,11 +91,6 @@ namespace EventTraceKit.VsExtension.Views
             var descriptor = new TraceProfileDescriptor();
             descriptor.Collectors.AddRange(Collectors.Select(x => x.CreateDescriptor()));
             return descriptor;
-        }
-
-        public Dictionary<EventKey, string> GetEventSymbols()
-        {
-            return new Dictionary<EventKey, string>();
         }
     }
 }

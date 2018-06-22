@@ -149,7 +149,7 @@ namespace EventTraceKit.VsExtension.Controls
 
         public bool Equals(AsyncDataViewModelPreset other)
         {
-            return CompareTo(other) == 0;
+            return other != null && CompareTo(other) == 0;
         }
 
         public int CompareTo(AsyncDataViewModelPreset other)

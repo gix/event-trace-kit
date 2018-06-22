@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Native
+namespace EventTraceKit.VsExtension.Native
 {
     using System;
     using System.Runtime.InteropServices;
@@ -46,20 +46,20 @@
 
         public TDH_IN_TYPE InType
         {
-            get { return (TDH_IN_TYPE)union.field0UInt16; }
-            set { union.field0UInt16 = (ushort)value; }
+            get => (TDH_IN_TYPE)union.field0UInt16;
+            set => union.field0UInt16 = (ushort)value;
         }
 
         public TDH_OUT_TYPE OutType
         {
-            get { return (TDH_OUT_TYPE)union.field1UInt16; }
-            set { union.field1UInt16 = (ushort)value; }
+            get => (TDH_OUT_TYPE)union.field1UInt16;
+            set => union.field1UInt16 = (ushort)value;
         }
 
         public uint MapNameOffset
         {
-            get { return union.field2UInt32; }
-            set { union.field2UInt32 = value; }
+            get => union.field2UInt32;
+            set => union.field2UInt32 = value;
         }
 
         public ushort StructStartIndex => union.field0UInt16;

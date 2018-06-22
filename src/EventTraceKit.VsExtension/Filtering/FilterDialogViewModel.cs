@@ -9,23 +9,28 @@ namespace EventTraceKit.VsExtension.Filtering
     using System.Threading.Tasks;
     using System.Windows.Input;
     using EventTraceKit.VsExtension.Extensions;
+    using EventTraceKit.VsExtension.Views;
 
     public class FilterDialogViewModel : ObservableModel, INotifyDataErrorInfo
     {
+        private readonly IFilterable filterable;
         private readonly TraceLogFilterBuilder builder = TraceLogFilterBuilder.Instance;
 
         private bool advancedMode;
         private bool? dialogResult;
+        private bool isDirty;
 
         private IModelProperty selectedProperty;
         private FilterRelation selectedRelation;
-        private ValueHolder valueHolder;
+        private ValueHolder targetValue;
         private string expression;
         private FilterConditionAction selectedAction;
         private FilterConditionViewModel selectedCondition;
 
-        public FilterDialogViewModel()
+        public FilterDialogViewModel(IFilterable filterable = null)
         {
+            this.filterable = filterable;
+
             var simpleRelations = new List<FilterRelation>();
             simpleRelations.Add(new FilterRelation("==", FilterRelationKind.Equal));
             simpleRelations.Add(new FilterRelation("!=", FilterRelationKind.NotEqual));
@@ -165,12 +170,15 @@ namespace EventTraceKit.VsExtension.Filtering
 
         private bool CanAddCondition()
         {
+            if (HasErrors)
+                return false;
+
             if (AdvancedMode)
                 return Expression != null;
             return
                 SelectedProperty != null &&
                 SelectedRelation != null &&
-                ValueHolder != null;
+                TargetValue != null;
         }
 
         private Task AddCondition()
@@ -189,7 +197,7 @@ namespace EventTraceKit.VsExtension.Filtering
                 condition = new SimpleFilterConditionViewModel(SelectedProperty) {
                     IsEnabled = true,
                     Relation = SelectedRelation,
-                    Value = ValueHolder.RawValue,
+                    Value = TargetValue.RawValue,
                     Action = SelectedAction
                 };
             }
@@ -199,6 +207,7 @@ namespace EventTraceKit.VsExtension.Filtering
                 idx = ~idx;
 
             Conditions.Insert(idx, condition);
+            isDirty = true;
 
             return Task.CompletedTask;
         }
@@ -225,13 +234,15 @@ namespace EventTraceKit.VsExtension.Filtering
 
         private Task RemoveCondition()
         {
-            if (SelectedCondition != null) {
+            var condition = SelectedCondition;
+            if (condition != null) {
                 SelectedProperty = null;
                 SelectedRelation = null;
-                ValueHolder = null;
+                TargetValue = null;
                 Expression = null;
+                SelectedAction = condition.Action;
 
-                switch (SelectedCondition) {
+                switch (condition) {
                     case AdvancedFilterConditionViewModel advanced:
                         AdvancedMode = true;
                         Expression = advanced.Expression;
@@ -242,13 +253,15 @@ namespace EventTraceKit.VsExtension.Filtering
                         SelectedRelation = simple.Relation;
                         var value = SelectedProperty.CreateValue();
                         value.RawValue = simple.Value;
-                        ValueHolder = value;
-                        SelectedAction = simple.Action;
+                        TargetValue = value;
                         break;
                 }
+
+                SelectedCondition = null;
+                Conditions.Remove(condition);
+                isDirty = true;
             }
 
-            Conditions.Remove(SelectedCondition);
             return Task.CompletedTask;
         }
 
@@ -265,11 +278,15 @@ namespace EventTraceKit.VsExtension.Filtering
 
         private bool CanApply()
         {
-            return true;
+            return filterable != null && !isDirty;
         }
 
         private Task Apply()
         {
+            if (filterable != null) {
+                filterable.Filter = GetFilter();
+                isDirty = false;
+            }
             return Task.CompletedTask;
         }
 
@@ -284,7 +301,7 @@ namespace EventTraceKit.VsExtension.Filtering
                 else
                     SelectedRelation = Relations.FirstOrDefault();
 
-                ValueHolder = SelectedProperty.CreateValue();
+                TargetValue = SelectedProperty.CreateValue();
             }
         }
 
@@ -294,10 +311,10 @@ namespace EventTraceKit.VsExtension.Filtering
             set => SetProperty(ref selectedRelation, value);
         }
 
-        public ValueHolder ValueHolder
+        public ValueHolder TargetValue
         {
-            get => valueHolder;
-            set => SetProperty(ref valueHolder, value);
+            get => targetValue;
+            set => SetProperty(ref targetValue, value);
         }
 
         public string Expression
@@ -316,7 +333,7 @@ namespace EventTraceKit.VsExtension.Filtering
         {
             expressionError = null;
             try {
-                new ExpressionFactoryVisitor().Visit(
+                ExpressionFactoryVisitor.Convert(
                     FilterSyntaxFactory.ParseExpression(expression));
             } catch (Exception ex) {
                 expressionError = ex.Message;

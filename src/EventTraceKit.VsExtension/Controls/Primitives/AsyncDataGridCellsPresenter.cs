@@ -13,6 +13,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
     using System.Windows.Threading;
     using Extensions;
     using Windows;
+    using EventTraceKit.VsExtension.Utilities;
 
     public class AsyncDataGridCellsPresenter : FrameworkElement, IScrollInfo
     {
@@ -1511,7 +1512,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 }
 
                 if (e.Handled)
-                    viewModel.RequestUpdate(false);
+                    viewModel.RequestUpdate();
 
                 BeginDragging(rowIndex);
             }
@@ -1545,11 +1546,11 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
                     if (!viewModel.RowSelection.Contains(rowIndex)) {
                         viewModel.RowSelection.ToggleSingle(rowIndex);
-                        viewModel.RequestUpdate(false);
+                        viewModel.RequestUpdate();
                     }
                 } else {
                     viewModel.RowSelection.Clear();
-                    viewModel.RequestUpdate(false);
+                    viewModel.RequestUpdate();
                 }
 
                 e.Handled = true;
@@ -1574,7 +1575,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 int max = Math.Max(dragSelectionCtx.AnchorRow, rowIndex);
                 viewModel.RowSelection.RestoreSnapshot(dragSelectionCtx.SelectionSnapshot);
                 viewModel.RowSelection.SetRange(min, max, dragSelectionCtx.SelectionRemoves);
-                viewModel.RequestUpdate(false);
+                viewModel.RequestUpdate();
             }
 
             dragSelectionCtx.LastTargetedRow = row;
@@ -1650,7 +1651,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
                 }
 
                 if (e.Handled)
-                    viewModel.RequestUpdate(false);
+                    viewModel.RequestUpdate();
             }
 
             if (!ViewModel.IsReady)

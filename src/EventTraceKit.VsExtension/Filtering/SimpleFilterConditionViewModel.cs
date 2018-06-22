@@ -46,8 +46,8 @@ namespace EventTraceKit.VsExtension.Filtering
         {
             IsEnabled = condition.IsEnabled;
             Action = condition.Action;
-            Value = condition.Value;
             Relation = property.Relations.Single(x => x.Kind == condition.Relation);
+            Value = condition.Value;
         }
 
         public IModelProperty Property { get; }
@@ -80,7 +80,7 @@ namespace EventTraceKit.VsExtension.Filtering
 
         private void UpdateDisplayName()
         {
-            DisplayName = $"{Property} {Relation} {Value}";
+            DisplayName = $"{Property.Name} {Relation?.DisplayName ?? "??"} {Value}";
         }
     }
 

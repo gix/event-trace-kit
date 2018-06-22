@@ -1,4 +1,4 @@
-namespace EventTraceKit.VsExtension
+namespace EventTraceKit.VsExtension.Windows
 {
     using System;
     using System.Windows.Threading;

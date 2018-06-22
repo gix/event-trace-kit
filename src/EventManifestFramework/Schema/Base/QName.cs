@@ -89,6 +89,8 @@ namespace EventManifestFramework.Schema.Base
             return $"{Namespace.NamespaceName}:{LocalName}";
         }
 
+        public string AsPrefixedString => ToPrefixedString();
+
         public string ToPrefixedString()
         {
             if (string.IsNullOrEmpty(Prefix))

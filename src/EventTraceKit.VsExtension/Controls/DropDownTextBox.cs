@@ -19,6 +19,7 @@ namespace EventTraceKit.VsExtension.Controls
     public class DropDownTextBox : Control
     {
         private Popup dropDownPopup;
+        private Point lastMousePosition;
 
         static DropDownTextBox()
         {
@@ -551,17 +552,16 @@ namespace EventTraceKit.VsExtension.Controls
             return ((DropDownTextBox)d).IsDropDownOpen ? Boxed.False : value;
         }
 
-        private Point _lastMousePosition;
         private UIElement ItemsHost => dropDownPopup;
 
-        internal void SetInitialMousePosition()
+        private void SetInitialMousePosition()
         {
-            this._lastMousePosition = Mouse.GetPosition(this);
+            lastMousePosition = Mouse.GetPosition(this);
         }
 
-        internal void ResetLastMousePosition()
+        private void ResetLastMousePosition()
         {
-            this._lastMousePosition = new Point();
+            lastMousePosition = new Point();
         }
 
         private static void OnMouseMove(object sender, MouseEventArgs e)
@@ -581,7 +581,7 @@ namespace EventTraceKit.VsExtension.Controls
                     //source.DoAutoScroll(source.HighlightedInfo);
                 } else {
                     source.ReleaseMouseCapture();
-                    //source.ResetLastMousePosition();
+                    source.ResetLastMousePosition();
                 }
 
                 e.Handled = true;

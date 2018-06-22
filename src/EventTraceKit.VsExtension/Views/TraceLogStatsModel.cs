@@ -1,4 +1,4 @@
-namespace EventTraceKit.VsExtension
+namespace EventTraceKit.VsExtension.Views
 {
     public class TraceLogStatsModel : ObservableModel
     {

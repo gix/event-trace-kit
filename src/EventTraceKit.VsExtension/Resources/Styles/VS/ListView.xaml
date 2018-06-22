@@ -1,9 +1,8 @@
-﻿<ResourceDictionary
+<ResourceDictionary
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:vsp="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
-  xmlns:etkc="clr-namespace:EventTraceKit.VsExtension.Controls"
-  xmlns:windows="clr-namespace:EventTraceKit.VsExtension.Windows">
+  xmlns:etkc="clr-namespace:EventTraceKit.VsExtension.Controls">
   <!-- GridView Item Control Template -->
   <ControlTemplate x:Key="GridViewItemTemplate" TargetType="{x:Type ListViewItem}">
     <!-- Simplified template of the default ListView Style, removes much of the chrome -->

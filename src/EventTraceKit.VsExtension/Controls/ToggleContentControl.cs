@@ -24,14 +24,14 @@ namespace EventTraceKit.VsExtension.Controls
                 nameof(CheckedTemplate),
                 typeof(DataTemplate),
                 typeof(ToggleContentControl),
-                new PropertyMetadata(null, OnCheckedContentChanged));
+                new PropertyMetadata(null, OnCheckedTemplateChanged));
 
         public static readonly DependencyProperty UncheckedTemplateProperty =
             DependencyProperty.Register(
                 nameof(UncheckedTemplate),
                 typeof(DataTemplate),
                 typeof(ToggleContentControl),
-                new PropertyMetadata(null, OnUncheckedContentChanged));
+                new PropertyMetadata(null, OnUncheckedTemplateChanged));
 
         public bool IsChecked
         {
@@ -60,7 +60,7 @@ namespace EventTraceKit.VsExtension.Controls
             Keyboard.Focus(source);
         }
 
-        private static void OnCheckedContentChanged(
+        private static void OnCheckedTemplateChanged(
             DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var source = (ToggleContentControl)d;
@@ -68,7 +68,7 @@ namespace EventTraceKit.VsExtension.Controls
                 source.ContentTemplate = (DataTemplate)e.NewValue;
         }
 
-        private static void OnUncheckedContentChanged(
+        private static void OnUncheckedTemplateChanged(
             DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var source = (ToggleContentControl)d;

@@ -48,8 +48,8 @@ namespace EventTraceKit.VsExtension.Controls
         /// </summary>
         public bool IsActive
         {
-            get { return (bool)GetValue(IsActiveProperty); }
-            set { SetValue(IsActiveProperty, value); }
+            get => (bool)GetValue(IsActiveProperty);
+            set => SetValue(IsActiveProperty, value);
         }
 
         /// <summary>

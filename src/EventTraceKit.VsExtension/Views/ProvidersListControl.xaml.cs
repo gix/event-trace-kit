@@ -1,6 +1,5 @@
 namespace EventTraceKit.VsExtension.Views
 {
-    using System;
     using System.ComponentModel;
     using System.Windows;
     using System.Windows.Controls;
@@ -41,13 +40,19 @@ namespace EventTraceKit.VsExtension.Views
             }
         }
 
-        private void ProfileNameTextBox_OnLoaded(object sender, RoutedEventArgs e)
+        private void ProviderNameTextBox_OnLoaded(object sender, RoutedEventArgs e)
         {
             var textBox = (TextBox)sender;
             textBox.Focus();
             Keyboard.Focus(textBox);
 
             textBox.SelectAll();
+        }
+
+        private void ProvidersListBox_OnMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (!e.Handled)
+                ProvidersListBox.Focus();
         }
     }
 }

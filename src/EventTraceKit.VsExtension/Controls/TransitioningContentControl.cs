@@ -2,7 +2,6 @@ namespace EventTraceKit.VsExtension.Controls
 {
     using System;
     using System.Collections.ObjectModel;
-    using System.Globalization;
     using System.Linq;
     using System.Windows;
     using System.Windows.Controls;
@@ -116,10 +115,8 @@ namespace EventTraceKit.VsExtension.Controls
             DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var source = (TransitioningContentControl)d;
-            if (!source.allowIsTransitioningPropertyWrite) {
+            if (!source.allowIsTransitioningPropertyWrite)
                 source.IsTransitioning = (bool)e.OldValue;
-                throw new InvalidOperationException();
-            }
         }
 
         private Storyboard CurrentTransition
@@ -160,8 +157,6 @@ namespace EventTraceKit.VsExtension.Controls
             }
 
             source.SetValue(TransitionProperty, oldValue);
-            throw new ArgumentException(string.Format(CultureInfo.CurrentCulture,
-                "Temporary removed exception message", newValue));
         }
 
         private static void OnRestartTransitionOnContentChangePropertyChanged(
@@ -235,8 +230,8 @@ namespace EventTraceKit.VsExtension.Controls
                 currentContentPresentationSite.ContentTemplate = ContentTemplate;
             }
 
-            currentContentPresentationSite.Content = newContent;
             previousContentPresentationSite.Content = oldContent;
+            currentContentPresentationSite.Content = newContent;
 
             if (IsTransitioning && !RestartTransitionOnContentChange)
                 return;
@@ -287,8 +282,8 @@ namespace EventTraceKit.VsExtension.Controls
             IsTransitioning = false;
 
             if (previousContentPresentationSite != null) {
-                previousContentPresentationSite.ContentTemplate = null;
-                previousContentPresentationSite.Content = null;
+                //previousContentPresentationSite.ContentTemplate = null;
+                //previousContentPresentationSite.Content = null;
             }
         }
 

@@ -1,7 +1,9 @@
 namespace EventTraceKit.VsExtension.Filtering
 {
     using System;
+    using System.Globalization;
     using System.Linq.Expressions;
+    using EventTraceKit.VsExtension.Extensions;
 
     public class ExpressionFactoryVisitor : FilterSyntaxVisitor<Expression>
     {
@@ -40,12 +42,37 @@ namespace EventTraceKit.VsExtension.Filtering
 
         public override Expression VisitLiteralExpression(LiteralExpressionSyntax expr)
         {
-            if (expr.Kind == SyntaxKind.StringLiteralExpression)
-                return Expression.Constant(expr.Text.Substring(1, expr.Text.Length - 2));
-            if (expr.Kind == SyntaxKind.GuidLiteralExpression)
-                return CreateValueExpression(Guid.Parse(expr.Text));
+            switch (expr.Kind) {
+                case SyntaxKind.StringLiteralExpression:
+                    return Expression.Constant(expr.Text.Substring(1, expr.Text.Length - 2));
+                case SyntaxKind.GuidLiteralExpression:
+                    return CreateValueExpression(Guid.Parse(expr.Text));
+                case SyntaxKind.NumericLiteralExpression:
+                    return Expression.Constant(ConvertToNumber(expr.Text));
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
 
-            return Expression.Constant(expr.Text);
+        private static object ConvertToNumber(string numericLiteral)
+        {
+            if (ulong.TryParse(numericLiteral, NumberStyles.None, CultureInfo.InvariantCulture, out var intVal)) {
+                if (intVal <= byte.MaxValue)
+                    return (byte)intVal;
+                if (intVal <= ushort.MaxValue)
+                    return (ushort)intVal;
+                if (intVal <= uint.MaxValue)
+                    return (uint)intVal;
+                return intVal;
+            }
+
+            if (numericLiteral.IndexOfAny(new[] { '.', 'E', 'e' }) != -1 &&
+                double.TryParse(numericLiteral, NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint,
+                CultureInfo.InvariantCulture, out var floatVal)) {
+                return floatVal;
+            }
+
+            throw new ArgumentException($"Invalid numeric literal '{numericLiteral}'");
         }
 
         public override Expression VisitPrefixUnaryExpression(PrefixUnaryExpressionSyntax expr)
@@ -54,12 +81,19 @@ namespace EventTraceKit.VsExtension.Filtering
                 case SyntaxKind.UnaryPlusExpression:
                     return Expression.UnaryPlus(Visit(expr.Operand));
                 case SyntaxKind.UnaryMinusExpression:
-                    return Expression.Negate(Visit(expr.Operand));
+                    return Expression.Negate(VerifyNegate(Visit(expr.Operand)));
                 case SyntaxKind.LogicalNotExpression:
                     return Expression.Not(Visit(expr.Operand));
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+
+        private Expression VerifyNegate(Expression expr)
+        {
+            if (expr is ConstantExpression ce && ce.Type.IsArithmetic() && ce.Type.IsUnsignedInt())
+                throw new ArgumentException("Unsigned integer cannot be negative.");
+            return expr;
         }
 
         public override Expression VisitBinaryExpression(BinaryExpressionSyntax expr)
@@ -68,71 +102,89 @@ namespace EventTraceKit.VsExtension.Filtering
             var left = Visit(expr.Left);
             var right = Visit(expr.Right);
 
+            if (exprType == ExpressionType.LeftShift || exprType == ExpressionType.RightShift) {
+                if (right.Type != typeof(int) && CanPromote(right.Type, typeof(int)))
+                    right = Expression.Convert(right, typeof(int));
+            }
+
             if (left.Type != right.Type) {
                 if (!TryConvert(ref right, left.Type) &&
-                    !TryConvert(ref left, right.Type))
-                    throw new ArgumentOutOfRangeException($"Incompatible operand types '{left}' and '{right}' for {exprType}");
+                    !TryConvert(ref left, right.Type)) {
+                    string leftType = GetTypeDescription(left.Type);
+                    string rightType = GetTypeDescription(right.Type);
+                    string operation = GetOperationDescription(exprType);
+                    throw new ArgumentException(
+                        $"Cannot {operation} incompatible operand types '{leftType}' (for '{left}') and '{rightType}' (for '{right}')");
+                }
             }
 
             return Expression.MakeBinary(exprType, left, right);
         }
 
-        private bool TryConvert(ref Expression expr, Type targetType)
+        private static bool TryConvert(ref Expression expr, Type targetType)
         {
-            if (expr.NodeType != ExpressionType.Constant)
-                return false;
+            if (expr.NodeType == ExpressionType.Constant) {
+                var value = ((ConstantExpression)expr).Value;
+                if (expr.Type == typeof(string)) {
+                    var str = (string)value;
 
-            var value = ((ConstantExpression)expr).Value;
-            if (expr.Type == typeof(string)) {
-                var str = (string)value;
+                    if (targetType == typeof(Guid)) {
+                        if (!Guid.TryParse(str, out var v))
+                            throw new ArgumentException($"Invalid GUID '{str}'.");
+                        expr = CreateValueExpression(v);
+                        return true;
+                    }
+                } else if (targetType.IsArithmetic()) {
+                    object targetValue;
+                    try {
+                        targetValue = System.Convert.ChangeType(
+                            value, targetType, CultureInfo.InvariantCulture);
+                    } catch (Exception) {
+                        return false;
+                    }
 
-                if (targetType == typeof(sbyte)) {
-                    expr = Expression.Constant(sbyte.Parse(str));
+                    expr = Expression.Constant(targetValue);
                     return true;
                 }
-
-                if (targetType == typeof(byte)) {
-                    expr = Expression.Constant(byte.Parse(str));
-                    return true;
-                }
-
-                if (targetType == typeof(short)) {
-                    expr = Expression.Constant(short.Parse(str));
-                    return true;
-                }
-
-                if (targetType == typeof(ushort)) {
-                    expr = Expression.Constant(ushort.Parse(str));
-                    return true;
-                }
-
-                if (targetType == typeof(int)) {
-                    expr = Expression.Constant(int.Parse(str));
-                    return true;
-                }
-
-                if (targetType == typeof(uint)) {
-                    expr = Expression.Constant(uint.Parse(str));
-                    return true;
-                }
-
-                if (targetType == typeof(long)) {
-                    expr = Expression.Constant(long.Parse(str));
-                    return true;
-                }
-
-                if (targetType == typeof(ulong)) {
-                    expr = Expression.Constant(ulong.Parse(str));
-                    return true;
-                }
-
-                if (targetType == typeof(Guid)) {
-                    expr = CreateValueExpression(Guid.Parse(str));
-                    return true;
-                }
+            } else if (CanPromote(expr.Type, targetType)) {
+                expr = Expression.Convert(expr, targetType);
+                return true;
             }
 
             return false;
+        }
+
+        private static bool CanPromote(Type sourceType, Type targetType)
+        {
+            return
+                GetIntSize(sourceType, out var sourceBits) &&
+                GetIntSize(targetType, out var targetBits) &&
+                targetBits >= sourceBits;
+        }
+
+        private static bool GetIntSize(Type type, out int bits)
+        {
+            switch (Type.GetTypeCode(type)) {
+                case TypeCode.SByte:
+                case TypeCode.Byte:
+                    bits = 8;
+                    return true;
+                case TypeCode.Int16:
+                case TypeCode.UInt16:
+                    bits = 16;
+                    return true;
+                case TypeCode.Int32:
+                case TypeCode.UInt32:
+                    bits = 32;
+                    return true;
+                case TypeCode.Int64:
+                case TypeCode.UInt64:
+                    bits = 64;
+                    return true;
+                default:
+                    bits = 0;
+                    return false;
+            }
         }
 
         private static Expression CreateValueExpression(Guid value)
@@ -184,6 +236,55 @@ namespace EventTraceKit.VsExtension.Filtering
                 default:
                     throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
             }
+        }
+
+        private string GetOperationDescription(ExpressionType exprType)
+        {
+            switch (exprType) {
+                case ExpressionType.Add: return "add";
+                case ExpressionType.Subtract: return "subtract";
+                case ExpressionType.Multiply: return "multiply";
+                case ExpressionType.Divide: return "divide";
+                case ExpressionType.Modulo: return "modulo";
+                case ExpressionType.Equal:
+                case ExpressionType.NotEqual:
+                case ExpressionType.LessThan:
+                case ExpressionType.LessThanOrEqual:
+                case ExpressionType.GreaterThan:
+                case ExpressionType.GreaterThanOrEqual: return "compare";
+                case ExpressionType.And:
+                case ExpressionType.Or:
+                case ExpressionType.ExclusiveOr:
+                case ExpressionType.AndAlso:
+                case ExpressionType.OrElse: return "logically combine";
+                case ExpressionType.LeftShift:
+                case ExpressionType.RightShift: return "shift";
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(exprType), exprType, null);
+            }
+        }
+
+        private string GetTypeDescription(Type type)
+        {
+            switch (Type.GetTypeCode(type)) {
+                case TypeCode.SByte: return "signed 8-bit integer";
+                case TypeCode.Byte: return "unsigned 8-bit integer";
+                case TypeCode.Int16: return "signed 16-bit integer";
+                case TypeCode.UInt16: return "unsigned 16-bit integer";
+                case TypeCode.Int32: return "signed 32-bit integer";
+                case TypeCode.UInt32: return "unsigned 32-bit integer";
+                case TypeCode.Int64: return "signed 64-bit integer";
+                case TypeCode.UInt64: return "unsigned 64-bit integer";
+                case TypeCode.Single: return "float";
+                case TypeCode.Double: return "double";
+                case TypeCode.String: return "string";
+                case TypeCode.Boolean: return "bool";
+            }
+
+            if (type == typeof(Guid))
+                return "GUID";
+
+            return type.ToString();
         }
     }
 }

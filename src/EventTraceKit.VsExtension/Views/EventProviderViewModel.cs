@@ -48,7 +48,6 @@ namespace EventTraceKit.VsExtension.Views
 
         public EventProviderViewModel()
         {
-            ToggleSelectedEventsCommand = new AsyncDelegateCommand<IList>(ToggleSelectedEvents);
             BrowseManifestCommand = new AsyncDelegateCommand(BrowseManifest);
         }
 
@@ -68,11 +67,10 @@ namespace EventTraceKit.VsExtension.Views
 
         public ITraceSettingsContext Context { get; set; }
 
-        public Func<Task<IEnumerable>> SuggestedManifestsSource => async () => await Context.ManifestsInSolution;
-        public Func<Task<IEnumerable>> SuggestedProjectsSource => async () => await Context.ProjectsInSolution;
+        public Func<Task<IEnumerable>> SuggestedManifestsSource => async () => await Context.ManifestsInSolution.GetValueAsync();
+        public Func<Task<IEnumerable>> SuggestedProjectsSource => async () => await Context.ProjectsInSolution.GetValueAsync();
 
         public ICommand BrowseManifestCommand { get; }
-        public ICommand ToggleSelectedEventsCommand { get; }
 
         public Func<Task<IEnumerable>> DefinedLevelsSource =>
             async () => (await GetSchemaListAsync(x => x.Levels)).OrderBy(x => x.Value).ToList();
@@ -332,16 +330,6 @@ namespace EventTraceKit.VsExtension.Views
             target.FilterEventIds = source.FilterEventIds;
             target.EventIds = source.EventIds;
             target.EventIdsFilterIn = source.EventIdsFilterIn;
-        }
-
-        private Task ToggleSelectedEvents(IList selectedObjects)
-        {
-            var selectedEvents = selectedObjects.Cast<EventViewModel>().ToList();
-            bool enabled = !selectedEvents.All(x => x.IsEnabled);
-            foreach (var evt in selectedEvents)
-                evt.IsEnabled = enabled;
-
-            return Task.CompletedTask;
         }
 
         private Task BrowseManifest()

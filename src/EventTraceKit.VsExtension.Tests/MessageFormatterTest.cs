@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Tests
+namespace EventTraceKit.VsExtension.Tests
 {
     using System;
     using System.Collections.Generic;
@@ -214,15 +214,6 @@
             string message;
 
             var sw = new Stopwatch();
-
-            sw.Restart();
-            for (int i = 0; i < 100000; ++i) {
-                message = TdhHelper.GetMessageForEventRecord(
-                    recordPtr, infoPtr, context, formatProvider);
-                Assert.Equal("Foo 32 Bar", message);
-            }
-            sw.Stop();
-            output.WriteLine("TdhHelper: {0}", sw.ElapsedMilliseconds);
 
             var formatter = new NativeTdhFormatter();
 

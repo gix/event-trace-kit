@@ -11,30 +11,20 @@ namespace EventTraceKit.VsExtension.Controls
     using Primitives;
     using Windows;
 
-    [TemplatePart(Name = PART_CancelButton, Type = typeof(Button))]
     [TemplatePart(Name = PART_CellsScrollViewer, Type = typeof(ScrollViewer))]
     [TemplatePart(Name = PART_CellsPresenter, Type = typeof(AsyncDataGridCellsPresenter))]
     [TemplatePart(Name = PART_ColumnHeadersPresenter, Type = typeof(AsyncDataGridColumnHeadersPresenter))]
-    [TemplateVisualState(Name = STATE_Ready, GroupName = STATE_GROUP_Responsiveness)]
-    [TemplateVisualState(Name = STATE_Processing, GroupName = STATE_GROUP_Responsiveness)]
     public class AsyncDataGrid : Control
     {
-        private const string PART_CancelButton = "PART_CancelButton";
         private const string PART_CellsPresenter = "PART_CellsPresenter";
         private const string PART_CellsScrollViewer = "PART_CellsScrollViewer";
         private const string PART_ColumnHeadersPresenter = "PART_ColumnHeadersPresenter";
-        private const string STATE_GROUP_Responsiveness = "ResponsivenessStates";
-        private const string STATE_Processing = "Processing";
-        private const string STATE_Ready = "Ready";
 
         static AsyncDataGrid()
         {
             Type forType = typeof(AsyncDataGrid);
             DefaultStyleKeyProperty.OverrideMetadata(
                 forType, new FrameworkPropertyMetadata(forType));
-            IsEnabledProperty.OverrideMetadata(
-                forType, new FrameworkPropertyMetadata(
-                    (d, e) => ((AsyncDataGrid)d).OnIsEnabledChanged(e)));
 
             CommandManager.RegisterClassCommandBinding(
                 typeof(AsyncDataGrid),
@@ -360,7 +350,7 @@ namespace EventTraceKit.VsExtension.Controls
                 typeof(AsyncDataGrid),
                 new PropertyMetadata(
                     null,
-                    (s, e) => ((AsyncDataGrid)s).ViewModelEventSourcePropertyChanged(e),
+                    (s, e) => ((AsyncDataGrid)s).OnViewModelEventSourceChanged(e),
                     (d, v) => ((AsyncDataGrid)d).CoerceViewModelEventSourceProperty(v)));
 
         /// <summary>
@@ -377,47 +367,20 @@ namespace EventTraceKit.VsExtension.Controls
             return IsLoaded ? ViewModel : null;
         }
 
-        private void ViewModelEventSourcePropertyChanged(
+        private void OnViewModelEventSourceChanged(
             DependencyPropertyChangedEventArgs e)
         {
-            var oldValue = (AsyncDataGridViewModel)e.OldValue;
-            if (oldValue != null) {
+            if (e.OldValue is AsyncDataGridViewModel oldValue) {
                 oldValue.DataInvalidated -= OnViewModelDataInvalidated;
                 oldValue.ColumnsModel.ColumnsChanged -= OnColumnsChanged;
                 oldValue.Updated -= OnViewModelUpdated;
             }
 
-            var newValue = (AsyncDataGridViewModel)e.NewValue;
-            if (newValue != null) {
+            if (e.NewValue is AsyncDataGridViewModel newValue) {
                 newValue.Updated += OnViewModelUpdated;
                 newValue.ColumnsModel.ColumnsChanged += OnColumnsChanged;
                 newValue.DataInvalidated += OnViewModelDataInvalidated;
             }
-        }
-
-        #endregion
-
-        #region public Button CancelButtonPart { get; private set; }
-
-        private static readonly DependencyPropertyKey CancelButtonPartPropertyKey =
-            DependencyProperty.RegisterReadOnly(
-                nameof(CancelButtonPart),
-                typeof(Button),
-                typeof(AsyncDataGrid),
-                new PropertyMetadata(
-                    null,
-                    (s, e) => ((AsyncDataGrid)s).OnCancelButtonPartChanged(e)));
-
-        /// <summary>
-        ///   Identifies the <see cref="CancelButtonPart"/> dependency property.
-        /// </summary>
-        public static readonly DependencyProperty CancelButtonPartProperty =
-            CancelButtonPartPropertyKey.DependencyProperty;
-
-        public Button CancelButtonPart
-        {
-            get => (Button)GetValue(CancelButtonPartProperty);
-            private set => SetValue(CancelButtonPartPropertyKey, value);
         }
 
         #endregion
@@ -546,29 +509,18 @@ namespace EventTraceKit.VsExtension.Controls
         {
             base.OnApplyTemplate();
 
-            if (CellsPresenter != null) {
-                CellsPresenter.MouseDown -= OnCellsPresenterMouseDown;
-            }
-
             if (CellsScrollViewer != null)
                 BindingOperations.ClearBinding(this, HorizontalScrollOffsetProperty);
 
             ColumnHeadersPresenter = GetTemplateChild(PART_ColumnHeadersPresenter) as AsyncDataGridColumnHeadersPresenter;
             CellsScrollViewer = GetTemplateChild(PART_CellsScrollViewer) as ScrollViewer;
             CellsPresenter = GetTemplateChild(PART_CellsPresenter) as AsyncDataGridCellsPresenter;
-            CancelButtonPart = GetTemplateChild(PART_CancelButton) as Button;
 
             if (CellsScrollViewer != null) {
                 var binding = new Binding(nameof(CellsScrollViewer.HorizontalOffset));
                 binding.Source = CellsScrollViewer;
                 SetBinding(HorizontalScrollOffsetProperty, binding);
             }
-
-            if (CellsPresenter != null) {
-                CellsPresenter.MouseDown += OnCellsPresenterMouseDown;
-            }
-
-            UpdateStates(false);
         }
 
         protected override void OnIsKeyboardFocusWithinChanged(
@@ -626,9 +578,6 @@ namespace EventTraceKit.VsExtension.Controls
             if (column == null)
                 throw new ArgumentNullException(nameof(column));
 
-            if (!column.IsSafeToReadCellValuesFromUIThread)
-                return 0;
-
             double newWidth = 0;
             if (CellsPresenter != null)
                 newWidth = CellsPresenter.GetColumnAutoSize(column);
@@ -660,37 +609,6 @@ namespace EventTraceKit.VsExtension.Controls
             }
         }
 
-        protected virtual void OnIsEnabledChanged(
-            DependencyPropertyChangedEventArgs e)
-        {
-        }
-
-        private void OnCellsPresenterMouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.Handled)
-                return;
-
-            //var cellsPresenter = sender as AsyncDataGridCellsPresenter;
-            //if (cellsPresenter != null) {
-            //    var x = e.GetPosition(cellsPresenter).X;
-            //    var columnFromPosition = cellsPresenter.GetColumnFromPosition(x);
-            //    ViewModel.ColumnsModel.SetClickedColumn(columnFromPosition);
-            //}
-        }
-
-        private void UpdateStates(bool useTransitions)
-        {
-            //if (true/*IsReadyInternal*/) {
-            //    VisualStateManager.GoToState(this, "Ready", useTransitions);
-            //} else {
-            //    VisualStateManager.GoToState(this, "Processing", useTransitions);
-            //}
-        }
-
-        private void OnCancelButtonPartChanged(DependencyPropertyChangedEventArgs e)
-        {
-        }
-
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
             CoerceValue(ViewModelEventSourceProperty);
@@ -701,7 +619,7 @@ namespace EventTraceKit.VsExtension.Controls
             CoerceValue(ViewModelEventSourceProperty);
         }
 
-        private void OnViewModelUpdated(object sender, ItemEventArgs<bool> args)
+        private void OnViewModelUpdated(object sender, EventArgs args)
         {
             CellsPresenter?.QueueRender(true);
         }

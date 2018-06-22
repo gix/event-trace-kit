@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Controls.Primitives
+namespace EventTraceKit.VsExtension.Controls.Primitives
 {
     using System;
     using System.Diagnostics;
@@ -49,8 +49,8 @@
         /// </summary>
         public int LeftFrozenColumnCount
         {
-            get { return (int)GetValue(LeftFrozenColumnCountProperty); }
-            set { SetValue(LeftFrozenColumnCountProperty, value); }
+            get => (int)GetValue(LeftFrozenColumnCountProperty);
+            set => SetValue(LeftFrozenColumnCountProperty, value);
         }
 
         private object CoerceLeftFrozenColumnCount(object baseValue)
@@ -83,8 +83,8 @@
         /// </summary>
         public int RightFrozenColumnCount
         {
-            get { return (int)GetValue(RightFrozenColumnCountProperty); }
-            set { SetValue(RightFrozenColumnCountProperty, value); }
+            get => (int)GetValue(RightFrozenColumnCountProperty);
+            set => SetValue(RightFrozenColumnCountProperty, value);
         }
 
         private object CoerceRightFrozenColumnCount(object baseValue)

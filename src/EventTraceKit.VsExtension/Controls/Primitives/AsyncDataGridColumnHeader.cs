@@ -53,8 +53,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public AsyncDataGridColumn Column
         {
-            get { return (AsyncDataGridColumn)GetValue(ColumnProperty); }
-            set { SetValue(ColumnProperty, value); }
+            get => (AsyncDataGridColumn)GetValue(ColumnProperty);
+            set => SetValue(ColumnProperty, value);
         }
 
         private static void OnColumnChanged(
@@ -66,8 +66,7 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
         }
 
         private void OnColumnChanged(
-            AsyncDataGridColumn oldValue,
-            AsyncDataGridColumn newValue)
+            AsyncDataGridColumn oldValue, AsyncDataGridColumn newValue)
         {
             if (newValue != null) {
                 IsResizable = newValue.IsResizable;
@@ -106,8 +105,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public Thumb LeftHeaderGripperPart
         {
-            get { return (Thumb)GetValue(LeftHeaderGripperPartProperty); }
-            private set { SetValue(LeftHeaderGripperPartPropertyKey, value); }
+            get => (Thumb)GetValue(LeftHeaderGripperPartProperty);
+            private set => SetValue(LeftHeaderGripperPartPropertyKey, value);
         }
 
         #endregion
@@ -126,8 +125,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public Thumb RightHeaderGripperPart
         {
-            get { return (Thumb)GetValue(RightHeaderGripperPartProperty); }
-            private set { SetValue(RightHeaderGripperPartPropertyKey, value); }
+            get => (Thumb)GetValue(RightHeaderGripperPartProperty);
+            private set => SetValue(RightHeaderGripperPartPropertyKey, value);
         }
 
         #endregion
@@ -146,8 +145,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public Visibility LeftHeaderGripperVisibility
         {
-            get { return (Visibility)GetValue(LeftHeaderGripperVisibilityProperty); }
-            private set { SetValue(LeftHeaderGripperVisibilityPropertyKey, value); }
+            get => (Visibility)GetValue(LeftHeaderGripperVisibilityProperty);
+            private set => SetValue(LeftHeaderGripperVisibilityPropertyKey, value);
         }
 
         #endregion
@@ -166,8 +165,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public Visibility RightHeaderGripperVisibility
         {
-            get { return (Visibility)GetValue(RightHeaderGripperVisibilityProperty); }
-            private set { SetValue(FrozenStatePropertyKey, value); }
+            get => (Visibility)GetValue(RightHeaderGripperVisibilityProperty);
+            private set => SetValue(FrozenStatePropertyKey, value);
         }
 
         #endregion
@@ -186,8 +185,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public bool IsResizable
         {
-            get { return (bool)GetValue(IsResizableProperty); }
-            private set { SetValue(IsResizablePropertyKey, Boxed.Bool(value)); }
+            get => (bool)GetValue(IsResizableProperty);
+            private set => SetValue(IsResizablePropertyKey, Boxed.Bool(value));
         }
 
         #endregion
@@ -206,8 +205,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public bool IsKeySeparator
         {
-            get { return (bool)GetValue(IsKeySeparatorProperty); }
-            private set { SetValue(IsSeparatorPropertyKey, Boxed.Bool(value)); }
+            get => (bool)GetValue(IsKeySeparatorProperty);
+            private set => SetValue(IsSeparatorPropertyKey, Boxed.Bool(value));
         }
 
         #endregion
@@ -226,8 +225,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public bool IsFreezableAreaSeparator
         {
-            get { return (bool)GetValue(IsFreezableAreaSeparatorProperty); }
-            private set { SetValue(IsFreezableAreaSeparatorPropertyKey, Boxed.Bool(value)); }
+            get => (bool)GetValue(IsFreezableAreaSeparatorProperty);
+            private set => SetValue(IsFreezableAreaSeparatorPropertyKey, Boxed.Bool(value));
         }
 
         #endregion
@@ -246,8 +245,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public bool IsExpanderHeader
         {
-            get { return (bool)GetValue(IsExpanderHeaderProperty); }
-            private set { SetValue(IsExpanderHeaderPropertyKey, Boxed.Bool(value)); }
+            get => (bool)GetValue(IsExpanderHeaderProperty);
+            private set => SetValue(IsExpanderHeaderPropertyKey, Boxed.Bool(value));
         }
 
         #endregion
@@ -266,8 +265,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public int SortPriority
         {
-            get { return (int)GetValue(SortPriorityProperty); }
-            private set { SetValue(SortPriorityPropertyKey, Boxed.Int32(value)); }
+            get => (int)GetValue(SortPriorityProperty);
+            private set => SetValue(SortPriorityPropertyKey, Boxed.Int32(value));
         }
 
         #endregion
@@ -283,8 +282,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public Brush SeparatorBrush
         {
-            get { return (Brush)GetValue(SeparatorBrushProperty); }
-            set { SetValue(SeparatorBrushProperty, value); }
+            get => (Brush)GetValue(SeparatorBrushProperty);
+            set => SetValue(SeparatorBrushProperty, value);
         }
 
         #endregion
@@ -300,8 +299,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
 
         public Visibility SeparatorVisibility
         {
-            get { return (Visibility)GetValue(SeparatorVisibilityProperty); }
-            set { SetValue(SeparatorVisibilityProperty, value); }
+            get => (Visibility)GetValue(SeparatorVisibilityProperty);
+            set => SetValue(SeparatorVisibilityProperty, value);
         }
 
         #endregion

@@ -1,8 +1,9 @@
-namespace EventTraceKit.VsExtension.Tests
+namespace EventTraceKit.VsExtension.Tests.Utilities
 {
     using System;
     using System.IO;
     using System.Threading;
+    using EventTraceKit.VsExtension.Utilities;
     using Xunit;
 
     public class FileCacheTest
@@ -47,7 +48,7 @@ namespace EventTraceKit.VsExtension.Tests
                 return item;
             }
 
-            var cache = new FileCache<Item>(2, Factory);
+            var cache = new FileLruCache<Item>(2, Factory);
             var arg = Path.GetTempFileName();
             var result = cache.Get(arg);
 
@@ -59,7 +60,7 @@ namespace EventTraceKit.VsExtension.Tests
         [Fact]
         public void GetCachedItem()
         {
-            var cache = new FileCache<Item>(2, x => new Item(x));
+            var cache = new FileLruCache<Item>(2, x => new Item(x));
             var arg = Path.GetTempFileName();
 
             var result1 = cache.Get(arg);
@@ -73,7 +74,7 @@ namespace EventTraceKit.VsExtension.Tests
         [Fact]
         public void RemoveUncachedItem()
         {
-            var cache = new FileCache<Item>(2, x => new Item(x));
+            var cache = new FileLruCache<Item>(2, x => new Item(x));
             var arg1 = Path.GetTempFileName();
             var arg2 = Path.GetTempFileName();
 
@@ -90,7 +91,7 @@ namespace EventTraceKit.VsExtension.Tests
         [Fact]
         public void RemoveCachedItem()
         {
-            var cache = new FileCache<Item>(2, x => new Item(x));
+            var cache = new FileLruCache<Item>(2, x => new Item(x));
             var arg = Path.GetTempFileName();
 
             var result1 = cache.Get(arg);
@@ -106,7 +107,7 @@ namespace EventTraceKit.VsExtension.Tests
         [Fact]
         public void EvictsOldestItem()
         {
-            var cache = new FileCache<DisposableItem>(2, x => new DisposableItem(x));
+            var cache = new FileLruCache<DisposableItem>(2, x => new DisposableItem(x));
             var arg1 = Path.GetTempFileName();
             var arg2 = Path.GetTempFileName();
             var arg3 = Path.GetTempFileName();
@@ -130,7 +131,7 @@ namespace EventTraceKit.VsExtension.Tests
         [Fact]
         public void EvictsOldestItem2()
         {
-            var cache = new FileCache<DisposableItem>(2, x => new DisposableItem(x));
+            var cache = new FileLruCache<DisposableItem>(2, x => new DisposableItem(x));
             var arg1 = Path.GetTempFileName();
             var arg2 = Path.GetTempFileName();
             var arg3 = Path.GetTempFileName();
@@ -157,7 +158,7 @@ namespace EventTraceKit.VsExtension.Tests
         [Fact]
         public void EvictsChangedItem()
         {
-            var cache = new FileCache<DisposableItem>(2, x => new DisposableItem(x, File.ReadAllText(x)));
+            var cache = new FileLruCache<DisposableItem>(2, x => new DisposableItem(x, File.ReadAllText(x)));
             var arg1 = Path.GetTempFileName();
             File.WriteAllText(arg1, "foo");
 
@@ -176,7 +177,7 @@ namespace EventTraceKit.VsExtension.Tests
         [Fact]
         public void Clear()
         {
-            var cache = new FileCache<Item>(2, x => new Item(x));
+            var cache = new FileLruCache<Item>(2, x => new Item(x));
             var arg1 = Path.GetTempFileName();
             var arg2 = Path.GetTempFileName();
 
@@ -193,7 +194,7 @@ namespace EventTraceKit.VsExtension.Tests
         [Fact]
         public void ClearDisposable()
         {
-            var cache = new FileCache<DisposableItem>(2, x => new DisposableItem(x));
+            var cache = new FileLruCache<DisposableItem>(2, x => new DisposableItem(x));
             var arg1 = Path.GetTempFileName();
             var arg2 = Path.GetTempFileName();
 
@@ -212,7 +213,7 @@ namespace EventTraceKit.VsExtension.Tests
         [Fact]
         public void Dispose()
         {
-            var cache = new FileCache<DisposableItem>(2, x => new DisposableItem(x));
+            var cache = new FileLruCache<DisposableItem>(2, x => new DisposableItem(x));
             var arg1 = Path.GetTempFileName();
             var arg2 = Path.GetTempFileName();
 

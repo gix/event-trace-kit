@@ -48,7 +48,7 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
 
             InitializeComponent();
             DataContext = this;
-            this.builtInPresetNames = from p in presetCollection.BuiltInPresets select p.Name;
+            builtInPresetNames = from p in presetCollection.BuiltInPresets select p.Name;
         }
 
         public static PresetSaveAsDialog ShowPresetSaveAsDialog(

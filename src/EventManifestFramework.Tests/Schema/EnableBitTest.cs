@@ -22,6 +22,8 @@ namespace EventManifestFramework.Tests.Schema
             }
         }
 
+#pragma warning disable xUnit1026 // Theory methods should use all of their parameters
+
         [Theory]
         [MemberData(nameof(EnableBitCases))]
         public void GetIndex(int bit, int itemSize, int index, ulong mask)
@@ -37,5 +39,7 @@ namespace EventManifestFramework.Tests.Schema
             var enableBit = new EnableBit(bit, 0, 0);
             Assert.Equal(mask, enableBit.GetMask(itemSize));
         }
+
+#pragma warning restore xUnit1026 // Theory methods should use all of their parameters
     }
 }

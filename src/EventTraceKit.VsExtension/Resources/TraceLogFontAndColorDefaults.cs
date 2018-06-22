@@ -173,15 +173,7 @@ namespace EventTraceKit.VsExtension.Resources
         public const string CategoryIdString = "93F54391-5474-4289-AABA-78CAB30CBCFC";
         public static Guid CategoryId { get; } = new Guid(CategoryIdString);
 
-        private List<AllColorableItemInfo> Items
-        {
-            get
-            {
-                if (items == null)
-                    items = new List<AllColorableItemInfo>();
-                return items;
-            }
-        }
+        private List<AllColorableItemInfo> Items => items ?? (items = new List<AllColorableItemInfo>());
 
         #region IVsFontAndColorDefaults
 

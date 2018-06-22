@@ -20,6 +20,7 @@
 
   <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Static etkr:ResourceKeys.TextBoxStyleKey}}">
     <Setter Property="Padding" Value="2"/>
+    <Setter Property="Margin" Value="1"/>
   </Style>
 
   <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static etkr:ResourceKeys.ButtonStyleKey}}">
@@ -50,8 +51,8 @@
     <Setter Property="Background" Value="Transparent"/>
     <Setter Property="PreviewStyle">
       <Setter.Value>
-        <Style>
-          <Setter Property="Control.Template">
+        <Style TargetType="{x:Type Control}">
+          <Setter Property="Template">
             <Setter.Value>
               <ControlTemplate>
                 <Rectangle Fill="{DynamicResource {x:Static vsfx:VsBrushes.ButtonShadowKey}}"/>

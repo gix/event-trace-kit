@@ -3,7 +3,6 @@ namespace EventTraceKit.VsExtension
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Threading;
     using System.Windows;
     using Controls;
     using Windows;
@@ -11,20 +10,11 @@ namespace EventTraceKit.VsExtension
     public class AsyncDataViewModel : DependencyObject
     {
         private readonly WorkManager workManager;
-        private readonly IDataView dataView;
 
         private bool isInitializedWithFirstPreset;
         private bool shouldApplyPreset;
         private AsyncDataViewModelPreset presetBeingApplied;
         private AsyncDataViewModelPreset presetToApplyOnReady;
-        private bool refreshViewModelFromModelOnReady;
-        private bool refreshViewModelOnUpdateRequest;
-
-        private CancellationTokenSource readCancellationTokenSource;
-        private readonly ManualResetEvent asyncReadQueueComplete;
-        private readonly object asyncReadWorkQueueLock;
-        private bool allowBackgroundThreads;
-        private int countReadOperationInProgress;
 
         public AsyncDataViewModel(
             WorkManager workManager,
@@ -41,28 +31,23 @@ namespace EventTraceKit.VsExtension
                 throw new ArgumentNullException(nameof(templatePreset));
 
             this.workManager = workManager;
-            this.dataView = dataView;
+            DataView = dataView;
             PresetCollection = presetCollection;
+
             TemplatePreset = templatePreset.EnsureFrozen();
-
-            asyncReadQueueComplete = new ManualResetEvent(true);
-            asyncReadWorkQueueLock = new object();
-            allowBackgroundThreads = true;
-
             GridViewModel = new AsyncDataGridViewModel(this);
-
-            IsReady = false;
-
             dataView.RowCountChanged += OnRowCountChanged;
 
             Preset = defaultPreset;
+            throttledRaiseUpdate = new ThrottledAction(
+                TimeSpan.FromMilliseconds(100),
+                () => workManager.UIThreadTaskFactory.StartNew(RaiseUpdate));
         }
 
         public AsyncDataViewModelPreset TemplatePreset { get; }
-
         public AsyncDataGridViewModel GridViewModel { get; }
 
-        #region public AdvViewModelPresetCollection PresetCollection
+        #region public AdvmPresetCollection PresetCollection
 
         private static readonly DependencyPropertyKey PresetCollectionPropertyKey =
             DependencyProperty.RegisterReadOnly(
@@ -130,24 +115,21 @@ namespace EventTraceKit.VsExtension
                     IsReady = true;
                     isInitializedWithFirstPreset = true;
                 }
+
                 if (!IsReady) {
-                    var b = presetToApplyOnReady == null &&
-                            presetBeingApplied != null &&
-                            !presetBeingApplied.Equals(newPreset);
-                    var b1 = presetToApplyOnReady != null &&
-                             !presetToApplyOnReady.Equals(newPreset);
-                    if (b || b1) {
-                        presetToApplyOnReady = newPreset;
+                    if (presetToApplyOnReady == null) {
+                        if (presetBeingApplied != null && !presetBeingApplied.Equals(newPreset))
+                            presetToApplyOnReady = newPreset;
+                    } else {
+                        if (!presetToApplyOnReady.Equals(newPreset))
+                            presetToApplyOnReady = newPreset;
                     }
+
                     return;
                 }
 
                 presetBeingApplied = newPreset;
-
-                //this.DataView.BeginDataUpdate();
-                ApplyPresetToGridModel(
-                    newPreset,
-                    () => ContinuePresetAfterGridModelInSync(newPreset));
+                ApplyPresetToGridModel(newPreset);
             }
 
             if (oldPreset != null && newPreset != null &&
@@ -166,9 +148,10 @@ namespace EventTraceKit.VsExtension
                 nameof(IsReady),
                 typeof(bool),
                 typeof(AsyncDataViewModel),
-                new PropertyMetadata(Boxed.True, OnIsReadyChanged));
+                new PropertyMetadata(Boxed.False, OnIsReadyChanged));
 
-        public static readonly DependencyProperty IsReadyProperty = IsReadyPropertyKey.DependencyProperty;
+        public static readonly DependencyProperty IsReadyProperty =
+            IsReadyPropertyKey.DependencyProperty;
 
         public bool IsReady
         {
@@ -188,78 +171,65 @@ namespace EventTraceKit.VsExtension
 
         #endregion
 
-        public bool RequestUpdate(bool refreshViewModelFromModel = true)
+        public bool RequestUpdate()
         {
-            if (!IsReady) {
-                refreshViewModelOnUpdateRequest |= refreshViewModelFromModel;
+            if (!IsReady)
                 return false;
-            }
-
-            RaiseUpdate(refreshViewModelFromModel);
+            RaiseUpdate();
             return true;
         }
 
-        internal WorkManager WorkManager => workManager;
-
-        public IDataView DataView => dataView;
+        public IDataView DataView { get; }
         internal object DataValidityToken => DataView.DataValidityToken;
 
         public event EventHandler DataInvalidated;
 
-        private readonly ActionThrottler rowCountChangedThrottler =
-            new ActionThrottler(TimeSpan.FromMilliseconds(100));
+        private readonly ThrottledAction throttledRaiseUpdate;
 
         private void OnRowCountChanged(object sender, EventArgs eventArgs)
         {
-            if (dataView.RowCount == 0)
-                workManager.UIThreadTaskFactory.StartNew(() => DataInvalidated?.Invoke(this, EventArgs.Empty));
+            if (DataView.RowCount == 0)
+                workManager.UIThreadTaskFactory.StartNew(
+                    () => DataInvalidated?.Invoke(this, EventArgs.Empty));
 
-            rowCountChangedThrottler.Run(
-                () => workManager.UIThreadTaskFactory.StartNew(() => RaiseUpdate(false)));
+            throttledRaiseUpdate.Invoke();
         }
 
-        public void RaiseUpdate(bool refreshViewModelFromModel = true)
+        public void RaiseUpdate()
         {
             VerifyAccess();
-
-            GridViewModel?.RaiseUpdated(refreshViewModelFromModel);
+            GridViewModel?.RaiseUpdated();
         }
 
-        internal void EnableTableAfterAsyncOperation()
-        {
-            IsReady = true;
-            allowBackgroundThreads = true;
-        }
-
-        internal void DisableTableForAsyncOperation()
-        {
-            IsReady = false;
-        }
-
-        private void ApplyPresetToGridModel(
-            AsyncDataViewModelPreset preset, Action callbackOnComplete)
+        private void ApplyPresetToGridModel(AsyncDataViewModelPreset preset)
         {
             if (!IsReady)
-                ExceptionUtils.ThrowInvalidOperationException(
-                    "Must be ready before applying preset to grid model.");
+                throw new InvalidOperationException("Model must be ready to apply preset.");
 
-            DisableTableForAsyncOperation();
+            IsReady = false;
 
-            DataColumnViewInfo[] columnViewInfos = GetDataColumnViewInfosFromPreset(preset).ToArray();
-            WaitForReadOperationToComplete();
+            var columnViewInfos = GetDataColumnViewInfosFromPreset(preset).ToArray();
 
-            WorkManager.BackgroundTaskFactory.StartNew(delegate {
-                dataView.BeginDataUpdate();
-                dataView.ApplyColumnView(columnViewInfos);
-                //this.columnViewReady = true;
-                dataView.EndDataUpdate();
-            }).ContinueWith(t => callbackOnComplete(), WorkManager.UIThreadTaskScheduler);
+            DataView.BeginDataUpdate();
+            DataView.ApplyColumnView(columnViewInfos);
+            DataView.EndDataUpdate();
+
+            GridViewModel.ColumnsModel.ApplyPreset(preset);
+
+            IsReady = true;
+            if (presetToApplyOnReady != null) {
+                Preset = presetToApplyOnReady;
+                presetToApplyOnReady = null;
+                return;
+            }
+
+            RequestUpdate();
         }
 
         private IEnumerable<DataColumnViewInfo> GetDataColumnViewInfosFromPreset(
             AsyncDataViewModelPreset preset)
         {
-            foreach (ColumnViewModelPreset columnPreset in preset.ConfigurableColumns)
+            foreach (var columnPreset in preset.ConfigurableColumns)
                 yield return GetDataColumnViewInfoFromPreset(columnPreset);
         }
 
@@ -276,159 +246,24 @@ namespace EventTraceKit.VsExtension
             return info;
         }
 
-        internal void WaitForReadOperationToComplete()
-        {
-            WaitForReadOperationToComplete(-1, null);
-        }
-
-        internal void WaitForReadOperationToComplete(
-            int spinIntervalMilliseconds, Action stillWaitingCallback)
-        {
-            allowBackgroundThreads = false;
-            readCancellationTokenSource?.Cancel();
-
-            while (!asyncReadQueueComplete.WaitOne(spinIntervalMilliseconds))
-                stillWaitingCallback?.Invoke();
-        }
-
-        private void ContinuePresetAfterGridModelInSync(AsyncDataViewModelPreset preset)
-        {
-            GridViewModel.ColumnsModel.ApplyPreset(preset);
-            ContinueAsyncOperation(CompleteApplyPreset, true);
-        }
-
-        private void CompleteApplyPreset()
-        {
-            //if (!this.DataView.EndDataUpdate()) {
-            //    ExceptionUtils.ThrowInternalErrorException("Expected data update nesting depth to be 0");
-            //}
-
-            CompleteAsyncOrSyncUpdate();
-        }
-
-        private void ContinueAsyncOperation(Action callback, bool refreshViewModelFromModelOnReady = true)
-        {
-            if (IsReady)
-                ExceptionUtils.ThrowInvalidOperationException(
-                    "The system is ready, you aren't continuing an async operation?");
-            this.refreshViewModelFromModelOnReady |= refreshViewModelFromModelOnReady;
-            WorkManager.BackgroundTaskFactory.StartNew(callback);
-        }
-
-        private void CompleteAsyncOrSyncUpdate()
-        {
-            WorkManager.UIThread.Send(CompleteAsyncUpdate);
-        }
-
-        private bool CompleteAsyncUpdate()
-        {
-            bool flag = false;
-
-            EnableTableAfterAsyncOperation();
-            //if (this.checkForColumnChangingOnReady) {
-            //    this.checkForColumnChangingOnReady = false;
-            //    ColumnChangingContext columnChangingContext = AsyncDataViewModel.columnChangingContext;
-            //    AsyncDataViewModelPreset preset = presetBeingApplied ?? presetToApplyOnReady;
-            //    if (this.HasAnyVisibleColumnAffectedByChange(preset, columnChangingContext.ColumnChangingPredicate)) {
-            //        this.DisableTableForAsyncOperation();
-            //        AddChangingAdvModel(this);
-            //        flag = true;
-            //    }
-            //    countBusyAdvModels--;
-            //    CompleteUpdateWhenAllReady();
-            //}
-            if (!flag && (presetToApplyOnReady != null)) {
-                Preset = presetToApplyOnReady;
-                presetToApplyOnReady = null;
-                flag = true;
-            }
-
-            if (!flag) {
-                //this.UpdateDynamicHeader();
-                bool refreshViewModelFromModel = refreshViewModelFromModelOnReady && IsReady;
-                if (refreshViewModelFromModel)
-                    refreshViewModelFromModelOnReady = false;
-
-                bool flag3 = RequestUpdate(refreshViewModelFromModel);
-                if (refreshViewModelFromModel && !flag3) {
-                    ExceptionUtils.ThrowInternalErrorException("We should have sent an update for the advmodel, but didn't");
-                }
-            }
-
-            return !flag;
-        }
-
         internal CellValue GetCellValue(int rowIndex, int visibleColumnIndex)
         {
-            var value = dataView.GetCellValue(rowIndex, visibleColumnIndex);
+            var value = DataView.GetCellValue(rowIndex, visibleColumnIndex);
             value.PrecomputeString();
             return value;
         }
 
         public void VerifyIsReady()
         {
-            if (!IsReady)
-                ExceptionUtils.ThrowInvalidOperationException(
-                    "AsyncDataViewModel needs to be ready for this operation");
+            if (!IsReady) {
+                throw new InvalidOperationException("AsyncDataViewModel needs to be ready for this operation");
+            }
         }
 
         internal void OnUIPropertyChanged(
             AsyncDataGridColumn column, DependencyPropertyChangedEventArgs args)
         {
             GridViewModel?.ColumnsModel?.OnUIPropertyChanged(column, args);
-        }
-
-        internal void PerformAsyncReadOperation(Action<CancellationToken> callback)
-        {
-            if (TryBeginReadOperation()) {
-                WorkManager.BackgroundTaskFactory.StartNew(() => {
-                    callback(readCancellationTokenSource.Token);
-                    CompleteAsyncRead();
-                });
-            } else {
-                var cancelledToken = new CancellationTokenSource();
-                cancelledToken.Cancel();
-                WorkManager.BackgroundTaskFactory.StartNew(() => callback(cancelledToken.Token));
-            }
-        }
-
-        internal bool TryBeginReadOperation()
-        {
-            VerifyAccess();
-            if (!allowBackgroundThreads)
-                ExceptionUtils.ThrowInvalidOperationException("Cannot perform background operation in this state.");
-
-            lock (asyncReadWorkQueueLock) {
-                if (countReadOperationInProgress == 0) {
-                    if (readCancellationTokenSource != null)
-                        ExceptionUtils.ThrowInvalidOperationException("The async read count is out of sync with the token source");
-
-                    readCancellationTokenSource = new CancellationTokenSource();
-                    asyncReadQueueComplete.Reset();
-                }
-
-                ++countReadOperationInProgress;
-            }
-
-            return true;
-        }
-
-        private void CompleteAsyncRead()
-        {
-            if (WorkManager.UIThread.CheckAccess())
-                ExceptionUtils.ThrowInternalErrorException("Must not invoke this method from the UI thread");
-
-            lock (asyncReadWorkQueueLock) {
-                if (countReadOperationInProgress == 0)
-                    ExceptionUtils.ThrowInternalErrorException("There was no read operation to complete.");
-
-                --countReadOperationInProgress;
-                if (countReadOperationInProgress == 0) {
-                    readCancellationTokenSource.Dispose();
-                    readCancellationTokenSource = null;
-                    asyncReadQueueComplete.Set();
-                }
-            }
         }
 
         public bool IsValidDataValidityToken(object dataValidityToken)
@@ -439,7 +274,7 @@ namespace EventTraceKit.VsExtension
         public DataColumnView GetPrototypeViewForColumnPreset(ColumnViewModelPreset columnPreset)
         {
             DataColumnViewInfo columnViewInfo = GetDataColumnViewInfoFromPreset(columnPreset);
-            return dataView.CreateDataColumnViewFromInfo(columnViewInfo);
+            return DataView.CreateDataColumnViewFromInfo(columnViewInfo);
         }
     }
 }

@@ -90,10 +90,12 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ActionThrottler.cs" />
+    <Compile Include="Windows\DataObjectExtensions.cs" />
+    <Compile Include="Windows\ItemsControlExtensions.cs" />
+    <Compile Include="Threading\PeriodicCumulativeProgress.cs" />
+    <Compile Include="ThrottledAction.cs" />
     <Compile Include="Controls\DropDownTextBoxAutomationPeer.cs" />
     <Compile Include="Controls\ThemedUserControl.cs" />
-    <Compile Include="DteUtils.cs" />
     <Compile Include="Filtering\ExpressionFactoryVisitor.cs" />
     <Compile Include="Filtering\FilterExpressionLexer.cs" />
     <Compile Include="Filtering\FilterExpressionParser.cs" />
@@ -105,9 +107,8 @@
     <Compile Include="IDiagLog.cs" />
     <Compile Include="IVsSolutionManager.cs" />
     <Compile Include="MessageHelper.cs" />
-    <Compile Include="Native\DebuggingNativeMethods.cs" />
     <Compile Include="ISolutionBrowser.cs" />
-    <Compile Include="PropertiesExtensions.cs" />
+    <Compile Include="Extensions\DteExtensions.cs" />
     <Compile Include="Resources\ResourceKeys.cs" />
     <Compile Include="Resources\ThemeResourceManager.cs" />
     <Compile Include="Controls\TransitioningControl.cs" />
@@ -122,7 +123,7 @@
     <Compile Include="EventSymbolSource.cs" />
     <Compile Include="AsyncDelegateCommand.cs" />
     <Compile Include="Extensions\AsyncExtensions.cs" />
-    <Compile Include="CharCPtrUtils.cs" />
+    <Compile Include="Native\CharCPtrUtils.cs" />
     <Compile Include="Extensions\CollectionExtensions.cs" />
     <Compile Include="Extensions\CollectionUtils.cs" />
     <Compile Include="Extensions\ComparisonUtils.cs" />
@@ -132,9 +133,6 @@
     <Compile Include="Controls\FreezableAreaSeparatorColumn.cs" />
     <Compile Include="Controls\MenuItemCommand.cs" />
     <Compile Include="Controls\SelectorUtils.cs" />
-    <Compile Include="EventTraceKitProfileManager.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="Controls\InsertionAdorner.cs" />
     <Compile Include="Extensions\PackageExtensions.cs" />
     <Compile Include="Extensions\PointUtils.cs" />
@@ -148,7 +146,7 @@
     <Compile Include="Extensions\Extensions.cs" />
     <Compile Include="Extensions\XElementExtensions.cs" />
     <Compile Include="Filtering\FilterRelation.cs" />
-    <Compile Include="PortableExecutableUtils.cs" />
+    <Compile Include="Debugging\PortableExecutableUtils.cs" />
     <Compile Include="Debugging\ProvideDebuggerLaunchHookAttribute.cs" />
     <Compile Include="Extensions\StreamExtensions.cs" />
     <Compile Include="Serialization\CollectionToCommaSeparatedValuesMapper.cs" />
@@ -162,9 +160,10 @@
     <Compile Include="Settings\SettingsStoreWrapper.cs" />
     <Compile Include="Settings\XamlFileSettingsStorage.cs" />
     <Compile Include="Settings\Persistence\Settings.cs" />
-    <Compile Include="TraceProfileUtils.cs" />
+    <Compile Include="Settings\TraceProfileUtils.cs" />
     <Compile Include="Views\AcqRelObservableCollection.cs" />
-    <Compile Include="AsyncLazy.cs" />
+    <Compile Include="Views\ITraceSettingsContext.cs" />
+    <Compile Include="Views\SolutionTraceSettingsContext.cs" />
     <Compile Include="Views\VsModalExtensions.cs" />
     <Compile Include="Windows\Bind.cs" />
     <Compile Include="Views\CollectorViewModel.cs" />
@@ -179,7 +178,7 @@
       <DependentUpon>EventProviderEditControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ExtensionCommands.cs" />
-    <Compile Include="FileCache.cs" />
+    <Compile Include="Utilities\FileLruCache.cs" />
     <Compile Include="Extensions\ExpressionEx.cs" />
     <Compile Include="Filtering\SimpleFilterConditionViewModel.cs" />
     <Compile Include="Filtering\FilterDialog.xaml.cs">
@@ -205,7 +204,7 @@
     <Compile Include="Native\TraceEventInfoCPtr.cs" />
     <Compile Include="Native\TraceDataHelper.cs" />
     <Compile Include="Native\UnmanagedString.cs" />
-    <Compile Include="Threading\Threading.cs" />
+    <Compile Include="Threading\ThreadingExtensions.cs" />
     <Compile Include="Filtering\FilterProperties.cs" />
     <Compile Include="Filtering\TraceLogFilter.cs" />
     <Compile Include="Filtering\TraceLogFilterBuilder.cs" />
@@ -217,14 +216,12 @@
     <Compile Include="ListBoxDragPreview.cs" />
     <Compile Include="Controls\MultiDragListBox.cs" />
     <Compile Include="Controls\MultiDragListView.cs" />
-    <Compile Include="ManagedTdhFormatter.cs" />
     <Compile Include="Native\FormatMessageFlags.cs" />
-    <Compile Include="Native\MOVEFILE_FLAGS.cs" />
+    <Compile Include="Native\MoveFileFlags.cs" />
     <Compile Include="Native\RECT.cs" />
     <Compile Include="Views\KeywordSelector.xaml.cs">
       <DependentUpon>KeywordSelector.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\Misc.cs" />
     <Compile Include="Views\PresetManager\ExceptionFilterEventArgs.cs" />
     <Compile Include="Views\PresetManager\PresetManagerDialog.xaml.cs">
       <DependentUpon>PresetManagerDialog.xaml</DependentUpon>
@@ -251,7 +248,6 @@
       <DependentUpon>PresetSaveAsDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Native\SafeBstrHandle.cs" />
-    <Compile Include="Extensions\ActivatorUtils.cs" />
     <Compile Include="Serialization\DeserializationCallbackAttribute.cs" />
     <Compile Include="Extensions\DictionaryExtensions.cs" />
     <Compile Include="Serialization\EnumerableExtensions.cs" />
@@ -282,17 +278,12 @@
     <Compile Include="DataTable.cs" />
     <Compile Include="IDataView.cs" />
     <Compile Include="DataView.cs" />
-    <Compile Include="ExceptionUtils.cs" />
     <Compile Include="ColumnViewModelPreset.cs" />
     <Compile Include="AsyncDataViewModel.cs" />
-    <Compile Include="InternalErrorException.cs" />
-    <Compile Include="ItemEventHandler.cs" />
     <Compile Include="IWorkManager.cs" />
     <Compile Include="Settings\Persistence\Views.cs" />
-    <Compile Include="Views\EventViewModel.cs" />
-    <Compile Include="TraceLogStatsModel.cs" />
+    <Compile Include="Views\TraceLogStatsModel.cs" />
     <Compile Include="Views\TraceSettingsViewModel.cs" />
-    <Compile Include="UsedImplicitlyAttribute.cs" />
     <Compile Include="Windows\BindableDialogResult.cs" />
     <Compile Include="Windows\KeyDownEventTrigger.cs" />
     <Compile Include="SimpleEventManifestParser.cs" />
@@ -314,14 +305,14 @@
     <Compile Include="Controls\Primitives\ColumnChooser.cs" />
     <Compile Include="Windows\FreezableExtensions.cs" />
     <Compile Include="GenericEventsViewModelSource.cs" />
-    <Compile Include="HslColor.cs" />
-    <Compile Include="HsvColor.cs" />
+    <Compile Include="Windows\Media\HslColor.cs" />
+    <Compile Include="Windows\Media\HsvColor.cs" />
     <Compile Include="IEventInfoSource.cs" />
     <Compile Include="Keyword.cs" />
     <Compile Include="MultiRange.cs" />
     <Compile Include="Native\NativeMethods.cs" />
     <Compile Include="Extensions\NumberUtils.cs" />
-    <Compile Include="QueuedDispatcherAction.cs" />
+    <Compile Include="Windows\QueuedDispatcherAction.cs" />
     <Compile Include="Range.cs" />
     <Compile Include="CommonControlBrushes.cs" />
     <Compile Include="Windows\Boxed.cs" />
@@ -335,7 +326,7 @@
     <Compile Include="Windows\ObjectNullCheckToVisibility.cs" />
     <Compile Include="Controls\Primitives\CollectionDefaults.cs" />
     <Compile Include="Windows\DelegateValueConverter.cs" />
-    <Compile Include="ValueCache.cs" />
+    <Compile Include="Utilities\ValueCache.cs" />
     <Compile Include="Controls\Primitives\AsyncDataGridColumnHeader.cs" />
     <Compile Include="Windows\FrameworkExtensions.cs" />
     <Compile Include="Windows\PropertyMetadataUtils.cs" />
@@ -356,7 +347,6 @@
     <Compile Include="Controls\Primitives\AsyncDataGridCellsPresenter.cs" />
     <Compile Include="PkgCmdId.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TdhHelper.cs" />
     <Compile Include="TimePoint.cs" />
     <Compile Include="TimePointConverter.cs" />
     <Compile Include="TimePointFormatter.cs" />
@@ -376,6 +366,7 @@
     <EmbeddedResource Include="VSPackage.resx">
       <MergeWithCTO>true</MergeWithCTO>
       <ManifestResourceName>VSPackage</ManifestResourceName>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
@@ -554,7 +545,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AutoMapper">
-      <Version>6.2.2</Version>
+      <Version>7.0.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.ImageCatalog">
       <Version>14.3.25407</Version>

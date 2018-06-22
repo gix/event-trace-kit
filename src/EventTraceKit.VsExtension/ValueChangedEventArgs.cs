@@ -7,9 +7,6 @@ namespace EventTraceKit.VsExtension
     {
         private static readonly ObjectPool<ValueChangedEventArgs<T>> Pool;
 
-        private T newValue;
-        private T oldValue;
-
         static ValueChangedEventArgs()
         {
             Pool = new ObjectPool<ValueChangedEventArgs<T>>(
@@ -22,25 +19,25 @@ namespace EventTraceKit.VsExtension
 
         public ValueChangedEventArgs(T oldValue, T newValue)
         {
-            this.oldValue = oldValue;
-            this.newValue = newValue;
+            OldValue = oldValue;
+            NewValue = newValue;
         }
 
-        public T NewValue => newValue;
-        public T OldValue => oldValue;
+        public T OldValue { get; private set; }
+        public T NewValue { get; private set; }
 
         public static ValueChangedEventArgs<T> Get(T oldValue, T newValue)
         {
             ValueChangedEventArgs<T> args = Pool.Acquire();
-            args.oldValue = oldValue;
-            args.newValue = newValue;
+            args.OldValue = oldValue;
+            args.NewValue = newValue;
             return args;
         }
 
         public void Return()
         {
-            oldValue = default(T);
-            newValue = default(T);
+            OldValue = default;
+            NewValue = default;
             Pool.Release(this);
         }
     }

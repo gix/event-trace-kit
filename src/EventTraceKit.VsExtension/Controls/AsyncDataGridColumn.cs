@@ -62,8 +62,6 @@ namespace EventTraceKit.VsExtension.Controls
 
         internal bool IsResizing { get; private set; }
 
-        internal bool IsSafeToReadCellValuesFromUIThread { get; set; } = true;
-
         #region public double Width { get; set; }
 
         /// <summary>

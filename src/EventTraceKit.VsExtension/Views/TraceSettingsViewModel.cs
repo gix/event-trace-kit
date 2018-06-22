@@ -3,96 +3,25 @@ namespace EventTraceKit.VsExtension.Views
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
-    using System.IO;
+    using System.ComponentModel;
     using System.Linq;
-    using System.Threading.Tasks;
     using System.Windows.Input;
     using AutoMapper;
-    using EventManifestFramework;
-    using EventManifestFramework.Schema;
     using EventTraceKit.Tracing;
     using EventTraceKit.VsExtension.Extensions;
     using EventTraceKit.VsExtension.Serialization;
     using EventTraceKit.VsExtension.Settings;
     using EventTraceKit.VsExtension.Settings.Persistence;
+    using EventTraceKit.VsExtension.Threading;
+    using Microsoft.VisualStudio.PlatformUI;
     using Task = System.Threading.Tasks.Task;
-    using TaskEx = EventTraceKit.VsExtension.Threading.TaskExtensions;
-
-    public interface ITraceSettingsContext
-    {
-        AsyncLazy<IReadOnlyList<ProjectInfo>> ProjectsInSolution { get; }
-        AsyncLazy<IReadOnlyList<string>> ManifestsInSolution { get; }
-        Task<EventManifest> GetManifest(string manifestFile);
-    }
-
-    public class TraceSettingsContext : ITraceSettingsContext
-    {
-        private readonly ISolutionBrowser solutionBrowser;
-        private readonly FileCache<EventManifest> manifestCache;
-
-        public TraceSettingsContext(ISolutionBrowser solutionBrowser = null)
-        {
-            this.solutionBrowser = solutionBrowser;
-
-            ProjectsInSolution = new AsyncLazy<IReadOnlyList<ProjectInfo>>(() => FindProjects());
-            ManifestsInSolution = new AsyncLazy<IReadOnlyList<string>>(() => FindManifests());
-
-            manifestCache = new FileCache<EventManifest>(
-                10, path => {
-                    var diags = new DiagnosticCollector();
-
-                    var parser = EventManifestParser.CreateWithWinmeta(diags);
-                    var manifest = parser.ParseManifest(path);
-                    if (manifest == null || diags.Diagnostics.Count != 0)
-                        throw new Exception(
-                            string.Join("\r\n", diags.Diagnostics.Select(x => x.Message)));
-
-                    return manifest;
-                });
-        }
-
-        public AsyncLazy<IReadOnlyList<ProjectInfo>> ProjectsInSolution { get; }
-        public AsyncLazy<IReadOnlyList<string>> ManifestsInSolution { get; }
-
-        public async Task<EventManifest> GetManifest(string manifestFile)
-        {
-            if (string.IsNullOrEmpty(manifestFile) || !File.Exists(manifestFile))
-                return new EventManifest();
-
-            return await Task.Run(() => manifestCache.Get(manifestFile));
-        }
-
-        private IReadOnlyList<ProjectInfo> FindProjects()
-        {
-            var projects = new List<ProjectInfo>();
-            projects.Add(new ProjectInfo(Guid.Empty, null, string.Empty));
-            try {
-                if (solutionBrowser != null)
-                    projects.AddRange(solutionBrowser.EnumerateProjects().OrderBy(x => x.Name));
-            } catch (Exception) {
-            }
-
-            return projects;
-        }
-
-        private IReadOnlyList<string> FindManifests()
-        {
-            try {
-                if (solutionBrowser != null)
-                    return solutionBrowser.FindFiles(".man").ToList();
-            } catch (Exception) {
-            }
-
-            return new string[0];
-        }
-    }
 
     [SerializedShape(typeof(TraceSettings))]
-    public class TraceSettingsViewModel : ObservableModel
+    public class TraceSettingsViewModel : ObservableModel, IDataErrorInfo
     {
         private readonly ISettingsStore settingsStore;
         private readonly IMapper mapper = SettingsSerializer.Mapper;
-        private ITraceSettingsContext context;
+        private readonly ITraceSettingsContext context;
 
         private bool? dialogResult;
         private ICommand saveCommand;
@@ -102,13 +31,16 @@ namespace EventTraceKit.VsExtension.Views
         private ICommand deleteProfileCommand;
         private TraceProfileViewModel activeProfile;
 
-        public TraceSettingsViewModel(
-            ISettingsStore settingsStore = null,
-            ISolutionBrowser solutionBrowser = null)
-        {
-            this.settingsStore = settingsStore;
+        private bool isInRenamingMode;
+        private ICommand switchToRenamingModeCommand;
+        private ICommand saveAndSwitchFromRenamingModeCommand;
+        private ICommand discardAndSwitchFromRenamingModeCommand;
 
-            context = new TraceSettingsContext(solutionBrowser);
+        public TraceSettingsViewModel(
+            ITraceSettingsContext context, ISettingsStore settingsStore = null)
+        {
+            this.context = context ?? throw new ArgumentNullException(nameof(context));
+            this.settingsStore = settingsStore;
 
             Profiles = new AcqRelObservableCollection<TraceProfileViewModel>(
                 x => x.Context = null, x => x.Context = context);
@@ -139,15 +71,62 @@ namespace EventTraceKit.VsExtension.Views
             newProfileCommand ?? (newProfileCommand = new AsyncDelegateCommand(NewProfile));
 
         public ICommand CopyProfileCommand =>
-            copyProfileCommand ?? (copyProfileCommand = new AsyncDelegateCommand(CopyPreset, CanCopyPreset));
+            copyProfileCommand ?? (copyProfileCommand = new AsyncDelegateCommand(CopyProfile, CanCopyProfile));
 
         public ICommand DeleteProfileCommand =>
-            deleteProfileCommand ?? (deleteProfileCommand = new AsyncDelegateCommand(DeletePreset, CanDeletePreset));
+            deleteProfileCommand ?? (deleteProfileCommand = new AsyncDelegateCommand(DeleteProfile, CanDeleteProfile));
+
+        public string NewName { get; set; }
+
+        public bool IsInRenamingMode
+        {
+            get => isInRenamingMode;
+            set => SetProperty(ref isInRenamingMode, value);
+        }
+
+        public ICommand SwitchToRenamingModeCommand =>
+            switchToRenamingModeCommand ??
+            (switchToRenamingModeCommand = new DelegateCommand(o => {
+                if (ActiveProfile != null) {
+                    NewName = ActiveProfile.Name;
+                    IsInRenamingMode = true;
+                }
+            }));
+
+        public ICommand SaveAndSwitchFromRenamingModeCommand =>
+            saveAndSwitchFromRenamingModeCommand ??
+            (saveAndSwitchFromRenamingModeCommand = new DelegateCommand(o => {
+                if (!IsInRenamingMode)
+                    return;
+
+                if (!string.IsNullOrWhiteSpace(NewName)
+                    && ActiveProfile != null
+                    && NewName != ActiveProfile.Name) {
+                    if (!IsUniqueProfileName(NewName))
+                        return;
+                    ActiveProfile.Name = NewName;
+                }
+
+                IsInRenamingMode = false;
+            }));
+
+        public ICommand DiscardAndSwitchFromRenamingModeCommand =>
+            discardAndSwitchFromRenamingModeCommand ??
+            (discardAndSwitchFromRenamingModeCommand = new DelegateCommand(o => {
+                if (IsInRenamingMode) {
+                    NewName = null;
+                    IsInRenamingMode = false;
+                }
+            }));
 
         public TraceProfileViewModel ActiveProfile
         {
             get => activeProfile;
-            set => SetProperty(ref activeProfile, value);
+            set
+            {
+                if (!isInRenamingMode)
+                    SetProperty(ref activeProfile, value);
+            }
         }
 
         public ObservableCollection<TraceProfileViewModel> Profiles { get; }
@@ -155,44 +134,48 @@ namespace EventTraceKit.VsExtension.Views
         private Task NewProfile()
         {
             var newProfile = new TraceProfileViewModel {
-                Name = "Unnamed",
+                Name = EnsureUniqueProfileName("Unnamed Profile"),
                 Collectors = {
                     new EventCollectorViewModel {
-                        Name = "Default"
+                        Name = "Default Collector"
                     }
                 }
             };
 
+            IsInRenamingMode = false;
             Profiles.Add(newProfile);
             ActiveProfile = newProfile;
             return Task.CompletedTask;
         }
 
-        private bool CanCopyPreset()
+        private bool CanCopyProfile()
         {
             return ActiveProfile != null;
         }
 
-        private Task CopyPreset()
+        private Task CopyProfile()
         {
             if (ActiveProfile != null) {
-                var newPreset = ActiveProfile.DeepClone();
-                newPreset.Name = "Copy of " + ActiveProfile.Name;
-                Profiles.Add(newPreset);
-                ActiveProfile = newPreset;
+                IsInRenamingMode = false;
+                var newProfile = ActiveProfile.DeepClone();
+                newProfile.Name = ActiveProfile.Name.MakeNumberedCopy(
+                    Profiles.Select(x => x.Name).ToHashSet());
+                Profiles.Add(newProfile);
+                ActiveProfile = newProfile;
             }
 
             return Task.CompletedTask;
         }
 
-        private bool CanDeletePreset()
+        private bool CanDeleteProfile()
         {
             return ActiveProfile != null;
         }
 
-        private Task DeletePreset()
+        private Task DeleteProfile()
         {
             if (ActiveProfile != null) {
+                IsInRenamingMode = false;
                 Profiles.Remove(ActiveProfile);
                 ActiveProfile = null;
             }
@@ -202,13 +185,14 @@ namespace EventTraceKit.VsExtension.Views
 
         private async Task Save()
         {
+            IsInRenamingMode = false;
             if (settingsStore != null) {
                 var settings = settingsStore.GetValue(SettingsKeys.Tracing) ?? new TraceSettings();
                 settings.Profiles.SetRange(GetProfiles());
                 settings.ActiveProfile = ActiveProfile?.Id;
                 settingsStore.SetValue(SettingsKeys.Tracing, settings);
 
-                await TaskEx.RunWithProgress(() => settingsStore.Save(), "Saving");
+                await ThreadingExtensions.RunWithProgress(() => settingsStore.Save(), "Saving");
             }
 
             DialogResult = true;
@@ -216,6 +200,7 @@ namespace EventTraceKit.VsExtension.Views
 
         private Task Restore()
         {
+            IsInRenamingMode = false;
             LoadFromSettings();
             return Task.CompletedTask;
         }
@@ -235,20 +220,48 @@ namespace EventTraceKit.VsExtension.Views
             return ActiveProfile?.CreateDescriptor();
         }
 
-        public Dictionary<EventKey, string> GetEventSymbols()
-        {
-            return ActiveProfile?.GetEventSymbols() ?? new Dictionary<EventKey, string>();
-        }
-
         public IEnumerable<TraceProfile> GetProfiles()
         {
             return Profiles.Select(x => mapper.Map<TraceProfile>(x));
+        }
+
+        public string this[string columnName]
+        {
+            get
+            {
+                if (columnName == nameof(NewName)) {
+                    if (ActiveProfile?.Name != NewName && !IsUniqueProfileName(NewName))
+                        return "Name is already used";
+                }
+
+                return "";
+            }
+        }
+
+        string IDataErrorInfo.Error { get; }
+
+        private bool IsUniqueProfileName(string name)
+        {
+            return !Profiles.Select(x => x.Name).Contains(name);
+        }
+
+        private string EnsureUniqueProfileName(string name)
+        {
+            var names = Profiles.Select(x => x.Name).ToHashSet();
+            if (!names.Contains(name))
+                return name;
+
+            for (int i = 2; ; ++i) {
+                var numberedName = $"{name} {i}";
+                if (!names.Contains(numberedName))
+                    return numberedName;
+            }
         }
     }
 
     public class TraceSettingsDesignTimeModel : TraceSettingsViewModel
     {
-        public TraceSettingsDesignTimeModel()
+        public TraceSettingsDesignTimeModel() : base(null)
         {
             var provider = new EventProviderViewModel();
             provider.Id = new Guid("9ED16FBE-E642-4D9F-B425-E339FEDC91F8");

@@ -1,5 +1,8 @@
 namespace EventTraceKit.VsExtension.Views.PresetManager
 {
+    using System;
+    using System.ComponentModel;
+    using System.Globalization;
     using System.Windows;
     using System.Windows.Controls;
 
@@ -18,8 +21,10 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
                 case PresetManagerColumnType.Configurable:
                     return ConfigurableColumnTemplate;
                 default:
-                    throw ExceptionUtils.InvalidEnumArgumentException(
-                        model.ColumnType, "model.ColumnType");
+                    throw new InvalidEnumArgumentException(
+                        nameof(model.ColumnType),
+                        Convert.ToInt32(model.ColumnType, CultureInfo.CurrentCulture),
+                        typeof(PresetManagerColumnType));
             }
         }
 

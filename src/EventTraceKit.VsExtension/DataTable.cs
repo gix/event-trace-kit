@@ -76,9 +76,7 @@ namespace EventTraceKit.VsExtension
 
         public DataTableColumnCollection(DataTable table)
         {
-            if (table == null)
-                throw new ArgumentNullException(nameof(table));
-            this.table = table;
+            this.table = table ?? throw new ArgumentNullException(nameof(table));
         }
 
         public DataColumn this[int index] => table[index];

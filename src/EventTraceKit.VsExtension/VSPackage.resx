@@ -130,7 +130,7 @@
     <value>Event Trace Kit Extension</value>
   </data>
   <data name="112" xml:space="preserve">
-    <value>Enables consuming ETW real-time traces.</value>
+    <value>Provides a trace log to consume real-time ETW traces.</value>
   </data>
   <data name="200" xml:space="preserve">
     <value>Trace Log</value>

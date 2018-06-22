@@ -1,4 +1,4 @@
-namespace EventTraceKit.VsExtension.Styles
+namespace EventTraceKit.VsExtension.Resources.Styles
 {
     using System;
 

@@ -2,13 +2,9 @@ namespace EventTraceKit.VsExtension.Tests.Serialization
 {
     using System;
     using System.Collections.Generic;
-    using System.Collections.ObjectModel;
-    using System.ComponentModel;
     using System.IO;
     using System.Linq;
     using System.Windows;
-    using System.Windows.Markup;
-    using System.Xml;
     using System.Xml.Linq;
     using EventTraceKit.VsExtension.Controls;
     using EventTraceKit.VsExtension.Settings.Persistence;
@@ -57,7 +53,7 @@ namespace EventTraceKit.VsExtension.Tests.Serialization
         }
 
         [Fact]
-        public void SerializeTraceSettings()
+        public void SerializeTraceProfile()
         {
             var provider = new EventProviderViewModel(
                 new Guid("37D34B87-80A6-44CE-90BB-1C3D6EDB0784"), "MyProvider");
@@ -76,24 +72,16 @@ namespace EventTraceKit.VsExtension.Tests.Serialization
                 Collectors = { collector }
             };
 
-            var settings = new TraceSettingsViewModel {
-                Profiles = { profile }
-            };
-
             var stream = new MemoryStream();
-            new SettingsSerializer().Save(settings, stream);
+            new SettingsSerializer().Save(profile, stream);
 
             var doc = XDocument.Parse(stream.ReadFullyAsString());
             output.WriteLine(doc.ToString());
 
             stream.Position = 0;
-            var actualSettings = new SettingsSerializer().Load<TraceSettingsViewModel>(stream);
+            var actualProfile = new SettingsSerializer().Load<TraceProfileViewModel>(stream);
 
-            Assert.NotNull(actualSettings);
-            Assert.Equal(settings.Profiles.Count, actualSettings.Profiles.Count);
-
-            var actualProfile = actualSettings.Profiles[0];
-            Assert.NotNull(actualSettings);
+            Assert.NotNull(actualProfile);
             Assert.Equal(profile.Id, actualProfile.Id);
             Assert.Equal(profile.Name, actualProfile.Name);
             Assert.Equal(profile.Collectors.Count, actualProfile.Collectors.Count);
@@ -109,35 +97,6 @@ namespace EventTraceKit.VsExtension.Tests.Serialization
 
             var actualProvider = actualCollector.Providers[0];
             Assert.Equal(provider, actualProvider, new DelegateComparer<EventProviderViewModel>(Equals));
-        }
-
-        [Fact]
-        public void SerializeTraceSettings2()
-        {
-            var profile = new TraceProfileViewModel {
-                Name = "MyProfile"
-            };
-
-            var settings = new TraceSettingsViewModel {
-                Profiles = { profile }
-            };
-
-            var stream = new MemoryStream();
-            new SettingsSerializer().Save(settings, stream);
-
-            var doc = XDocument.Parse(stream.ReadFullyAsString());
-            output.WriteLine(doc.ToString());
-
-            stream.Position = 0;
-            var actualSettings = new SettingsSerializer().Load<TraceSettingsViewModel>(stream);
-
-            Assert.NotNull(actualSettings);
-            Assert.Equal(settings.Profiles.Count, actualSettings.Profiles.Count);
-
-            var actualProfile = actualSettings.Profiles[0];
-            Assert.NotNull(actualSettings);
-            Assert.Equal(profile.Id, actualProfile.Id);
-            Assert.Equal(profile.Name, actualProfile.Name);
         }
 
         private static bool Equals(EventProviderViewModel x, EventProviderViewModel y)
@@ -161,28 +120,6 @@ namespace EventTraceKit.VsExtension.Tests.Serialization
                 x.StartupProject == y.StartupProject;
         }
 
-        private class DelegateComparer<T> : IEqualityComparer<T>
-        {
-            private readonly Func<T, T, bool> comparer;
-            private readonly Func<T, int> hasher;
-
-            public DelegateComparer(Func<T, T, bool> comparer, Func<T, int> hasher = null)
-            {
-                this.comparer = comparer;
-                this.hasher = hasher;
-            }
-
-            public bool Equals(T x, T y)
-            {
-                return comparer(x, y);
-            }
-
-            public int GetHashCode(T obj)
-            {
-                return hasher != null ? hasher(obj) : 0;
-            }
-        }
-
         [Fact]
         public void SerializeEventCollector()
         {
@@ -192,6 +129,7 @@ namespace EventTraceKit.VsExtension.Tests.Serialization
             collector.MinimumBuffers = 23;
             collector.MaximumBuffers = 42;
             collector.LogFileName = @"z:\path\to\logfile.etl";
+            collector.FlushPeriod = 1500;
 
             var provider = new EventProviderViewModel(
                 new Guid("37D34B87-80A6-44CE-90BB-1C3D6EDB0784"), "Bar");
@@ -207,6 +145,7 @@ namespace EventTraceKit.VsExtension.Tests.Serialization
             Assert.Equal("64", doc.Root.Attribute("BufferSize")?.Value);
             Assert.Equal("23", doc.Root.Attribute("MinimumBuffers")?.Value);
             Assert.Equal("42", doc.Root.Attribute("MaximumBuffers")?.Value);
+            Assert.Equal("00:00:01.5000000", doc.Root.Attribute("FlushPeriod")?.Value);
             Assert.Equal(@"z:\path\to\logfile.etl", doc.Root.Attribute("LogFileName")?.Value);
 
             stream.Position = 0;
@@ -217,7 +156,7 @@ namespace EventTraceKit.VsExtension.Tests.Serialization
             Assert.Equal(collector.MinimumBuffers, deserialized.MinimumBuffers);
             Assert.Equal(collector.MaximumBuffers, deserialized.MaximumBuffers);
             Assert.Equal(collector.LogFileName, deserialized.LogFileName);
-            Assert.Equal(collector.LogFileName, deserialized.LogFileName);
+            Assert.Equal(collector.FlushPeriod, deserialized.FlushPeriod);
         }
 
         [Fact]
@@ -252,10 +191,14 @@ namespace EventTraceKit.VsExtension.Tests.Serialization
             var stream = new MemoryStream();
             new SettingsSerializer().Save(source, stream);
 
+            var ns = XNamespace.Get("urn:schemas-eventtracekit:settings");
+            var s = XNamespace.Get("clr-namespace:System;assembly=mscorlib");
+            var xaml = XNamespace.Get("http://schemas.microsoft.com/winfx/2006/xaml");
+
             var doc = XDocument.Parse(stream.ReadFullyAsString());
             output.WriteLine(doc.ToString());
-            Assert.Equal("EventProvider", doc.Root.Name.LocalName);
-            Assert.Equal(15, doc.Root.NonXmlnsAttributes().Count());
+            Assert.Equal(ns + "EventProvider", doc.Root.Name);
+            Assert.Equal(14, doc.Root.NonXmlnsAttributes().Count());
             Assert.Equal("ec700760-3fae-48ad-8110-e4ae77c69f85", doc.Root.Attribute("Id")?.Value);
             Assert.Equal("Foo", doc.Root.Attribute("Name")?.Value);
             Assert.Equal(@"z:\path\to\manifest.man", doc.Root.Attribute("Manifest")?.Value);
@@ -270,7 +213,24 @@ namespace EventTraceKit.VsExtension.Tests.Serialization
             Assert.Equal("True", doc.Root.Attribute("FilterProcessIds")?.Value);
             Assert.Equal("True", doc.Root.Attribute("FilterEventIds")?.Value);
             Assert.Equal("False", doc.Root.Attribute("EventIdsFilterIn")?.Value);
-            Assert.Equal("z:\\foo.csproj", doc.Root.Attribute("StartupProject")?.Value);
+
+            var eventIdsElem = doc.Root.Element(ns + "EventProvider.EventIds");
+            Assert.NotNull(eventIdsElem);
+            Assert.Equal(2, eventIdsElem.Elements().Count());
+            Assert.Equal(new[] { "12", "34" }, eventIdsElem.Elements(s + "UInt16").Select(x => x.Value).ToList());
+
+            var processIds = doc.Root.Element(ns + "EventProvider.ProcessIds");
+            Assert.NotNull(processIds);
+            Assert.Equal(2, processIds.Elements().Count());
+            Assert.Equal(new[] { "23", "42" }, processIds.Elements(s + "UInt32").Select(x => x.Value).ToList());
+
+            var exeNamesElem = doc.Root.Element(ns + "EventProvider.ExecutableNames");
+            Assert.NotNull(exeNamesElem);
+            Assert.Equal(new[] { "foo.exe" }, exeNamesElem.Elements(xaml + "String").Select(x => x.Value).ToList());
+
+            var startupProjectsElem = doc.Root.Element(ns + "EventProvider.StartupProjects");
+            Assert.NotNull(startupProjectsElem);
+            Assert.Equal(new[] { "z:\\foo.csproj" }, startupProjectsElem.Elements(xaml + "String").Select(x => x.Value).ToList());
 
             stream.Position = 0;
             var deserialized = new SettingsSerializer().Load<EventProviderViewModel>(stream);
@@ -289,7 +249,7 @@ namespace EventTraceKit.VsExtension.Tests.Serialization
             Assert.Equal(source.Manifest, deserialized.Manifest);
 
             Assert.Equal(source.FilterExecutableNames, deserialized.FilterExecutableNames);
-            //Assert.Equal(source.ExecutableNames, deserialized.ExecutableNames);
+            Assert.Equal(source.ExecutableNames, deserialized.ExecutableNames);
             Assert.Equal(source.FilterProcessIds, deserialized.FilterProcessIds);
             Assert.Equal(source.ProcessIds, deserialized.ProcessIds);
             Assert.Equal(source.FilterEventIds, deserialized.FilterEventIds);
@@ -372,31 +332,6 @@ namespace EventTraceKit.VsExtension.Tests.Serialization
         }
 
         [Fact]
-        public void Foo()
-        {
-            var serializer = new SettingsSerializer();
-
-            var preset = new AsyncDataViewModelPreset();
-            preset.Name = "Foo";
-            preset.ConfigurableColumns.Add(new ColumnViewModelPreset {
-                Id = new Guid("C6B4A55A-72BB-4235-8F3C-5EDABC4DBA52"),
-                Name = "Col",
-                Width = 123,
-                CellFormat = "F0",
-                IsVisible = true,
-                TextAlignment = TextAlignment.Right
-            });
-
-            var stream = new MemoryStream();
-            serializer.Save(preset, stream);
-
-            stream.Position = 0;
-
-            var unserialized = serializer.Load<AsyncDataViewModelPreset>(stream);
-            Assert.Equal(preset, unserialized);
-        }
-
-        [Fact]
         public void MapViewPreset()
         {
             var preset = new AsyncDataViewModelPreset {
@@ -430,7 +365,7 @@ namespace EventTraceKit.VsExtension.Tests.Serialization
         }
 
         [Fact]
-        public void MapViewPresets()
+        public void MapViewPresetCollection()
         {
             var preset = new AsyncDataViewModelPreset {
                 Name = "Foo",

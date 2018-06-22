@@ -52,6 +52,9 @@ namespace EventTraceKit.VsExtension.Serialization
 
                     AddCallbacks(m, targetType);
                 }
+
+                CreateMap<uint?, TimeSpan?>().ConvertUsing<MillisecondsToTimeSpanConverter>();
+                CreateMap<TimeSpan?, uint?>().ConvertUsing<MillisecondsToTimeSpanConverter>();
             }
 
             private IMappingExpression CreateMapHierarchy(Type sourceType, Type targetType)
@@ -106,6 +109,25 @@ namespace EventTraceKit.VsExtension.Serialization
                 if (typeof(SettingsElement).IsAssignableFrom(shape))
                     return shape;
                 return null;
+            }
+
+            private sealed class MillisecondsToTimeSpanConverter
+                : ITypeConverter<uint?, TimeSpan?>
+                , ITypeConverter<TimeSpan?, uint?>
+            {
+                public TimeSpan? Convert(uint? source, TimeSpan? destination, ResolutionContext context)
+                {
+                    if (source == null)
+                        return null;
+                    return TimeSpan.FromMilliseconds(source.Value);
+                }
+
+                public uint? Convert(TimeSpan? source, uint? destination, ResolutionContext context)
+                {
+                    if (source == null)
+                        return null;
+                    return (uint?)source.Value.TotalMilliseconds;
+                }
             }
         }
     }

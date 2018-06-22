@@ -8,6 +8,7 @@ namespace EventTraceKit.VsExtension
     using System.Threading.Tasks;
     using EventTraceKit.Tracing;
     using EventTraceKit.VsExtension.Debugging;
+    using EventTraceKit.VsExtension.Settings;
     using Microsoft.VisualStudio.Threading;
     using Process = System.Diagnostics.Process;
 
@@ -40,7 +41,6 @@ namespace EventTraceKit.VsExtension
         private readonly object mutex = new object();
 
         private EventSession runningSession;
-        private bool autoLogEnabled;
 #pragma warning disable 649
         private bool asyncAutoLog;
 #pragma warning restore 649
@@ -50,20 +50,20 @@ namespace EventTraceKit.VsExtension
         public event Action<TraceLog> SessionStarting;
         public event Action<EventSession> SessionStarted;
         public event Action<EventSession> SessionStopped;
-        public bool IsAutoLogEnabled => autoLogEnabled;
+        public bool IsAutoLogEnabled { get; private set; }
 
         public void EnableAutoLog(TraceProfileDescriptor profile)
         {
             lock (mutex) {
                 autoLogProfile = profile;
-                autoLogEnabled = true;
+                IsAutoLogEnabled = true;
             }
         }
 
         public void DisableAutoLog()
         {
             lock (mutex) {
-                autoLogEnabled = false;
+                IsAutoLogEnabled = false;
                 autoLogProfile = null;
             }
         }
@@ -152,7 +152,7 @@ namespace EventTraceKit.VsExtension
 
         public void LaunchTraceTargets(IReadOnlyList<TraceLaunchTarget> targets)
         {
-            if (!autoLogEnabled || runningSession != null || !autoLogProfile.IsUsable())
+            if (!IsAutoLogEnabled || runningSession != null || !autoLogProfile.IsUsable())
                 return;
 
             autoLogExitCts?.Cancel();
@@ -170,12 +170,12 @@ namespace EventTraceKit.VsExtension
 
             Task.WhenAll(processTasks).ContinueWith(t => {
                 ExitTraceTargets(targets);
-            }, autoLogExitCts.Token).Forget();
+            }, autoLogExitCts.Token, TaskContinuationOptions.None, TaskScheduler.Default).Forget();
         }
 
         private void ExitTraceTargets(IReadOnlyList<TraceLaunchTarget> targets)
         {
-            if (!autoLogEnabled || runningSession == null)
+            if (!IsAutoLogEnabled || runningSession == null)
                 return;
 
             StopSession();

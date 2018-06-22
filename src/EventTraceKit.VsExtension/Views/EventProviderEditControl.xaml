@@ -10,8 +10,8 @@
   xmlns:schema="clr-namespace:EventManifestFramework.Schema;assembly=EventManifestFramework"
   mc:Ignorable="d"
   d:DataContext="{d:DesignInstance {x:Type etkv:EventProviderViewModel}, d:IsDesignTimeCreatable=False}"
-  d:DesignWidth="300"
-  d:DesignHeight="300">
+  d:DesignWidth="600"
+  d:DesignHeight="400">
   <Grid>
     <FrameworkElement.Resources>
       <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
@@ -75,8 +75,37 @@
       </Grid>
 
       <Label Grid.Row="2" Grid.Column="0"
+             Content="Project" Target="{Binding ElementName=StartupProject}"
+             ToolTip="{Binding ToolTip, ElementName=StartupProject}"
+             ToolTipService.ShowDuration="10000"/>
+      <ComboBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3"
+                x:Name="StartupProject"
+                etkw:Bind.ItemsSourceProviderAsync="{Binding SuggestedProjectsSource}"
+                DisplayMemberPath="Name"
+                SelectedValue="{Binding StartupProject, UpdateSourceTrigger=PropertyChanged}"
+                SelectedValuePath="FullName"
+                ToolTipService.ShowDuration="10000">
+        <ComboBox.ToolTip>
+          <ToolTip MaxWidth="400">
+            <TextBlock TextWrapping="Wrap">
+              <Run>
+                Sets the startup project associated with the event provider.
+              </Run>
+              <LineBreak/>
+              <LineBreak/>
+              <Run>
+                Whenever this project is started (with or without debugging) and
+                automatic logging is enabled, the event provider will be enabled
+                for the specific process.
+              </Run>
+            </TextBlock>
+          </ToolTip>
+        </ComboBox.ToolTip>
+      </ComboBox>
+
+      <Label Grid.Row="3" Grid.Column="0"
              Content="Level" Target="{Binding ElementName=level}"/>
-      <ComboBox Grid.Row="2" Grid.Column="1" x:Name="level"
+      <ComboBox Grid.Row="3" Grid.Column="1" x:Name="level"
                 etkw:Bind.ItemsSourceProviderAsync="{Binding DefinedLevelsSource}"
                 Text="{Binding Level}"
                 TextSearch.TextPath="Value.Value"
@@ -84,16 +113,16 @@
         <ComboBox.ItemTemplate>
           <DataTemplate DataType="{x:Type schema:Level}">
             <TextBlock>
-              <Run Text="{Binding Value, Mode=OneTime, StringFormat='0x{0:X2}'}"/>
-              (<Run Text="{Binding Name.Value.Prefix, Mode=OneTime}"/>:<Run Text="{Binding Name.Value.LocalName, Mode=OneTime}"/>)
+              <Run Text="{Binding Value, Mode=OneTime}"/>:
+              <Run Text="{Binding Name.Value.AsPrefixedString, Mode=OneTime}"/>
             </TextBlock>
           </DataTemplate>
         </ComboBox.ItemTemplate>
       </ComboBox>
 
-      <Label Grid.Row="3" Grid.Column="0"
+      <Label Grid.Row="4" Grid.Column="0"
              Content="Match Any Keywords" Target="{Binding ElementName=matchAnyKeywords}"/>
-      <etkc:DropDownTextBox Grid.Row="3" Grid.Column="1" x:Name="matchAnyKeywords"
+      <etkc:DropDownTextBox Grid.Row="4" Grid.Column="1" x:Name="matchAnyKeywords"
                             Margin="3"
                             Text="{Binding MatchAnyKeyword, Converter={x:Static etkw:HexNumberConverter.Instance}, ConverterParameter='16'}">
         <etkc:DropDownTextBox.DropDownContentTemplate>
@@ -104,9 +133,9 @@
         </etkc:DropDownTextBox.DropDownContentTemplate>
       </etkc:DropDownTextBox>
 
-      <Label Grid.Row="4" Grid.Column="0"
+      <Label Grid.Row="5" Grid.Column="0"
              Content="Match All Keywords" Target="{Binding ElementName=matchAllKeyword}"/>
-      <etkc:DropDownTextBox Grid.Row="4" Grid.Column="1" x:Name="matchAllKeyword"
+      <etkc:DropDownTextBox Grid.Row="5" Grid.Column="1" x:Name="matchAllKeyword"
                             Margin="3"
                             Text="{Binding MatchAllKeyword, Converter={x:Static etkw:HexNumberConverter.Instance}, ConverterParameter='16'}">
         <etkc:DropDownTextBox.DropDownContentTemplate>
@@ -117,34 +146,47 @@
         </etkc:DropDownTextBox.DropDownContentTemplate>
       </etkc:DropDownTextBox>
 
-      <CheckBox Grid.Row="2" Grid.Column="3" Content="Include Stacktrace"
+      <CheckBox Grid.Row="3" Grid.Column="3" Content="Include Stacktrace"
                 HorizontalAlignment="Left"
                 IsChecked="{Binding IncludeStackTrace, UpdateSourceTrigger=PropertyChanged}"/>
-      <CheckBox Grid.Row="3" Grid.Column="3" Content="Include Security Id"
+      <CheckBox Grid.Row="4" Grid.Column="3" Content="Include Security Id"
                 HorizontalAlignment="Left"
                 IsChecked="{Binding IncludeSecurityId, UpdateSourceTrigger=PropertyChanged}"/>
-      <CheckBox Grid.Row="4" Grid.Column="3" Content="Include Terminal Session Id"
+      <CheckBox Grid.Row="5" Grid.Column="3" Content="Include Terminal Session Id"
                 HorizontalAlignment="Left"
                 IsChecked="{Binding IncludeTerminalSessionId, UpdateSourceTrigger=PropertyChanged}"/>
-
-      <Label Grid.Row="5" Grid.Column="0"
-             Content="Project" Target="{Binding ElementName=StartupProject}"/>
-      <ComboBox Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3"
-                x:Name="StartupProject"
-                etkw:Bind.ItemsSourceProviderAsync="{Binding SuggestedProjectsSource}"
-                DisplayMemberPath="Name"
-                SelectedValue="{Binding StartupProject, UpdateSourceTrigger=PropertyChanged}"
-                SelectedValuePath="FullName"/>
 
       <CheckBox Grid.Row="6" Grid.Column="0"
                 Content="Executable Name" IsChecked="{Binding FilterExecutableNames}"/>
       <TextBox Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3"
-                Text="{Binding ExecutableNames, UpdateSourceTrigger=PropertyChanged}"/>
+               Text="{Binding ExecutableNames, UpdateSourceTrigger=PropertyChanged}">
+        <TextBox.ToolTip>
+          <ToolTip MaxWidth="400">
+            <TextBlock TextWrapping="Wrap">
+              <Run>
+                When enabled, events are only logged from processes matching any
+                executable name listed. Multiple names are separated by comma (e.g. foo.exe,bar.exe).
+              </Run>
+            </TextBlock>
+          </ToolTip>
+        </TextBox.ToolTip>
+      </TextBox>
 
       <CheckBox Grid.Row="7" Grid.Column="0"
                 Content="Process Ids" IsChecked="{Binding FilterProcessIds}"/>
       <TextBox Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="3"
-                Text="{Binding ProcessIds, UpdateSourceTrigger=PropertyChanged}"/>
+                Text="{Binding ProcessIds, UpdateSourceTrigger=PropertyChanged}">
+        <TextBox.ToolTip>
+          <ToolTip MaxWidth="400">
+            <TextBlock TextWrapping="Wrap">
+              <Run>
+                When enabled, events are only logged from processes matching any
+                process ID listed. Multiple IDs are separated by comma (e.g. 23,24).
+              </Run>
+            </TextBlock>
+          </ToolTip>
+        </TextBox.ToolTip>
+      </TextBox>
 
       <CheckBox Grid.Row="8" Grid.Column="0"
                 Content="Event Ids" IsChecked="{Binding FilterEventIds}"/>
@@ -153,44 +195,22 @@
           <ColumnDefinition Width="Auto"/>
           <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        <CheckBox Content="Filter In" IsChecked="{Binding EventIdsFilterIn}"/>
-        <TextBox Grid.Column="1" Text="{Binding EventIds, UpdateSourceTrigger=PropertyChanged}"/>
+        <CheckBox Content="Filter In" IsChecked="{Binding EventIdsFilterIn}"
+                  ToolTip="Enable to include the listed events. Disable to exclude."/>
+        <TextBox Grid.Column="1" Text="{Binding EventIds, UpdateSourceTrigger=PropertyChanged}">
+          <TextBox.ToolTip>
+            <ToolTip MaxWidth="400">
+              <TextBlock TextWrapping="Wrap">
+                <Run>
+                  Event IDs to filter. Multiple IDs are separated by comma (e.g. 23,24).
+                  If "Filter In" is enabled, only the listed events are logged,
+                  otherwise they are excluded.
+                </Run>
+              </TextBlock>
+            </ToolTip>
+          </TextBox.ToolTip>
+        </TextBox>
       </Grid>
     </Grid>
-    <!--<Separator Grid.Row="1" Style="{StaticResource UnrelatedControlsSeparator}"/>
-    <TextBlock Grid.Row="2" Text="{Binding InvalidManifestMessage}"/>
-    <DataGrid Grid.Row="3"
-              ItemsSource="{Binding Events}"
-              AutoGenerateColumns="False"
-              BorderThickness="1"
-              CanUserAddRows="True"
-              CanUserDeleteRows="True"
-              GridLinesVisibility="None"
-              HeadersVisibility="Column"
-              SelectionMode="Extended"
-              SelectionUnit="FullRow"
-              EnableRowVirtualization="True"
-              EnableColumnVirtualization="True">
-      <i:Interaction.Behaviors>
-        <etkw:ToggleSelectOnSpace ToggleSelectCommand="{Binding ToggleSelectedEventsCommand}"/>
-      </i:Interaction.Behaviors>
-      <DataGrid.Columns>
-        <DataGridCheckBoxColumn Binding="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}"
-                                ElementStyle="{StaticResource DataGridCheckBoxColumnStyle}"
-                                EditingElementStyle="{StaticResource DataGridCheckBoxColumnStyle}"/>
-        <DataGridTextColumn Header="Id" Binding="{Binding Id}"
-                            EditingElementStyle="{StaticResource DataGridTextColumnEditingStyle}"/>
-        <DataGridTextColumn Header="Version" Binding="{Binding Version}"
-                            EditingElementStyle="{StaticResource DataGridTextColumnEditingStyle}"/>
-        <DataGridTextColumn Header="Symbol" Binding="{Binding Symbol}"
-                            EditingElementStyle="{StaticResource DataGridTextColumnEditingStyle}"
-                            Width="*"/>
-        <DataGridTextColumn Header="Channel" Binding="{Binding Channel}" IsReadOnly="True"/>
-        <DataGridTextColumn Header="Level" Binding="{Binding Level}" IsReadOnly="True"/>
-        <DataGridTextColumn Header="Task" Binding="{Binding Task}" IsReadOnly="True"/>
-        <DataGridTextColumn Header="Opcode" Binding="{Binding Opcode}" IsReadOnly="True"/>
-        <DataGridTextColumn Header="Keywords" Binding="{Binding Keywords}" IsReadOnly="True"/>
-      </DataGrid.Columns>
-    </DataGrid>-->
   </Grid>
 </etkc:ThemedUserControl>

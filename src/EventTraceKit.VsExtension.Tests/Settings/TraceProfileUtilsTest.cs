@@ -1,9 +1,10 @@
-namespace EventTraceKit.VsExtension.Tests
+namespace EventTraceKit.VsExtension.Tests.Settings
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using EventTraceKit.Tracing;
+    using EventTraceKit.VsExtension.Settings;
     using EventTraceKit.VsExtension.Settings.Persistence;
     using Xunit;
 
@@ -119,13 +120,6 @@ namespace EventTraceKit.VsExtension.Tests
                         StartupProjects = { @"z:\project1.vcxproj", @"z:\project2.vcxproj" },
                     }
                 };
-                yield return new object[] {
-                    new EventProvider {
-                        Id = new Guid("E436A7BC-76A4-4226-9BA1-A3EF2E977C55"),
-                        IsEnabled = false,
-                        Manifest = @"z:\etw.man",
-                    }
-                };
             }
         }
 
@@ -151,6 +145,18 @@ namespace EventTraceKit.VsExtension.Tests
         {
             var actual = TraceProfileUtils.GetDescriptor(expected);
             VerifyEqual(expected, actual);
+        }
+
+        [Fact]
+        public void GetDescriptor_ThrowsForDisabledEventProvider()
+        {
+            var provider = new EventProvider {
+                Id = new Guid("E436A7BC-76A4-4226-9BA1-A3EF2E977C55"),
+                IsEnabled = false,
+                Manifest = @"z:\etw.man",
+            };
+            var ex = Assert.Throws<InvalidOperationException>(() => TraceProfileUtils.GetDescriptor(provider));
+            Assert.Contains("disabled", ex.Message);
         }
 
         private void VerifyEqual(TraceProfile expected, TraceProfileDescriptor actual)

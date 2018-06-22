@@ -33,6 +33,10 @@ public:
     virtual ~IFilteredTraceLog() = default;
     virtual size_t GetEventCount() = 0;
     virtual EventInfo GetEvent(size_t index) const = 0;
+
+    // Takes ownership of the passed in filter. Note: This cannot be a unique_ptr
+    // directly due to a compiler bug:
+    // https://developercommunity.visualstudio.com/content/problem/201217/ccli-stdmove-causes-stdunique-ptr-parameter-to-be.html
     virtual void SetFilter(TraceLogFilter* filter) = 0;
 };
 

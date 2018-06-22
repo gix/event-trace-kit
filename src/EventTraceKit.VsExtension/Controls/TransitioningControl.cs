@@ -3,7 +3,6 @@ namespace EventTraceKit.VsExtension.Controls
     using System;
     using System.Collections.ObjectModel;
     using System.Diagnostics;
-    using System.Globalization;
     using System.Linq;
     using System.Windows;
     using System.Windows.Controls;
@@ -121,10 +120,8 @@ namespace EventTraceKit.VsExtension.Controls
             DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var source = (TransitioningControl)d;
-            if (!source.allowIsTransitioningPropertyWrite) {
+            if (!source.allowIsTransitioningPropertyWrite)
                 source.IsTransitioning = (bool)e.OldValue;
-                throw new InvalidOperationException();
-            }
         }
 
         private Storyboard CurrentTransition
@@ -164,14 +161,12 @@ namespace EventTraceKit.VsExtension.Controls
             }
 
             source.SetValue(TransitionProperty, oldValue);
-            throw new ArgumentException(string.Format(CultureInfo.CurrentCulture,
-                "Temporary removed exception message", newValue));
         }
 
         private static void OnRestartTransitionOnContentChangePropertyChanged(
             DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var source = ((TransitioningControl)d);
+            var source = (TransitioningControl)d;
             source.OnRestartTransitionOnContentChangeChanged((bool)e.OldValue, (bool)e.NewValue);
         }
 

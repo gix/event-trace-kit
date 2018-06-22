@@ -114,7 +114,8 @@ namespace EventTraceKit.VsExtension.Views
 
                 yield return new Separator();
 
-                var filterableColumns = view.Columns.Where(x => filterableColumnsMap.ContainsKey(x.ColumnId))
+                var filterableColumns = view.Columns
+                    .Where(x => filterableColumnsMap.ContainsKey(x.ColumnId))
                     .OrderBy(x => x.Name).ToList();
 
                 var includeMenu = new MenuItem { Header = "Include" };
