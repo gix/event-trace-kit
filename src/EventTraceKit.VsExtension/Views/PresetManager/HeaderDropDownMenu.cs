@@ -16,7 +16,7 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
         private static readonly DependencyPropertyKey ItemsPropertyKey =
             DependencyProperty.RegisterReadOnly(
                 nameof(Items),
-                typeof(ObservableCollection<GraphTreeItemHeaderCommand>),
+                typeof(ObservableCollection<HeaderCommand>),
                 typeof(HeaderDropDownMenu),
                 PropertyMetadataUtils.DefaultNull);
 
@@ -32,7 +32,7 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
 
         public HeaderDropDownMenu()
         {
-            Items = new ObservableCollection<GraphTreeItemHeaderCommand>();
+            Items = new ObservableCollection<HeaderCommand>();
         }
 
         private void HeaderPropertyChanged(DependencyPropertyChangedEventArgs e)
@@ -52,9 +52,9 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
             set => SetValue(HeaderProperty, value);
         }
 
-        public ObservableCollection<GraphTreeItemHeaderCommand> Items
+        public ObservableCollection<HeaderCommand> Items
         {
-            get => (ObservableCollection<GraphTreeItemHeaderCommand>)GetValue(ItemsProperty);
+            get => (ObservableCollection<HeaderCommand>)GetValue(ItemsProperty);
             private set => SetValue(ItemsPropertyKey, value);
         }
     }

@@ -1,10 +1,10 @@
-namespace EventTraceKit.VsExtension
+namespace EventTraceKit.VsExtension.Views.PresetManager
 {
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Documents;
     using System.Windows.Media;
-    using Controls;
+    using EventTraceKit.VsExtension.Controls;
 
     public class ListBoxDragPreview
     {

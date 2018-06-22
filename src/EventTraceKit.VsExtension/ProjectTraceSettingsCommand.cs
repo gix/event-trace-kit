@@ -3,12 +3,12 @@ namespace EventTraceKit.VsExtension
     using System;
     using System.ComponentModel.Design;
     using System.Globalization;
+    using System.Security.Permissions;
     using EventTraceKit.VsExtension.Extensions;
     using EventTraceKit.VsExtension.Views;
-    using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
 
-    internal sealed class ProjectTraceSettingsCommand : OleMenuCommand
+    internal sealed class ProjectTraceSettingsCommand : MenuCommand
     {
         private readonly Func<IVsMonitorSelection> vsMonitorSelectionFactory;
         private readonly Func<ProjectInfo, TraceSettingsViewModel> viewModelFactory;
@@ -20,6 +20,17 @@ namespace EventTraceKit.VsExtension
         {
             this.vsMonitorSelectionFactory = vsMonitorSelectionFactory ?? throw new ArgumentNullException(nameof(vsMonitorSelectionFactory));
             this.viewModelFactory = viewModelFactory ?? throw new ArgumentNullException(nameof(viewModelFactory));
+        }
+
+        public override int OleStatus
+        {
+            [PermissionSet(SecurityAction.LinkDemand, Name = "FullTrust")]
+            get
+            {
+                var project = vsMonitorSelectionFactory()?.GetSelectedProject();
+                Enabled = project != null && IsSupported(project);
+                return base.OleStatus;
+            }
         }
 
         public override void Invoke()

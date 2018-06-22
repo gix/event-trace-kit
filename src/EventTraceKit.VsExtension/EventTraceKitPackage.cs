@@ -24,9 +24,6 @@ namespace EventTraceKit.VsExtension
         Style = VsDockStyle.Tabbed,
         Window = VsGuids.OutputWindowFrameString,
         Orientation = ToolWindowOrientation.Right)]
-    //[FontAndColorsRegistration(
-    //    "Trace Log", FontAndColorDefaultsProvider.ServiceId,
-    //    TraceLogFontAndColorDefaults.CategoryIdString)]
     [ProvideService(typeof(STraceController), IsAsyncQueryable = true)]
     public class EventTraceKitPackage : AsyncPackage, IDiagLog
     {
@@ -40,8 +37,6 @@ namespace EventTraceKit.VsExtension
         private IVsOutputWindow outputWindow;
         private ISettingsService settings;
 
-        //private ResourceSynchronizer resourceSynchronizer;
-
         protected override async Task InitializeAsync(
             CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
@@ -51,12 +46,6 @@ namespace EventTraceKit.VsExtension
 
             traceController = new DefaultTraceController();
 
-            //var fncStorage = this.GetService<SVsFontAndColorStorage, IVsFontAndColorStorage>();
-            //resourceSynchronizer = new ResourceSynchronizer(
-            //    fncStorage, Application.Current.Resources.MergedDictionaries);
-
-            //container.AddService(
-            //    typeof(SVsFontAndColorDefaultsProvider), CreateService, true);
             AddService(typeof(STraceController), CreateServiceAsync);
 
             // -----------------------------------------------------------------
@@ -93,8 +82,6 @@ namespace EventTraceKit.VsExtension
             IAsyncServiceContainer asyncServiceContainer,
             CancellationToken cancellationToken, Type serviceType)
         {
-            //if (service.IsEquivalentTo(typeof(SVsFontAndColorDefaultsProvider)))
-            //    return new SVsFontAndColorDefaultsProvider(resourceSynchronizer);
             if (serviceType.IsEquivalentTo(typeof(STraceController)))
                 return Task.FromResult<object>(traceController);
 

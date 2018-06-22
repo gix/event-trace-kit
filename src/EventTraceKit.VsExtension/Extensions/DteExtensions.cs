@@ -23,7 +23,7 @@ namespace EventTraceKit.VsExtension.Extensions
             IntPtr punkSelectionContainer = IntPtr.Zero;
             try {
                 vsMonitorSelection.GetCurrentSelection(
-                    out punkHierarchy, out uint itemId, out var _,
+                    out punkHierarchy, out uint itemId, out _,
                     out punkSelectionContainer);
 
                 if (punkHierarchy == IntPtr.Zero)
@@ -38,7 +38,7 @@ namespace EventTraceKit.VsExtension.Extensions
                     && hierarchy.GetProperty(
                         VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_ExtObject,
                         out var project) >= 0) {
-                    return project as EnvDTE.Project;
+                    return project as Project;
                 }
 
                 return null;

@@ -520,7 +520,7 @@
     </Style>
     <Style x:Key="VsToolBarTrayStyle" TargetType="{x:Type ToolBarTray}" BasedOn="{StaticResource {x:Type ToolBarTray}}">
       <Style.Resources>
-        <Style TargetType="{x:Type Button}" BasedOn="{StaticResource VsToolBarButtonStyle}"/>
+        <Style x:Key="{x:Static ToolBar.ButtonStyleKey}" TargetType="{x:Type Button}" BasedOn="{StaticResource VsToolBarButtonStyle}"/>
         <Style TargetType="{x:Type ToolBar}" BasedOn="{StaticResource VsToolBar}">
           <Setter Property="Padding" Value="4,2,4,2"/>
           <Setter Property="Margin" Value="0"/>
@@ -610,7 +610,8 @@
         SelectedItem="{Binding SelectedColumn}"
         BorderThickness="1"
         SelectionMode="Extended"
-        ItemContainerStyleSelector="{StaticResource LayoutListColumnStyleSelector}">
+        ItemContainerStyleSelector="{StaticResource LayoutListColumnStyleSelector}"
+        KeyDown="OnLayoutListKeyDown">
         <etkc:MultiDragListView.View>
           <GridView>
             <GridViewColumn Header="Visible">
@@ -676,9 +677,9 @@
           <ColumnDefinition Width="Auto"/>
           <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
-        <Button Grid.Column="1" Content="OK" Click="CloseButtonClickHandler" IsDefault="True"/>
-        <Button Grid.Column="2" Content="Cancel" Click="CancelButtonClickHandler" IsCancel="True" Margin="7,1,1,1"/>
-        <Button Grid.Column="3" Content="Apply" Click="ApplyButtonClickHandler" IsEnabled="{Binding CanApply}" Margin="7,1,1,1"/>
+        <Button Grid.Column="1" Content="OK" Click="OnCloseButtonClick" IsDefault="True"/>
+        <Button Grid.Column="2" Content="Cancel" Click="OnCancelButtonClick" IsCancel="True" Margin="7,1,1,1"/>
+        <Button Grid.Column="3" Content="Apply" Click="OnApplyButtonClick" IsEnabled="{Binding CanApply}" Margin="7,1,1,1"/>
       </Grid>
     </Border>
   </Grid>

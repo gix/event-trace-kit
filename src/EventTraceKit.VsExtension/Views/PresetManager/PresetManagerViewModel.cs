@@ -46,7 +46,7 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
                 Mode = BindingMode.OneWay
             });
 
-            HdvViewModel = advModel;
+            AdvViewModel = advModel;
             IsDialogStateDirty = false;
             isApplyingChanges = false;
         }
@@ -85,24 +85,24 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
 
         #endregion
 
-        #region public AsyncDataViewModel HdvViewModel
+        #region public AsyncDataViewModel AdvViewModel
 
-        private static readonly DependencyPropertyKey HdvViewModelPropertyKey =
+        private static readonly DependencyPropertyKey AdvViewModelPropertyKey =
             DependencyProperty.RegisterReadOnly(
-                nameof(HdvViewModel),
+                nameof(AdvViewModel),
                 typeof(AsyncDataViewModel),
                 typeof(PresetManagerViewModel),
                 new PropertyMetadata(
                     null,
-                    (d, e) => ((PresetManagerViewModel)d).OnHdvViewModelPropertyChanged(e)));
+                    (d, e) => ((PresetManagerViewModel)d).OnAdvViewModelPropertyChanged(e)));
 
-        public static readonly DependencyProperty HdvViewModelProperty =
-            HdvViewModelPropertyKey.DependencyProperty;
+        public static readonly DependencyProperty AdvViewModelProperty =
+            AdvViewModelPropertyKey.DependencyProperty;
 
-        public AsyncDataViewModel HdvViewModel
+        public AsyncDataViewModel AdvViewModel
         {
-            get => (AsyncDataViewModel)GetValue(HdvViewModelProperty);
-            private set => SetValue(HdvViewModelPropertyKey, value);
+            get => (AsyncDataViewModel)GetValue(AdvViewModelProperty);
+            private set => SetValue(AdvViewModelPropertyKey, value);
         }
 
         #endregion
@@ -320,7 +320,7 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
 
         #endregion
 
-        private void OnHdvViewModelPropertyChanged(DependencyPropertyChangedEventArgs e)
+        private void OnAdvViewModelPropertyChanged(DependencyPropertyChangedEventArgs e)
         {
             var oldValue = (AsyncDataViewModel)e.OldValue;
             if (oldValue != null) {
@@ -332,23 +332,22 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
             if (newValue != null) {
                 newValue.PresetCollection.AvailablePresetsChanged += OnAvailablePresetsChanged;
                 newValue.PresetChanged += OnPresetChanged;
-                RefreshFromHdvViewModel();
+                RefreshFromAdvViewModel();
             }
         }
 
         private void OnAvailablePresetsChanged(object sender, EventArgs e)
         {
-            PresetDropDownMenu.Items.Clear();
-            PresetDropDownMenu.Items.AddRange(
-                from preset in HdvViewModel.PresetCollection.EnumerateAllPresetsByName()
+            PresetDropDownMenu.Items.SetRange(
+                from preset in AdvViewModel.PresetCollection.EnumerateAllPresetsByName()
                 select new ApplyPresetHeaderCommand(this, preset.Name));
         }
 
         private bool CanSavePreset()
         {
-            if (HdvViewModel == null)
+            if (AdvViewModel == null)
                 return false;
-            var presetCollection = HdvViewModel.PresetCollection;
+            var presetCollection = AdvViewModel.PresetCollection;
             if (presetCollection.IsBuiltInPreset(CurrentSelectedPresetName))
                 return false;
 
@@ -364,7 +363,7 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
         public Task SavePresetAs()
         {
             var dialog = PresetSaveAsDialog.ShowPresetSaveAsDialog(
-                HdvViewModel.PresetCollection);
+                AdvViewModel.PresetCollection);
             if (dialog.DialogResult == true)
                 SaveCurrentPresetAs(dialog.NewPresetName);
             return Task.CompletedTask;
@@ -384,8 +383,8 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
         private bool CanDeletePreset()
         {
             return
-                HdvViewModel != null &&
-                !HdvViewModel.PresetCollection.IsBuiltInPreset(CurrentSelectedPresetName);
+                AdvViewModel != null &&
+                !AdvViewModel.PresetCollection.IsBuiltInPreset(CurrentSelectedPresetName);
         }
 
         private Task DeletePreset()
@@ -397,15 +396,15 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
 
             if (result == MessageBoxResult.Yes) {
                 DeletePreset(name);
-                var newPreset = HdvViewModel.PresetCollection.EnumerateAllPresets().FirstOrDefault();
+                var newPreset = AdvViewModel.PresetCollection.EnumerateAllPresets().FirstOrDefault();
                 if (newPreset == null) {
-                    newPreset = HdvViewModel.TemplatePreset;
-                    HdvViewModel.PresetCollection.SetUserPreset(newPreset);
+                    newPreset = AdvViewModel.TemplatePreset;
+                    AdvViewModel.PresetCollection.SetUserPreset(newPreset);
                 }
 
-                if (HdvViewModel.Preset.Equals(currentPreset)) {
+                if (AdvViewModel.Preset.Equals(currentPreset)) {
                     isApplyingChanges = true;
-                    HdvViewModel.Preset = newPreset;
+                    AdvViewModel.Preset = newPreset;
                     isApplyingChanges = false;
                 }
 
@@ -417,10 +416,10 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
 
         private void DeletePreset(string name)
         {
-            HdvViewModel.PresetCollection.DeleteUserPresetByName(name);
+            AdvViewModel.PresetCollection.DeleteUserPresetByName(name);
         }
 
-        private sealed class ApplyPresetHeaderCommand : GraphTreeItemHeaderCommand
+        private sealed class ApplyPresetHeaderCommand : HeaderCommand
         {
             private static readonly IsEqualConverter isEqualConverter = new IsEqualConverter();
             private readonly PresetManagerViewModel presetManagerViewModel;
@@ -439,29 +438,28 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
                 });
             }
 
-            public override void OnExecute()
+            protected override void OnExecute()
             {
                 presetManagerViewModel.RefreshFromPreset(DisplayName);
             }
         }
 
-        private void RefreshFromHdvViewModel()
+        private void RefreshFromAdvViewModel()
         {
-            PresetDropDownMenu.Items.Clear();
-            PresetDropDownMenu.Items.AddRange(
-                from preset in HdvViewModel.PresetCollection.EnumerateAllPresetsByName()
+            PresetDropDownMenu.Items.SetRange(
+                from preset in AdvViewModel.PresetCollection.EnumerateAllPresetsByName()
                 select new ApplyPresetHeaderCommand(this, preset.Name));
 
-            templatePreset = HdvViewModel.TemplatePreset;
+            templatePreset = AdvViewModel.TemplatePreset;
             templateColumns.Clear();
             templateColumns.AddRange(
                 templatePreset.ConfigurableColumns.OrderBy(x => x.Name));
-            RefreshFromPreset(HdvViewModel.Preset);
+            RefreshFromPreset(AdvViewModel.Preset);
         }
 
         private void RefreshFromPreset(string displayName)
         {
-            var preset = HdvViewModel.PresetCollection.TryGetCurrentPresetByName(displayName);
+            var preset = AdvViewModel.PresetCollection.TryGetCurrentPresetByName(displayName);
             RefreshFromPreset(preset);
         }
 
@@ -473,7 +471,7 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
 
                 presetColumns.Clear();
                 foreach (var columnPreset in currentPreset.ConfigurableColumns) {
-                    var columnView = HdvViewModel.GetPrototypeViewForColumnPreset(columnPreset);
+                    var columnView = AdvViewModel.GetPrototypeViewForColumnPreset(columnPreset);
                     var item = new PresetManagerColumnViewModel(this, columnPreset, columnView);
                     presetColumns.Add(item);
                 }
@@ -498,7 +496,7 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
             object sender, ValueChangedEventArgs<AsyncDataViewModelPreset> args)
         {
             if (!isApplyingChanges)
-                RefreshFromPreset(HdvViewModel.Preset);
+                RefreshFromPreset(AdvViewModel.Preset);
         }
 
         private void UpdateCurrentPreset()
@@ -540,7 +538,7 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
                     columnPreset.IsVisible = true;
 
                 var viewModel = new PresetManagerColumnViewModel(
-                    this, columnPreset, HdvViewModel.GetPrototypeViewForColumnPreset(newColumn));
+                    this, columnPreset, AdvViewModel.GetPrototypeViewForColumnPreset(newColumn));
 
                 presetColumns.Insert(insertAt++, viewModel);
             }
@@ -661,10 +659,10 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
                 try {
                     UpdateCurrentPreset();
                     var newPreset = CaptureCurrentPreset();
-                    var hdvViewModel = HdvViewModel;
-                    hdvViewModel.Preset = newPreset;
-                    //hdvViewModel.ShowHideFreezeBars(this.ShowFreezeBars);
-                    RefreshFromPreset(hdvViewModel.Preset);
+                    var model = AdvViewModel;
+                    model.Preset = newPreset;
+                    //model.ShowHideFreezeBars(this.ShowFreezeBars);
+                    RefreshFromPreset(model.Preset);
                 } finally {
                     isApplyingChanges = false;
                 }
@@ -682,15 +680,15 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
         public void ResetCurrentPreset()
         {
             if (IsCurrentPresetModified) {
-                HdvViewModel.PresetCollection.DeletePersistedPresetByName(currentPreset.Name);
-                currentPreset = HdvViewModel.PresetCollection.TryGetUnmodifiedPresetByName(currentPreset.Name);
+                AdvViewModel.PresetCollection.DeletePersistedPresetByName(currentPreset.Name);
+                currentPreset = AdvViewModel.PresetCollection.TryGetUnmodifiedPresetByName(currentPreset.Name);
                 RefreshFromPreset(currentPreset);
             }
         }
 
         public void SaveCurrentPresetAs(string newPresetName)
         {
-            AdvmPresetCollection presetCollection = HdvViewModel?.PresetCollection;
+            AdvmPresetCollection presetCollection = AdvViewModel?.PresetCollection;
             if (presetCollection == null)
                 return;
 
@@ -707,7 +705,7 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
             if (oldPreset != null)
                 presetCollection.UserPresets.Remove(oldPreset);
 
-            HdvViewModel.Preset = newPreset;
+            AdvViewModel.Preset = newPreset;
 
             presetCollection.SavePreset(newPreset, isModified, name);
         }

@@ -22,7 +22,7 @@ namespace EventTraceKit.VsExtension.Resources
 
     public static class TraceLogColors
     {
-        public static readonly Guid Category = TraceLogFontAndColorDefaults.CategoryId;
+        public static readonly Guid Category = new Guid("93F54391-5474-4289-AABA-78CAB30CBCFC");
 
         private static FontAndColorsResourceKey rowForegroundBrushKey;
         private static FontAndColorsResourceKey rowBackgroundBrushKey;
@@ -68,7 +68,7 @@ namespace EventTraceKit.VsExtension.Resources
 
     public static class TraceLogFonts
     {
-        public static readonly Guid Category = TraceLogFontAndColorDefaults.CategoryId;
+        public static readonly Guid Category = TraceLogColors.Category;
 
         private static FontAndColorsResourceKey rowFontFamilyKey;
         private static FontAndColorsResourceKey rowFontSizeKey;

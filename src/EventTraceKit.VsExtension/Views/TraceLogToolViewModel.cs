@@ -4,7 +4,6 @@ namespace EventTraceKit.VsExtension.Views
     using System.ComponentModel.Design;
     using System.Linq;
     using System.Runtime.InteropServices;
-    using System.Threading;
     using System.Windows;
     using System.Windows.Data;
     using System.Windows.Threading;
@@ -101,11 +100,6 @@ namespace EventTraceKit.VsExtension.Views
             BindingOperations.SetBinding(GridModel, AsyncDataGridViewModel.AutoScrollProperty, new Binding(nameof(AutoScroll)) {
                 Source = this
             });
-
-            if (SynchronizationContext.Current == null) {
-                SynchronizationContext.SetSynchronizationContext(
-                    new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
-            }
 
             updateStatsTimer = new DispatcherTimer(DispatcherPriority.Background);
             updateStatsTimer.Interval = TimeSpan.FromSeconds(1);
@@ -527,6 +521,7 @@ namespace EventTraceKit.VsExtension.Views
                     isFilterEnabled = value;
                     ambientStore.IsFilterEnabled = value;
                     RefreshFilter();
+                    uiShell?.UpdateCommandUI(0);
                 }
             }
         }

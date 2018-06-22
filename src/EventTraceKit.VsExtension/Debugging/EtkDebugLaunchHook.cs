@@ -14,10 +14,34 @@ namespace EventTraceKit.VsExtension.Debugging
     using Microsoft;
     using Microsoft.VisualStudio;
     using Microsoft.VisualStudio.Debugger.Internal;
+    using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
     using Microsoft.VisualStudio.Threading;
     using Task = System.Threading.Tasks.Task;
 
+    /// <summary>
+    ///   Debugger launch hook to automatically start and stop trace sessions
+    ///   when projects are started from VS (either with or without debugging).
+    /// </summary>
+    /// <devdoc>
+    ///   There are several reasons for using a debug launch hook:
+    ///   <para>
+    ///     1. Trace sessions should be up and running as soon as possible, ideally
+    ///     before process initialization has begun.
+    ///   </para>
+    ///   <para>
+    ///     2. Trace providers usually should be scoped to the launched process
+    ///     which requires process ids.
+    ///   </para>
+    ///   <para>
+    ///     3. We have to deal with the cmd.exe wrapper for console targets.
+    ///   </para>
+    ///   1) and 2) rules out most of the notification APIs (e.g. the IDE operational
+    ///   mode notifications). 3) rules out proper debug events since we have to
+    ///   actually change the launch parameters to use our own wrapper (TraceLaunch)
+    ///   which can report back the real process id and resume the target when
+    ///   ready.
+    /// </devdoc>
     [Guid("4469EFAB-EEEB-48CD-A4F4-E85806D72925")]
     public sealed class EtkDebugLaunchHook : IVsDebugLaunchHook110
     {
@@ -87,6 +111,10 @@ namespace EventTraceKit.VsExtension.Debugging
 
             int hr;
             if (!noDebug) {
+                // All targets launch with an attached debugger. In this case
+                // all targets (even console targets) are started directly and
+                // we can simply retrieve their process ids from the launch
+                // results.
                 hr = nextHook.OnLaunchDebugTargets(
                     debugTargetCount, debugTargets, launchResults);
                 if (hr < 0)
@@ -97,18 +125,35 @@ namespace EventTraceKit.VsExtension.Debugging
                 return hr;
             }
 
+            // At least one target launches without a debugger. Console targets
+            // it will be launched via cmd.exe to show the standard output even
+            // after the has process exited. The process ids reported in the
+            // launch results will be of the cmd.exe process which is useless
+            // for trace filtering. Instead we intercept the target launch by
+            // inserting our own TraceLaunch utility which can report back the
+            // real process ids.
             using (var ctx = InterceptTargets(debugTargets)) {
                 hr = nextHook.OnLaunchDebugTargets(
                     debugTargetCount, ctx.Targets, launchResults);
                 if (hr < 0)
                     return hr;
 
-                LaunchTraceTargets(debugTargets, launchResults, ctx);
+                ThreadHelper.JoinableTaskFactory.Run(async () =>
+                    await LaunchTraceTargetsAsync(debugTargets, launchResults, ctx));
             }
 
             return hr;
         }
 
+        /// <devdoc>
+        ///   Targets are intercepted by using TraceLaunch as the new executable
+        ///   and the old exe and args are passed together with a named pipe
+        ///   name as new arguments. The pipes are first used to send the real
+        ///   process ids from TraceLaunch to this object (a simple 4-byte
+        ///   unsigned integer). Once the trace session is up and running the
+        ///   paused targets are resumed by sending a 1-byte "1" value to the
+        ///   TraceLaunch processes.
+        /// </devdoc>
         private static InterceptionContext InterceptTargets(VsDebugTargetInfo4[] debugTargets)
         {
             var interceptedTargets = (VsDebugTargetInfo4[])debugTargets.Clone();
@@ -183,33 +228,22 @@ namespace EventTraceKit.VsExtension.Debugging
             }
         }
 
-        private void LaunchTraceTargets(
+        private async Task LaunchTraceTargetsAsync(
             VsDebugTargetInfo4[] debugTargets, VsDebugTargetProcessInfo[] launchResults,
             InterceptionContext ctx)
         {
             try {
                 var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-                WhenAllProcessesExit(launchResults).ContinueWith(t => cts.Cancel(), cts.Token, 0, TaskScheduler.Default);
+                WhenAllProcessesExit(launchResults)
+                    .ContinueWith(t => cts.Cancel(), cts.Token, 0, TaskScheduler.Default)
+                    .Forget();
 
-                var processIds = Task.Run(
-                    async () => await ctx.GatherRealProcessIdsAsync(launchResults, cts.Token),
-                    cts.Token).Result;
+                var processIds = await Task.Run(
+                    async () => await ctx.GatherRealProcessIdsAsync(launchResults, cts.Token), cts.Token);
 
                 LaunchTraceTargets(debugTargets, processIds);
 
                 ctx.ResumeTargets();
-            } catch (AggregateException ae) {
-                ae.Handle(x => {
-                    switch (x) {
-                        case OperationCanceledException _:
-                            log.WriteLine("EventTraceKit: Timeout during trace launch");
-                            break;
-                        case Exception ex:
-                            log.WriteLine("EventTraceKit: Error in debug launch hook: {0}", ex.Message);
-                            break;
-                    }
-                    return true;
-                });
             } catch (OperationCanceledException) {
                 log.WriteLine("EventTraceKit: Timeout during trace launch");
             } catch (Exception ex) {
@@ -241,6 +275,8 @@ namespace EventTraceKit.VsExtension.Debugging
                     realExe = match.Groups["path"].Value;
             }
 
+            // Since TraceLaunch acts as a debugger it needs to have the same
+            // architecture as the real executable.
             var arch = PortableExecutableUtils.GetImageArchitecture(realExe);
             switch (arch) {
                 case ProcessorArchitecture.X86:
