@@ -21,6 +21,9 @@
     <TargetFrameworkMonikerAssemblyAttributesPath>$([System.IO.Path]::Combine('$(IntermediateOutputPath)','$(TargetFrameworkMoniker).AssemblyAttributes$(DefaultLanguageSourceExtension)'))</TargetFrameworkMonikerAssemblyAttributesPath>
   </PropertyGroup>
 
+  <!-- Returns the current build version. Used in .vsixmanifests to substitute our build version into them -->
+  <Target Name="GetBuildVersion" Returns="$(VsixVersion)"/>
+
   <Target Name="ValidateBuildNumber" BeforeTargets="Build">
     <Error Condition="'$(BuildNumber)' == '' AND '$(OfficialBuild)' == 'true'"
            Text="A build number must be specified for an official build."/>
