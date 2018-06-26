@@ -9,7 +9,10 @@ namespace EventTraceKit.VsExtension.Filtering
     {
         public static Expression Convert(ExpressionSyntax expr)
         {
-            return new ExpressionFactoryVisitor().Visit(expr);
+            var converted = new ExpressionFactoryVisitor().Visit(expr);
+            if (converted.Type != typeof(bool))
+                throw new InvalidOperationException("Input expression is not boolean.");
+            return converted;
         }
 
         public override Expression VisitIdentifierName(IdentifierNameSyntax expr)
@@ -56,7 +59,9 @@ namespace EventTraceKit.VsExtension.Filtering
 
         private static object ConvertToNumber(string numericLiteral)
         {
-            if (ulong.TryParse(numericLiteral, NumberStyles.None, CultureInfo.InvariantCulture, out var intVal)) {
+            if (numericLiteral.StartsWith("0x")
+                && ulong.TryParse(numericLiteral.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out var intVal)
+                || ulong.TryParse(numericLiteral, NumberStyles.None, CultureInfo.InvariantCulture, out intVal)) {
                 if (intVal <= byte.MaxValue)
                     return (byte)intVal;
                 if (intVal <= ushort.MaxValue)

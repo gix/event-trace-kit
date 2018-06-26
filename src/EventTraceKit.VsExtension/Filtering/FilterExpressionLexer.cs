@@ -317,7 +317,7 @@ namespace EventTraceKit.VsExtension.Filtering
 
         private static bool IsNumberBody(char c)
         {
-            return c >= '0' && c <= '9' || c == '.';
+            return c >= '0' && c <= '9' || c == '.' || c == 'x';
         }
 
         private static bool IsGuidBody(char c)

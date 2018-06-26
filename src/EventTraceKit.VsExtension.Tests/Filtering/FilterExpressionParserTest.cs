@@ -17,6 +17,7 @@ namespace EventTraceKit.VsExtension.Tests.Filtering
         [InlineData(" 1 ")]
         [InlineData(" 18446744073709551615 ")] // ulong.MaxValue
         [InlineData(" 18446744073709551616 ")] // not representable
+        [InlineData(" 0x123 ")] // hex
         [InlineData(" 10.25 ")]
         [InlineData(" 10.25e+10 ")]
         [InlineData(" 10.25E+10 ")]
