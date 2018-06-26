@@ -268,7 +268,6 @@
     <Compile Include="Settings\Persistence\Tracing.cs" />
     <Compile Include="Resources\Styles\FontAndColorsResourceDictionary.cs" />
     <Compile Include="Resources\Styles\FontAndColorsResourceKey.cs" />
-    <Compile Include="Resources\Styles\ResourceSynchronizer.cs" />
     <Compile Include="Resources\TraceLogResourceDictionary.cs" />
     <Compile Include="Utilities\UnboundedCache.cs" />
     <Compile Include="ValueChangedEventArgs.cs" />
