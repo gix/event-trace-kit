@@ -1,4 +1,4 @@
-﻿<etkc:ThemedDialogWindow
+<etkc:ThemedDialogWindow
   x:Class="EventTraceKit.VsExtension.Views.ImportProvidersDialog"
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -6,12 +6,17 @@
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   xmlns:etkc="clr-namespace:EventTraceKit.VsExtension.Controls"
   xmlns:etkv="clr-namespace:EventTraceKit.VsExtension.Views"
+  xmlns:vsi="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.Imaging"
+  xmlns:vsic="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
   mc:Ignorable="d"
   d:DataContext="{d:DesignInstance {x:Type etkv:ImportProvidersDialog}}"
-  Title="Import Providers" Width="640" Height="360"
+  Title="Import Providers"
+  Width="640"
+  Height="360"
   WindowStartupLocation="CenterOwner"
   ResizeMode="CanResizeWithGrip"
   ShowInTaskbar="False"
+  HasHelpButton="True"
   FocusManager.FocusedElement="{Binding ElementName=ImportDeclarationsTextBox}">
   <Grid Margin="7">
     <Grid.RowDefinitions>
@@ -23,7 +28,15 @@
              Text="{Binding ImportDeclarations, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
              FontFamily="Consolas"/>
     <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,6,0,0">
-      <Button Content="Import" IsDefault="true" Command="{Binding ImportCommand}"/>
+      <vsi:CrispImage Moniker="{x:Static vsic:KnownMonikers.StatusHelp}">
+        <vsi:CrispImage.ToolTip>
+          <ToolTip>
+            One Provider per line, beginning with the provider GUID followed by
+            an optional provider name (separated by space or colon).
+          </ToolTip>
+        </vsi:CrispImage.ToolTip>
+      </vsi:CrispImage>
+      <Button Content="Import" IsDefault="true" Margin="7,1,1,1" Command="{Binding ImportCommand}"/>
       <Button Content="Cancel" IsCancel="true" Margin="7,1,1,1"/>
     </StackPanel>
   </Grid>

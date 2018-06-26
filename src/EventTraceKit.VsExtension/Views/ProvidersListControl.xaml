@@ -12,7 +12,6 @@
   xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
   xmlns:system="clr-namespace:System;assembly=mscorlib"
   xmlns:cm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
-  xmlns:vs="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
   mc:Ignorable="d"
   d:DataContext="{d:DesignInstance {x:Type v:EventCollectorViewModel}, d:IsDesignTimeCreatable=False}"
   d:DesignWidth="300"
@@ -29,26 +28,6 @@
     </CollectionViewSource>
 
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-
-    <Style x:Key="ImageButton" TargetType="{x:Type Button}">
-      <Setter Property="Width" Value="16"/>
-      <Setter Property="Height" Value="16"/>
-      <Setter Property="MaxHeight" Value="32"/>
-      <Setter Property="MaxWidth" Value="32"/>
-      <Setter Property="MinHeight" Value="0"/>
-      <Setter Property="MinWidth" Value="0"/>
-      <Setter Property="Margin" Value="4,0,0,0"/>
-      <Setter Property="Padding" Value="0"/>
-      <Setter Property="Background" Value="Transparent"/>
-      <Setter Property="BorderThickness" Value="0"/>
-      <Setter Property="HorizontalContentAlignment" Value="Center"/>
-      <Setter Property="VerticalContentAlignment" Value="Center"/>
-      <Style.Triggers>
-        <Trigger Property="IsMouseOver" Value="True">
-          <Setter Property="Background" Value="{DynamicResource {x:Static vs:CommonControlsColors.ButtonHoverBrushKey}}"/>
-        </Trigger>
-      </Style.Triggers>
-    </Style>
 
     <DataTemplate DataType="{x:Type v:EventProviderViewModel}">
       <c:ToggleContentControl Height="20"
@@ -80,7 +59,7 @@
               <TextBlock Grid.Column="1" Margin="3,1,1,1" TextTrimming="CharacterEllipsis"
                          Text="{Binding DisplayName, Mode=OneWay}" VerticalAlignment="Center"/>
               <Button Grid.Column="2" Command="{Binding SwitchToRenamingModeCommand}"
-                      ToolTip="Rename" Style="{StaticResource ImageButton}"
+                      ToolTip="Rename" Style="{DynamicResource ImageButton}"
                       VerticalAlignment="Center" Width="20" Height="20"
                       Visibility="{Binding IsSelected, RelativeSource={RelativeSource FindAncestor, AncestorType=ListBoxItem}, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <vsi:CrispImage Moniker="{x:Static vsic:KnownMonikers.Edit}"

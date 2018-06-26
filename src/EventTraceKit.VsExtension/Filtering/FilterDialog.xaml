@@ -8,11 +8,10 @@
   xmlns:vsui="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
   xmlns:sys="clr-namespace:System;assembly=mscorlib"
   xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
-  xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
-  xmlns:vsimg="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.Imaging"
-  xmlns:imageCatalog="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
+  xmlns:vsi="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.Imaging"
+  xmlns:vsp="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Imaging"
+  xmlns:vsic="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
   xmlns:windows="clr-namespace:EventTraceKit.VsExtension.Windows"
-  xmlns:imaging="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Imaging"
   xmlns:filterin="clr-namespace:EventTraceKit.VsExtension.Filtering"
   mc:Ignorable="d"
   d:DataContext="{d:DesignInstance {x:Type filterin:FilterDialogViewModel}, d:IsDesignTimeCreatable=True}"
@@ -41,10 +40,21 @@
             <Grid Margin="7,7,7,6">
               <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto" MinWidth="80"/>
               </Grid.ColumnDefinitions>
               <TextBox Grid.Column="0" Margin="1" Text="{Binding Expression, UpdateSourceTrigger=PropertyChanged, Delay=150, ValidatesOnNotifyDataErrors=True}"/>
-              <ComboBox Grid.Column="1" Margin="7,1,1,1"
+              <vsi:CrispImage Grid.Column="1" Moniker="{x:Static vsic:KnownMonikers.StatusHelp}" Margin="7,1,1,1"/>
+              <Button Grid.Column="1" x:Name="RenameButton" Margin="7,1,1,1"
+                      Click="OnHelpButtonClicked"
+                      ToolTip="Advanced Filter Help" Style="{DynamicResource ImageButton}"
+                      VerticalAlignment="Center" Width="20" Height="20">
+                <vsi:CrispImage Moniker="{x:Static vsic:KnownMonikers.StatusHelp}"
+                                Width="16" Height="16" Stretch="Uniform"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"/>
+              </Button>
+              <ComboBox Grid.Column="2" Margin="7,1,1,1"
                         ItemsSource="{Binding Source={StaticResource ActionValues}}"
                         SelectedValue="{Binding SelectedAction}"/>
             </Grid>
@@ -112,7 +122,7 @@
         <Style TargetType="{x:Type DataGridRow}" BasedOn="{StaticResource {x:Type DataGridRow}}">
           <EventSetter Event="MouseDoubleClick" Handler="OnRowDoubleClick"/>
           <!-- Default or Transparent results in weird artifacts in the image. -->
-          <Setter Property="imaging:ImageThemingUtilities.ImageBackgroundColor" Value="#00000000"/>
+          <Setter Property="vsp:ImageThemingUtilities.ImageBackgroundColor" Value="#00000000"/>
         </Style>
       </DataGrid.Resources>
       <DataGrid.Columns>
@@ -121,13 +131,13 @@
             <DataTemplate DataType="{x:Type filterin:FilterConditionViewModel}">
               <StackPanel Orientation="Horizontal">
                 <CheckBox IsChecked="{Binding IsEnabled}"/>
-                <vsimg:CrispImage x:Name="image" Moniker="{x:Static imageCatalog:KnownMonikers.StatusOK}"
+                <vsi:CrispImage x:Name="image" Moniker="{x:Static vsic:KnownMonikers.StatusOK}"
                                   Margin="4,0,0,0"/>
                 <TextBlock Text="{Binding DisplayName}" Margin="8,0,0,0"/>
               </StackPanel>
               <DataTemplate.Triggers>
                 <DataTrigger Binding="{Binding Action}" Value="Exclude">
-                  <Setter TargetName="image" Property="Moniker" Value="{x:Static imageCatalog:KnownMonikers.StatusExcluded}"/>
+                  <Setter TargetName="image" Property="Moniker" Value="{x:Static vsic:KnownMonikers.StatusExcluded}"/>
                 </DataTrigger>
               </DataTemplate.Triggers>
             </DataTemplate>

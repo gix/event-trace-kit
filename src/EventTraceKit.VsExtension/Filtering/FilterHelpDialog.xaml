@@ -1,0 +1,171 @@
+<etkc:ThemedDialogWindow
+  x:Class="EventTraceKit.VsExtension.Filtering.FilterHelpDialog"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:etkc="clr-namespace:EventTraceKit.VsExtension.Controls"
+  mc:Ignorable="d"
+  Title="Advanced Filter Expression Help"
+  Width="500"
+  Height="700"
+  MinWidth="500"
+  MinHeight="700"
+  WindowStartupLocation="CenterOwner"
+  WindowStyle="ToolWindow"
+  ShowInTaskbar="False">
+  <FlowDocumentScrollViewer VerticalScrollBarVisibility="Auto">
+    <FlowDocument FontFamily="Segoe UI" FontSize="9pt">
+      <FlowDocument.Resources>
+        <Style TargetType="Paragraph">
+          <Setter Property="Margin" Value="0,5,0,5"/>
+          <Setter Property="Padding" Value="0"/>
+        </Style>
+
+        <Style x:Key="Heading" TargetType="Paragraph">
+          <Setter Property="Margin" Value="0,15,0,10"/>
+          <Setter Property="Padding" Value="0"/>
+          <Setter Property="FontSize" Value="11pt"/>
+        </Style>
+
+        <Style TargetType="ListItem">
+          <Style.Resources>
+            <Style TargetType="Paragraph">
+              <Setter Property="Margin" Value="0"/>
+            </Style>
+          </Style.Resources>
+        </Style>
+
+        <Style TargetType="{x:Type List}">
+          <Setter Property="Margin" Value="0"/>
+          <Setter Property="Padding" Value="0"/>
+          <Setter Property="MarkerStyle" Value="None"/>
+        </Style>
+
+        <Style x:Key="Field" TargetType="{x:Type Run}">
+          <Setter Property="FontWeight" Value="Bold"/>
+          <Setter Property="FontFamily" Value="Consolas"/>
+        </Style>
+
+        <Style x:Key="Expression" TargetType="{x:Type TextElement}">
+          <Setter Property="FontFamily" Value="Consolas"/>
+        </Style>
+      </FlowDocument.Resources>
+      <Paragraph>
+        Filter expressions are boolean expressions consisting of case-insensitive
+        <Italic>fields</Italic>, which refer to properties of an event, various
+        <Italic>operators</Italic>, parentheses and
+        <Italic>literal values</Italic>.
+      </Paragraph>
+      <Section>
+        <Paragraph Style="{StaticResource Heading}">Fields</Paragraph>
+        <List>
+          <ListItem>
+            <Paragraph>
+              <Run Style="{StaticResource Field}">ProviderId</Run>: GUID
+            </Paragraph>
+          </ListItem>
+          <ListItem>
+            <Paragraph>
+              <Run Style="{StaticResource Field}">ProcessId</Run> (or
+              <Run Style="{StaticResource Field}">PID</Run>): unsigned 32-bit integer
+            </Paragraph>
+          </ListItem>
+          <ListItem>
+            <Paragraph>
+              <Run Style="{StaticResource Field}">ThreadId</Run> (or
+              <Run Style="{StaticResource Field}">TID</Run>): unsigned 32-bit integer
+            </Paragraph>
+          </ListItem>
+          <ListItem>
+            <Paragraph>
+              <Run Style="{StaticResource Field}">ActivityId</Run>: GUID
+            </Paragraph>
+          </ListItem>
+          <ListItem>
+            <Paragraph>
+              <Run Style="{StaticResource Field}">RelatedActivityId</Run>: GUID
+            </Paragraph>
+          </ListItem>
+          <ListItem>
+            <Paragraph>
+              <Run Style="{StaticResource Field}">Id</Run>: unsigned 16-bit integer
+            </Paragraph>
+          </ListItem>
+          <ListItem>
+            <Paragraph>
+              <Run Style="{StaticResource Field}">Version</Run>: unsigned 32-bit integer
+            </Paragraph>
+          </ListItem>
+          <ListItem>
+            <Paragraph>
+              <Run Style="{StaticResource Field}">Channel</Run>: unsigned 8-bit integer
+            </Paragraph>
+          </ListItem>
+          <ListItem>
+            <Paragraph>
+              <Run Style="{StaticResource Field}">Level</Run>: unsigned 8-bit integer
+            </Paragraph>
+          </ListItem>
+          <ListItem>
+            <Paragraph>
+              <Run Style="{StaticResource Field}">Opcode</Run>: unsigned 8-bit integer
+            </Paragraph>
+          </ListItem>
+          <ListItem>
+            <Paragraph>
+              <Run Style="{StaticResource Field}">Task</Run>: unsigned 16-bit integer
+            </Paragraph>
+          </ListItem>
+          <ListItem>
+            <Paragraph>
+              <Run Style="{StaticResource Field}">Keyword</Run>: unsigned 64-bit integer
+            </Paragraph>
+          </ListItem>
+        </List>
+      </Section>
+      <Section>
+        <Paragraph Style="{StaticResource Heading}">Operators</Paragraph>
+        <List>
+          <ListItem>
+            <Paragraph>Mathematical: <Run Style="{StaticResource Expression}">+, -, *, /, %</Run></Paragraph>
+          </ListItem>
+          <ListItem>
+            <Paragraph>Comparisons: <Run Style="{StaticResource Expression}">==, !=, &lt;, &lt;=, >, >=</Run></Paragraph>
+          </ListItem>
+          <ListItem>
+            <Paragraph>Logical: <Run Style="{StaticResource Expression}">!, &amp;&amp;, ||</Run></Paragraph>
+          </ListItem>
+          <ListItem>
+            <Paragraph>Bitwise: <Run Style="{StaticResource Expression}">&amp;, |</Run></Paragraph>
+          </ListItem>
+        </List>
+      </Section>
+      <Section>
+        <Paragraph Style="{StaticResource Heading}">Literals</Paragraph>
+        <List>
+          <ListItem>
+            <Paragraph>
+              Numbers: <Run Style="{StaticResource Expression}">123, 0x123</Run></Paragraph>
+          </ListItem>
+          <ListItem>
+            <Paragraph>
+              GUID: <Run Style="{StaticResource Expression}">{75C62A2B-81F8-4BE4-82C8-E73F16A93B96}</Run></Paragraph>
+          </ListItem>
+        </List>
+      </Section>
+      <BlockUIContainer>
+        <Separator Margin="0,15,0,0"/>
+      </BlockUIContainer>
+      <Section>
+        <Paragraph Style="{StaticResource Heading}">Examples</Paragraph>
+        <Paragraph Style="{StaticResource Expression}">
+          providerid == {75C62A2B-81F8-4BE4-82C8-E73F16A93B96} &amp;&amp; id > 42
+        </Paragraph>
+        <Paragraph Style="{StaticResource Expression}">
+          id != 42 &amp;&amp; ((keyword &amp; 4) != 0 || task >= 3)
+        </Paragraph>
+      </Section>
+    </FlowDocument>
+  </FlowDocumentScrollViewer>
+</etkc:ThemedDialogWindow>

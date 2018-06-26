@@ -90,6 +90,9 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Filtering\FilterHelpDialog.xaml.cs">
+      <DependentUpon>FilterHelpDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Views\PresetManager\PresetColumnDragBehavior.cs" />
     <Compile Include="Windows\DataObjectExtensions.cs" />
@@ -385,6 +388,10 @@
     </VSCTCompile>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Filtering\FilterHelpDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Resources\SharedResources.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

@@ -32,26 +32,6 @@
            Normally the Application resource dictionary would be used but this
            is not possible when hosted in Visual Studio. -->
 
-      <Style x:Key="ImageButton" TargetType="{x:Type Button}">
-        <Setter Property="Width" Value="16"/>
-        <Setter Property="Height" Value="16"/>
-        <Setter Property="MaxHeight" Value="32"/>
-        <Setter Property="MaxWidth" Value="32"/>
-        <Setter Property="MinHeight" Value="0"/>
-        <Setter Property="MinWidth" Value="0"/>
-        <Setter Property="Margin" Value="4,0,0,0"/>
-        <Setter Property="Padding" Value="0"/>
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="HorizontalContentAlignment" Value="Center"/>
-        <Setter Property="VerticalContentAlignment" Value="Center"/>
-        <Style.Triggers>
-          <Trigger Property="IsMouseOver" Value="True">
-            <Setter Property="Background" Value="{DynamicResource {x:Static vs:CommonControlsColors.ButtonHoverBrushKey}}"/>
-          </Trigger>
-        </Style.Triggers>
-      </Style>
-
       <DataTemplate DataType="{x:Type etkv:EventProviderViewModel}">
         <etkv:EventProviderEditControl/>
       </DataTemplate>
@@ -257,7 +237,7 @@
                   </ComboBox>
                   <Button Grid.Column="1" x:Name="RenameButton"
                           Command="{Binding SwitchToRenamingModeCommand}"
-                          ToolTip="Rename" Style="{StaticResource ImageButton}"
+                          ToolTip="Rename" Style="{DynamicResource ImageButton}"
                           VerticalAlignment="Center" Width="20" Height="20">
                     <imaging:CrispImage Moniker="{x:Static vsic:KnownMonikers.Edit}"
                                         Width="16" Height="16" Stretch="Uniform"

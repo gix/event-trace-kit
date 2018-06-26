@@ -410,4 +410,24 @@
     <Setter Property="Background" Value="{DynamicResource {x:Static vsfx:VsBrushes.WindowKey}}"/>
     <Setter Property="Foreground" Value="{DynamicResource {x:Static vsfx:VsBrushes.WindowTextKey}}"/>
   </Style>
+
+  <Style x:Key="ImageButton" TargetType="{x:Type Button}">
+    <Setter Property="Width" Value="16"/>
+    <Setter Property="Height" Value="16"/>
+    <Setter Property="MaxHeight" Value="32"/>
+    <Setter Property="MaxWidth" Value="32"/>
+    <Setter Property="MinHeight" Value="0"/>
+    <Setter Property="MinWidth" Value="0"/>
+    <Setter Property="Margin" Value="4,0,0,0"/>
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Style.Triggers>
+      <Trigger Property="IsMouseOver" Value="True">
+        <Setter Property="Background" Value="{DynamicResource {x:Static vsp:CommonControlsColors.ButtonHoverBrushKey}}"/>
+      </Trigger>
+    </Style.Triggers>
+  </Style>
 </ResourceDictionary>
