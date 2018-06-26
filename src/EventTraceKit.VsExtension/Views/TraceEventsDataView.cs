@@ -5,6 +5,7 @@ namespace EventTraceKit.VsExtension.Views
     using System.Diagnostics;
     using System.Linq;
     using System.Windows.Controls;
+    using System.Windows.Input;
     using EventTraceKit.VsExtension.Extensions;
     using EventTraceKit.VsExtension.Filtering;
     using EventTraceKit.VsExtension.Formatting;
@@ -93,21 +94,28 @@ namespace EventTraceKit.VsExtension.Views
                 if (rowIndex == null || columnIndex == null)
                     yield break;
 
-                var valuePreview = view.GetCellValue(rowIndex.Value, columnIndex.Value)
-                    .ToString().TrimToLength(50);
+                var cellValue = view.GetCellValue(rowIndex.Value, columnIndex.Value);
+                var valuePreview = cellValue.ToString().TrimToLength(50);
 
                 var includeCommand = new DelegateCommand(IncludeValue, CanFilter);
                 var excludeCommand = new DelegateCommand(ExcludeValue, CanFilter);
                 var copyCommand = new DelegateCommand(CopyValue, CanCopy);
 
-                yield return new MenuItem {
-                    Header = $"Include '{valuePreview}'",
-                    Command = includeCommand
-                };
-                yield return new MenuItem {
-                    Header = $"Exclude '{valuePreview}'",
-                    Command = excludeCommand
-                };
+                if (view.Columns[columnIndex.Value].ColumnId == GenericEventsViewModelSource.KeywordColumnId) {
+                    var includeMaskCommand = new DelegateCommand(IncludeMask, CanFilter);
+                    var excludeMaskCommand = new DelegateCommand(ExcludeMask, CanFilter);
+                    yield return CreateMaskMenu("Include", cellValue, valuePreview, includeMaskCommand);
+                    yield return CreateMaskMenu("Exclude", cellValue, valuePreview, excludeMaskCommand);
+                } else {
+                    yield return new MenuItem {
+                        Header = $"Include '{valuePreview}'",
+                        Command = includeCommand
+                    };
+                    yield return new MenuItem {
+                        Header = $"Exclude '{valuePreview}'",
+                        Command = excludeCommand
+                    };
+                }
                 yield return new MenuItem {
                     Header = $"Copy '{valuePreview}'",
                     Command = copyCommand
@@ -169,6 +177,37 @@ namespace EventTraceKit.VsExtension.Views
                 return filterableColumnsMap.ContainsKey(column.ColumnId);
             }
 
+            private MenuItem CreateMaskMenu(
+                string header, CellValue value, string valuePreview, ICommand command)
+            {
+                var menu = new MenuItem {
+                    Header = header
+                };
+
+                menu.Items.Add(new MenuItem {
+                    Header = $"{valuePreview}",
+                    Command = command
+                });
+
+                var keywords = ((Keyword)value.Value).KeywordValue;
+                if (keywords == 0)
+                    return menu;
+
+                menu.Items.Add(new Separator());
+                for (int flag = 0; flag < 64; ++flag) {
+                    ulong mask = 1ul << flag;
+                    if ((keywords & mask) != 0) {
+                        menu.Items.Add(new MenuItem {
+                            Header = $"{mask:X}",
+                            Command = command,
+                            CommandParameter = mask
+                        });
+                    }
+                }
+
+                return menu;
+            }
+
             private void IncludeValue(object obj)
             {
                 ModifyFilter(GetColumn(obj), FilterConditionAction.Include);
@@ -177,6 +216,16 @@ namespace EventTraceKit.VsExtension.Views
             private void ExcludeValue(object obj)
             {
                 ModifyFilter(GetColumn(obj), FilterConditionAction.Exclude);
+            }
+
+            private void IncludeMask(object obj)
+            {
+                ModifyFilter(GetColumn(obj), FilterConditionAction.Include, mask: obj);
+            }
+
+            private void ExcludeMask(object obj)
+            {
+                ModifyFilter(GetColumn(obj), FilterConditionAction.Include, mask: obj);
             }
 
             private bool CanCopy(object obj)
@@ -190,15 +239,17 @@ namespace EventTraceKit.VsExtension.Views
                 ClipboardUtils.SetText(value);
             }
 
-            private void ModifyFilter(DataColumnView column, FilterConditionAction action)
+            private void ModifyFilter(
+                DataColumnView column, FilterConditionAction action, object mask = null)
             {
                 var filter = view.filterable.Filter ?? new TraceLogFilter();
-                ModifyFilter(filter, column, action);
+                ModifyFilter(filter, column, action, mask);
                 view.filterable.Filter = filter;
             }
 
             private void ModifyFilter(
-                TraceLogFilter filter, DataColumnView column, FilterConditionAction action)
+                TraceLogFilter filter, DataColumnView column,
+                FilterConditionAction action, object mask = null)
             {
                 Debug.Assert(rowIndex != null);
 
@@ -213,10 +264,13 @@ namespace EventTraceKit.VsExtension.Views
                 string expr;
                 if (columnId == providerIdColumn.ColumnId) {
                     expr = $"ProviderId == {providerId:B}";
-                } else {
+                } else if (mask == null) {
                     var field = columnToFieldMap[columnId];
                     var value = FormatValue(column.UntypedGetValue(rowIndex.Value));
                     expr = $"ProviderId == {providerId:B} && {field} == {value}";
+                } else {
+                    var field = columnToFieldMap[columnId];
+                    expr = $"ProviderId == {providerId:B} && ({field} & {mask}) != 0";
                 }
 
                 filter.Conditions.Add(new TraceLogFilterCondition(expr, true, action));
