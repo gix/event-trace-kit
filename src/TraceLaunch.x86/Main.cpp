@@ -149,9 +149,9 @@ static bool IsCmdWrapper(std::wstring_view appPath, std::wstring_view args)
            EndsWith(args, L" & pause\""sv);
 }
 
-static bool IsConHost(wchar_t const* imageName)
+static bool IsConHost(wchar_t const* imageName, wchar_t const* conhostPath)
 {
-    return _wcsicmp(imageName, L"C:\\Windows\\System32\\conhost.exe") == 0;
+    return _wcsicmp(imageName, conhostPath) == 0;
 }
 
 static bool DispatchPid(std::wstring const& pipeName, DWORD childPid)
@@ -165,6 +165,27 @@ static bool DispatchPid(std::wstring const& pipeName, DWORD childPid)
     }
 
     return true;
+}
+
+static std::wstring GetConhostPath()
+{
+    constexpr auto const fileName = L"\\conhost.exe"sv;
+
+    std::wstring path;
+    path.resize(MAX_PATH + fileName.length());
+
+    UINT actualLength = GetSystemDirectoryW(&path[0], static_cast<UINT>(path.length()));
+    if (actualLength > path.length()) {
+        path.resize(actualLength);
+        actualLength = GetSystemDirectoryW(&path[0], static_cast<UINT>(path.length()));
+    }
+
+    if (actualLength == 0)
+        return L"C:\\Windows\\System32\\conhost.exe"s;
+
+    path.resize(actualLength);
+    path += fileName;
+    return path;
 }
 
 int CALLBACK wWinMain(_In_ HINSTANCE /*hInstance*/, _In_ HINSTANCE /*hPrevInstance*/,
@@ -207,6 +228,8 @@ int CALLBACK wWinMain(_In_ HINSTANCE /*hInstance*/, _In_ HINSTANCE /*hPrevInstan
         // Resume right away so we can listen to debug events.
         ResumeThread(processInfo.hThread);
 
+        auto const conhostPath = GetConhostPath();
+
         bool consumeEvents = true;
         wchar_t imageName[MAX_PATH] = {};
         DEBUG_EVENT debugEvent;
@@ -222,7 +245,7 @@ int CALLBACK wWinMain(_In_ HINSTANCE /*hInstance*/, _In_ HINSTANCE /*hPrevInstan
                 // Ignore the first pid (it will be the cmd.exe process). Also
                 // ignore any conhost.exe process that might spawn before the
                 // real child process.
-                if (pid != processInfo.dwProcessId && !IsConHost(imageName)) {
+                if (pid != processInfo.dwProcessId && !IsConHost(imageName, conhostPath.c_str())) {
                     if (!DispatchPid(pipeName, pid))
                         exitCode = -3;
                     consumeEvents = false;
