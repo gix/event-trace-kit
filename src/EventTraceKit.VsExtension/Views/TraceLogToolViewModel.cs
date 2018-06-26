@@ -92,7 +92,6 @@ namespace EventTraceKit.VsExtension.Views
 
             EventsDataView = new TraceEventsDataView(dataTable, this);
             AdvModel = new AsyncDataViewModel(
-                new WorkManager(Dispatcher.CurrentDispatcher),
                 EventsDataView, templatePreset, preset, viewPresets);
 
             GridModel = AdvModel.GridViewModel;

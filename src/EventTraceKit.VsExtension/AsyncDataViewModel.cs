@@ -3,13 +3,14 @@ namespace EventTraceKit.VsExtension
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
     using System.Windows;
     using Controls;
     using Windows;
 
     public class AsyncDataViewModel : DependencyObject
     {
-        private readonly WorkManager workManager;
+        private readonly TaskFactory uiTaskFactory;
 
         private bool isInitializedWithFirstPreset;
         private bool shouldApplyPreset;
@@ -17,20 +18,17 @@ namespace EventTraceKit.VsExtension
         private AsyncDataViewModelPreset presetToApplyOnReady;
 
         public AsyncDataViewModel(
-            WorkManager workManager,
             IDataView dataView,
             AsyncDataViewModelPreset templatePreset,
             AsyncDataViewModelPreset defaultPreset,
             AdvmPresetCollection presetCollection)
         {
-            if (workManager == null)
-                throw new ArgumentNullException(nameof(workManager));
             if (dataView == null)
                 throw new ArgumentNullException(nameof(dataView));
             if (templatePreset == null)
                 throw new ArgumentNullException(nameof(templatePreset));
 
-            this.workManager = workManager;
+            uiTaskFactory = new TaskFactory(TaskScheduler.FromCurrentSynchronizationContext());
             DataView = dataView;
             PresetCollection = presetCollection;
 
@@ -41,7 +39,7 @@ namespace EventTraceKit.VsExtension
             Preset = defaultPreset;
             throttledRaiseUpdate = new ThrottledAction(
                 TimeSpan.FromMilliseconds(100),
-                () => workManager.UIThreadTaskFactory.StartNew(RaiseUpdate));
+                () => uiTaskFactory.StartNew(RaiseUpdate));
         }
 
         public AsyncDataViewModelPreset TemplatePreset { get; }
@@ -189,7 +187,7 @@ namespace EventTraceKit.VsExtension
         private void OnRowCountChanged(object sender, EventArgs eventArgs)
         {
             if (DataView.RowCount == 0)
-                workManager.UIThreadTaskFactory.StartNew(
+                uiTaskFactory.StartNew(
                     () => DataInvalidated?.Invoke(this, EventArgs.Empty));
 
             throttledRaiseUpdate.Invoke();

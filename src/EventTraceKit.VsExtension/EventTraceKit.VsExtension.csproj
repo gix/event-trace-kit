@@ -124,7 +124,6 @@
     <Compile Include="Debugging\EtkDebugLaunchHook.cs" />
     <Compile Include="EventSymbolSource.cs" />
     <Compile Include="AsyncDelegateCommand.cs" />
-    <Compile Include="Extensions\AsyncExtensions.cs" />
     <Compile Include="Native\CharCPtrUtils.cs" />
     <Compile Include="Extensions\CollectionExtensions.cs" />
     <Compile Include="Extensions\CollectionUtils.cs" />
@@ -279,7 +278,6 @@
     <Compile Include="DataView.cs" />
     <Compile Include="ColumnViewModelPreset.cs" />
     <Compile Include="AsyncDataViewModel.cs" />
-    <Compile Include="IWorkManager.cs" />
     <Compile Include="Settings\Persistence\Views.cs" />
     <Compile Include="Views\TraceLogStatsModel.cs" />
     <Compile Include="Views\TraceSettingsViewModel.cs" />

@@ -152,7 +152,6 @@ namespace EventTraceKit.VsExtension.UITests
 
             dataView = new DataView(dataTable, new DefaultFormatProviderSource());
             return new AsyncDataViewModel(
-                new WorkManager(Dispatcher.CurrentDispatcher),
                 dataView, templatePreset, templatePreset, presetCollection);
         }
 

@@ -36,7 +36,6 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
 
             var dataView = new DataView(table, new DefaultFormatProviderSource());
             return new AsyncDataViewModel(
-                new WorkManager(Dispatcher.CurrentDispatcher),
                 dataView, template, template, new AdvmPresetCollection());
         }
 

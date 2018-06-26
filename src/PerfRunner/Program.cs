@@ -49,13 +49,11 @@ namespace PerfRunner
 
             dataView = new DataView(dataTable, new DefaultFormatProviderSource());
 
-            var workManager = new WorkManager(Dispatcher.CurrentDispatcher);
             var defaultPreset = templatePreset.Clone();
             var presetCollection = new AdvmPresetCollection();
 
             advModel = new AsyncDataViewModel(
-                workManager, dataView, templatePreset, defaultPreset,
-                presetCollection);
+                dataView, templatePreset, defaultPreset, presetCollection);
 
             presenterViewModel = new AsyncDataGridCellsPresenterViewModel(advModel);
 
