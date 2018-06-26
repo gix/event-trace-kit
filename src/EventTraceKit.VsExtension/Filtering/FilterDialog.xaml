@@ -102,7 +102,7 @@
               ItemsSource="{Binding Conditions}"
               SelectedItem="{Binding SelectedCondition}"
               CanUserAddRows="False"
-              CanUserDeleteRows="False"
+              CanUserDeleteRows="True"
               AutoGenerateColumns="False"
               HeadersVisibility="Column"
               SelectionMode="Single"
@@ -115,11 +115,6 @@
           <Setter Property="imaging:ImageThemingUtilities.ImageBackgroundColor" Value="#00000000"/>
         </Style>
       </DataGrid.Resources>
-      <i:Interaction.Triggers>
-        <ei:KeyTrigger Key="Delete">
-          <i:InvokeCommandAction Command="{Binding RemoveCommand}"/>
-        </ei:KeyTrigger>
-      </i:Interaction.Triggers>
       <DataGrid.Columns>
         <DataGridTemplateColumn Header="Property">
           <DataGridTemplateColumn.CellTemplate>
