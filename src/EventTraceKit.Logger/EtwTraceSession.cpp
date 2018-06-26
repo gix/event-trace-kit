@@ -281,8 +281,10 @@ HRESULT EtwTraceSession::Stop()
         customFlushTimer.Stop();
 
     if (traceHandle != 0) {
-        HR(HResultFromWin32(ControlTraceW(traceHandle, nullptr, traceProperties.get(),
-                                          EVENT_TRACE_CONTROL_STOP)));
+        HRESULT const hr = HResultFromWin32(ControlTraceW(
+            traceHandle, nullptr, traceProperties.get(), EVENT_TRACE_CONTROL_STOP));
+        if (FAILED(hr) && hr != HResultFromWin32(ERROR_MORE_DATA))
+            (void)ETK_TRACE_HR(hr);
         traceHandle = 0;
     }
     return S_OK;
