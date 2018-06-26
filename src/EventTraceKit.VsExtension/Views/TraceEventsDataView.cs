@@ -41,6 +41,7 @@ namespace EventTraceKit.VsExtension.Views
                 {GenericEventsViewModelSource.LevelColumnId, Guid.Empty},
                 {GenericEventsViewModelSource.LevelNameColumnId, GenericEventsViewModelSource.LevelColumnId},
                 {GenericEventsViewModelSource.KeywordColumnId, Guid.Empty},
+                {GenericEventsViewModelSource.KeywordNameColumnId, GenericEventsViewModelSource.KeywordColumnId},
                 {GenericEventsViewModelSource.ProcessIdColumnId, Guid.Empty},
                 {GenericEventsViewModelSource.ThreadIdColumnId, Guid.Empty},
                 {GenericEventsViewModelSource.DecodingSourceColumnId, Guid.Empty},

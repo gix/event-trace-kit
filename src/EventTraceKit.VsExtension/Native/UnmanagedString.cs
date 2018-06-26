@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Native
+namespace EventTraceKit.VsExtension.Native
 {
     using System;
     using System.Runtime.InteropServices;
@@ -38,6 +38,11 @@
         public static implicit operator string(UnmanagedString value)
         {
             return value.ToString();
+        }
+
+        public static unsafe explicit operator char* (UnmanagedString value)
+        {
+            return value.str;
         }
 
         public bool Equals(UnmanagedString other)

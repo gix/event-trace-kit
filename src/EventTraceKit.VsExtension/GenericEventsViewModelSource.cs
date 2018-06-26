@@ -28,6 +28,7 @@ namespace EventTraceKit.VsExtension
         private readonly ColumnViewModelPreset opcodeOrTypePreset;
         private readonly ColumnViewModelPreset opcodeNamePreset;
         private readonly ColumnViewModelPreset keywordPreset;
+        private readonly ColumnViewModelPreset keywordNamePreset;
         private readonly ColumnViewModelPreset eventNamePreset;
         private readonly ColumnViewModelPreset messagePreset;
         private readonly ColumnViewModelPreset eventTypePreset;
@@ -52,25 +53,26 @@ namespace EventTraceKit.VsExtension
         private readonly ColumnViewModelPreset threadStartModulePreset;
         private readonly ColumnViewModelPreset threadStartFunctionPreset;
 
-        public static readonly Guid ProviderIdColumnId = new Guid("9B9DAF0F-EAC6-43FE-B68F-EAF0D9A4AFB9");
-        public static readonly Guid ProviderNameColumnId = new Guid("934D2438-65F3-4AE9-8FEA-94B81AA5A4A6");
-        public static readonly Guid IdColumnId = new Guid("0FE03A19-FBCB-4514-9441-2D0B1AB5E2E1");
-        public static readonly Guid VersionColumnId = new Guid("215AB0D7-BEC9-4A70-96C4-028EE3404F09");
-        public static readonly Guid ChannelColumnId = new Guid("CF9373E2-5876-4F84-BB3A-F6C878D36F86");
-        public static readonly Guid ChannelNameColumnId = new Guid("FAC4B329-DD59-41D2-8AA8-83B66DFBAECC");
-        public static readonly Guid LevelColumnId = new Guid("388591F3-43B2-4E68-B080-0B1A48D33559");
-        public static readonly Guid LevelNameColumnId = new Guid("1B2ADB63-7C73-4330-927D-4FF37A60B249");
-        public static readonly Guid TaskColumnId = new Guid("CE90F4D8-0FDE-4324-8D39-5BF74C8F4D9B");
-        public static readonly Guid TaskNameColumnId = new Guid("730765B3-2E42-43E7-8B26-BAB7F4999E69");
-        public static readonly Guid OpcodeColumnId = new Guid("F08CCD14-FE1E-4D9E-BE6C-B527EA4B25DA");
-        public static readonly Guid OpcodeNameColumnId = new Guid("99C0A192-174F-4DD5-AFD8-32F513506E88");
-        public static readonly Guid KeywordColumnId = new Guid("62DC8843-C7BF-45F0-AC61-644395D53409");
-        public static readonly Guid ThreadIdColumnId = new Guid("6BEB4F24-53DC-4A9D-8EEA-ED8F69990349");
-        public static readonly Guid ProcessIdColumnId = new Guid("7600E8FD-D7C2-4BA4-9DE4-AADE5230DC53");
-        public static readonly Guid DecodingSourceColumnId = new Guid("D06EBF0F-A744-4E27-B635-F2E4A56B9B50");
-        public static readonly Guid MessageColumnId = new Guid("89F731F6-D4D2-40E8-9615-6EB5A5A68A75");
-        public static readonly Guid TimeAbsoluteColumnId = new Guid("FC87155E-AD2A-4294-A425-55E914FA1821");
-        public static readonly Guid TimeRelativeColumnId = new Guid("8823874B-917D-4D64-ABDF-EA29E6C87789");
+        public static readonly Guid ProviderIdColumnId = new Guid(0x9B9DAF0F, 0xEAC6, 0x43FE, 0xB6, 0x8F, 0xEA, 0xF0, 0xD9, 0xA4, 0xAF, 0xB9);
+        public static readonly Guid ProviderNameColumnId = new Guid(0x934D2438, 0x65F3, 0x4AE9, 0x8F, 0xEA, 0x94, 0xB8, 0x1A, 0xA5, 0xA4, 0xA6);
+        public static readonly Guid IdColumnId = new Guid(0x0FE03A19, 0xFBCB, 0x4514, 0x94, 0x41, 0x2D, 0x0B, 0x1A, 0xB5, 0xE2, 0xE1);
+        public static readonly Guid VersionColumnId = new Guid(0x215AB0D7, 0xBEC9, 0x4A70, 0x96, 0xC4, 0x02, 0x8E, 0xE3, 0x40, 0x4F, 0x09);
+        public static readonly Guid ChannelColumnId = new Guid(0xCF9373E2, 0x5876, 0x4F84, 0xBB, 0x3A, 0xF6, 0xC8, 0x78, 0xD3, 0x6F, 0x86);
+        public static readonly Guid ChannelNameColumnId = new Guid(0xFAC4B329, 0xDD59, 0x41D2, 0x8A, 0xA8, 0x83, 0xB6, 0x6D, 0xFB, 0xAE, 0xCC);
+        public static readonly Guid LevelColumnId = new Guid(0x388591F3, 0x43B2, 0x4E68, 0xB0, 0x80, 0x0B, 0x1A, 0x48, 0xD3, 0x35, 0x59);
+        public static readonly Guid LevelNameColumnId = new Guid(0x1B2ADB63, 0x7C73, 0x4330, 0x92, 0x7D, 0x4F, 0xF3, 0x7A, 0x60, 0xB2, 0x49);
+        public static readonly Guid TaskColumnId = new Guid(0xCE90F4D8, 0x0FDE, 0x4324, 0x8D, 0x39, 0x5B, 0xF7, 0x4C, 0x8F, 0x4D, 0x9B);
+        public static readonly Guid TaskNameColumnId = new Guid(0x730765B3, 0x2E42, 0x43E7, 0x8B, 0x26, 0xBA, 0xB7, 0xF4, 0x99, 0x9E, 0x69);
+        public static readonly Guid OpcodeColumnId = new Guid(0xF08CCD14, 0xFE1E, 0x4D9E, 0xBE, 0x6C, 0xB5, 0x27, 0xEA, 0x4B, 0x25, 0xDA);
+        public static readonly Guid OpcodeNameColumnId = new Guid(0x99C0A192, 0x174F, 0x4DD5, 0xAF, 0xD8, 0x32, 0xF5, 0x13, 0x50, 0x6E, 0x88);
+        public static readonly Guid KeywordColumnId = new Guid(0x62DC8843, 0xC7BF, 0x45F0, 0xAC, 0x61, 0x64, 0x43, 0x95, 0xD5, 0x34, 0x09);
+        public static readonly Guid KeywordNameColumnId = new Guid(0x0E603B2B, 0x2443, 0x45FF, 0x9E, 0x72, 0x76, 0x79, 0x81, 0x56, 0x26, 0x62);
+        public static readonly Guid ThreadIdColumnId = new Guid(0x6BEB4F24, 0x53DC, 0x4A9D, 0x8E, 0xEA, 0xED, 0x8F, 0x69, 0x99, 0x03, 0x49);
+        public static readonly Guid ProcessIdColumnId = new Guid(0x7600E8FD, 0xD7C2, 0x4BA4, 0x9D, 0xE4, 0xAA, 0xDE, 0x52, 0x30, 0xDC, 0x53);
+        public static readonly Guid DecodingSourceColumnId = new Guid(0xD06EBF0F, 0xA744, 0x4E27, 0xB6, 0x35, 0xF2, 0xE4, 0xA5, 0x6B, 0x9B, 0x50);
+        public static readonly Guid MessageColumnId = new Guid(0x89F731F6, 0xD4D2, 0x40E8, 0x96, 0x15, 0x6E, 0xB5, 0xA5, 0xA6, 0x8A, 0x75);
+        public static readonly Guid TimeAbsoluteColumnId = new Guid(0xFC87155E, 0xAD2A, 0x4294, 0xA4, 0x25, 0x55, 0xE9, 0x14, 0xFA, 0x18, 0x21);
+        public static readonly Guid TimeRelativeColumnId = new Guid(0x8823874B, 0x917D, 0x4D64, 0xAB, 0xDF, 0xEA, 0x29, 0xE6, 0xC8, 0x77, 0x89);
 
         public GenericEventsViewModelSource()
         {
@@ -161,11 +163,18 @@ namespace EventTraceKit.VsExtension
             keywordPreset =
                 new ColumnViewModelPreset {
                     Id = KeywordColumnId,
-                    Name = "Keyword",
+                    Name = "Keywords",
                     IsVisible = false,
-                    Width = 80,
+                    Width = 115,
                     TextAlignment = TextAlignment.Right,
-                    CellFormat = "x"
+                    CellFormat = "X"
+                }.EnsureFrozen();
+            keywordNamePreset =
+                new ColumnViewModelPreset {
+                    Id = KeywordNameColumnId,
+                    Name = "Keywords Name",
+                    IsVisible = false,
+                    Width = 115,
                 }.EnsureFrozen();
             messagePreset =
                 new ColumnViewModelPreset {
@@ -176,28 +185,28 @@ namespace EventTraceKit.VsExtension
                 }.EnsureFrozen();
             eventNamePreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("B82277B9-7066-4938-A959-EABF0C689087"),
+                    Id = new Guid(0xB82277B9, 0x7066, 0x4938, 0xA9, 0x59, 0xEA, 0xBF, 0x0C, 0x68, 0x90, 0x87),
                     Name = "Event Name",
                     IsVisible = false,
                     Width = 100
                 }.EnsureFrozen();
             eventTypePreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("AC2A6011-BCB3-4721-BEF1-E1DEC50C073D"),
+                    Id = new Guid(0xAC2A6011, 0xBCB3, 0x4721, 0xBE, 0xF1, 0xE1, 0xDE, 0xC5, 0x0C, 0x07, 0x3D),
                     Name = "Event Type",
                     IsVisible = false,
                     Width = 100
                 }.EnsureFrozen();
             symbolPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("79423887-739E-4DFF-9045-3DCF243E2922"),
+                    Id = new Guid(0x79423887, 0x739E, 0x4DFF, 0x90, 0x45, 0x3D, 0xCF, 0x24, 0x3E, 0x29, 0x22),
                     Name = "Symbol",
                     IsVisible = false,
                     Width = 100
                 }.EnsureFrozen();
             cpuPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("452A05E3-A1C0-4686-BB6B-C39AFF2F24BE"),
+                    Id = new Guid(0x452A05E3, 0xA1C0, 0x4686, 0xBB, 0x6B, 0xC3, 0x9A, 0xFF, 0x2F, 0x24, 0xBE),
                     Name = "CPU",
                     IsVisible = false,
                     Width = 30
@@ -224,56 +233,56 @@ namespace EventTraceKit.VsExtension
                 }.EnsureFrozen();
             userDataPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("2E47C924-663F-422A-9232-B1BCB1602280"),
+                    Id = new Guid(0x2E47C924, 0x663F, 0x422A, 0x92, 0x32, 0xB1, 0xBC, 0xB1, 0x60, 0x22, 0x80),
                     Name = "UserData",
                     IsVisible = false,
                     Width = 200
                 }.EnsureFrozen();
             userDataLengthPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("813F4638-8D41-4EAD-94DD-9A4AFFEFA701"),
+                    Id = new Guid(0x813F4638, 0x8D41, 0x4EAD, 0x94, 0xDD, 0x9A, 0x4A, 0xFF, 0xEF, 0xA7, 0x01),
                     Name = "UserData (Bytes)",
                     IsVisible = false,
                     Width = 30
                 }.EnsureFrozen();
             activityIdPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("21695563-AC1B-4953-9B9B-991353DBC082"),
+                    Id = new Guid(0x21695563, 0xAC1B, 0x4953, 0x9B, 0x9B, 0x99, 0x13, 0x53, 0xDB, 0xC0, 0x82),
                     Name = "etw:ActivityId",
                     IsVisible = false,
                     Width = 60
                 }.EnsureFrozen();
             relatedActivityIdPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("83B1BF6F-5E8D-4143-A84B-8C16ED1EF6BD"),
+                    Id = new Guid(0x83B1BF6F, 0x5E8D, 0x4143, 0xA8, 0x4B, 0x8C, 0x16, 0xED, 0x1E, 0xF6, 0xBD),
                     Name = "etw:Related ActivityId",
                     IsVisible = false,
                     Width = 60
                 }.EnsureFrozen();
             userSecurityIdentifierPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("F979E52D-EE1B-4A7E-950F-28103990D11B"),
+                    Id = new Guid(0xF979E52D, 0xEE1B, 0x4A7E, 0x95, 0x0F, 0x28, 0x10, 0x39, 0x90, 0xD1, 0x1B),
                     Name = "etw:UserSid",
                     IsVisible = false,
                     Width = 60
                 }.EnsureFrozen();
             sessionIdPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("84FC6D0C-5FFD-40D9-8C3B-F0EB8F8F2D1B"),
+                    Id = new Guid(0x84FC6D0C, 0x5FFD, 0x40D9, 0x8C, 0x3B, 0xF0, 0xEB, 0x8F, 0x8F, 0x2D, 0x1B),
                     Name = "etw:SessionId",
                     IsVisible = false,
                     Width = 60
                 }.EnsureFrozen();
             eventKeyPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("4F0679D2-B5E7-4AB1-ADF7-FCDEBEEF801B"),
+                    Id = new Guid(0x4F0679D2, 0xB5E7, 0x4AB1, 0xAD, 0xF7, 0xFC, 0xDE, 0xBE, 0xEF, 0x80, 0x1B),
                     Name = "etw:EventKey",
                     IsVisible = false,
                     Width = 80
                 }.EnsureFrozen();
             timePointGeneratorPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("9C75AA69-046E-42AE-B594-B4AD24335A0A"),
+                    Id = new Guid(0x9C75AA69, 0x046E, 0x42AE, 0xB5, 0x94, 0xB4, 0xAD, 0x24, 0x33, 0x5A, 0x0A),
                     Name = "Time (Raw)",
                     IsVisible = false,
                     Width = 145,
@@ -304,35 +313,35 @@ namespace EventTraceKit.VsExtension
                 }.EnsureFrozen();
             modernProcessDataPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("DC7E68B0-E753-47DF-8357-61BEC093E405"),
+                    Id = new Guid(0xDC7E68B0, 0xE753, 0x47DF, 0x83, 0x57, 0x61, 0xBE, 0xC0, 0x93, 0xE4, 0x05),
                     Name = "Process",
                     IsVisible = true,
                     Width = 150
                 }.EnsureFrozen();
             processNamePreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("BB09F706-FE79-43AA-A103-120801DAC28F"),
+                    Id = new Guid(0xBB09F706, 0xFE79, 0x43AA, 0xA1, 0x03, 0x12, 0x08, 0x01, 0xDA, 0xC2, 0x8F),
                     Name = "Process Name",
                     IsVisible = true,
                     Width = 150
                 }.EnsureFrozen();
             stackTopPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("D55383F4-D0ED-404B-98A8-DC9CF4533FBF"),
+                    Id = new Guid(0xD55383F4, 0xD0ED, 0x404B, 0x98, 0xA8, 0xDC, 0x9C, 0xF4, 0x53, 0x3F, 0xBF),
                     Name = "Stack",
                     IsVisible = false,
                     Width = 100
                 }.EnsureFrozen();
             threadStartModulePreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("D58C42B0-818D-4D83-BD99-9DA872E77B54"),
+                    Id = new Guid(0xD58C42B0, 0x818D, 0x4D83, 0xBD, 0x99, 0x9D, 0xA8, 0x72, 0xE7, 0x7B, 0x54),
                     Name = "Thread Start Module",
                     IsVisible = false,
                     Width = 100
                 }.EnsureFrozen();
             threadStartFunctionPreset =
                 new ColumnViewModelPreset {
-                    Id = new Guid("125BB527-34C6-4A33-82B8-05E3B0C7A591"),
+                    Id = new Guid(0x125BB527, 0x34C6, 0x4A33, 0x82, 0xB8, 0x05, 0xE3, 0xB0, 0xC7, 0xA5, 0x91),
                     Name = "Thread Start Function",
                     IsVisible = false,
                     Width = 100
@@ -428,11 +437,11 @@ namespace EventTraceKit.VsExtension
             var keywordPreset =
                 new ColumnViewModelPreset {
                     Id = KeywordColumnId,
-                    Name = "Keyword",
+                    Name = "Keywords",
                     IsVisible = false,
-                    Width = 80,
+                    Width = 115,
                     TextAlignment = TextAlignment.Right,
-                    CellFormat = "x"
+                    CellFormat = "X"
                 }.EnsureFrozen();
             var messagePreset =
                 new ColumnViewModelPreset {
@@ -533,6 +542,7 @@ namespace EventTraceKit.VsExtension
             AddColumn(table, templatePreset, levelPreset, DataColumn.Create(info.ProjectLevel));
             AddColumn(table, templatePreset, levelNamePreset, DataColumn.Create(info.ProjectLevelName));
             AddColumn(table, templatePreset, keywordPreset, DataColumn.Create(info.ProjectKeyword));
+            AddColumn(table, templatePreset, keywordNamePreset, DataColumn.Create(info.ProjectKeywordName));
             AddColumn(table, templatePreset, processIdPreset, DataColumn.Create(info.ProjectProcessId));
             AddColumn(table, templatePreset, threadIdPreset, DataColumn.Create(info.ProjectThreadId));
             AddColumn(table, templatePreset, messagePreset, DataColumn.Create(info.ProjectMessage));
@@ -573,7 +583,7 @@ namespace EventTraceKit.VsExtension
         private sealed class CrimsonEventsInfo
         {
             private static readonly Guid ActivityIdSentinel =
-                new Guid("D733D8B0-7D18-4AEB-A3FC-8C4613BC2A40");
+                new Guid(0xD733D8B0, 0x7D18, 0x4AEB, 0xA3, 0xFC, 0x8C, 0x46, 0x13, 0xBC, 0x2A, 0x40);
 
             private readonly IEventInfoSource eventInfoSource;
             private readonly ObjectPool<IMessageFormatter> messageFormatterPool;
@@ -720,6 +730,26 @@ namespace EventTraceKit.VsExtension
             public Keyword ProjectKeyword(int index)
             {
                 return GetEventRecord(index).EventHeader.EventDescriptor.Keyword;
+            }
+
+            public unsafe string ProjectKeywordName(int index)
+            {
+                var name = GetTraceEventInfo(index).GetKeywordsName();
+
+                var ptr = (char*)name;
+                if (ptr[0] == 0 && ptr[1] == 0)
+                    return string.Empty;
+
+                var buffer = new StringBuilder();
+                while (*ptr != 0) {
+                    if (buffer.Length != 0)
+                        buffer.Append(", ");
+                    var s = new string(ptr);
+                    buffer.Append(s);
+                    ptr += s.Length + 1;
+                }
+
+                return buffer.ToString();
             }
 
             public string ProjectMessage(int index)

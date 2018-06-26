@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Native
+namespace EventTraceKit.VsExtension.Native
 {
     using System;
     using System.Runtime.InteropServices;
@@ -67,6 +67,13 @@
         {
             if (HasValue)
                 return GetTdhString(pTraceEventInfo->OpcodeNameOffset);
+            return UnmanagedString.Empty;
+        }
+
+        public UnmanagedString GetKeywordsName()
+        {
+            if (HasValue)
+                return GetTdhString(pTraceEventInfo->KeywordsNameOffset);
             return UnmanagedString.Empty;
         }
 
