@@ -5,6 +5,13 @@ namespace TraceLaunchTester
     using System.Globalization;
     using System.IO;
     using System.IO.Pipes;
+    using System.Linq;
+    using System.Runtime.InteropServices;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Win32.SafeHandles;
+    using ThreadState = System.Diagnostics.ThreadState;
 
     class DebugLaunchSettings
     {
@@ -14,62 +21,96 @@ namespace TraceLaunchTester
 
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var launchSettings = QueryDebugTargets(true);
 
             var pipeName = Guid.NewGuid().ToString("D");
             Log("[SERVER] pipe: {0}", pipeName);
 
-            var client = new Process();
-            client.StartInfo.FileName = @"C:\Users\nrieck\dev\EventTraceKit\build\x86-dbg\bin\TraceLaunch.x86.exe";
-            client.StartInfo.Arguments = pipeName + " " + launchSettings.Arguments;
-            client.StartInfo.UseShellExecute = false;
+            var launcher = new Process();
+            launcher.StartInfo.FileName = Path.GetFullPath("TraceLaunch.x86.exe");
+            launcher.StartInfo.Arguments = pipeName + " \"" + launchSettings.Executable + "\" " + launchSettings.Arguments;
+            launcher.StartInfo.UseShellExecute = false;
+            launcher.StartInfo.CreateNoWindow = true;
+
+            Process client = null;
 
             var pipe = new NamedPipeServerStream(
                 pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message,
-                PipeOptions.WriteThrough, 4, 4);
+                PipeOptions.WriteThrough | PipeOptions.Asynchronous, 4, 4);
             pipe.ReadMode = PipeTransmissionMode.Message;
 
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
             using (pipe) {
-                Log("[SERVER] Starting client");
-                client.Start();
+                Log("[SERVER] Starting launcher");
+                if (!launcher.Start()) {
+                    Log("[SERVER] Failed to start launcher");
+                    return;
+                }
+
                 Log("[SERVER] Waiting for incoming connection");
-                pipe.WaitForConnection();
+                try {
+                    await pipe.WaitForConnectionAsync(cts.Token);
+                } catch (OperationCanceledException) {
+                    if (launcher.HasExited) {
+                        Log("[SERVER] Launcher exited prematurely. Exit code: {0}", launcher.ExitCode);
+                    } else {
+                        Log("[SERVER] Timed out");
+                        launcher.Kill();
+                    }
+
+                    return;
+                }
 
                 try {
+                    Log("[SERVER] Reading pid...");
+
                     var buffer = new byte[4];
                     pipe.ReadExact(buffer, 0, buffer.Length);
                     uint pid = BitConverter.ToUInt32(buffer, 0);
                     Log("[SERVER] Received pid: {0}", pid);
-                    Console.WriteLine("Pid: {0}", pid);
+
+                    client = Process.GetProcessById((int)pid);
+                    Log("[SERVER] Client: {0}", client.GetModuleFileName());
+                    Log("[SERVER] Client threads: {0}", string.Join(",", client.Threads.Cast<ProcessThread>().Select(x => x.ThreadState == ThreadState.Wait ? $"{x.ThreadState}:{x.WaitReason}" : $"{x.ThreadState}")));
 
                     //Log("[SERVER] Simulating work");
                     //Thread.Sleep(2000);
 
+                    Log("[SERVER] Resuming client", pid);
                     buffer[0] = 1;
                     pipe.Write(buffer, 0, 1);
                     pipe.WaitForPipeDrain();
+
+                    client.Refresh();
+                    await Task.Delay(TimeSpan.FromMilliseconds(500));
+                    Log("[SERVER] Client threads: {0}", string.Join(",", client.Threads.Cast<ProcessThread>().Select(x => x.ThreadState == ThreadState.Wait ? $"{x.ThreadState}:{x.WaitReason}" : $"{x.ThreadState}")));
                 } catch (IOException e) {
                     Log("[SERVER] Error: {0}", e.Message);
                 }
             }
 
-            client.WaitForExit();
-            client.Close();
-            Log("[SERVER] Client quit. Server terminating.");
+            launcher.WaitForExit();
+            launcher.Close();
+            Log("[SERVER] Launcher quit. Server terminating.");
+
+            if (client != null) {
+                Log("[SERVER] Terminating client.");
+                client.Kill();
+                client.WaitForExit();
+            }
         }
 
         private static void Log(string format, params object[] args)
         {
-            return;
             Console.WriteLine(format, args);
         }
 
         private static DebugLaunchSettings QueryDebugTargets(bool isConsoleApp)
         {
             var launchSettings = new DebugLaunchSettings();
-            launchSettings.Executable = @"C:\Users\nrieck\dev\Samples\ConsoleApplication3\Debug\ConsoleApplication3.exe";
+            launchSettings.Executable = Path.GetFullPath(@"..\..\..\test\Debug\NativeConsoleApp.exe");
             launchSettings.Arguments = @"CA3 ""foo bar""";
 
             if (isConsoleApp) {
@@ -81,6 +122,24 @@ namespace TraceLaunchTester
 
             return launchSettings;
         }
+    }
+
+    public static class ProcessExtensions
+    {
+        public static string GetModuleFileName(this Process process)
+        {
+            var buffer = new StringBuilder(512);
+            uint ret = GetModuleFileNameEx(process.SafeHandle, IntPtr.Zero, buffer, buffer.Capacity);
+            if (ret <= 0)
+                return null;
+
+            return buffer.ToString();
+        }
+
+        [DllImport("psapi.dll", SetLastError = true)]
+        private static extern uint GetModuleFileNameEx(
+            SafeProcessHandle hProcess, IntPtr hModule, [Out] StringBuilder lpBaseName,
+            [In] [MarshalAs(UnmanagedType.U4)] int nSize);
     }
 
     public static class StreamExtensions
