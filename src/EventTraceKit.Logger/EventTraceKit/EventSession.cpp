@@ -173,7 +173,7 @@ EventSession::EventSession(TraceProfileDescriptor^ profile, TraceLog^ traceLog)
             this->kernelSession = session.release();
             continue;
         }
-        
+
         if (auto eventCollector = dynamic_cast<EventCollectorDescriptor^>(collector)) {
             auto traceProperties = CreateTraceProperties(eventCollector);
             auto session = etk::CreateEtwTraceSession(*loggerName, traceProperties);

@@ -91,7 +91,7 @@ static bool SplitCommandLine(std::wstring& args, std::wstring& appPath,
 #ifdef _DEBUG
 static FILE* OpenLog()
 {
-    HANDLE hlogFile = CreateFileW(L"d:\\TraceLaunch.log", GENERIC_WRITE,
+    HANDLE hlogFile = CreateFileW(L"TraceLaunch.log", GENERIC_WRITE,
                                   FILE_SHARE_WRITE | FILE_SHARE_READ, nullptr,
                                   CREATE_ALWAYS, 0, nullptr);
     return _fdopen(_open_osfhandle(reinterpret_cast<intptr_t>(hlogFile), 0), "wb");
