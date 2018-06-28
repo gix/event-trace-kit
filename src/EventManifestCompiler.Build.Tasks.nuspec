@@ -5,8 +5,8 @@
     <version>0.0.0.0</version>
     <authors>Nico Rieck</authors>
     <owners>nrieck</owners>
-    <licenseUrl>https://raw.github.com/gix/etk/master/LICENSE.txt</licenseUrl>
-    <projectUrl>http://github.com/gix/etk</projectUrl>
+    <licenseUrl>https://raw.github.com/gix/event-trace-kit/master/LICENSE.txt</licenseUrl>
+    <projectUrl>http://github.com/gix/event-trace-kit</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <releaseNotes></releaseNotes>
     <description>MSBuild tasks to compile event/instrumentation manifests and generate ETW (Event Tracing for Windows) logging code.</description>

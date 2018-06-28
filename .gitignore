@@ -2,7 +2,9 @@ bin/
 obj/
 Debug/
 Release/
+/dist/
 /src/packages/
+/tools/
 
 .vs/
 *.VC.db
