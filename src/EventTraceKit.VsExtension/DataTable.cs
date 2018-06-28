@@ -67,6 +67,11 @@ namespace EventTraceKit.VsExtension
 
             return table;
         }
+
+        internal IEnumerator<DataColumn> GetEnumerator()
+        {
+            return columns.GetEnumerator();
+        }
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -92,7 +97,7 @@ namespace EventTraceKit.VsExtension
 
         public IEnumerator<DataColumn> GetEnumerator()
         {
-            return table.Columns.GetEnumerator();
+            return table.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

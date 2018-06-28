@@ -64,7 +64,7 @@ namespace EventTraceKit.VsExtension.Views
             private readonly TraceEventsDataView view;
             private readonly int? rowIndex;
             private readonly int? columnIndex;
-            private readonly DataColumnView<Guid> providerIdColumn;
+            private readonly DataColumn<Guid> providerIdColumn;
 
             public WorkflowProvider(TraceEventsDataView view, int? rowIndex, int? columnIndex)
             {
@@ -72,9 +72,8 @@ namespace EventTraceKit.VsExtension.Views
                 this.rowIndex = rowIndex;
                 this.columnIndex = columnIndex;
 
-                providerIdColumn = (DataColumnView<Guid>)view.Columns.First(
-                    x => x.ColumnId == GenericEventsViewModelSource.ProviderIdColumnId);
-
+                providerIdColumn = (DataColumn<Guid>)view.DataTable.Columns.FirstOrDefault(
+                    x => x.Id == GenericEventsViewModelSource.ProviderIdColumnId);
             }
 
             public T GetWorkflow<T>() where T : class
@@ -262,7 +261,7 @@ namespace EventTraceKit.VsExtension.Views
                 var providerId = providerIdColumn[rowIndex.Value];
 
                 string expr;
-                if (columnId == providerIdColumn.ColumnId) {
+                if (columnId == providerIdColumn.Id) {
                     expr = $"ProviderId == {providerId:B}";
                 } else if (mask == null) {
                     var field = columnToFieldMap[columnId];

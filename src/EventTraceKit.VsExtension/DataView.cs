@@ -22,6 +22,7 @@ namespace EventTraceKit.VsExtension
 
         public event EventHandler RowCountChanged;
 
+        public DataTable DataTable => table;
         public DataViewColumnsCollection Columns => new DataViewColumnsCollection(this);
         public DataViewColumnsCollection VisibleColumns => new DataViewColumnsCollection(this);
 
