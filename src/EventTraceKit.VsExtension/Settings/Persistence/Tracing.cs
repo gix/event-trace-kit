@@ -27,13 +27,13 @@ namespace EventTraceKit.VsExtension.Settings.Persistence
 
     public class TraceLogFilter : SettingsElement
     {
-        private Collection<TraceLogFilter> conditions;
+        private Collection<TraceLogFilterCondition> conditions;
 
         public string Name { get; set; }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        public Collection<TraceLogFilter> Conditions =>
-            conditions ?? (conditions = new Collection<TraceLogFilter>());
+        public Collection<TraceLogFilterCondition> Conditions =>
+            conditions ?? (conditions = new Collection<TraceLogFilterCondition>());
     }
 
     public class TraceLogFilterCondition : SettingsElement

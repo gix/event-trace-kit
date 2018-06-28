@@ -2,6 +2,7 @@ namespace EventTraceKit.VsExtension.Tests.Serialization
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.IO;
     using System.Linq;
     using System.Windows;
@@ -64,6 +65,7 @@ namespace EventTraceKit.VsExtension.Tests.Serialization
                 MinimumBuffers = 23,
                 MaximumBuffers = 42,
                 LogFileName = @"z:\path\to\logfile.etl",
+                FlushPeriod = 123,
                 Providers = { provider }
             };
 
@@ -92,7 +94,7 @@ namespace EventTraceKit.VsExtension.Tests.Serialization
             Assert.Equal(collector.MinimumBuffers, actualCollector.MinimumBuffers);
             Assert.Equal(collector.MaximumBuffers, actualCollector.MaximumBuffers);
             Assert.Equal(collector.LogFileName, actualCollector.LogFileName);
-            Assert.Equal(collector.LogFileName, actualCollector.LogFileName);
+            Assert.Equal(collector.FlushPeriod, actualCollector.FlushPeriod);
             Assert.Equal(collector.Providers.Count, actualCollector.Providers.Count);
 
             var actualProvider = actualCollector.Providers[0];
@@ -123,17 +125,18 @@ namespace EventTraceKit.VsExtension.Tests.Serialization
         [Fact]
         public void SerializeEventCollector()
         {
-            var collector = new EventCollectorViewModel();
-            collector.Name = "Foo";
-            collector.BufferSize = 64;
-            collector.MinimumBuffers = 23;
-            collector.MaximumBuffers = 42;
-            collector.LogFileName = @"z:\path\to\logfile.etl";
-            collector.FlushPeriod = 1500;
-
             var provider = new EventProviderViewModel(
                 new Guid("37D34B87-80A6-44CE-90BB-1C3D6EDB0784"), "Bar");
-            collector.Providers.Add(provider);
+
+            var collector = new EventCollectorViewModel {
+                Name = "Foo",
+                BufferSize = 64,
+                MinimumBuffers = 23,
+                MaximumBuffers = 42,
+                LogFileName = @"z:\path\to\logfile.etl",
+                FlushPeriod = 1500,
+                Providers = { provider }
+            };
 
             var stream = new MemoryStream();
             new SettingsSerializer().Save(collector, stream);
@@ -329,6 +332,115 @@ namespace EventTraceKit.VsExtension.Tests.Serialization
 
             Assert.Equal(expected.Manifest, actual.Manifest);
             Assert.Equal(new[] { expected.StartupProject }, actual.StartupProjects);
+        }
+
+        [Fact]
+        public void MapCommaSeparatesValuesToCollection()
+        {
+            var mapper = SettingsSerializer.Mapper;
+            Assert.Null(mapper.Map<Collection<ushort>>(null));
+            Assert.Equal(new ushort[0], mapper.Map<Collection<ushort>>(""));
+            Assert.Equal(new ushort[] { 10, 20 }, mapper.Map<Collection<ushort>>("10, 20"));
+            Assert.Equal(new[] { 1, 2, -3 }, mapper.Map<Collection<int>>("1,2,-3"));
+        }
+
+        [Fact]
+        public void MapCollectionToCommaSeparatesValues()
+        {
+            var mapper = SettingsSerializer.Mapper;
+            Assert.Null(mapper.Map<string>(null));
+            Assert.Null(mapper.Map<string>(new ushort[0]));
+            Assert.Equal("10,20", mapper.Map<string>(new ushort[] { 10, 20 }));
+            Assert.Equal("1,2,-3", mapper.Map<string>(new[] { 1, 2, -3 }));
+        }
+
+        [Fact]
+        public void MapTraceProfileViewModel()
+        {
+            var provider = new EventProviderViewModel {
+                Id = new Guid("B3E63165-B450-4669-9EC6-D582C88AD37F"),
+                Name = "MyProvider",
+                IsEnabled = true,
+
+                Level = 123,
+                MatchAnyKeyword = 0xFFEEDDCCBBAA9988UL,
+                MatchAllKeyword = 0x7766554433221100UL,
+
+                IncludeSecurityId = true,
+                IncludeTerminalSessionId = true,
+                IncludeStackTrace = true,
+
+                FilterExecutableNames = true,
+                ExecutableNames = "project1.exe,project2.exe",
+
+                FilterProcessIds = true,
+                ProcessIds = "1, 2",
+
+                FilterEventIds = true,
+                EventIds = "10, 20",
+                EventIdsFilterIn = true,
+
+                Manifest = @"z:\etw.man",
+                StartupProject = @"z:\project1.vcxproj",
+            };
+
+            var collector = new EventCollectorViewModel {
+                Name = "MyCollector",
+                BufferSize = 64,
+                MinimumBuffers = 23,
+                MaximumBuffers = 42,
+                LogFileName = @"z:\path\to\logfile.etl",
+                FlushPeriod = 123,
+                Providers = { provider }
+            };
+
+            var profile = new TraceProfileViewModel(new Guid("5E25CAF0-1A7B-4ECA-9031-DAE0FCAEB3E1")) {
+                Name = "MyProfile",
+                Collectors = { collector }
+            };
+
+            var mapper = SettingsSerializer.Mapper;
+            var actualProfile = mapper.Map<TraceProfile>(profile);
+
+            Assert.Equal(profile.Id, actualProfile.Id);
+            Assert.Equal(profile.Name, actualProfile.Name);
+            Assert.Equal(profile.Collectors.Count, actualProfile.Collectors.Count);
+
+            var actualCollector = Assert.IsType<EventCollector>(actualProfile.Collectors[0]);
+            Assert.Equal(collector.Name, actualCollector.Name);
+            Assert.Equal(collector.BufferSize, actualCollector.BufferSize);
+            Assert.Equal(collector.MinimumBuffers, actualCollector.MinimumBuffers);
+            Assert.Equal(collector.MaximumBuffers, actualCollector.MaximumBuffers);
+            Assert.Equal(collector.LogFileName, actualCollector.LogFileName);
+            Assert.Equal(TimeSpan.FromMilliseconds(collector.FlushPeriod.Value), actualCollector.FlushPeriod);
+            Assert.Equal(collector.Providers.Count, actualCollector.Providers.Count);
+
+            var actualProvider = actualCollector.Providers[0];
+            Assert.Equal(provider.Id, actualProvider.Id);
+            Assert.Equal(provider.Level, actualProvider.Level);
+            Assert.Equal(provider.MatchAnyKeyword, actualProvider.MatchAnyKeyword);
+            Assert.Equal(provider.MatchAllKeyword, actualProvider.MatchAllKeyword);
+
+            Assert.Equal(provider.IncludeSecurityId, actualProvider.IncludeSecurityId);
+            Assert.Equal(provider.IncludeTerminalSessionId, actualProvider.IncludeTerminalSessionId);
+            Assert.Equal(provider.IncludeStackTrace, actualProvider.IncludeStackTrace);
+
+            Assert.Equal(new[] { "project1.exe", "project2.exe" }, actualProvider.ExecutableNames);
+            Assert.Equal(new uint[] { 1, 2 }, actualProvider.ProcessIds);
+            Assert.Equal(new ushort[] { 10, 20 }, actualProvider.EventIds);
+            Assert.Equal(provider.EventIdsFilterIn, actualProvider.EventIdsFilterIn);
+
+            //Assert.Equal(expected.FilterStackWalkEventIds, actual.FilterStackWalkEventIds);
+            //Assert.Equal(expected.StackWalkEventIds, actual.StackWalkEventIds);
+            //Assert.Equal(expected.StackWalkEventIdsFilterIn, actual.StackWalkEventIdsFilterIn);
+            //Assert.Equal(expected.FilterStackWalkLevelKeyword, actual.FilterStackWalkLevelKeyword);
+            //Assert.Equal(expected.StackWalkFilterIn, actual.StackWalkFilterIn);
+            //Assert.Equal(expected.StackWalkLevel, actual.StackWalkLevel);
+            //Assert.Equal(expected.StackWalkMatchAnyKeyword, actual.StackWalkMatchAnyKeyword);
+            //Assert.Equal(expected.StackWalkMatchAllKeyword, actual.StackWalkMatchAllKeyword);
+
+            Assert.Equal(provider.Manifest, actualProvider.Manifest);
+            Assert.Equal(new[] { provider.StartupProject }, actualProvider.StartupProjects);
         }
 
         [Fact]
