@@ -315,6 +315,7 @@ namespace EventTraceKit.VsExtension.Views
         private static void Copy(EventProviderViewModel source, EventProviderViewModel target)
         {
             target.Id = source.Id;
+            target.Name = source.Name;
             target.Manifest = source.Manifest;
             target.Level = source.Level;
             target.MatchAnyKeyword = source.MatchAnyKeyword;
