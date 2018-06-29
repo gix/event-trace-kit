@@ -80,7 +80,7 @@ namespace EventTraceKit.VsExtension.Views
                 SetStatus(null);
                 return;
             } catch (Exception ex) {
-                StatusText.Text = ex.Message;
+                SetStatus(ex.Message);
                 return;
             }
 
@@ -93,9 +93,10 @@ namespace EventTraceKit.VsExtension.Views
             if (keywords.Count != 0) {
                 var allBits = keywords.Aggregate(0UL, (a, k) => a | k.Mask);
                 ItemList.Items.Add(new KeywordItem(allBits, "(All)", HasBits, SetBits));
-                //ItemList.Items.Add(new KeywordItem(ulong.MaxValue, "(Max)", HasBits, SetBits));
                 foreach (var keyword in keywords)
                     ItemList.Items.Add(new KeywordItem(keyword, HasBits, SetBits));
+            } else {
+                SetStatus("No known keywords");
             }
         }
 

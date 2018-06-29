@@ -8,7 +8,7 @@
              d:DesignWidth="300"
              d:DesignHeight="300">
   <StackPanel>
-    <TextBlock x:Name="StatusText"/>
+    <TextBlock x:Name="StatusText" Margin="3"/>
     <ItemsControl x:Name="ItemList">
       <ItemsControl.ItemTemplate>
         <DataTemplate DataType="{x:Type etkv:KeywordItem}">
