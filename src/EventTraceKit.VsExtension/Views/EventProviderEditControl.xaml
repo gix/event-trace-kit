@@ -159,7 +159,8 @@
       <CheckBox Grid.Row="6" Grid.Column="0"
                 Content="Executable Name" IsChecked="{Binding FilterExecutableNames}"/>
       <TextBox Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="3"
-               Text="{Binding ExecutableNames, UpdateSourceTrigger=PropertyChanged}">
+               Text="{Binding ExecutableNames, UpdateSourceTrigger=PropertyChanged}"
+               ToolTipService.ShowDuration="10000">
         <TextBox.ToolTip>
           <ToolTip MaxWidth="400">
             <TextBlock TextWrapping="Wrap">
@@ -175,7 +176,8 @@
       <CheckBox Grid.Row="7" Grid.Column="0"
                 Content="Process Ids" IsChecked="{Binding FilterProcessIds}"/>
       <TextBox Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="3"
-                Text="{Binding ProcessIds, UpdateSourceTrigger=PropertyChanged}">
+                Text="{Binding ProcessIds, UpdateSourceTrigger=PropertyChanged}"
+               ToolTipService.ShowDuration="10000">
         <TextBox.ToolTip>
           <ToolTip MaxWidth="400">
             <TextBlock TextWrapping="Wrap">
@@ -197,7 +199,8 @@
         </Grid.ColumnDefinitions>
         <CheckBox Content="Filter In" IsChecked="{Binding EventIdsFilterIn}"
                   ToolTip="Enable to include the listed events. Disable to exclude."/>
-        <TextBox Grid.Column="1" Text="{Binding EventIds, UpdateSourceTrigger=PropertyChanged}">
+        <TextBox Grid.Column="1" Text="{Binding EventIds, UpdateSourceTrigger=PropertyChanged}"
+                 ToolTipService.ShowDuration="10000">
           <TextBox.ToolTip>
             <ToolTip MaxWidth="400">
               <TextBlock TextWrapping="Wrap">

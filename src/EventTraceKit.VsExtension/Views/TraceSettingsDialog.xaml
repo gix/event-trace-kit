@@ -142,7 +142,8 @@
                           Command="{Binding BrowseLogFileCommand}"/>
 
                   <TextBlock Text="Flush Period" Margin="11,0,7,0" VerticalAlignment="Center"/>
-                  <TextBox Text="{Binding FlushPeriod, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}" Width="50">
+                  <TextBox Text="{Binding FlushPeriod, UpdateSourceTrigger=PropertyChanged, TargetNullValue=''}"
+                           Width="50" ToolTipService.ShowDuration="20000">
                     <TextBox.ToolTip>
                       <ToolTip MaxWidth="400">
                         <TextBlock TextWrapping="Wrap">

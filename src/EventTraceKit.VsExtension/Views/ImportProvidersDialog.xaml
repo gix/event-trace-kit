@@ -16,7 +16,6 @@
   WindowStartupLocation="CenterOwner"
   ResizeMode="CanResizeWithGrip"
   ShowInTaskbar="False"
-  HasHelpButton="True"
   FocusManager.FocusedElement="{Binding ElementName=ImportDeclarationsTextBox}">
   <Grid Margin="7">
     <Grid.RowDefinitions>
@@ -28,7 +27,8 @@
              Text="{Binding ImportDeclarations, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
              FontFamily="Consolas"/>
     <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,6,0,0">
-      <vsi:CrispImage Moniker="{x:Static vsic:KnownMonikers.StatusHelp}">
+      <vsi:CrispImage Moniker="{x:Static vsic:KnownMonikers.StatusHelp}"
+                      ToolTipService.ShowDuration="20000">
         <vsi:CrispImage.ToolTip>
           <ToolTip>
             One Provider per line, beginning with the provider GUID followed by
