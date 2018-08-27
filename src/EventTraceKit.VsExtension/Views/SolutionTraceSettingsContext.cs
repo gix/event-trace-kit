@@ -7,6 +7,7 @@ namespace EventTraceKit.VsExtension.Views
     using System.Threading.Tasks;
     using EventManifestFramework;
     using EventManifestFramework.Schema;
+    using EventTraceKit.VsExtension.Extensions;
     using EventTraceKit.VsExtension.Threading;
     using EventTraceKit.VsExtension.Utilities;
     using Microsoft.VisualStudio.Threading;
@@ -53,10 +54,13 @@ namespace EventTraceKit.VsExtension.Views
         {
             var projects = new List<ProjectInfo>();
             projects.Add(new ProjectInfo(Guid.Empty, null, string.Empty));
-            try {
-                if (solutionBrowser != null)
-                    projects.AddRange(solutionBrowser.EnumerateProjects().OrderBy(x => x.Name));
-            } catch (Exception) {
+            if (solutionBrowser != null) {
+                try {
+                    var supportedProjects = solutionBrowser.EnumerateProjects()
+                        .Where(x => x.Kind.IsSupportedProjectKind());
+                    projects.AddRange(supportedProjects.OrderBy(x => x.Name));
+                } catch (Exception) {
+                }
             }
 
             return projects;
