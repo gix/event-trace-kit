@@ -76,6 +76,20 @@ namespace EventTraceKit.VsExtension.Extensions
             }
         }
 
+        public static bool IsSupported(this Project project)
+        {
+            return project.Kind != null && IsSupportedProjectKind(new Guid(project.Kind));
+        }
+
+        public static bool IsSupportedProjectKind(this Guid kind)
+        {
+            return
+                kind == VsProjectKinds.CppProjectKindId ||
+                kind == VsProjectKinds.LegacyCSharpProjectKindId ||
+                kind == VsProjectKinds.CSharpProjectKindId ||
+                kind == VsProjectKinds.VisualBasicNetProjectKindId;
+        }
+
         public static ProjectInfo GetProjectInfo(this Project project)
         {
             return new ProjectInfo(

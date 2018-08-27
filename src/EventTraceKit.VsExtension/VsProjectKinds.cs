@@ -15,5 +15,9 @@ namespace EventTraceKit.VsExtension
         /// <summary>{9A19103F-16F7-4668-BE54-9A1E7A4F7556}</summary>
         public static readonly Guid CSharpProjectKindId =
             new Guid(0x9A19103F, 0x16F7, 0x4668, 0xBE, 0x54, 0x9A, 0x1E, 0x7A, 0x4F, 0x75, 0x56);
+
+        /// <summary>{F184B08F-C81C-45F6-A57F-5ABD9991F28F}</summary>
+        public static readonly Guid VisualBasicNetProjectKindId =
+            new Guid(0xF184B08F, 0xC81C, 0x45F6, 0xA5, 0x7F, 0x5A, 0xBD, 0x99, 0x91, 0xF2, 0x8F);
     }
 }

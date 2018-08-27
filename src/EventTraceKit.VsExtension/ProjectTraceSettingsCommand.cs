@@ -28,7 +28,7 @@ namespace EventTraceKit.VsExtension
             get
             {
                 var project = vsMonitorSelectionFactory()?.GetSelectedProject();
-                Enabled = project != null && IsSupported(project);
+                Enabled = project != null && project.IsSupported();
                 return base.OleStatus;
             }
         }
@@ -36,7 +36,7 @@ namespace EventTraceKit.VsExtension
         public override void Invoke()
         {
             var project = vsMonitorSelectionFactory()?.GetSelectedProject();
-            if (project == null || !IsSupported(project)) {
+            if (project == null || !project.IsSupported()) {
                 var projectName = project != null ? project.Name : string.Empty;
                 var errorMessage = string.IsNullOrEmpty(projectName)
                     ? "No project is selected for this operation."
@@ -50,19 +50,6 @@ namespace EventTraceKit.VsExtension
                 DataContext = viewModelFactory(project.GetProjectInfo())
             };
             dialog.ShowModal();
-        }
-
-        private static bool IsSupported(EnvDTE.Project project)
-        {
-            return project.Kind != null && IsSupportedProjectKind(new Guid(project.Kind));
-        }
-
-        private static bool IsSupportedProjectKind(Guid kind)
-        {
-            return
-                kind == VsProjectKinds.CppProjectKindId ||
-                kind == VsProjectKinds.LegacyCSharpProjectKindId ||
-                kind == VsProjectKinds.CSharpProjectKindId;
         }
     }
 }
