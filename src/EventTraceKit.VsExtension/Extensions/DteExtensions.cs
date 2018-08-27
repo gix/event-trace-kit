@@ -1,14 +1,81 @@
 namespace EventTraceKit.VsExtension.Extensions
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Runtime.InteropServices;
     using EnvDTE;
+    using EnvDTE80;
     using Microsoft.VisualStudio;
     using Microsoft.VisualStudio.Shell;
     using Microsoft.VisualStudio.Shell.Interop;
 
     internal static class DteExtensions
     {
+        public static IEnumerable<Project> ProjectsRecursive(this Solution solution)
+        {
+            return solution.Projects.Cast<Project>().SelectMany(EnumerateProject);
+        }
+
+        private static IEnumerable<Project> EnumerateProject(Project project)
+        {
+            if (project == null)
+                yield break;
+
+            if (project.Kind == ProjectKinds.vsProjectKindSolutionFolder)
+                foreach (var subProject in GetSolutionFolderProjects(project))
+                    yield return subProject;
+            else
+                yield return project;
+        }
+
+        private static IEnumerable<Project> GetSolutionFolderProjects(Project solutionFolder)
+        {
+            return solutionFolder.ProjectItems
+                .Cast<ProjectItem>()
+                .SelectMany(x => EnumerateProject(x.SubProject));
+        }
+
+        public static IEnumerable<string> FilesRecursive(this Solution solution)
+        {
+            foreach (Project project in solution.ProjectsRecursive()) {
+                foreach (var fileName in project.FilesRecursive())
+                    yield return fileName;
+            }
+        }
+
+        public static IEnumerable<string> FilesRecursive(this Project project)
+        {
+            foreach (ProjectItem item in project.ProjectItems) {
+                foreach (var fileName in FilesRecursive(item))
+                    yield return fileName;
+            }
+        }
+
+        public static IEnumerable<string> FilesRecursive(this ProjectItem item)
+        {
+            if (Guid.Parse(item.Kind) == VSConstants.GUID_ItemType_PhysicalFile) {
+                for (short i = 0; i < item.FileCount; ++i)
+                    yield return item.FileNames[i];
+            }
+
+            if (item.ProjectItems != null) {
+                foreach (var fileName in item.ProjectItems.Cast<ProjectItem>().SelectMany(FilesRecursive))
+                    yield return fileName;
+            }
+        }
+
+        public static Project GetProjectByName(this Solution solution, string uniqueProjectName)
+        {
+            try {
+                return solution.Item(uniqueProjectName);
+            } catch (ArgumentException) {
+                // Contrary to the documentation, Solution.Item() does not find
+                // projects contained in solution folders.
+                return solution.ProjectsRecursive().FirstOrDefault(x => x.UniqueName == uniqueProjectName);
+            }
+        }
+
         public static ProjectInfo GetProjectInfo(this Project project)
         {
             return new ProjectInfo(
