@@ -106,14 +106,12 @@ namespace EventTraceKit.VsExtension.Debugging
             if (!EnsureInitialized() || !traceController.IsAutoLogEnabled)
                 return nextHook.OnLaunchDebugTargets(debugTargetCount, debugTargets, launchResults);
 
-            bool noDebug = debugTargets.Any(
-                x => (x.LaunchFlags & (int)__VSDBGLAUNCHFLAGS.DBGLAUNCH_NoDebug) != 0);
-
             int hr;
-            if (!noDebug) {
-                // All targets launch with an attached debugger. In this case
-                // all targets (even console targets) are started directly and
-                // we can simply retrieve their process ids from the launch
+            if (!RequiresInterception(debugTargets)) {
+                // All targets launch with an attached debugger or are launched
+                // without debugging by VsDebugConsole.exe. In this case all
+                // targets (even console targets) are started directly and we
+                // can simply retrieve their process ids from the launch
                 // results.
                 hr = nextHook.OnLaunchDebugTargets(
                     debugTargetCount, debugTargets, launchResults);
@@ -125,13 +123,13 @@ namespace EventTraceKit.VsExtension.Debugging
                 return hr;
             }
 
-            // At least one target launches without a debugger. Console targets
-            // it will be launched via cmd.exe to show the standard output even
-            // after the has process exited. The process ids reported in the
-            // launch results will be of the cmd.exe process which is useless
-            // for trace filtering. Instead we intercept the target launch by
-            // inserting our own TraceLaunch utility which can report back the
-            // real process ids.
+            // At least one target launches without a debugger and requires
+            // interception. Console targets will be launched via cmd.exe to
+            // show the standard output even after the has process exited. The
+            // process ids reported in the launch results will be of the cmd.exe
+            // process which is useless for trace filtering. Instead we
+            // intercept the target launch by inserting our own TraceLaunch
+            // utility which can report back the real process ids.
             using (var ctx = InterceptTargets(debugTargets)) {
                 hr = nextHook.OnLaunchDebugTargets(
                     debugTargetCount, ctx.Targets, launchResults);
@@ -143,6 +141,22 @@ namespace EventTraceKit.VsExtension.Debugging
             }
 
             return hr;
+        }
+
+        private static bool RequiresInterception(VsDebugTargetInfo4[] targets)
+        {
+            for (int i = 0; i < targets.Length; ++i) {
+                if (RequiresInterception(in targets[i]))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool RequiresInterception(in VsDebugTargetInfo4 target)
+        {
+            return (target.LaunchFlags & (int)__VSDBGLAUNCHFLAGS.DBGLAUNCH_NoDebug) != 0
+                   && IsCmdWrapper(target);
         }
 
         /// <devdoc>
@@ -161,7 +175,7 @@ namespace EventTraceKit.VsExtension.Debugging
 
             for (int i = 0; i < interceptedTargets.Length; ++i) {
                 ref var target = ref interceptedTargets[i];
-                if ((target.LaunchFlags & (int)__VSDBGLAUNCHFLAGS.DBGLAUNCH_NoDebug) != 0) {
+                if (RequiresInterception(target)) {
                     var traceLaunchExe = GetTraceLaunchPath(in target);
 
                     var pipeName = Guid.NewGuid().ToString("D");
