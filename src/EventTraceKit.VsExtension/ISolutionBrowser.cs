@@ -39,12 +39,5 @@ namespace EventTraceKit.VsExtension
         public ProjectInfo Project { get; }
         public string Command { get; }
         public string CommandArguments { get; }
-
-        public bool MatchesProcess(Process process)
-        {
-            return
-                string.Equals(Command, process.TryGetCommand(), StringComparison.OrdinalIgnoreCase) &&
-                CommandArguments == process.TryGetCommandLine();
-        }
     }
 }

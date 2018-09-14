@@ -204,7 +204,6 @@
     <Compile Include="Native\EventHeaderCPtr.cs" />
     <Compile Include="Native\EventPropertyInfoCPtr.cs" />
     <Compile Include="Native\EventRecordCPtr.cs" />
-    <Compile Include="Native\ProcessUtils.cs" />
     <Compile Include="Native\TraceEventInfoCPtr.cs" />
     <Compile Include="Native\TraceDataHelper.cs" />
     <Compile Include="Native\UnmanagedString.cs" />
