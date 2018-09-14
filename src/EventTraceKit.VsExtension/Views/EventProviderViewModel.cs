@@ -68,7 +68,7 @@ namespace EventTraceKit.VsExtension.Views
         public ITraceSettingsContext Context { get; set; }
 
         public Func<Task<IEnumerable>> SuggestedManifestsSource => async () => await Context.ManifestsInSolution.GetValueAsync();
-        public Func<Task<IEnumerable>> SuggestedProjectsSource => async () => await Context.ProjectsInSolution.GetValueAsync();
+        public IEnumerable SuggestedProjects => Context.ProjectsInSolution;
 
         public ICommand BrowseManifestCommand { get; }
 

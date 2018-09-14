@@ -240,8 +240,7 @@ namespace EventTraceKit.VsExtension.UITests
 
         private class StubSettingsContext : ITraceSettingsContext
         {
-            public AsyncLazy<IReadOnlyList<ProjectInfo>> ProjectsInSolution { get; } =
-                new AsyncLazy<IReadOnlyList<ProjectInfo>>(() => Task.FromResult<IReadOnlyList<ProjectInfo>>(new ProjectInfo[0]));
+            public IReadOnlyList<ProjectInfo> ProjectsInSolution { get; } = new ProjectInfo[0];
 
             public AsyncLazy<IReadOnlyList<string>> ManifestsInSolution { get; } =
                 new AsyncLazy<IReadOnlyList<string>>(() => Task.FromResult<IReadOnlyList<string>>(new string[0]));

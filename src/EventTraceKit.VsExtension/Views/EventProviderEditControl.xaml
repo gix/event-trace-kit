@@ -80,7 +80,7 @@
              ToolTipService.ShowDuration="10000"/>
       <ComboBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3"
                 x:Name="StartupProject"
-                etkw:Bind.ItemsSourceProviderAsync="{Binding SuggestedProjectsSource}"
+                ItemsSource="{Binding SuggestedProjects}"
                 DisplayMemberPath="Name"
                 SelectedValue="{Binding StartupProject, UpdateSourceTrigger=PropertyChanged}"
                 SelectedValuePath="FullName"

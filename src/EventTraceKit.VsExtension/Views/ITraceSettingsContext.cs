@@ -7,7 +7,7 @@ namespace EventTraceKit.VsExtension.Views
 
     public interface ITraceSettingsContext
     {
-        AsyncLazy<IReadOnlyList<ProjectInfo>> ProjectsInSolution { get; }
+        IReadOnlyList<ProjectInfo> ProjectsInSolution { get; }
         AsyncLazy<IReadOnlyList<string>> ManifestsInSolution { get; }
         Task<EventManifest> GetManifest(string manifestFile);
     }

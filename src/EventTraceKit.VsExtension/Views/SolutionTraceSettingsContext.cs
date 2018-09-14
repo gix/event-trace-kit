@@ -22,7 +22,7 @@ namespace EventTraceKit.VsExtension.Views
         {
             this.solutionBrowser = solutionBrowser;
 
-            ProjectsInSolution = ThreadingExtensions.CreateAsyncLazy(FindProjects);
+            ProjectsInSolution = FindProjects();
             ManifestsInSolution = ThreadingExtensions.CreateAsyncLazy(FindManifests);
 
             manifestCache = new FileLruCache<EventManifest>(
@@ -39,7 +39,7 @@ namespace EventTraceKit.VsExtension.Views
                 });
         }
 
-        public AsyncLazy<IReadOnlyList<ProjectInfo>> ProjectsInSolution { get; }
+        public IReadOnlyList<ProjectInfo> ProjectsInSolution { get; }
         public AsyncLazy<IReadOnlyList<string>> ManifestsInSolution { get; }
 
         public async Task<EventManifest> GetManifest(string manifestFile)
