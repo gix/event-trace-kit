@@ -21,7 +21,7 @@ Includes the following:
    Generates ETW binary templates and message tables to be embedded in provider
    executables as well es C++ logging code. Functions as a modern alternative
    to [Message Compiler (mc.exe)](https://docs.microsoft.com/en-us/windows/desktop/WES/message-compiler--mc-exe-).
-- `EventManifestCompiler.Build.Tasks`: Nuget package to integrates the manifest
+- `EventManifestCompiler.Build.Tasks`: Nuget package that integrates the manifest
    compiler into C++ MSBuild projects.
 
 
