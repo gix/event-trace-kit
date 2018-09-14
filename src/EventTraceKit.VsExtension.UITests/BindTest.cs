@@ -13,9 +13,13 @@ namespace EventTraceKit.VsExtension.UITests
 
     public class BindTest
     {
+        private const string SpecialItemValue = "<special>";
+
         private static IEnumerable<string> NextItems(Random rng, int count)
         {
-            return Enumerable.Range(0, count).Select(x => rng.Next().ToString()).ToList();
+            var list = Enumerable.Range(0, count).Select(x => rng.Next().ToString()).ToList();
+            list.Insert(count == 0 ? 0 : 1, SpecialItemValue);
+            return list;
         }
 
         [StaFact]
@@ -58,6 +62,8 @@ namespace EventTraceKit.VsExtension.UITests
             }
 
             Bind.SetItemsSourceAsync(comboBox, Task.Run(Source));
+            Bind.SetDefaultItem(comboBox, SpecialItemValue);
+            comboBox.SelectedItem = SpecialItemValue;
 
             DisplayElement(comboBox);
         }
@@ -75,6 +81,8 @@ namespace EventTraceKit.VsExtension.UITests
             }
 
             Bind.SetItemsSourceProviderAsync(comboBox, () => Task.Run(Source));
+            Bind.SetDefaultItem(comboBox, SpecialItemValue);
+            comboBox.SelectedItem = SpecialItemValue;
 
             DisplayElement(comboBox);
         }
@@ -93,6 +101,8 @@ namespace EventTraceKit.VsExtension.UITests
 
             var lazySource = new AsyncLazy<IEnumerable>(() => Task.Run(Source));
             Bind.SetItemsSourceProviderAsync(comboBox, async () => await lazySource.GetValueAsync());
+            Bind.SetDefaultItem(comboBox, SpecialItemValue);
+            comboBox.SelectedItem = SpecialItemValue;
 
             DisplayElement(comboBox);
         }

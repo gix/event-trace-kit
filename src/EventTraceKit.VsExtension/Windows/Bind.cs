@@ -138,13 +138,38 @@ namespace EventTraceKit.VsExtension.Windows
             }
         }
 
+        public static readonly DependencyProperty DefaultItemProperty =
+            DependencyProperty.RegisterAttached(
+                "DefaultItem",
+                typeof(object),
+                typeof(Bind),
+                new FrameworkPropertyMetadata(OnSelectedItemChanged));
+
+        public static object GetDefaultItem(ComboBox d)
+        {
+            return d.GetValue(DefaultItemProperty);
+        }
+
+        public static void SetDefaultItem(ComboBox d, object value)
+        {
+            d.SetValue(DefaultItemProperty, value);
+        }
+
+        private static void OnSelectedItemChanged(
+            DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is ComboBox comboBox) {
+                EnsureSelectedItemAvailable(comboBox, e.NewValue);
+            }
+        }
+
         private static async void Async_ComboBoxOnDropDownOpened(object sender, EventArgs e)
         {
             var source = (ComboBox)sender;
 
             var itemsSourceTask = GetItemsSourceAsync(source);
             if (itemsSourceTask == null) {
-                source.ItemsSource = null;
+                ClearItemsSource(source);
                 return;
             }
 
@@ -161,11 +186,11 @@ namespace EventTraceKit.VsExtension.Windows
 
             var itemsSourceProvider = GetItemsSourceProvider(source);
             if (itemsSourceProvider == null) {
-                source.ItemsSource = null;
+                ClearItemsSource(source);
                 return;
             }
 
-            SetItemsSource(source, itemsSourceProvider());
+            SetItemsSource(source, itemsSourceProvider(), source.SelectedItem);
         }
 
         private static void Provider_ComboBoxOnDropDownClosed(object sender, EventArgs e)
@@ -179,7 +204,7 @@ namespace EventTraceKit.VsExtension.Windows
 
             var itemsSourceTaskProvider = GetItemsSourceProviderAsync(source);
             if (itemsSourceTaskProvider == null) {
-                source.ItemsSource = null;
+                ClearItemsSource(source);
                 return;
             }
 
@@ -193,20 +218,52 @@ namespace EventTraceKit.VsExtension.Windows
 
         private static void ClearItemsSource(ComboBox comboBox)
         {
-            if (!comboBox.IsEditable)
+            void Clear()
+            {
+                var selectedItem = comboBox.SelectedItem;
+
+                comboBox.ItemsSource = null;
+                comboBox.Items.Clear();
+
+                if (selectedItem != null) {
+                    if (comboBox.Items.Count == 0)
+                        comboBox.Items.Add(selectedItem);
+                    else
+                        comboBox.Items[0] = selectedItem;
+                }
+
+                comboBox.SelectedItem = selectedItem;
+            }
+
+            if (comboBox.IsEditable) {
+                using (new SuspendBindingScope(comboBox, ComboBox.TextProperty))
+                    Clear();
+            } else {
+                Clear();
+            }
+        }
+
+        private static void EnsureSelectedItemAvailable(
+            ComboBox comboBox, object newSelectedValue)
+        {
+            if (comboBox.ItemsSource != null)
                 return;
 
             using (new SuspendBindingScope(comboBox, ComboBox.TextProperty)) {
-                comboBox.ItemsSource = null;
-                comboBox.Items.Clear();
+                if (comboBox.Items.Count == 0)
+                    comboBox.Items.Add(newSelectedValue);
+                else
+                    comboBox.Items[0] = newSelectedValue;
             }
         }
 
         private static async Task SetItemsSourceWithLoading(
             ComboBox comboBox, Task<IEnumerable> itemsSourceTask)
         {
+            var selectedItem = comboBox.SelectedItem;
+
             if (itemsSourceTask.IsCompleted) {
-                SetItemsSource(comboBox, await itemsSourceTask);
+                SetItemsSource(comboBox, await itemsSourceTask, selectedItem);
                 return;
             }
 
@@ -215,16 +272,23 @@ namespace EventTraceKit.VsExtension.Windows
             using (new ComboBoxLoadingScope(comboBox, GetLoadingContent(comboBox)))
                 itemsSource = await itemsSourceTask;
             if (!cts.IsCancellationRequested)
-                SetItemsSource(comboBox, itemsSource);
+                SetItemsSource(comboBox, itemsSource, selectedItem);
         }
 
-        private static void SetItemsSource(ComboBox comboBox, IEnumerable itemsSource)
+        private static void SetItemsSource(
+            ComboBox comboBox, IEnumerable itemsSource, object selectedItem)
         {
+            if (comboBox.ItemsSource == null && comboBox.Items.Count != 0)
+                comboBox.Items.Clear();
+
             if (comboBox.IsEditable) {
-                using (new SuspendBindingScope(comboBox, ComboBox.TextProperty))
+                using (new SuspendBindingScope(comboBox, ComboBox.TextProperty)) {
                     comboBox.ItemsSource = itemsSource;
+                    comboBox.SelectedItem = selectedItem;
+                }
             } else {
                 comboBox.ItemsSource = itemsSource;
+                comboBox.SelectedItem = selectedItem;
             }
         }
 
