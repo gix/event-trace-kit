@@ -30,4 +30,5 @@
   </Target>
 
   <Import Project="$(MSBuildThisFileDirectory)GenerateAssemblyInfo.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)ReplaceFileText.targets" />
 </Project>

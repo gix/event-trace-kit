@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <UsingTask TaskName="ReplaceFileText"
+             TaskFactory="CodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <ParameterGroup>
+      <SourceFile ParameterType="Microsoft.Build.Framework.ITaskItem" Required="true"/>
+      <DestinationFile ParameterType="Microsoft.Build.Framework.ITaskItem" Output="true"/>
+      <MatchExpression ParameterType="System.String" Required="true"/>
+      <ReplacementText ParameterType="System.String" Required="true"/>
+    </ParameterGroup>
+    <Task>
+      <Reference Include="System.Core"/>
+      <Using Namespace="System"/>
+      <Using Namespace="System.IO"/>
+      <Using Namespace="System.Text.RegularExpressions"/>
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+        var text = File.ReadAllText(SourceFile.ItemSpec);
+        text = Regex.Replace(text, MatchExpression, ReplacementText);
+        var directoryPath = Path.GetDirectoryName(DestinationFile.ItemSpec);
+        Directory.CreateDirectory(directoryPath);
+        File.WriteAllText(DestinationFile.ItemSpec, text);
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+</Project>
