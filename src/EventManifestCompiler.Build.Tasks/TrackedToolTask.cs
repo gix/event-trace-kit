@@ -293,7 +293,7 @@ namespace EventManifestCompiler.Build.Tasks
                     if (!string.IsNullOrEmpty(ToolArchitecture)) {
                         if (!Enum.TryParse(ToolArchitecture, out toolType)) {
                             Log.LogErrorWithCodeFromResources(
-                                Strings.Names.General_InvalidValue,
+                                nameof(Strings.General_InvalidValue),
                                 "ToolArchitecture",
                                 GetType().Name);
                             return -1;
@@ -306,11 +306,11 @@ namespace EventManifestCompiler.Build.Tasks
                         trackerPath = FileTracker.GetTrackerPath(toolType, TrackerSdkPath);
                         if (trackerPath == null)
                             Log.LogErrorFromResources(
-                                Strings.Names.Error_MissingFile,
+                                nameof(Strings.Error_MissingFile),
                                 "tracker.exe");
                     } catch (Exception ex) when (!ExceptionHandling.NotExpectedException(ex)) {
                         Log.LogErrorWithCodeFromResources(
-                            Strings.Names.General_InvalidValue,
+                            nameof(Strings.General_InvalidValue),
                             "TrackerSdkPath",
                             GetType().Name);
                         return -1;
@@ -321,7 +321,7 @@ namespace EventManifestCompiler.Build.Tasks
                             toolType, TrackerFrameworkPath);
                     } catch (Exception ex) when (!ExceptionHandling.NotExpectedException(ex)) {
                         Log.LogErrorWithCodeFromResources(
-                            Strings.Names.General_InvalidValue,
+                            nameof(Strings.General_InvalidValue),
                             "TrackerFrameworkPath",
                             GetType().Name);
                         return -1;
@@ -343,7 +343,7 @@ namespace EventManifestCompiler.Build.Tasks
 
                     Log.LogMessageFromResources(
                         MessageImportance.Low,
-                        Strings.Names.Native_TrackingCommandMessage);
+                        nameof(Strings.Native_TrackingCommandMessage));
                     Log.LogMessage(
                         MessageImportance.Low,
                         trackerPath + (AttributeFileTracking ? " /a " : " ") +
@@ -406,7 +406,7 @@ namespace EventManifestCompiler.Build.Tasks
                     throw;
 
                 Log.LogWarningWithCodeFromResources(
-                    Strings.Names.TrackedToolTask_RebuildingDueToInvalidTLog, ex.Message);
+                    nameof(Strings.TrackedToolTask_RebuildingDueToInvalidTLog), ex.Message);
 
                 return true;
             }
@@ -414,7 +414,7 @@ namespace EventManifestCompiler.Build.Tasks
             if (!File.Exists(path)) {
                 Log.LogMessageFromResources(
                     MessageImportance.Low,
-                    Strings.Names.TrackedToolTask_RebuildingNoCommandTLog,
+                    nameof(Strings.TrackedToolTask_RebuildingNoCommandTLog),
                     TLogCommandFile.GetMetadata("FullPath"));
                 return true;
             }
@@ -451,12 +451,12 @@ namespace EventManifestCompiler.Build.Tasks
                 if (sourcesWithChangedCommandLines.Count == TrackedInputFiles.Length) {
                     Log.LogMessageFromResources(
                         MessageImportance.Low,
-                        Strings.Names.TrackedToolTask_RebuildingAllSourcesCommandLineChanged);
+                        nameof(Strings.TrackedToolTask_RebuildingAllSourcesCommandLineChanged));
                 } else {
                     foreach (ITaskItem item in sourcesWithChangedCommandLines) {
                         Log.LogMessageFromResources(
                             MessageImportance.Low,
-                            Strings.Names.TrackedToolTask_RebuildingSourceCommandLineChanged,
+                            nameof(Strings.TrackedToolTask_RebuildingSourceCommandLineChanged),
                             item.GetMetadata("FullPath"));
                     }
                 }
@@ -469,7 +469,7 @@ namespace EventManifestCompiler.Build.Tasks
             if (sourcesWithChangedCommandLines.Count == TrackedInputFiles.Length) {
                 Log.LogMessageFromResources(
                     MessageImportance.Low,
-                    Strings.Names.TrackedToolTask_RebuildingAllSourcesCommandLineChanged);
+                    nameof(Strings.TrackedToolTask_RebuildingAllSourcesCommandLineChanged));
                 return TrackedInputFiles;
             }
 
@@ -491,7 +491,7 @@ namespace EventManifestCompiler.Build.Tasks
                 if (commandLineChanged)
                     Log.LogMessageFromResources(
                         MessageImportance.Low,
-                        Strings.Names.TrackedToolTask_RebuildingSourceCommandLineChanged,
+                        nameof(Strings.TrackedToolTask_RebuildingSourceCommandLineChanged),
                         item.GetMetadata("FullPath"));
             }
 
@@ -586,7 +586,7 @@ namespace EventManifestCompiler.Build.Tasks
 
                 if (invalidTLog) {
                     Log.LogWarningWithCodeFromResources(
-                        Strings.Names.TrackedToolTask_RebuildingDueToInvalidTLogContents,
+                        nameof(Strings.TrackedToolTask_RebuildingDueToInvalidTLogContents),
                         metadata);
                     sourceMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                 }
