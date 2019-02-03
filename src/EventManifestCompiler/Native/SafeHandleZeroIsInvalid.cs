@@ -4,14 +4,12 @@ namespace EventManifestCompiler.Native
     using System.Runtime.ConstrainedExecution;
     using System.Runtime.InteropServices;
     using System.Security;
-    using System.Security.Permissions;
 
     /// <summary>
     ///   Provides a base class for Win32 safe handle implementations in which
     ///   the value of 0 indicates an invalid handle.
     /// </summary>
     [SecurityCritical]
-    [SecurityPermission(SecurityAction.InheritanceDemand, UnmanagedCode = true)]
     internal abstract class SafeHandleZeroIsInvalid : SafeHandle
     {
         /// <summary>

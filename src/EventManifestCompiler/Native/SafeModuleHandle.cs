@@ -2,11 +2,9 @@ namespace EventManifestCompiler.Native
 {
     using System;
     using System.Security;
-    using System.Security.Permissions;
 
     /// <summary>Represents a wrapper class for a HMODULE handle.</summary>
     [SecurityCritical]
-    [HostProtection(SecurityAction.LinkDemand, MayLeakOnAbort = true)]
     internal sealed class SafeModuleHandle : SafeHandleZeroIsInvalid
     {
         public static SafeModuleHandle Load(string fileName, LoadLibraryExFlags flags = 0)
