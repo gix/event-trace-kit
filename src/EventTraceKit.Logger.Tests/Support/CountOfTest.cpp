@@ -30,7 +30,7 @@ TEST(CountOfTest, CountWideString)
 
 TEST(CountOfTest, CountUtf8String)
 {
-    char const input[] = u8"1234567";
+    char8_t const input[] = u8"1234567";
     EXPECT_EQ(8u, countof(input));
 }
 
