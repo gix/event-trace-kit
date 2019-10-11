@@ -56,7 +56,6 @@
     </Reference>
     <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Microsoft.Expression.Interactions, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Debugger.Interop.Internal">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\PrivateAssemblies\Microsoft.VisualStudio.Debugger.Interop.Internal.dll</HintPath>
       <Private>False</Private>
@@ -71,7 +70,6 @@
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
@@ -590,6 +588,9 @@
     <PackageReference Include="WinApi.Core">
       <Version>0.1.0-ci-62701-02</Version>
     </PackageReference>
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf">
+      <Version>1.0.1</Version>
+    </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
@@ -600,6 +601,7 @@
     <ItemGroup>
       <VSIXCopyLocalReferenceSourceItem Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.NuGetPackageId)' == 'WinApi.Core'" />
       <VSIXCopyLocalReferenceSourceItem Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.NuGetPackageId)' == 'AutoMapper'" />
+      <VSIXCopyLocalReferenceSourceItem Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.NuGetPackageId)' == 'Microsoft.Xaml.Behaviors.Wpf'" />
     </ItemGroup>
   </Target>
   <Target Name="CreateVSIXChangelog" Inputs="..\..\CHANGELOG.md" Outputs="$(OutDir)CHANGELOG.txt">

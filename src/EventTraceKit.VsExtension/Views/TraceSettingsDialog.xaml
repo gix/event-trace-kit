@@ -4,7 +4,7 @@
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-  xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+  xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
   xmlns:c="clr-namespace:EventTraceKit.VsExtension.Controls"
   xmlns:etkv="clr-namespace:EventTraceKit.VsExtension.Views"
   xmlns:etkw="clr-namespace:EventTraceKit.VsExtension.Windows"
@@ -22,9 +22,9 @@
   Height="700"
   WindowStartupLocation="CenterOwner"
   ShowInTaskbar="False">
-  <i:Interaction.Behaviors>
+  <b:Interaction.Behaviors>
     <etkw:BindableDialogResult Binding="{Binding DialogResult}"/>
-  </i:Interaction.Behaviors>
+  </b:Interaction.Behaviors>
   <Grid>
     <Grid.Resources>
       <!-- Resources are placed into the Grid instead of the top-level Window

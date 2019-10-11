@@ -7,7 +7,7 @@
   xmlns:etkc="clr-namespace:EventTraceKit.VsExtension.Controls"
   xmlns:vsui="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
   xmlns:sys="clr-namespace:System;assembly=mscorlib"
-  xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+  xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
   xmlns:vsi="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.Imaging"
   xmlns:vsp="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Imaging"
   xmlns:vsic="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
@@ -22,9 +22,9 @@
   Height="700"
   WindowStartupLocation="CenterOwner"
   ShowInTaskbar="False">
-  <i:Interaction.Behaviors>
+  <b:Interaction.Behaviors>
     <windows:BindableDialogResult Binding="{Binding DialogResult}"/>
-  </i:Interaction.Behaviors>
+  </b:Interaction.Behaviors>
   <Window.Resources>
     <ObjectDataProvider x:Key="ActionValues" ObjectType="{x:Type sys:Enum}" MethodName="GetValues">
       <ObjectDataProvider.MethodParameters>

@@ -1,8 +1,8 @@
 namespace EventTraceKit.VsExtension.Windows
 {
     using System.Windows;
-    using System.Windows.Interactivity;
     using Microsoft.VisualStudio.PlatformUI;
+    using Microsoft.Xaml.Behaviors;
 
     public class BindableDialogResult : Behavior<DialogWindow>
     {

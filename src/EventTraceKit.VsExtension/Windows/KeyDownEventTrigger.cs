@@ -2,7 +2,7 @@ namespace EventTraceKit.VsExtension.Windows
 {
     using System;
     using System.Windows.Input;
-    using System.Windows.Interactivity;
+    using Microsoft.Xaml.Behaviors;
 
     public class KeyDownEventTrigger : EventTrigger
     {

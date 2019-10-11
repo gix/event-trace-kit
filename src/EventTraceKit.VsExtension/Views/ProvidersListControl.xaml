@@ -9,7 +9,7 @@
   xmlns:w="clr-namespace:EventTraceKit.VsExtension.Windows"
   xmlns:vsi="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.Imaging"
   xmlns:vsic="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
-  xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+  xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
   xmlns:system="clr-namespace:System;assembly=mscorlib"
   xmlns:cm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
   mc:Ignorable="d"
@@ -110,7 +110,7 @@
            Focusable="True"
            IsTabStop="True"
            MouseDown="ProvidersListBox_OnMouseDown">
-    <i:Interaction.Behaviors>
+    <b:Interaction.Behaviors>
       <w:CommandBridge SourceCommand="ApplicationCommands.Cut"
                        TargetCommand="{Binding CutProvidersCommand}"/>
       <w:CommandBridge SourceCommand="ApplicationCommands.Copy"
@@ -123,7 +123,7 @@
                        TargetCommand="{Binding ToggleProvidersCommand}"/>
       <w:CommandBridge SourceCommand="v:ExtensionCommands.Rename"
                        TargetCommand="{Binding SelectedProvider.SwitchToRenamingModeCommand}"/>
-    </i:Interaction.Behaviors>
+    </b:Interaction.Behaviors>
     <ListBox.ItemContainerStyle>
       <Style TargetType="{x:Type ListBoxItem}" BasedOn="{StaticResource {x:Type ListBoxItem}}">
         <Setter Property="HorizontalAlignment" Value="Stretch"/>

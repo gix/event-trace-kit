@@ -4,8 +4,8 @@ namespace EventTraceKit.VsExtension.Windows
     using System.Linq;
     using System.Windows;
     using System.Windows.Input;
-    using System.Windows.Interactivity;
     using EventTraceKit.VsExtension.Extensions;
+    using Microsoft.Xaml.Behaviors;
 
     public class CommandBridge : Behavior<UIElement>
     {
