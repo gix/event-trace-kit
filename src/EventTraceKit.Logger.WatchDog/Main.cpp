@@ -3,7 +3,7 @@
 #include "ADT/WaitEvent.cpp"
 #include "Support/ByteCount.h"
 #include "Win32Exception.cpp"
-#include <boost/lexical_cast.hpp>
+#include <string>
 #include <windows.h>
 #include <evntrace.h>
 
@@ -34,7 +34,7 @@ int wmain(int argc, wchar_t** argv)
     }
 
     try {
-        DWORD const processId = boost::lexical_cast<DWORD>(argv[1]);
+        DWORD const processId = std::stoul(argv[1]);
         std::wstring const loggerName(argv[2]);
         std::wstring const readyEventName(argv[3]);
         std::wstring const exitEventName(argv[4]);
