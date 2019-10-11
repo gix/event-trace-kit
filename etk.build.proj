@@ -74,7 +74,7 @@
 
   <Target Name="Test" DependsOnTargets="Build;GetXunit" Condition="'$(Test)' != 'false'">
     <ItemGroup>
-      <TestAssemblies Include="build\any\bin\EventManifestFramework.Tests.dll"/>
+      <TestAssemblies Include="build\x86\bin\EventManifestFramework.Tests.dll"/>
       <TestAssemblies Include="build\x86\bin\EventTraceKit.VsExtension.Tests.dll"/>
       <TestExecutables Include="build\x86\bin\EventTraceKit.Logger.Tests.exe"/>
     </ItemGroup>
