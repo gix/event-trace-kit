@@ -28,7 +28,7 @@
 
   <Import Project="src\Build\Settings.props" />
 
-  <Target Name="Clean">
+  <Target Name="Clean" Condition="'$(Clean)' != 'false'">
     <MSBuild Projects="@(ProjectItem)"
              Properties="$(BuildProperties)"
              Targets="Clean"
@@ -45,7 +45,7 @@
     <RemoveDir Directories="build\x64"/>
   </Target>
 
-  <Target Name="Restore">
+  <Target Name="Restore" Condition="'$(Restore)' != 'false'">
     <MSBuild Projects="@(ProjectItem)"
              Properties="$(BuildProperties)"
              Targets="Restore"
@@ -53,7 +53,7 @@
              StopOnFirstFailure="true"/>
   </Target>
 
-  <Target Name="Build" DependsOnTargets="Restore">
+  <Target Name="Build" DependsOnTargets="Restore" Condition="'$(Build)' != 'false'">
     <MSBuild Projects="@(ProjectItem64)"
              Properties="$(BuildProperties64)"
              BuildInParallel="true"
@@ -72,7 +72,7 @@
           Command="nuget install xunit.runner.console -Version 2.3.1 -OutputDirectory &quot;$(ToolsDir.TrimEnd('\'))&quot;"/>
   </Target>
 
-  <Target Name="Test" DependsOnTargets="Build;GetXunit">
+  <Target Name="Test" DependsOnTargets="Build;GetXunit" Condition="'$(Test)' != 'false'">
     <ItemGroup>
       <TestAssemblies Include="build\any\bin\EventManifestFramework.Tests.dll"/>
       <TestAssemblies Include="build\x86\bin\EventTraceKit.VsExtension.Tests.dll"/>
