@@ -158,15 +158,25 @@ namespace EventTraceKit.VsExtension
             autoLogExitCts?.Cancel();
             autoLogExitCts = new CancellationTokenSource();
 
+            var processTasks = targets.Select(
+                x => {
+                    try {
+                        return Process.GetProcessById((int)x.ProcessId).WaitForExitAsync(autoLogExitCts.Token);
+                    } catch (ArgumentException) {
+                        // The launched process is not running (anymore).
+                        return null;
+                    }
+                }).Where(x => x != null).ToList();
+
+            if (processTasks.Count == 0)
+                return; // All launched processes have ended already.
+
             var profile = AugmentTraceProfile(autoLogProfile, targets);
 
             if (asyncAutoLog)
                 StartSessionAsync(profile).Forget();
             else
                 StartSession(profile);
-
-            var processTasks = targets.Select(
-                x => Process.GetProcessById((int)x.ProcessId).WaitForExitAsync());
 
             Task.WhenAll(processTasks).ContinueWith(t => {
                 ExitTraceTargets(targets);
