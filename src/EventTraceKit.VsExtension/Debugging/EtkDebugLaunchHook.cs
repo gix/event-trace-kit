@@ -108,10 +108,9 @@ namespace EventTraceKit.VsExtension.Debugging
 
             int hr;
             if (!RequiresInterception(debugTargets)) {
-                // All targets launch with an attached debugger or are launched
-                // without debugging by VsDebugConsole.exe. In this case all
-                // targets (even console targets) are started directly and we
-                // can simply retrieve their process ids from the launch
+                // All targets launch with an attached debugger. In this case
+                // all targets (even console targets) are started directly and
+                // we can simply retrieve their process ids from the launch
                 // results.
                 hr = nextHook.OnLaunchDebugTargets(
                     debugTargetCount, debugTargets, launchResults);
@@ -155,8 +154,7 @@ namespace EventTraceKit.VsExtension.Debugging
 
         private static bool RequiresInterception(in VsDebugTargetInfo4 target)
         {
-            return (target.LaunchFlags & (int)__VSDBGLAUNCHFLAGS.DBGLAUNCH_NoDebug) != 0
-                   && IsCmdWrapper(target);
+            return (target.LaunchFlags & (int)__VSDBGLAUNCHFLAGS.DBGLAUNCH_NoDebug) != 0;
         }
 
         /// <devdoc>
@@ -168,7 +166,7 @@ namespace EventTraceKit.VsExtension.Debugging
         ///   paused targets are resumed by sending a 1-byte "1" value to the
         ///   TraceLaunch processes.
         /// </devdoc>
-        private static InterceptionContext InterceptTargets(VsDebugTargetInfo4[] debugTargets)
+        private static unsafe InterceptionContext InterceptTargets(VsDebugTargetInfo4[] debugTargets)
         {
             var interceptedTargets = (VsDebugTargetInfo4[])debugTargets.Clone();
             var pipes = new List<NamedPipeServerStream>(debugTargets.Length);
@@ -194,8 +192,7 @@ namespace EventTraceKit.VsExtension.Debugging
         {
             private readonly IReadOnlyList<NamedPipeServerStream> pipes;
 
-            public InterceptionContext(
-                VsDebugTargetInfo4[] interceptedTargets,
+            public InterceptionContext(VsDebugTargetInfo4[] interceptedTargets,
                 IReadOnlyList<NamedPipeServerStream> pipes)
             {
                 if (interceptedTargets.Length != pipes.Count)
@@ -289,9 +286,14 @@ namespace EventTraceKit.VsExtension.Debugging
                     realExe = match.Groups["path"].Value;
             }
 
-            // Since TraceLaunch acts as a debugger it needs to have the same
-            // architecture as the real executable.
-            var arch = PortableExecutableUtils.GetImageArchitecture(realExe);
+            // Since TraceLaunch can act as a debugger it needs to have the same
+            // architecture as the real executable. For GUI applications the
+            // architecture is irrelevant, but we need a matching subsystem to
+            // avoid the console window.
+            var arch = PortableExecutableUtils.GetImageArchitecture(realExe, out var subsystem);
+            if (subsystem == ImageSubsystem.WindowsGui)
+                return EventTraceKitPackage.GetToolPath("TraceLaunch.Windows.exe");
+
             switch (arch) {
                 case ProcessorArchitecture.X86:
                     return EventTraceKitPackage.GetToolPath("TraceLaunch.x86.exe");

@@ -19,6 +19,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EventTraceKit.Logger.WatchD
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventTraceKit.VsExtension", "EventTraceKit.VsExtension\EventTraceKit.VsExtension.csproj", "{6D3D2D02-2D86-4FBF-9CC6-A0D7D37D5BA1}"
 	ProjectSection(ProjectDependencies) = postProject
+		{49E2662A-1940-4523-A9F3-BFDC37CF361E} = {49E2662A-1940-4523-A9F3-BFDC37CF361E}
 		{F82B8B4A-F941-4817-BB2B-030FDF3F1775} = {F82B8B4A-F941-4817-BB2B-030FDF3F1775}
 		{2C0F05B7-3438-437C-918F-2671287E3BAC} = {2C0F05B7-3438-437C-918F-2671287E3BAC}
 	EndProjectSection
@@ -36,6 +37,11 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PerfRunner", "PerfRunner\PerfRunner.csproj", "{13031697-54EA-4F2C-89DB-F1A314976839}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EventTraceKit.Logger.Tests", "EventTraceKit.Logger.Tests\EventTraceKit.Logger.Tests.vcxproj", "{837E39A8-4379-4DEB-9889-7369EA7771BB}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TraceLaunch.Windows", "TraceLaunch.Windows\TraceLaunch.Windows.vcxproj", "{49E2662A-1940-4523-A9F3-BFDC37CF361E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2C0F05B7-3438-437C-918F-2671287E3BAC} = {2C0F05B7-3438-437C-918F-2671287E3BAC}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -159,6 +165,12 @@ Global
 		{837E39A8-4379-4DEB-9889-7369EA7771BB}.Release|x64.Build.0 = Release|x64
 		{837E39A8-4379-4DEB-9889-7369EA7771BB}.Release|x86.ActiveCfg = Release|Win32
 		{837E39A8-4379-4DEB-9889-7369EA7771BB}.Release|x86.Build.0 = Release|Win32
+		{49E2662A-1940-4523-A9F3-BFDC37CF361E}.Debug|x64.ActiveCfg = Debug|Win32
+		{49E2662A-1940-4523-A9F3-BFDC37CF361E}.Debug|x86.ActiveCfg = Debug|Win32
+		{49E2662A-1940-4523-A9F3-BFDC37CF361E}.Debug|x86.Build.0 = Debug|Win32
+		{49E2662A-1940-4523-A9F3-BFDC37CF361E}.Release|x64.ActiveCfg = Release|Win32
+		{49E2662A-1940-4523-A9F3-BFDC37CF361E}.Release|x86.ActiveCfg = Release|Win32
+		{49E2662A-1940-4523-A9F3-BFDC37CF361E}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

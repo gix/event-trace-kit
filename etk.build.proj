@@ -5,6 +5,7 @@
     <ProjectItem Include="src\EventManifestFramework\EventManifestFramework.csproj"/>
     <ProjectItem Include="src\EventManifestFramework.Tests\EventManifestFramework.Tests.csproj"/>
     <ProjectItem Include="src\EventTraceKit.Logger.Tests\EventTraceKit.Logger.Tests.vcxproj"/>
+    <ProjectItem Include="src\TraceLaunch.Windows\TraceLaunch.Windows.vcxproj"/>
     <ProjectItem Include="src\TraceLaunch.x86\TraceLaunch.x86.vcxproj"/>
     <ProjectItem64 Include="src\TraceLaunch.x64\TraceLaunch.x64.vcxproj"/>
     <ProjectItem Include="src\EventTraceKit.VsExtension\EventTraceKit.VsExtension.csproj"/>
