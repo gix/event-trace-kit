@@ -70,9 +70,7 @@
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Management" />
     <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
@@ -529,10 +527,6 @@
   <ItemGroup>
     <Content Include="ImageIds.vsct" />
     <EmbeddedResource Include="Controls\Primitives\Split.cur" />
-    <Content Include="$(OutDir)EventTraceKit.Logger.pdb">
-      <Link>EventTraceKit.Logger.pdb</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Build\EventTraceKit.snk">
@@ -611,10 +605,7 @@
   <Target Name="CreateVSIXChangelog" Inputs="..\..\CHANGELOG.md" Outputs="$(OutDir)CHANGELOG.txt">
     <!-- The VSIX changelog is displayed in RichTextBox where linefeeds are
          interpreted as a new paragraph. Remove those to get proper spacing. -->
-    <ReplaceFileText SourceFile="..\..\CHANGELOG.md"
-                     DestinationFile="$(OutDir)CHANGELOG.txt"
-                     MatchExpression="\r?\n"
-                     ReplacementText="&#x0D;" />
+    <ReplaceFileText SourceFile="..\..\CHANGELOG.md" DestinationFile="$(OutDir)CHANGELOG.txt" MatchExpression="\r?\n" ReplacementText="&#xD;" />
   </Target>
   <Target Name="IncludeCustomVsixSourceItems" DependsOnTargets="CreateVSIXChangelog">
     <ItemGroup>
