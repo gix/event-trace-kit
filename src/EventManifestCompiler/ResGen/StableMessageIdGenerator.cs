@@ -69,7 +69,7 @@ namespace EventManifestCompiler.ResGen
                 return Message.UnusedId;
             var version = evt.Version;
             byte tag = 0xB;
-            if (evt.Channel.IsGlobal())
+            if (evt.Channel != null && evt.Channel.IsGlobal())
                 tag = 0;
             return CreateId(evt, tag, provider.Index, version, evt.Value);
         }
