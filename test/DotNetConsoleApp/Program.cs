@@ -9,7 +9,7 @@ namespace ConsoleApp
         public static void Main(string[] args)
         {
             var es = new MinimalEventSource();
-            for (int i = 0; i < 50; ++i) {
+            for (int i = 0; i < 5; ++i) {
                 es.EventWrite(i);
                 Console.WriteLine("DotNetConsoleApp {0}", i);
                 Thread.Sleep(1000);

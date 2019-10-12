@@ -29,7 +29,7 @@ int main(int argc, char** argv)
     REGHANDLE traceHandle;
     EventRegister(&ProviderId, EnableCallback, nullptr, &traceHandle);
 
-    for (int i = 0; i < 5 || true; ++i) {
+    for (int i = 0; i < 5; ++i) {
         EVENT_DESCRIPTOR eventDesc = {};
         eventDesc.Id = i;
         EventWrite(traceHandle, &eventDesc, 0, nullptr);

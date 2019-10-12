@@ -5,7 +5,7 @@ Module Module1
     Sub Main()
         Dim es = New MinimalEventSource()
 
-        For i = 0 To 50
+        For i = 0 To 5
             es.EventWrite(i)
             Console.WriteLine("DotNetConsoleApp {0}", i)
             Thread.Sleep(1000)
