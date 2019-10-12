@@ -2,6 +2,7 @@
 #include <string>
 #include <string_view>
 
+#include <fcntl.h>
 #include <io.h>
 #include <objbase.h>
 #include <psapi.h>
@@ -9,7 +10,10 @@
 
 using namespace std::literals;
 
-static bool Consume(wchar_t const*& p, wchar_t chr)
+namespace
+{
+
+bool Consume(wchar_t const*& p, wchar_t chr)
 {
     if (*p != chr)
         return false;
@@ -18,7 +22,7 @@ static bool Consume(wchar_t const*& p, wchar_t chr)
     return true;
 }
 
-static bool ConsumeAppPath(wchar_t const*& p, std::wstring_view* appPath)
+bool ConsumeAppPath(wchar_t const*& p, std::wstring_view* appPath)
 {
     auto const first = p;
 
@@ -39,7 +43,7 @@ static bool ConsumeAppPath(wchar_t const*& p, std::wstring_view* appPath)
     return true;
 }
 
-static bool ConsumeNonSpace(wchar_t const*& p, std::wstring_view* str)
+bool ConsumeNonSpace(wchar_t const*& p, std::wstring_view* str)
 {
     auto const first = p;
 
@@ -55,8 +59,7 @@ static bool ConsumeNonSpace(wchar_t const*& p, std::wstring_view* str)
     return true;
 }
 
-static bool SplitCommandLine(std::wstring& args, std::wstring& appPath,
-                             std::wstring& pipeName)
+bool SplitCommandLine(std::wstring& args, std::wstring& appPath, std::wstring& pipeName)
 {
     wchar_t const* p = args.data();
 
@@ -89,15 +92,15 @@ static bool SplitCommandLine(std::wstring& args, std::wstring& appPath,
 }
 
 #ifdef _DEBUG
-static FILE* OpenLog()
+FILE* OpenLog()
 {
-    HANDLE hlogFile = CreateFileW(L"TraceLaunch.log", GENERIC_WRITE,
-                                  FILE_SHARE_WRITE | FILE_SHARE_READ, nullptr,
-                                  CREATE_ALWAYS, 0, nullptr);
+    HANDLE hlogFile =
+        CreateFileW(L"TraceLaunch.log", GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ,
+                    nullptr, CREATE_ALWAYS, 0, nullptr);
     return _fdopen(_open_osfhandle(reinterpret_cast<intptr_t>(hlogFile), 0), "wb");
 }
 
-static void Log(char const* format, ...)
+void Log(char const* format, ...)
 {
     static FILE* logFile = OpenLog();
 
@@ -108,26 +111,22 @@ static void Log(char const* format, ...)
     fflush(logFile);
 }
 #else
-static void Log(char const* format, ...)
+void Log(char const* format, ...)
 {
 }
 #endif
 
-static void LogCreateProcessFailed(DWORD ec)
+void LogCreateProcessFailed(DWORD ec)
 {
-#ifdef _DEBUG
     Log("[TraceLaunch] CreateProcessW failed: ec=%lu\n", ec);
-#endif
 }
 
-static void LogPipeFailure(DWORD ec)
+void LogPipeFailure(DWORD ec)
 {
-#ifdef _DEBUG
     Log("[TraceLaunch] CallNamedPipeW failed: ec=%lu\n", ec);
-#endif
 }
 
-static bool StartsWith(std::wstring_view str, std::wstring_view head)
+bool StartsWith(std::wstring_view str, std::wstring_view head)
 {
     if (head.length() > str.length())
         return false;
@@ -135,7 +134,7 @@ static bool StartsWith(std::wstring_view str, std::wstring_view head)
     return str.compare(0, head.length(), head) == 0;
 }
 
-static bool EndsWith(std::wstring_view str, std::wstring_view tail)
+bool EndsWith(std::wstring_view str, std::wstring_view tail)
 {
     if (tail.length() > str.length())
         return false;
@@ -143,18 +142,18 @@ static bool EndsWith(std::wstring_view str, std::wstring_view tail)
     return str.compare(str.length() - tail.length(), tail.length(), tail) == 0;
 }
 
-static bool IsCmdWrapper(std::wstring_view appPath, std::wstring_view args)
+bool IsCmdWrapper(std::wstring_view appPath, std::wstring_view args)
 {
     return EndsWith(appPath, L"\\cmd.exe"sv) && StartsWith(args, L"/c \"\""sv) &&
            EndsWith(args, L" & pause\""sv);
 }
 
-static bool IsConHost(wchar_t const* imageName, wchar_t const* conhostPath)
+bool IsConHost(wchar_t const* imageName, wchar_t const* conhostPath)
 {
     return _wcsicmp(imageName, conhostPath) == 0;
 }
 
-static bool DispatchPid(std::wstring const& pipeName, DWORD childPid)
+bool DispatchPid(std::wstring const& pipeName, DWORD childPid)
 {
     BYTE response = 0;
     DWORD bytesRead = 0;
@@ -167,7 +166,7 @@ static bool DispatchPid(std::wstring const& pipeName, DWORD childPid)
     return true;
 }
 
-static std::wstring GetConhostPath()
+std::wstring GetConhostPath()
 {
     constexpr auto const fileName = L"\\conhost.exe"sv;
 
@@ -188,23 +187,89 @@ static std::wstring GetConhostPath()
     return path;
 }
 
-int CALLBACK wWinMain(_In_ HINSTANCE /*hInstance*/, _In_ HINSTANCE /*hPrevInstance*/,
-                      _In_ PWSTR /*lpCmdLine*/, _In_ int /*nCmdShow*/)
+enum class ExitCode : int
 {
-    bool const waitForProcess = false;
+    Success = 0,
+    InvalidArgs = -1,
+    ErrorCreateProcess = -2,
+    ErrorDispatchPid = -3,
+    ErrorChildExited = -4,
+};
 
+struct ProcessInformation : PROCESS_INFORMATION
+{
+    ~ProcessInformation()
+    {
+        CloseHandle(hThread);
+        CloseHandle(hProcess);
+    }
+};
+
+void DebugCmdLaunch(PROCESS_INFORMATION const& processInfo, std::wstring const& pipeName,
+                    ExitCode& exitCode)
+{
+    DebugSetProcessKillOnExit(FALSE);
+
+    // Resume right away so we can listen to debug events.
+    ResumeThread(processInfo.hThread);
+
+    auto const conhostPath = GetConhostPath();
+
+    bool consumeEvents = true;
+    DEBUG_EVENT debugEvent;
+    wchar_t imageName[MAX_PATH] = {};
+
+    while (consumeEvents && WaitForDebugEvent(&debugEvent, INFINITE)) {
+        if (debugEvent.dwDebugEventCode == CREATE_PROCESS_DEBUG_EVENT) {
+            DWORD const pid = GetProcessId(debugEvent.u.CreateProcessInfo.hProcess);
+
+            if (!K32GetModuleFileNameExW(debugEvent.u.CreateProcessInfo.hProcess, nullptr,
+                                         imageName, MAX_PATH))
+                imageName[0] = 0;
+
+            // Ignore the first pid (it will be the cmd.exe process). Also
+            // ignore any conhost.exe process that might spawn before the
+            // real child process.
+            if (pid != processInfo.dwProcessId &&
+                !IsConHost(imageName, conhostPath.c_str())) {
+                if (!DispatchPid(pipeName, pid))
+                    exitCode = ExitCode::ErrorDispatchPid;
+
+                consumeEvents = false;
+                if (!DebugActiveProcessStop(pid)) {
+                    DWORD const ec = GetLastError();
+                    Log("[TraceLaunch] Failed to detach from '%ls' (process %ld): ec=%lu\n",
+                        imageName, pid, ec);
+                }
+            }
+        } else if (debugEvent.dwDebugEventCode == EXIT_PROCESS_DEBUG_EVENT) {
+            // cmd.exe failed to create a child process, abort.
+            exitCode = ExitCode::ErrorChildExited;
+            consumeEvents = false;
+        }
+
+        ContinueDebugEvent(debugEvent.dwProcessId, debugEvent.dwThreadId, DBG_CONTINUE);
+    }
+
+    if (!DebugActiveProcessStop(processInfo.dwProcessId)) {
+        DWORD const ec = GetLastError();
+        Log("[TraceLaunch] Failed to detach from '%ls' (process %ld): ec=%lu\n",
+            imageName, processInfo.dwProcessId, ec);
+    }
+}
+
+ExitCode CommonMain(bool const waitForProcess)
+{
     std::wstring args(GetCommandLineW());
     std::wstring appPath;
     std::wstring pipeName;
     if (!SplitCommandLine(args, appPath, pipeName))
-        return -1;
+        return ExitCode::InvalidArgs;
 
-    bool const usesCmdWrapper = IsCmdWrapper(appPath, args);
-
-    STARTUPINFOW startupInfo = {};
-    startupInfo.cb = sizeof(startupInfo);
-
-    PROCESS_INFORMATION processInfo = {};
+    // Overwrite the console title. When Visual Studio uses VsDebugConsole.exe
+    // to launch a console application, the console title shows our TraceLaunch
+    // instead of the actual application.
+    SetConsoleTitleW(appPath.c_str());
 
     // Create a suspended process because we want to report the process id and
     // start tracing before the process starts running.
@@ -212,68 +277,62 @@ int CALLBACK wWinMain(_In_ HINSTANCE /*hInstance*/, _In_ HINSTANCE /*hPrevInstan
 
     // If a cmd.exe wrapper is used we need the id of the spawned child process.
     // We attach ourselves as a debugger and listen to process creation events.
+    bool const usesCmdWrapper = IsCmdWrapper(appPath, args);
     if (usesCmdWrapper)
         creationFlags |= DEBUG_PROCESS;
 
+    STARTUPINFOW startupInfo = {};
+    startupInfo.cb = sizeof(startupInfo);
+
+    ProcessInformation processInfo = {};
     if (!CreateProcessW(appPath.data(), args.data(), nullptr, nullptr, FALSE,
                         creationFlags, nullptr, nullptr, &startupInfo, &processInfo)) {
         LogCreateProcessFailed(GetLastError());
-        return -2;
+        return ExitCode::ErrorCreateProcess;
     }
 
-    DebugSetProcessKillOnExit(FALSE);
-
-    int exitCode = 0;
-    if (usesCmdWrapper) {
-        // Resume right away so we can listen to debug events.
-        ResumeThread(processInfo.hThread);
-
-        auto const conhostPath = GetConhostPath();
-
-        bool consumeEvents = true;
-        wchar_t imageName[MAX_PATH] = {};
-        DEBUG_EVENT debugEvent;
-
-        while (consumeEvents && WaitForDebugEvent(&debugEvent, INFINITE)) {
-            if (debugEvent.dwDebugEventCode == CREATE_PROCESS_DEBUG_EVENT) {
-                DWORD const pid = GetProcessId(debugEvent.u.CreateProcessInfo.hProcess);
-
-                if (!K32GetModuleFileNameExW(debugEvent.u.CreateProcessInfo.hProcess,
-                                             nullptr, imageName, MAX_PATH))
-                    imageName[0] = 0;
-
-                // Ignore the first pid (it will be the cmd.exe process). Also
-                // ignore any conhost.exe process that might spawn before the
-                // real child process.
-                if (pid != processInfo.dwProcessId && !IsConHost(imageName, conhostPath.c_str())) {
-                    if (!DispatchPid(pipeName, pid))
-                        exitCode = -3;
-                    consumeEvents = false;
-                }
-            } else if (debugEvent.dwDebugEventCode == EXIT_PROCESS_DEBUG_EVENT) {
-                // cmd.exe failed to create a child process, abort.
-                exitCode = -4;
-                consumeEvents = false;
-            }
-
-            ContinueDebugEvent(debugEvent.dwProcessId, debugEvent.dwThreadId,
-                               DBG_CONTINUE);
-        }
-    } else {
-        // Without a wrapper we already have the actual process id.
+    ExitCode exitCode = ExitCode::Success;
+    if (!usesCmdWrapper) {
+        // Without a wrapper we already have the real process id.
         if (!DispatchPid(pipeName, processInfo.dwProcessId))
-            exitCode = -3;
+            exitCode = ExitCode::ErrorDispatchPid;
 
         ResumeThread(processInfo.hThread);
+    } else {
+        // Debug the cmd.exe wrapper until it spawns the real child process.
+        DebugCmdLaunch(processInfo, pipeName, exitCode);
     }
 
-    DebugActiveProcessStop(processInfo.dwProcessId);
+    if (!waitForProcess)
+        return exitCode;
 
-    if (waitForProcess)
-        WaitForSingleObject(processInfo.hProcess, INFINITE);
+    WaitForSingleObject(processInfo.hProcess, INFINITE);
 
-    CloseHandle(processInfo.hThread);
-    CloseHandle(processInfo.hProcess);
+    DWORD processExitCode;
+    if (!GetExitCodeProcess(processInfo.hProcess, &processExitCode))
+        processExitCode = 0;
+
+    // VsDebugConsole.exe prints a message when the launched console
+    // application exits. Since this will refer to TraceLaunch add an
+    // additional message before that with info about the real process.
+    _setmode(_fileno(stdout), _O_U16TEXT);
+    putwchar('\n');
+    wprintf(L"%ls (process %ld) exited with code %lu.", appPath.data(),
+            processInfo.dwProcessId, processExitCode);
+    FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
 
     return exitCode;
+}
+
+} // namespace
+
+int main(int /*argc*/, char** /*argv*/)
+{
+    return static_cast<int>(CommonMain(true));
+}
+
+int CALLBACK wWinMain(_In_ HINSTANCE /*hInstance*/, _In_ HINSTANCE /*hPrevInstance*/,
+                      _In_ PWSTR /*lpCmdLine*/, _In_ int /*nCmdShow*/)
+{
+    return static_cast<int>(CommonMain(false));
 }
