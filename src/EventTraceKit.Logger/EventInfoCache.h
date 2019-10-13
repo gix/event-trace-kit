@@ -1,10 +1,17 @@
 #pragma once
-#include "ADT/VarStructPtr.h"
 #include "EventInfo.h"
 
-#include <unordered_map>
+#include "ADT/VarStructPtr.h"
+#include "Support/CompilerSupport.h"
 
-#include <boost/functional/hash/hash.hpp>
+ETK_DIAGNOSTIC_PUSH()
+ETK_DIAGNOSTIC_DISABLE_MSVC(4127)
+ETK_DIAGNOSTIC_DISABLE_MSVC(4244)
+ETK_DIAGNOSTIC_DISABLE_MSVC(4245)
+ETK_DIAGNOSTIC_DISABLE_MSVC(4996)
+#include <absl/container/flat_hash_map.h>
+ETK_DIAGNOSTIC_POP()
+
 #include <windows.h>
 
 #include <evntcons.h>
@@ -48,11 +55,10 @@ public:
         return std::memcmp(&x, &y, sizeof(y)) < 0;
     }
 
-    friend std::size_t hash_value(EventKey const& key)
+    template<typename H>
+    friend H AbslHashValue(H state, EventKey const& key)
     {
-        std::size_t seed = 0;
-        boost::hash_combine(seed, key.data);
-        return seed;
+        return H::combine_contiguous(std::move(state), key.data, std::size(key.data));
     }
 
 private:
@@ -72,7 +78,7 @@ public:
     static TraceEventInfoPtr CreateEventInfo(EVENT_RECORD const& record);
 
 private:
-    std::unordered_map<EventKey, TraceEventInfoPtr, boost::hash<EventKey>> infos;
+    absl::flat_hash_map<EventKey, TraceEventInfoPtr> infos;
 };
 
 } // namespace etk

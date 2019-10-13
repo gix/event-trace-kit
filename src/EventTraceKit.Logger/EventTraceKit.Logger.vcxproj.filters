@@ -4,7 +4,6 @@
     <ClCompile Include="EtwTraceProcessor.cpp" />
     <ClCompile Include="EtwTraceSession.cpp" />
     <ClCompile Include="Support\ErrorHandling.cpp" />
-    <ClCompile Include="ADT\Guid.cpp" />
     <ClCompile Include="ADT\WaitEvent.cpp" />
     <ClCompile Include="Win32Exception.cpp" />
     <ClCompile Include="EventInfoCache.cpp" />
@@ -31,7 +30,6 @@
     <ClInclude Include="Support\ErrorHandling.h" />
     <ClInclude Include="Support\CountOf.h" />
     <ClInclude Include="Support\RangeAdaptors.h" />
-    <ClInclude Include="ADT\Guid.h" />
     <ClInclude Include="ADT\Handle.h" />
     <ClInclude Include="ADT\VarStructPtr.h" />
     <ClInclude Include="ADT\WaitEvent.h" />
@@ -62,5 +60,8 @@
     <ClInclude Include="Support\SetThreadDescription.h" />
     <ClInclude Include="ADT\Span.h" />
     <ClInclude Include="Support\IsComplete.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

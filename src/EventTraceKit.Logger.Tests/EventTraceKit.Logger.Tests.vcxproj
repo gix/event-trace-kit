@@ -15,6 +15,7 @@
     <ProjectGuid>{837E39A8-4379-4DEB-9889-7369EA7771BB}</ProjectGuid>
     <RootNamespace>EventTraceKitLoggerTests</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <VcpkgTriplet>x86-windows-etk</VcpkgTriplet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -72,12 +73,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="ADT\SpanTest.cpp" />
     <ClCompile Include="Support\CountOfTest.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\etk-deps.1.0.0\build\native\etk-deps.targets" Condition="Exists('..\packages\etk-deps.1.0.0\build\native\etk-deps.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\etk-deps.1.0.0\build\native\etk-deps.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\etk-deps.1.0.0\build\native\etk-deps.targets'))" />
+  </Target>
 </Project>

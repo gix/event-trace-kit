@@ -18,6 +18,7 @@
     <ProjectGuid>{3EDE8E61-F8E3-4645-A940-337F91A9DF65}</ProjectGuid>
     <RootNamespace>EventTraceKitLogger</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <VcpkgTriplet>x86-windows-etk</VcpkgTriplet>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -85,7 +86,6 @@
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ItemGroup>
-    <ClCompile Include="ADT\Guid.cpp" />
     <ClCompile Include="ADT\WaitEvent.cpp" />
     <ClInclude Include="ADT\Span.h" />
     <ClInclude Include="BinaryFind.h" />
@@ -191,7 +191,6 @@
     <ClInclude Include="Support\Allocator.h" />
     <ClInclude Include="Support\Hashing.h" />
     <ClInclude Include="ITraceProcessor.h" />
-    <ClInclude Include="ADT\Guid.h" />
     <ClInclude Include="ADT\Handle.h" />
     <ClInclude Include="ADT\LruCache.h" />
     <ClInclude Include="ADT\VarStructPtr.h" />
@@ -211,6 +210,16 @@
     <ClInclude Include="TraceDataContext.h" />
     <ClInclude Include="Win32Exception.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\etk-deps.1.0.0\build\native\etk-deps.targets" Condition="Exists('..\packages\etk-deps.1.0.0\build\native\etk-deps.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\etk-deps.1.0.0\build\native\etk-deps.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\etk-deps.1.0.0\build\native\etk-deps.targets'))" />
+  </Target>
 </Project>

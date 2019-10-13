@@ -46,11 +46,15 @@
   </Target>
 
   <Target Name="Restore" Condition="'$(Restore)' != 'false'">
-    <MSBuild Projects="@(ProjectItem)"
-             Properties="$(BuildProperties)"
-             Targets="Restore"
-             BuildInParallel="true"
-             StopOnFirstFailure="true"/>
+    <PropertyGroup>
+      <NuGetExecutable Condition="'$(NuGetExecutable)'==''">nuget.exe</NuGetExecutable>
+      <NuGetPackagesDirectory>$(MSBuildThisFileDirectory)src\packages\</NuGetPackagesDirectory>
+    </PropertyGroup>
+    <ItemGroup>
+      <NuGetRestoreTarget Include="$(MSBuildThisFileDirectory)src\EventTraceKit.sln"/>
+    </ItemGroup>
+    <Exec Condition="'@(NuGetRestoreTarget)'!=''"
+          Command="&quot;$(NuGetExecutable)&quot; restore -NonInteractive -Source &quot;$(NuGetPackageSource)&quot; &quot;%(NuGetRestoreTarget.Identity)&quot;"/>
   </Target>
 
   <Target Name="Build" DependsOnTargets="Restore" Condition="'$(Build)' != 'false'">

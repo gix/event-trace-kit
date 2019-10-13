@@ -1,12 +1,10 @@
 #pragma once
-#include <boost/config.hpp>
-
-#if defined(BOOST_CLANG)
+#if defined(__clang__)
   #define ETK_CLANG __clang__
-#elif defined(BOOST_MSVC)
+#elif defined(_MSC_VER)
   #define ETK_MSVC _MSC_VER
-#elif defined(BOOST_GCC)
-  #define ETK_GCC BOOST_GCC
+#elif defined(__GNUC__)
+  #define ETK_GCC __GNUC__
 #endif
 
 #ifdef _WIN64

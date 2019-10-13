@@ -42,7 +42,7 @@ void ZStringCopy(std::wstring_view str, wchar_t* dst)
 
 using FilterPtr = std::unique_ptr<std::byte[]>;
 
-void AddProcessIdFilter(SmallVectorBase<EVENT_FILTER_DESCRIPTOR>& filters,
+void AddProcessIdFilter(SmallVector<EVENT_FILTER_DESCRIPTOR, 4>& filters,
                         cspan<unsigned> processIds)
 {
     auto& descriptor = filters.emplace_back();
@@ -51,7 +51,7 @@ void AddProcessIdFilter(SmallVectorBase<EVENT_FILTER_DESCRIPTOR>& filters,
     descriptor.Type = EVENT_FILTER_TYPE_PID;
 }
 
-void AddExecutableNameFilter(SmallVectorBase<EVENT_FILTER_DESCRIPTOR>& filters,
+void AddExecutableNameFilter(SmallVector<EVENT_FILTER_DESCRIPTOR, 4>& filters,
                              std::wstring const& executableName)
 {
     auto& descriptor = filters.emplace_back();
@@ -67,8 +67,8 @@ size_t ComputeEventIdFilterSize(uint16_t eventCount)
            (sizeof(EVENT_FILTER_EVENT_ID::Events[0]) * extraCount);
 }
 
-void AddEventIdFilter(SmallVectorBase<EVENT_FILTER_DESCRIPTOR>& filters,
-                      SmallVectorBase<FilterPtr>& buffers, cspan<uint16_t> eventIds,
+void AddEventIdFilter(SmallVector<EVENT_FILTER_DESCRIPTOR, 4>& filters,
+                      SmallVector<FilterPtr, 3>& buffers, cspan<uint16_t> eventIds,
                       bool filterIn, ULONG type)
 {
     uint16_t const eventCount = static_cast<uint16_t>(eventIds.size());
@@ -86,22 +86,22 @@ void AddEventIdFilter(SmallVectorBase<EVENT_FILTER_DESCRIPTOR>& filters,
     descriptor.Type = type;
 }
 
-void AddEventFilter(SmallVectorBase<EVENT_FILTER_DESCRIPTOR>& filters,
-                    SmallVectorBase<FilterPtr>& buffers, cspan<uint16_t> eventIds,
+void AddEventFilter(SmallVector<EVENT_FILTER_DESCRIPTOR, 4>& filters,
+                    SmallVector<FilterPtr, 3>& buffers, cspan<uint16_t> eventIds,
                     bool filterIn)
 {
     AddEventIdFilter(filters, buffers, eventIds, filterIn, EVENT_FILTER_TYPE_EVENT_ID);
 }
 
-void AddStackWalkFilter(SmallVectorBase<EVENT_FILTER_DESCRIPTOR>& filters,
-                        SmallVectorBase<FilterPtr>& buffers, cspan<uint16_t> eventIds,
+void AddStackWalkFilter(SmallVector<EVENT_FILTER_DESCRIPTOR, 4>& filters,
+                        SmallVector<FilterPtr, 3>& buffers, cspan<uint16_t> eventIds,
                         bool filterIn)
 {
     AddEventIdFilter(filters, buffers, eventIds, filterIn, EVENT_FILTER_TYPE_STACKWALK);
 }
 
-void AddStackWalkLevelKeywordFilter(SmallVectorBase<EVENT_FILTER_DESCRIPTOR>& filters,
-                                    SmallVectorBase<FilterPtr>& buffers,
+void AddStackWalkLevelKeywordFilter(SmallVector<EVENT_FILTER_DESCRIPTOR, 4>& filters,
+                                    SmallVector<FilterPtr, 3>& buffers,
                                     ULONGLONG matchAnyKeyword, ULONGLONG matchAllKeyword,
                                     BYTE level, bool filterIn)
 {
@@ -389,7 +389,7 @@ HRESULT
 EtwTraceSession::StartEventProvider(TraceProviderDescriptor const& provider) const
 {
     SmallVector<EVENT_FILTER_DESCRIPTOR, 4> filters;
-    SmallVector<std::unique_ptr<std::byte[]>, 3> buffers;
+    SmallVector<FilterPtr, 3> buffers;
 
     if (OSVersion.IsWindows8Point1OrGreater() && !provider.ExecutableName.empty())
         AddExecutableNameFilter(filters, provider.ExecutableName);
