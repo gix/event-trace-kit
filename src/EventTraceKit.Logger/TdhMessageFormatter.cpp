@@ -172,13 +172,13 @@ ULONG GetEventMapInfo(EventInfo info, EVENT_PROPERTY_INFO const& propertyInfo,
     return ERROR_SUCCESS;
 }
 
-ULONG FormatProperty(TRACE_EVENT_INFO const& tei, EVENT_MAP_INFO const& emi,
+ULONG FormatProperty(TRACE_EVENT_INFO const& tei, EVENT_MAP_INFO const* emi,
                      unsigned pointerSize, EVENT_PROPERTY_INFO const& pi,
-                     USHORT propertyLength, cspan<std::byte> userData,
-                     ULONG* bufferSize, wchar_t* buffer, USHORT* userDataConsumed)
+                     USHORT propertyLength, cspan<std::byte> userData, ULONG* bufferSize,
+                     wchar_t* buffer, USHORT* userDataConsumed)
 {
     return TdhFormatProperty(
-        const_cast<TRACE_EVENT_INFO*>(&tei), const_cast<EVENT_MAP_INFO*>(&emi),
+        const_cast<TRACE_EVENT_INFO*>(&tei), const_cast<EVENT_MAP_INFO*>(emi),
         static_cast<ULONG>(pointerSize), pi.nonStructType.InType,
         pi.nonStructType.OutType, propertyLength, static_cast<USHORT>(userData.size()),
         const_cast<BYTE*>(reinterpret_cast<BYTE const*>(userData.data())), bufferSize,
@@ -186,9 +186,8 @@ ULONG FormatProperty(TRACE_EVENT_INFO const& tei, EVENT_MAP_INFO const& emi,
 }
 
 ULONG FormatProperty(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
-                     size_t pointerSize, cspan<std::byte>& userData,
-                     std::wstring& sink, std::vector<wchar_t>& buffer,
-                     std::vector<BYTE>& mapBuffer)
+                     size_t pointerSize, cspan<std::byte>& userData, std::wstring& sink,
+                     std::vector<wchar_t>& buffer, std::vector<BYTE>& mapBuffer)
 {
     ULONG ec;
 
@@ -232,12 +231,12 @@ ULONG FormatProperty(EventInfo info, EVENT_PROPERTY_INFO const& propInfo,
         USHORT userDataConsumed = 0;
 
         bufferSize = static_cast<DWORD>(buffer.size() * sizeof(wchar_t));
-        ec = FormatProperty(*info.Info(), *mapInfo, pointerSize, propInfo, propertyLength,
+        ec = FormatProperty(*info.Info(), mapInfo, pointerSize, propInfo, propertyLength,
                             userData, &bufferSize, buffer.data(), &userDataConsumed);
 
         if (ec == ERROR_INSUFFICIENT_BUFFER) {
             buffer.resize(bufferSize / sizeof(wchar_t));
-            ec = FormatProperty(*info.Info(), *mapInfo, pointerSize, propInfo,
+            ec = FormatProperty(*info.Info(), mapInfo, pointerSize, propInfo,
                                 propertyLength, userData, &bufferSize, buffer.data(),
                                 &userDataConsumed);
         }
