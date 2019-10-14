@@ -2,6 +2,7 @@
 #include "EventInfo.h"
 
 #include "ADT/VarStructPtr.h"
+#include "Support/Allocator.h"
 #include "Support/CompilerSupport.h"
 
 ETK_DIAGNOSTIC_PUSH()
@@ -16,6 +17,13 @@ ETK_DIAGNOSTIC_POP()
 
 #include <evntcons.h>
 #include <tdh.h>
+
+template<typename H>
+H AbslHashValue(H state, GUID const& key)
+{
+    return H::combine_contiguous(std::move(state), reinterpret_cast<uint8_t const*>(&key),
+                                 sizeof(key));
+}
 
 namespace etk
 {
@@ -66,6 +74,42 @@ private:
               sizeof(EVENT_DESCRIPTOR::Version)];
 };
 
+class TlogEventMetadataKey
+{
+public:
+    explicit TlogEventMetadataKey(uint8_t const* metadata, uint16_t size)
+        : metadata_(metadata)
+        , size_(size)
+    {
+    }
+
+    uint8_t const* data() const { return metadata_; }
+    uint16_t size() const { return size_; }
+
+    friend bool operator==(TlogEventMetadataKey const& lhs,
+                           TlogEventMetadataKey const& rhs)
+    {
+        return std::equal(lhs.metadata_, lhs.metadata_ + lhs.size_, rhs.metadata_,
+                          rhs.metadata_ + rhs.size_);
+    }
+
+    friend bool operator!=(TlogEventMetadataKey const& lhs,
+                           TlogEventMetadataKey const& rhs)
+    {
+        return !operator==(lhs, rhs);
+    }
+
+    template<typename H>
+    friend H AbslHashValue(H state, TlogEventMetadataKey const& key)
+    {
+        return H::combine_contiguous(std::move(state), key.metadata_, key.size_);
+    }
+
+private:
+    uint8_t const* metadata_ = nullptr;
+    uint16_t size_ = 0;
+};
+
 class EventInfoCache
 {
 public:
@@ -78,7 +122,53 @@ public:
     static TraceEventInfoPtr CreateEventInfo(EVENT_RECORD const& record);
 
 private:
+    using TlogEventMetadataKeyAllocator =
+        BumpPtrAllocator<MallocAllocator, 1 * 1024 * 1024>;
+
+    struct TlogProvider
+    {
+        using EventId = uint16_t;
+
+        absl::flat_hash_map<TlogEventMetadataKey, EventId> eventIdMap;
+        EventId uniqueEventId = 0;
+
+        EventId GetOrCreateUniqueId(TlogEventMetadataKeyAllocator& allocator,
+                                    EVENT_HEADER_EXTENDED_DATA_ITEM const& tlogExt)
+        {
+            auto key = TlogEventMetadataKey(
+                reinterpret_cast<uint8_t const*>(tlogExt.DataPtr), tlogExt.DataSize);
+
+            auto it = eventIdMap.find(key);
+            if (it != eventIdMap.end())
+                return it->second;
+
+            auto eventId = uniqueEventId++;
+            eventIdMap.insert(it, {AllocateKey(allocator, key), eventId});
+            return eventId;
+        }
+
+        TlogEventMetadataKey AllocateKey(TlogEventMetadataKeyAllocator& allocator,
+                                         TlogEventMetadataKey const& source)
+        {
+            auto const size = source.size();
+            auto ptr = allocator.Allocate<uint8_t>(size);
+            std::copy_n(source.data(), size, ptr);
+            return TlogEventMetadataKey(ptr, size);
+        }
+    };
+
+    EventKey CreateTlogEventKey(GUID const& providerId,
+                                EVENT_HEADER_EXTENDED_DATA_ITEM const& tlogExt)
+    {
+        auto& provider = tlogProviders[providerId];
+        auto eventId =
+            provider.GetOrCreateUniqueId(tlogEventMetadataKeyAllocator, tlogExt);
+        return EventKey(providerId, eventId, 0);
+    }
+
     absl::flat_hash_map<EventKey, TraceEventInfoPtr> infos;
+    absl::flat_hash_map<GUID, TlogProvider> tlogProviders;
+    TlogEventMetadataKeyAllocator tlogEventMetadataKeyAllocator;
 };
 
 } // namespace etk

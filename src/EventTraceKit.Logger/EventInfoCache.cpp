@@ -3,6 +3,17 @@
 namespace etk
 {
 
+static EVENT_HEADER_EXTENDED_DATA_ITEM const*
+GetTlogEventSchemaExtendedItem(EVENT_RECORD const& record)
+{
+    for (unsigned i = 0; i < record.ExtendedDataCount; ++i) {
+        if (record.ExtendedData[i].ExtType == EVENT_HEADER_EXT_TYPE_EVENT_SCHEMA_TL)
+            return &record.ExtendedData[i];
+    }
+
+    return nullptr;
+}
+
 EventInfoCache::EventInfoCache()
     : infos(50)
 {
@@ -10,7 +21,10 @@ EventInfoCache::EventInfoCache()
 
 EventInfo EventInfoCache::Get(EVENT_RECORD const& record)
 {
-    auto key = EventKey::FromEvent(record);
+    auto tlogExt = GetTlogEventSchemaExtendedItem(record);
+
+    EventKey key = tlogExt ? CreateTlogEventKey(record.EventHeader.ProviderId, *tlogExt)
+                           : EventKey::FromEvent(record);
 
     auto& entry = infos[key];
     if (!std::get<0>(entry))
