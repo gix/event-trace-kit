@@ -3,15 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29319.158
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventManifestFramework", "EventManifestFramework\EventManifestFramework.csproj", "{7595AD97-5122-4569-A087-910FBBCB2DDC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventManifestFramework", "EventManifestFramework\EventManifestFramework.csproj", "{7595AD97-5122-4569-A087-910FBBCB2DDC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventManifestFramework.Tests", "EventManifestFramework.Tests\EventManifestFramework.Tests.csproj", "{651B62CE-226C-440A-857F-EECE4D2C6E09}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventManifestFramework.Tests", "EventManifestFramework.Tests\EventManifestFramework.Tests.csproj", "{651B62CE-226C-440A-857F-EECE4D2C6E09}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventManifestCompiler", "EventManifestCompiler\EventManifestCompiler.csproj", "{F8EF0352-C0F0-4DA0-9A81-83BC2EFD1EF5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventManifestCompiler", "EventManifestCompiler\EventManifestCompiler.csproj", "{F8EF0352-C0F0-4DA0-9A81-83BC2EFD1EF5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventManifestCompiler.Build.Tasks", "EventManifestCompiler.Build.Tasks\EventManifestCompiler.Build.Tasks.csproj", "{E4279B17-44CD-4DAF-9BD1-8CE09FEC908F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventManifestCompiler.Build.Tasks", "EventManifestCompiler.Build.Tasks\EventManifestCompiler.Build.Tasks.csproj", "{E4279B17-44CD-4DAF-9BD1-8CE09FEC908F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventManifestCompiler.Tests", "EventManifestCompiler.Tests\EventManifestCompiler.Tests.csproj", "{A2DF0A84-0825-4521-BA83-D14F1A22633C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventManifestCompiler.Tests", "EventManifestCompiler.Tests\EventManifestCompiler.Tests.csproj", "{A2DF0A84-0825-4521-BA83-D14F1A22633C}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EventTraceKit.Logger", "EventTraceKit.Logger\EventTraceKit.Logger.vcxproj", "{3EDE8E61-F8E3-4645-A940-337F91A9DF65}"
 EndProject
@@ -24,7 +24,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventTraceKit.VsExtension",
 		{2C0F05B7-3438-437C-918F-2671287E3BAC} = {2C0F05B7-3438-437C-918F-2671287E3BAC}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventTraceKit.VsExtension.Tests", "EventTraceKit.VsExtension.Tests\EventTraceKit.VsExtension.Tests.csproj", "{3C8E5DBE-F7FA-45A7-B235-58F9BEF33261}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventTraceKit.VsExtension.Tests", "EventTraceKit.VsExtension.Tests\EventTraceKit.VsExtension.Tests.csproj", "{3C8E5DBE-F7FA-45A7-B235-58F9BEF33261}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventTraceKit.VsExtension.UITests", "EventTraceKit.VsExtension.UITests\EventTraceKit.VsExtension.UITests.csproj", "{7C4BF868-4B9D-4ECA-BACB-685654BF3DD1}"
 EndProject
@@ -32,7 +32,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TraceLaunch.x86", "TraceLau
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TraceLaunch.x64", "TraceLaunch.x64\TraceLaunch.x64.vcxproj", "{F82B8B4A-F941-4817-BB2B-030FDF3F1775}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TraceLaunchTester", "TraceLaunchTester\TraceLaunchTester.csproj", "{9E97397B-7D7A-4D61-96A5-DD561392642E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TraceLaunchTester", "TraceLaunchTester\TraceLaunchTester.csproj", "{9E97397B-7D7A-4D61-96A5-DD561392642E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PerfRunner", "PerfRunner\PerfRunner.csproj", "{13031697-54EA-4F2C-89DB-F1A314976839}"
 EndProject

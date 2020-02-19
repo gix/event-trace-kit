@@ -1,121 +1,16 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform>AnyCPU</Platform>
     <ProjectGuid>{7595AD97-5122-4569-A087-910FBBCB2DDC}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>EventManifestFramework</RootNamespace>
-    <AssemblyName>EventManifestFramework</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFramework>net46</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <FileAlignment>512</FileAlignment>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup>
     <SignAssembly>true</SignAssembly>
-  </PropertyGroup>
-  <PropertyGroup>
     <AssemblyOriginatorKeyFile>..\Build\EventTraceKit.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.ComponentModel.Composition" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Collections\UniqueCollection.cs" />
-    <Compile Include="Collections\DuplicateItemException.cs" />
-    <Compile Include="Internal\FunctorComparer.cs" />
-    <Compile Include="Collections\IConstraint.cs" />
-    <Compile Include="Collections\IUniqueConstraint.cs" />
-    <Compile Include="Collections\IUniqueConstraintOptions.cs" />
-    <Compile Include="Collections\IUniqueCollection.cs" />
-    <Compile Include="Internal\MergeSort.cs" />
-    <Compile Include="Internal\SelectorComparer.cs" />
-    <Compile Include="Collections\CachingUniqueConstraint.cs" />
-    <Compile Include="EventManifestParser.cs" />
-    <Compile Include="IEventManifestParser.cs" />
-    <Compile Include="Internal\Extensions\BinaryWriterExtensions.cs" />
-    <Compile Include="Internal\Extensions\CollectionExtensions.cs" />
-    <Compile Include="Internal\Extensions\SortExtensions.cs" />
-    <Compile Include="Internal\Extensions\XmlExtensions.cs" />
-    <Compile Include="Internal\Native\NativeMethods.cs" />
-    <Compile Include="Internal\Native\SafeHandleZeroIsInvalid.cs" />
-    <Compile Include="Internal\Native\SafeLocalMemHandle.cs" />
-    <Compile Include="Internal\WindowsSdkUtils.cs" />
-    <Compile Include="Internal\XElementNamespaceResolver.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Schema\Base\BaseType.cs" />
-    <Compile Include="Schema\Base\EnableBit.cs" />
-    <Compile Include="Schema\Base\InType.cs" />
-    <Compile Include="Schema\Base\OutType.cs" />
-    <Compile Include="Schema\Base\PropertyNumber.cs" />
-    <Compile Include="Schema\Base\QName.cs" />
-    <Compile Include="Schema\Base\XmlType.cs" />
-    <Compile Include="Schema\BitMap.cs" />
-    <Compile Include="Schema\BitMapItem.cs" />
-    <Compile Include="Schema\Channel.cs" />
-    <Compile Include="Schema\DataProperty.cs" />
-    <Compile Include="Schema\DefaultEventManifestSpecification.cs" />
-    <Compile Include="Internal\DiagUtils.cs" />
-    <Compile Include="Schema\Collections.cs" />
-    <Compile Include="Schema\Event.cs" />
-    <Compile Include="Schema\EventManifest.cs" />
-    <Compile Include="Schema\EventManifestMetadata.cs" />
-    <Compile Include="Schema\Filter.cs" />
-    <Compile Include="Schema\IEventManifestMetadata.cs" />
-    <Compile Include="Schema\IEventManifestSpecification.cs" />
-    <Compile Include="Schema\Keyword.cs" />
-    <Compile Include="Schema\Level.cs" />
-    <Compile Include="Schema\LocalizedResourceSet.cs" />
-    <Compile Include="Schema\LocalizedString.cs" />
-    <Compile Include="Schema\Map.cs" />
-    <Compile Include="Schema\MapItem.cs" />
-    <Compile Include="Schema\Message.cs" />
-    <Compile Include="Schema\Namespaces.cs" />
-    <Compile Include="Schema\Opcode.cs" />
-    <Compile Include="Schema\PatternMap.cs" />
-    <Compile Include="Schema\PatternMapItem.cs" />
-    <Compile Include="Schema\Property.cs" />
-    <Compile Include="Schema\Provider.cs" />
-    <Compile Include="Schema\ProviderItem.cs" />
-    <Compile Include="Schema\SchemaValidationException.cs" />
-    <Compile Include="Schema\StructProperty.cs" />
-    <Compile Include="Schema\Task.cs" />
-    <Compile Include="Schema\Template.cs" />
-    <Compile Include="Schema\ValueMap.cs" />
-    <Compile Include="Schema\ValueMapItem.cs" />
-    <Compile Include="Internal\Extensions\XNodeExtensions.cs" />
-    <Compile Include="Support\Diagnostics.cs" />
-    <Compile Include="Support\InternalException.cs" />
-    <Compile Include="Support\IProviderItemVisitor.cs" />
-    <Compile Include="Support\Located.cs" />
-    <Compile Include="Support\LocatedNullable.cs" />
-    <Compile Include="Support\LocatedRef.cs" />
-    <Compile Include="Support\LocatedVal.cs" />
-    <Compile Include="Support\SourceItem.cs" />
-    <Compile Include="Support\SourceLocation.cs" />
-    <Compile Include="Support\SourceLocationUtils.cs" />
-    <Compile Include="Support\UserException.cs" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
 </Project>
