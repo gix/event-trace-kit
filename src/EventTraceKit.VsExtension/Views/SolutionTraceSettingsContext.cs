@@ -5,8 +5,8 @@ namespace EventTraceKit.VsExtension.Views
     using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
-    using EventManifestFramework;
-    using EventManifestFramework.Schema;
+    using EventTraceKit.EventTracing;
+    using EventTraceKit.EventTracing.Schema;
     using EventTraceKit.VsExtension.Extensions;
     using EventTraceKit.VsExtension.Threading;
     using EventTraceKit.VsExtension.Utilities;

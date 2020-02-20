@@ -40,7 +40,7 @@ namespace EventTraceKit.VsExtension.Native
             return value.ToString();
         }
 
-        public static unsafe explicit operator char* (UnmanagedString value)
+        public static unsafe explicit operator char*(UnmanagedString value)
         {
             return value.str;
         }

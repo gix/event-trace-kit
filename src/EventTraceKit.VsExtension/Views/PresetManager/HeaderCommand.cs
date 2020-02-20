@@ -2,8 +2,8 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
 {
     using System.Windows;
     using System.Windows.Input;
-    using Windows;
     using Microsoft.VisualStudio.PlatformUI;
+    using Windows;
 
     public class HeaderCommand : DependencyObject
     {

@@ -28,7 +28,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\EventManifestCompiler\EventManifestCompiler.csproj" />
-    <ProjectReference Include="..\EventManifestFramework\EventManifestFramework.csproj" />
+    <ProjectReference Include="..\EventTraceKit.EventTracing\EventTraceKit.EventTracing.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Build\EventTraceKit.snk">

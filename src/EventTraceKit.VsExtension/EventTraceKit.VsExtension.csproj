@@ -537,7 +537,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\EventManifestFramework\EventManifestFramework.csproj">
+    <ProjectReference Include="..\EventTraceKit.EventTracing\EventTraceKit.EventTracing.csproj">
       <Project>{7595ad97-5122-4569-a087-910fbbcb2ddc}</Project>
       <Name>EventManifestFramework</Name>
     </ProjectReference>

@@ -2,7 +2,6 @@ namespace EventTraceKit.VsExtension.Tests
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using Xunit;
     using Xunit.Abstractions;
 

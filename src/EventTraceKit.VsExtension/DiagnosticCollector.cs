@@ -2,7 +2,7 @@ namespace EventTraceKit.VsExtension
 {
     using System;
     using System.Collections.Generic;
-    using EventManifestFramework.Support;
+    using EventTraceKit.EventTracing.Support;
 
     internal sealed class DiagnosticCollector : IDiagnostics
     {

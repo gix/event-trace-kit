@@ -6,8 +6,8 @@
     using System.Windows.Interop;
     using System.Windows.Markup;
     using Extensions;
-    using Native;
     using Microsoft.VisualStudio.PlatformUI;
+    using Native;
 
     public sealed class MenuPopupPositionerExtension : MarkupExtension
     {

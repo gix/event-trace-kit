@@ -2,10 +2,10 @@ namespace EventTraceKit.VsExtension
 {
     using System;
     using System.Windows;
-    using Windows;
     using Extensions;
     using Serialization;
     using Settings.Persistence;
+    using Windows;
 
     [SerializedShape(typeof(ViewColumn))]
     public class ColumnViewModelPreset

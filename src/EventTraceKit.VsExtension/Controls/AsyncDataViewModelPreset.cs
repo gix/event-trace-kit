@@ -5,10 +5,10 @@ namespace EventTraceKit.VsExtension.Controls
     using System.ComponentModel;
     using System.Linq;
     using System.Windows;
-    using Windows;
     using Extensions;
     using Serialization;
     using Settings.Persistence;
+    using Windows;
 
     [SerializedShape(typeof(ViewPreset))]
     public sealed class AsyncDataViewModelPreset

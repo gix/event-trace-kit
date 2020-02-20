@@ -5,7 +5,7 @@ namespace EventTraceKit.VsExtension.Views
     using System.Linq;
     using System.Threading.Tasks;
     using System.Windows;
-    using EventManifestFramework.Schema;
+    using EventTraceKit.EventTracing.Schema;
     using Task = System.Threading.Tasks.Task;
 
     public partial class KeywordSelector

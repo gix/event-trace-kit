@@ -2,7 +2,7 @@ namespace EventTraceKit.VsExtension.Views
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using EventManifestFramework.Schema;
+    using EventTraceKit.EventTracing.Schema;
     using Microsoft.VisualStudio.Threading;
 
     public interface ITraceSettingsContext

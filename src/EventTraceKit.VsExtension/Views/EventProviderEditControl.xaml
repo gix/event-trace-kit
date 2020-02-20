@@ -7,7 +7,7 @@
   xmlns:etkc="clr-namespace:EventTraceKit.VsExtension.Controls"
   xmlns:etkv="clr-namespace:EventTraceKit.VsExtension.Views"
   xmlns:etkw="clr-namespace:EventTraceKit.VsExtension.Windows"
-  xmlns:schema="clr-namespace:EventManifestFramework.Schema;assembly=EventManifestFramework"
+  xmlns:schema="clr-namespace:EventTraceKit.EventTracing.Schema;assembly=EventTraceKit.EventTracing"
   mc:Ignorable="d"
   d:DataContext="{d:DesignInstance {x:Type etkv:EventProviderViewModel}, d:IsDesignTimeCreatable=False}"
   d:DesignWidth="600"

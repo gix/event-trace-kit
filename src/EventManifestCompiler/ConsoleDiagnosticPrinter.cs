@@ -3,7 +3,7 @@ namespace EventManifestCompiler
     using System;
     using System.IO;
     using EventManifestCompiler.Support;
-    using EventManifestFramework.Support;
+    using EventTraceKit.EventTracing.Support;
 
     /// <summary>
     ///   Diagnostic consumer that prints all diagnostics to the console.

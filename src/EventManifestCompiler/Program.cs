@@ -6,7 +6,7 @@ namespace EventManifestCompiler
     using System.Linq;
     using System.Reflection;
     using EventManifestCompiler.Support;
-    using EventManifestFramework.Support;
+    using EventTraceKit.EventTracing.Support;
     using NOption;
 
     public static class Program
@@ -32,7 +32,7 @@ namespace EventManifestCompiler
             var diagPrinter = new ConsoleDiagnosticPrinter(Console.Error);
             var diags = new DiagnosticsEngine(diagPrinter);
 
-            var opts = new EmcOpts();
+            var opts = new EmcCommandLineArguments();
             var optTable = new EmcOptTable();
             if (!ParseOptions(args, optTable, opts, diags)) {
                 ShowBriefHelp();
@@ -58,7 +58,7 @@ namespace EventManifestCompiler
         }
 
         private static bool ParseOptions(
-            string[] cliArgs, OptTable optTable, EmcOpts opts, DiagnosticsEngine diags)
+            string[] cliArgs, OptTable optTable, EmcCommandLineArguments arguments, DiagnosticsEngine diags)
         {
             IArgumentList args = optTable.ParseArgs(cliArgs, out var missing);
 
@@ -79,39 +79,48 @@ namespace EventManifestCompiler
                 success = false;
             }
 
-            opts.ShowHelp = args.HasArg(Opt.help) || args.HasArg(Opt.QuestionMark);
-            opts.ShowVersion = args.HasArg(Opt.version);
-            opts.Inputs = args.GetAllArgValues(Opt.Input).ToList();
-            opts.DumpMessageTable = args.GetLastArgValue(Opt.dump_msg);
-            opts.DumpEventTemplate = args.GetLastArgValue(Opt.dump_wevt);
-            opts.OutputManifest = args.GetLastArgValue(Opt.gen_manifest);
-            opts.Verify = args.GetFlag(Opt.verify);
+            arguments.ShowHelp = args.HasArg(Opt.help) || args.HasArg(Opt.QuestionMark);
+            arguments.ShowVersion = args.HasArg(Opt.version);
+            arguments.DumpMessageTable = args.GetLastArgValue(Opt.dump_msg);
+            arguments.DumpEventTemplate = args.GetLastArgValue(Opt.dump_wevt);
+            arguments.OutputManifest = args.GetLastArgValue(Opt.gen_manifest);
+            arguments.Verify = args.GetFlag(Opt.verify);
 
+            var opts = arguments.CompilationOptions;
+            opts.Inputs = args.GetAllArgValues(Opt.Input).ToList();
             opts.OutputBaseName = args.GetLastArgValue(Opt.out_eq);
             opts.GenerateResources = args.GetFlag(Opt.res, Opt.no_res, true);
             opts.MessageTableFile = args.GetLastArgValue(Opt.msg_file_eq);
             opts.EventTemplateFile = args.GetLastArgValue(Opt.wevt_file_eq);
             opts.ResourceFile = args.GetLastArgValue(Opt.rc_file_eq);
 
-            opts.GenerateCode = args.GetFlag(Opt.code, Opt.no_code, true);
-            opts.CodeHeaderFile = args.GetLastArgValue(Opt.header_file_eq);
-            opts.CodeSourceFile = args.GetLastArgValue(Opt.source_file_eq);
-            opts.CodeGenerator = args.GetLastArgValue(Opt.Ggenerator_eq, opts.CodeGenerator);
-            opts.LogNamespace = args.GetLastArgValue(Opt.Glog_ns_eq, opts.LogNamespace);
-            opts.EtwNamespace = args.GetLastArgValue(Opt.Getw_ns_eq, opts.EtwNamespace);
-            opts.LogCallPrefix = args.GetLastArgValue(Opt.Glog_prefix_eq, opts.LogCallPrefix);
-            opts.UseCustomEventEnabledChecks = args.GetFlag(Opt.Gcustom_enabled_checks, Opt.Gno_custom_enabled_checks, false);
-            opts.SkipDefines = args.GetFlag(Opt.Gskip_defines, Opt.Gno_skip_defines, true);
-            opts.GenerateStubs = args.GetFlag(Opt.Gstubs, Opt.Gno_stubs, false);
-            opts.AlwaysInlineAttribute = args.GetLastArgValue(Opt.Galways_inline_attr_eq, opts.AlwaysInlineAttribute);
-            opts.NoInlineAttribute = args.GetLastArgValue(Opt.Gnoinline_attr_eq, opts.NoInlineAttribute);
+            opts.CodeGenOptions.GenerateCode = args.GetFlag(Opt.code, Opt.no_code, true);
+            opts.CodeGenOptions.CodeHeaderFile = args.GetLastArgValue(Opt.header_file_eq);
+            opts.CodeGenOptions.CodeSourceFile = args.GetLastArgValue(Opt.source_file_eq);
+            opts.CodeGenOptions.CodeGenerator = args.GetLastArgValue(Opt.Ggenerator_eq, opts.CodeGenOptions.CodeGenerator);
+            opts.CodeGenOptions.LogNamespace = args.GetLastArgValue(Opt.Glog_ns_eq, opts.CodeGenOptions.LogNamespace);
+            opts.CodeGenOptions.EtwNamespace = args.GetLastArgValue(Opt.Getw_ns_eq, opts.CodeGenOptions.EtwNamespace);
+            opts.CodeGenOptions.LogCallPrefix = args.GetLastArgValue(Opt.Glog_prefix_eq, opts.CodeGenOptions.LogCallPrefix);
+            opts.CodeGenOptions.UseCustomEventEnabledChecks = args.GetFlag(Opt.Gcustom_enabled_checks, Opt.Gno_custom_enabled_checks, false);
+            opts.CodeGenOptions.SkipDefines = args.GetFlag(Opt.Gskip_defines, Opt.Gno_skip_defines, true);
+            opts.CodeGenOptions.GenerateStubs = args.GetFlag(Opt.Gstubs, Opt.Gno_stubs, false);
+            opts.CodeGenOptions.AlwaysInlineAttribute = args.GetLastArgValue(Opt.Galways_inline_attr_eq, opts.CodeGenOptions.AlwaysInlineAttribute);
+            opts.CodeGenOptions.NoInlineAttribute = args.GetLastArgValue(Opt.Gnoinline_attr_eq, opts.CodeGenOptions.NoInlineAttribute);
+
+            if (opts.Inputs.Count == 1)
+                arguments.DecompilationOptions.InputModule = opts.Inputs[0];
+            else if (opts.Inputs.Count == 2) {
+                arguments.DecompilationOptions.InputEventTemplate = opts.Inputs[0];
+                arguments.DecompilationOptions.InputMessageTable = opts.Inputs[1];
+            }
+            arguments.DecompilationOptions.OutputManifest = arguments.OutputManifest;
 
             opts.CompatibilityLevel = args.GetLastArgValue(Opt.Gcompat_eq, "10.0");
 
             opts.InferUnspecifiedOutputFiles();
 
-            if (opts.Verify) {
-                opts.GenerateCode = false;
+            if (arguments.Verify) {
+                opts.CodeGenOptions.GenerateCode = false;
                 opts.GenerateResources = false;
             }
 

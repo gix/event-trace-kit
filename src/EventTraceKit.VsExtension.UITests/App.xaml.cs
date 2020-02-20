@@ -13,7 +13,6 @@ namespace EventTraceKit.VsExtension.UITests
     using EventTraceKit.VsExtension.Resources;
     using EventTraceKit.VsExtension.Windows;
     using Microsoft.Internal.VisualStudio.Shell.Interop;
-    using Microsoft.VisualStudio.Imaging;
     using Microsoft.VisualStudio.OLE.Interop;
     using Microsoft.VisualStudio.PlatformUI;
     using Microsoft.VisualStudio.Settings;

@@ -22,8 +22,8 @@ namespace EventTraceKit.VsExtension.Controls
 
         event EventHandler ICommand.CanExecuteChanged
         {
-            add {}
-            remove {}
+            add { }
+            remove { }
         }
 
         bool ICommand.CanExecute(object parameter)

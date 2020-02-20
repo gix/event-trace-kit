@@ -28,7 +28,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\EventManifestFramework\EventManifestFramework.csproj" />
+    <ProjectReference Include="..\EventTraceKit.EventTracing\EventTraceKit.EventTracing.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="ResGen\EventTemplateDumperFast.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="ResGen\EventTemplateDumperFast.cs" />

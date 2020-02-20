@@ -3,7 +3,6 @@ namespace EventTraceKit.VsExtension
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.Linq;
     using EnvDTE;
     using EventTraceKit.VsExtension.Extensions;
     using Microsoft.VisualStudio.VCProjectEngine;

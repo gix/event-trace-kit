@@ -35,12 +35,9 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Xunit.StaFact">
-      <Version>0.3.18</Version>
-    </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\EventManifestFramework\EventManifestFramework.csproj" />
+    <ProjectReference Include="..\EventTraceKit.EventTracing\EventTraceKit.EventTracing.csproj" />
     <ProjectReference Include="..\EventTraceKit.Logger\EventTraceKit.Logger.vcxproj" />
     <ProjectReference Include="..\EventTraceKit.VsExtension\EventTraceKit.VsExtension.csproj" />
   </ItemGroup>

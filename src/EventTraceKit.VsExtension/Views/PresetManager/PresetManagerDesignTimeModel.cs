@@ -1,10 +1,9 @@
 namespace EventTraceKit.VsExtension.Views.PresetManager
 {
     using System;
-    using System.Windows.Threading;
-    using Windows;
     using Controls;
     using Formatting;
+    using Windows;
 
     public class PresetManagerDesignTimeModel : PresetManagerViewModel
     {

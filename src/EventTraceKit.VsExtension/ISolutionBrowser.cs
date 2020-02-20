@@ -2,8 +2,6 @@ namespace EventTraceKit.VsExtension
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
-    using EventTraceKit.VsExtension.Native;
 
     public interface ISolutionBrowser
     {

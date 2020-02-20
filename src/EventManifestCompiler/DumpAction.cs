@@ -1,19 +1,16 @@
 namespace EventManifestCompiler
 {
     using System;
-    using System.ComponentModel;
     using System.IO;
-    using EventManifestCompiler.Extensions;
-    using EventManifestCompiler.Native;
-    using EventManifestCompiler.ResGen;
-    using EventManifestFramework.Support;
+    using EventTraceKit.EventTracing.Compilation.ResGen;
+    using EventTraceKit.EventTracing.Support;
 
     internal sealed class DumpAction : IAction
     {
         private readonly IDiagnostics diags;
-        private readonly EmcOpts opts;
+        private readonly EmcCommandLineArguments opts;
 
-        public DumpAction(IDiagnostics diags, EmcOpts opts)
+        public DumpAction(IDiagnostics diags, EmcCommandLineArguments opts)
         {
             this.diags = diags ?? throw new ArgumentNullException(nameof(diags));
             this.opts = opts ?? throw new ArgumentNullException(nameof(opts));
@@ -28,7 +25,7 @@ namespace EventManifestCompiler
             if (msgTableFile != null) {
                 try {
                     if (IsModule(wevtFile))
-                        WithMessageResource(wevtFile, s => d.DumpMessageTable(s));
+                        d.DumpMessageTableResource(wevtFile);
                     else
                         d.DumpMessageTable(msgTableFile);
                 } catch (Exception ex) {
@@ -37,7 +34,7 @@ namespace EventManifestCompiler
             } else if (wevtFile != null) {
                 try {
                     if (IsModule(wevtFile))
-                        WithWevtTemplateResource(wevtFile, s => d.DumpWevtTemplate(s));
+                        d.DumpWevtTemplateResource(wevtFile);
                     else
                         d.DumpWevtTemplate(wevtFile);
                 } catch (Exception ex) {
@@ -55,28 +52,6 @@ namespace EventManifestCompiler
             return
                 string.Equals(extension, ".exe", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(extension, ".dll", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static void WithWevtTemplateResource(string fileName, Action<Stream> action)
-        {
-            var module = SafeModuleHandle.LoadImageResource(fileName);
-            if (module.IsInvalid)
-                throw new Win32Exception();
-
-            using (module)
-            using (var stream = module.OpenResource("WEVT_TEMPLATE", 1))
-                action(stream);
-        }
-
-        private static void WithMessageResource(string fileName, Action<Stream> action)
-        {
-            var module = SafeModuleHandle.LoadImageResource(fileName);
-            if (module.IsInvalid)
-                throw new Win32Exception();
-
-            using (module)
-            using (var stream = module.OpenResource((IntPtr)11, 1))
-                action(stream);
         }
     }
 }

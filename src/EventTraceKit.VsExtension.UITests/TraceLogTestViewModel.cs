@@ -6,7 +6,7 @@ namespace EventTraceKit.VsExtension.UITests
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Input;
-    using EventManifestFramework.Schema;
+    using EventTraceKit.EventTracing.Schema;
     using EventTraceKit.VsExtension;
     using EventTraceKit.VsExtension.Settings;
     using EventTraceKit.VsExtension.Views;

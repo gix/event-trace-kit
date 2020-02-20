@@ -6,8 +6,8 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
     using System.Globalization;
     using System.Windows;
     using System.Windows.Media;
-    using Windows;
     using Extensions;
+    using Windows;
 
     public class AsyncDataGridRenderedCellsVisual : DrawingVisual
     {

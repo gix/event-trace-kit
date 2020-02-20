@@ -9,7 +9,6 @@ namespace EventTraceKit.VsExtension.UITests
     using System.Windows;
     using System.Windows.Input;
     using System.Windows.Media;
-    using System.Windows.Threading;
     using Controls;
     using EventTraceKit.VsExtension.Views.PresetManager;
     using Formatting;

@@ -4,7 +4,7 @@ namespace EventManifestCompiler.Build.Tasks
     using System.Collections.Generic;
     using System.IO;
     using System.Runtime.Serialization.Json;
-    using EventManifestFramework.Support;
+    using EventTraceKit.EventTracing.Support;
     using Microsoft.Build.Framework;
     using Microsoft.Build.Utilities;
     using NOption;
@@ -13,7 +13,7 @@ namespace EventManifestCompiler.Build.Tasks
     public sealed class InprocEmc : NOptionTrackedTask, IDiagnosticConsumer
     {
         private readonly DiagnosticsEngine diags;
-        private readonly EmcOpts opts = new EmcOpts();
+        private readonly EmcCommandLineArguments opts = new EmcCommandLineArguments();
 
         private ITaskItem source;
         private ITaskItem[] generatedFiles;
@@ -179,22 +179,22 @@ namespace EventManifestCompiler.Build.Tasks
             var dictionary = new SortedDictionary<string, string>();
 
             var opts = CreateOptions();
-            dictionary.Add("OutputBaseName", opts.OutputBaseName);
-            dictionary.Add("CodeHeaderFile", opts.CodeHeaderFile);
-            dictionary.Add("CodeSourceFile", opts.CodeSourceFile);
-            dictionary.Add("MessageTableFile", opts.MessageTableFile);
-            dictionary.Add("EventTemplateFile", opts.EventTemplateFile);
-            dictionary.Add("GenerateResources", opts.GenerateResources.ToString());
-            dictionary.Add("GenerateCode", opts.GenerateCode.ToString());
-            dictionary.Add("Generator", opts.CodeGenerator);
-            dictionary.Add("LogNamespace", opts.LogNamespace);
-            dictionary.Add("EtwNamespace", opts.EtwNamespace);
-            dictionary.Add("LogCallPrefix", opts.LogCallPrefix);
-            dictionary.Add("UseCustomEnabledChecks", opts.UseCustomEventEnabledChecks.ToString());
-            dictionary.Add("SkipDefines", opts.SkipDefines.ToString());
-            dictionary.Add("GenerateLogStubs", opts.GenerateStubs.ToString());
-            dictionary.Add("AlwaysInlineAttribute", opts.AlwaysInlineAttribute);
-            dictionary.Add("NoInlineAttribute", opts.NoInlineAttribute);
+            dictionary.Add("OutputBaseName", opts.CompilationOptions.OutputBaseName);
+            dictionary.Add("CodeHeaderFile", opts.CompilationOptions.CodeGenOptions.CodeHeaderFile);
+            dictionary.Add("CodeSourceFile", opts.CompilationOptions.CodeGenOptions.CodeSourceFile);
+            dictionary.Add("MessageTableFile", opts.CompilationOptions.MessageTableFile);
+            dictionary.Add("EventTemplateFile", opts.CompilationOptions.EventTemplateFile);
+            dictionary.Add("GenerateResources", opts.CompilationOptions.GenerateResources.ToString());
+            dictionary.Add("GenerateCode", opts.CompilationOptions.CodeGenOptions.GenerateCode.ToString());
+            dictionary.Add("Generator", opts.CompilationOptions.CodeGenOptions.CodeGenerator);
+            dictionary.Add("LogNamespace", opts.CompilationOptions.CodeGenOptions.LogNamespace);
+            dictionary.Add("EtwNamespace", opts.CompilationOptions.CodeGenOptions.EtwNamespace);
+            dictionary.Add("LogCallPrefix", opts.CompilationOptions.CodeGenOptions.LogCallPrefix);
+            dictionary.Add("UseCustomEnabledChecks", opts.CompilationOptions.CodeGenOptions.UseCustomEventEnabledChecks.ToString());
+            dictionary.Add("SkipDefines", opts.CompilationOptions.CodeGenOptions.SkipDefines.ToString());
+            dictionary.Add("GenerateLogStubs", opts.CompilationOptions.CodeGenOptions.GenerateStubs.ToString());
+            dictionary.Add("AlwaysInlineAttribute", opts.CompilationOptions.CodeGenOptions.AlwaysInlineAttribute);
+            dictionary.Add("NoInlineAttribute", opts.CompilationOptions.CodeGenOptions.NoInlineAttribute);
 
             using (var stream = new MemoryStream())
             using (var jw = JsonReaderWriterFactory.CreateJsonWriter(stream)) {
@@ -205,22 +205,26 @@ namespace EventManifestCompiler.Build.Tasks
             return string.Empty;
         }
 
-        private EmcOpts CreateOptions()
+        private EmcCommandLineArguments CreateOptions()
         {
-            return new EmcOpts {
-                OutputBaseName = OutputBaseName,
-                CodeHeaderFile = HeaderFile,
-                CodeSourceFile = SourceFile,
-                MessageTableFile = MessageTableFile,
-                EventTemplateFile = EventTemplateFile,
-                UseCustomEventEnabledChecks = UseCustomEnabledChecks,
-                SkipDefines = SkipDefines,
-                CodeGenerator = CodeGenerator,
-                LogNamespace = LogNamespace,
-                EtwNamespace = EtwNamespace,
-                AlwaysInlineAttribute = AlwaysInlineAttribute,
-                NoInlineAttribute = NoInlineAttribute,
-                LogCallPrefix = LogCallPrefix,
+            return new EmcCommandLineArguments {
+                CompilationOptions = {
+                    OutputBaseName = OutputBaseName,
+                    MessageTableFile = MessageTableFile,
+                    EventTemplateFile = EventTemplateFile,
+                    CodeGenOptions = {
+                        CodeHeaderFile = HeaderFile,
+                        CodeSourceFile = SourceFile,
+                        UseCustomEventEnabledChecks = UseCustomEnabledChecks,
+                        SkipDefines = SkipDefines,
+                        CodeGenerator = CodeGenerator,
+                        LogNamespace = LogNamespace,
+                        EtwNamespace = EtwNamespace,
+                        AlwaysInlineAttribute = AlwaysInlineAttribute,
+                        NoInlineAttribute = NoInlineAttribute,
+                        LogCallPrefix = LogCallPrefix,
+                    },
+                },
             };
         }
 
