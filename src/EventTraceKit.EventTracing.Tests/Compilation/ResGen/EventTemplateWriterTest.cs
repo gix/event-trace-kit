@@ -11,7 +11,7 @@ namespace EventTraceKit.EventTracing.Tests.Compilation.ResGen
     {
         [Theory]
         [ResGenTestData(typeof(ResGenTestCases), ".wevt.bin")]
-        public void Write(string testCase, ExceptionOr<EventManifest> inputManifest, Stream expectedWevt)
+        public void Write(ExceptionOr<EventManifest> inputManifest, Stream expectedWevt)
         {
             using (var temp = new TempFile()) {
                 using (var writer = new EventTemplateWriter(temp.Stream))

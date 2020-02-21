@@ -15,7 +15,7 @@ namespace EventTraceKit.EventTracing.Tests.Compilation.ResGen
 
         [Theory]
         [ResGenTestData(typeof(ResGenTestCases), ".msg.bin")]
-        public void Write(string testCase, ExceptionOr<EventManifest> inputManifest, Stream expectedMsgTable)
+        public void Write(ExceptionOr<EventManifest> inputManifest, Stream expectedMsgTable)
         {
             Assert.Single(inputManifest.Value.Resources);
 

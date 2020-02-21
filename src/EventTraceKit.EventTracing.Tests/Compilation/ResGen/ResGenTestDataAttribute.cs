@@ -55,7 +55,7 @@ namespace EventTraceKit.EventTracing.Tests.Compilation.ResGen
                     manifest = ex;
                 }
 
-                yield return new object[] { testCase, manifest, expectedOutput };
+                yield return new object[] { manifest, expectedOutput };
             }
         }
     }
