@@ -387,11 +387,10 @@ namespace EventManifestCompiler.Build.Tasks
         protected void WriteSourcesToCommandLinesTable(
             IDictionary<string, string> sourcesToCommandLines)
         {
-            using (var writer = CreateUnicodeWriter(TLogCommandFile.GetMetadata("FullPath"))) {
-                foreach (KeyValuePair<string, string> pair in sourcesToCommandLines) {
-                    writer.WriteLine("^" + pair.Key);
-                    writer.WriteLine(ApplyPrecompareCommandFilter(pair.Value));
-                }
+            using var writer = CreateUnicodeWriter(TLogCommandFile.GetMetadata("FullPath"));
+            foreach (KeyValuePair<string, string> pair in sourcesToCommandLines) {
+                writer.WriteLine("^" + pair.Key);
+                writer.WriteLine(ApplyPrecompareCommandFilter(pair.Value));
             }
         }
 
@@ -561,35 +560,34 @@ namespace EventManifestCompiler.Build.Tasks
             if (!File.Exists(metadata))
                 return sourceMap;
 
-            using (var reader = File.OpenText(metadata)) {
-                bool invalidTLog = false;
-                string source = string.Empty;
-                for (string line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
-                    if (line.Length == 0) {
+            using var reader = File.OpenText(metadata);
+            bool invalidTLog = false;
+            string source = string.Empty;
+            for (string line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
+                if (line.Length == 0) {
+                    invalidTLog = true;
+                    break;
+                }
+
+                if (line[0] == '^') {
+                    if (line.Length == 1) {
                         invalidTLog = true;
                         break;
                     }
-
-                    if (line[0] == '^') {
-                        if (line.Length == 1) {
-                            invalidTLog = true;
-                            break;
-                        }
-                        source = line.Substring(1);
-                    } else {
-                        if (!sourceMap.ContainsKey(source))
-                            sourceMap[source] = line;
-                        else
-                            sourceMap[source] += "\r\n" + line;
-                    }
+                    source = line.Substring(1);
+                } else {
+                    if (!sourceMap.ContainsKey(source))
+                        sourceMap[source] = line;
+                    else
+                        sourceMap[source] += "\r\n" + line;
                 }
+            }
 
-                if (invalidTLog) {
-                    Log.LogWarningWithCodeFromResources(
-                        nameof(Strings.TrackedToolTask_RebuildingDueToInvalidTLogContents),
-                        metadata);
-                    sourceMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                }
+            if (invalidTLog) {
+                Log.LogWarningWithCodeFromResources(
+                    nameof(Strings.TrackedToolTask_RebuildingDueToInvalidTLogContents),
+                    metadata);
+                sourceMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             }
 
             return sourceMap;

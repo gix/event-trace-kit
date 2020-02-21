@@ -31,8 +31,8 @@ namespace EventTraceKit.VsExtension.Debugging
         public override void Unregister(RegistrationContext context)
         {
             context.RemoveKey($"CLSID\\{LaunchHookType.GUID:B}");
-            using (Key key = context.CreateKey(@"Debugger\LaunchHooks110"))
-                key.SetValue(LaunchHookType.Name, null);
+            using Key key = context.CreateKey(@"Debugger\LaunchHooks110");
+            key.SetValue(LaunchHookType.Name, null);
         }
     }
 }

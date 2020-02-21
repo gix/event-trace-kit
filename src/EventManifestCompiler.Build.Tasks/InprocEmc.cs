@@ -196,11 +196,10 @@ namespace EventManifestCompiler.Build.Tasks
             dictionary.Add("AlwaysInlineAttribute", opts.CompilationOptions.CodeGenOptions.AlwaysInlineAttribute);
             dictionary.Add("NoInlineAttribute", opts.CompilationOptions.CodeGenOptions.NoInlineAttribute);
 
-            using (var stream = new MemoryStream())
-            using (var jw = JsonReaderWriterFactory.CreateJsonWriter(stream)) {
-                foreach (var pair in dictionary)
-                    jw.WriteElementString(pair.Key, pair.Value);
-            }
+            using var stream = new MemoryStream();
+            using var jw = JsonReaderWriterFactory.CreateJsonWriter(stream);
+            foreach (var pair in dictionary)
+                jw.WriteElementString(pair.Key, pair.Value);
 
             return string.Empty;
         }

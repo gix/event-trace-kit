@@ -26,8 +26,8 @@ namespace EventTraceKit.EventTracing.Compilation.BinXml
 
         public static void Write(Stream output, XDocument doc, IList<byte> types)
         {
-            using (var writer = new BinXmlWriter(output, types))
-                writer.WriteFragment(doc);
+            using var writer = new BinXmlWriter(output, types);
+            writer.WriteFragment(doc);
         }
 
         public void Dispose()

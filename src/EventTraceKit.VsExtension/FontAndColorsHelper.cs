@@ -50,11 +50,10 @@
         private static bool GetRoundFontSizesSetting()
         {
             var globalServiceProvider = (IServiceProvider)Package.GetGlobalService(typeof(IServiceProvider));
-            using (var provider = new ServiceProvider(globalServiceProvider)) {
-                var settingsManager = new ShellSettingsManager(provider);
-                var userSettings = settingsManager.GetReadOnlySettingsStore(SettingsScope.UserSettings);
-                return userSettings.GetBoolean("Text Editor", "RoundFontSizes", true);
-            }
+            using var provider = new ServiceProvider(globalServiceProvider);
+            var settingsManager = new ShellSettingsManager(provider);
+            var userSettings = settingsManager.GetReadOnlySettingsStore(SettingsScope.UserSettings);
+            return userSettings.GetBoolean("Text Editor", "RoundFontSizes", true);
         }
 
         public static FontFamily GetFallbackFontFamily()

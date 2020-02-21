@@ -455,10 +455,9 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
 
         private static byte[] ConvertToBinXml(XDocument doc, byte[] propTypes)
         {
-            using (var buffer = new MemoryStream()) {
-                BinXmlWriter.Write(buffer, doc, propTypes);
-                return buffer.ToArray();
-            }
+            using var buffer = new MemoryStream();
+            BinXmlWriter.Write(buffer, doc, propTypes);
+            return buffer.ToArray();
         }
 
         private void WriteProperty(

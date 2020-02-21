@@ -105,164 +105,163 @@ namespace EventTraceKit.VsExtension.Controls.Primitives
             RenderedViewport = Rect.Empty;
             Children.Clear();
 
-            using (DrawingContext dc = RenderOpen()) {
-                int rowCount = viewModel.RowCount;
-                if (rowCount <= 0 || visibleColumns.Count <= 0)
-                    return;
+            using DrawingContext dc = RenderOpen();
+            int rowCount = viewModel.RowCount;
+            if (rowCount <= 0 || visibleColumns.Count <= 0)
+                return;
 
-                double canvasWidth = cellsPresenter.ActualWidth;
-                double canvasHeight = cellsPresenter.ActualHeight;
-                double verticalOffset = cellsPresenter.VerticalOffset;
-                double rowHeight = cellsPresenter.RowHeight;
-                double columnHeight = Math.Min((rowCount * rowHeight) - verticalOffset, canvasHeight);
+            double canvasWidth = cellsPresenter.ActualWidth;
+            double canvasHeight = cellsPresenter.ActualHeight;
+            double verticalOffset = cellsPresenter.VerticalOffset;
+            double rowHeight = cellsPresenter.RowHeight;
+            double columnHeight = Math.Min((rowCount * rowHeight) - verticalOffset, canvasHeight);
 
-                Brush primaryBackground = cellsPresenter.PrimaryBackground;
-                Brush secondaryBackground = cellsPresenter.SecondaryBackground;
+            Brush primaryBackground = cellsPresenter.PrimaryBackground;
+            Brush secondaryBackground = cellsPresenter.SecondaryBackground;
+            for (int row = firstVisibleRow; row <= lastVisibleRow; ++row) {
+                double topEdge = (row * rowHeight) - verticalOffset;
+                var background = row % 2 == 0
+                    ? primaryBackground : secondaryBackground;
+                dc.DrawRectangle(
+                    background, null,
+                    new Rect(0, topEdge, canvasWidth, rowHeight));
+            }
+
+            Brush frozenColumnBackground = cellsPresenter.FrozenColumnBackground;
+            if (firstNonFrozenColumn > firstVisibleColumn) {
+                double leftEdge = columnEdges[firstVisibleColumn];
+                double rightEdge = columnEdges[firstNonFrozenColumn];
+                double width = rightEdge - leftEdge;
+                dc.DrawRectangle(
+                    frozenColumnBackground,
+                    null, new Rect(leftEdge, 0, width, columnHeight));
+            }
+
+            if (lastNonFrozenColumn < lastVisibleColumn) {
+                double width = columnEdges[lastVisibleColumn + 1] - columnEdges[lastNonFrozenColumn + 1];
+                double leftEdge = canvasWidth - width;
+                dc.DrawRectangle(
+                    frozenColumnBackground,
+                    null, new Rect(leftEdge, 0, width, columnHeight));
+            }
+
+            Brush selectionForeground = cellsPresenter.SelectionForeground;
+            Brush selectionBackground = cellsPresenter.SelectionBackground;
+            Pen selectionBorderPen = cellsPresenter.SelectionBorderPen;
+            if (!IsSelectionActive) {
+                selectionForeground = cellsPresenter.InactiveSelectionForeground;
+                selectionBackground = cellsPresenter.InactiveSelectionBackground;
+                selectionBorderPen = cellsPresenter.InactiveSelectionBorderPen;
+            }
+
+            bool hasVisibleSelection =
+                selectionForeground != null ||
+                selectionBackground != null ||
+                selectionBorderPen != null;
+
+            if (hasVisibleSelection) {
+                var rowSelection = viewModel.RowSelection;
+
                 for (int row = firstVisibleRow; row <= lastVisibleRow; ++row) {
+                    if (!rowSelection.Contains(row))
+                        continue;
+
                     double topEdge = (row * rowHeight) - verticalOffset;
-                    var background = row % 2 == 0
-                        ? primaryBackground : secondaryBackground;
+                    double bottomEdge = topEdge + rowHeight - 1;
+
                     dc.DrawRectangle(
-                        background, null,
-                        new Rect(0, topEdge, canvasWidth, rowHeight));
-                }
+                        selectionBackground, null,
+                        new Rect(
+                            new Point(0, topEdge),
+                            new Point(canvasWidth, bottomEdge + 1)));
 
-                Brush frozenColumnBackground = cellsPresenter.FrozenColumnBackground;
-                if (firstNonFrozenColumn > firstVisibleColumn) {
-                    double leftEdge = columnEdges[firstVisibleColumn];
-                    double rightEdge = columnEdges[firstNonFrozenColumn];
-                    double width = rightEdge - leftEdge;
-                    dc.DrawRectangle(
-                        frozenColumnBackground,
-                        null, new Rect(leftEdge, 0, width, columnHeight));
-                }
-
-                if (lastNonFrozenColumn < lastVisibleColumn) {
-                    double width = columnEdges[lastVisibleColumn + 1] - columnEdges[lastNonFrozenColumn + 1];
-                    double leftEdge = canvasWidth - width;
-                    dc.DrawRectangle(
-                        frozenColumnBackground,
-                        null, new Rect(leftEdge, 0, width, columnHeight));
-                }
-
-                Brush selectionForeground = cellsPresenter.SelectionForeground;
-                Brush selectionBackground = cellsPresenter.SelectionBackground;
-                Pen selectionBorderPen = cellsPresenter.SelectionBorderPen;
-                if (!IsSelectionActive) {
-                    selectionForeground = cellsPresenter.InactiveSelectionForeground;
-                    selectionBackground = cellsPresenter.InactiveSelectionBackground;
-                    selectionBorderPen = cellsPresenter.InactiveSelectionBorderPen;
-                }
-
-                bool hasVisibleSelection =
-                    selectionForeground != null ||
-                    selectionBackground != null ||
-                    selectionBorderPen != null;
-
-                if (hasVisibleSelection) {
-                    var rowSelection = viewModel.RowSelection;
-
-                    for (int row = firstVisibleRow; row <= lastVisibleRow; ++row) {
-                        if (!rowSelection.Contains(row))
-                            continue;
-
-                        double topEdge = (row * rowHeight) - verticalOffset;
-                        double bottomEdge = topEdge + rowHeight - 1;
-
-                        dc.DrawRectangle(
-                            selectionBackground, null,
-                            new Rect(
-                                new Point(0, topEdge),
-                                new Point(canvasWidth, bottomEdge + 1)));
-
-                        if (!rowSelection.Contains(row - 1)) {
-                            dc.DrawLineSnapped(
-                                selectionBorderPen,
-                                new Point(0, topEdge),
-                                new Point(canvasWidth, topEdge));
-                        }
-
-                        if (!rowSelection.Contains(row + 1)) {
-                            dc.DrawLineSnapped(
-                                selectionBorderPen,
-                                new Point(0, bottomEdge),
-                                new Point(canvasWidth, bottomEdge));
-                        }
-                    }
-                }
-
-                Pen horizontalGridLinesPen = cellsPresenter.HorizontalGridLinesPen;
-                if (horizontalGridLinesPen != null) {
-                    for (int row = firstVisibleRow; row <= lastVisibleRow; ++row) {
-                        double bottomEdge = ((row + 1) * rowHeight) - verticalOffset;
+                    if (!rowSelection.Contains(row - 1)) {
                         dc.DrawLineSnapped(
-                            horizontalGridLinesPen,
+                            selectionBorderPen,
+                            new Point(0, topEdge),
+                            new Point(canvasWidth, topEdge));
+                    }
+
+                    if (!rowSelection.Contains(row + 1)) {
+                        dc.DrawLineSnapped(
+                            selectionBorderPen,
                             new Point(0, bottomEdge),
                             new Point(canvasWidth, bottomEdge));
                     }
                 }
+            }
 
-                bool hasLeftFrozenColumns = firstNonFrozenColumn > firstVisibleColumn;
-                bool hasRightFrozenColumns = lastNonFrozenColumn < lastVisibleColumn;
-                bool hasFrozenColumns = hasLeftFrozenColumns ||
-                                        hasRightFrozenColumns;
-
-                if (rowCacheInvalid ||
-                    (hasFrozenColumns && prevRenderedWidth != canvasWidth) ||
-                    hasFrozenColumns != prevHasFrozenColumns) {
-                    frozenRowCacheInvalid = true;
-                    focusVisual = null;
-                    nonFrozenAreaClip = null;
+            Pen horizontalGridLinesPen = cellsPresenter.HorizontalGridLinesPen;
+            if (horizontalGridLinesPen != null) {
+                for (int row = firstVisibleRow; row <= lastVisibleRow; ++row) {
+                    double bottomEdge = ((row + 1) * rowHeight) - verticalOffset;
+                    dc.DrawLineSnapped(
+                        horizontalGridLinesPen,
+                        new Point(0, bottomEdge),
+                        new Point(canvasWidth, bottomEdge));
                 }
+            }
 
-                prevHasFrozenColumns = hasFrozenColumns;
-                prevRenderedWidth = canvasWidth;
+            bool hasLeftFrozenColumns = firstNonFrozenColumn > firstVisibleColumn;
+            bool hasRightFrozenColumns = lastNonFrozenColumn < lastVisibleColumn;
+            bool hasFrozenColumns = hasLeftFrozenColumns ||
+                                    hasRightFrozenColumns;
 
-                PreTrimRowCache(firstVisibleRow, lastVisibleRow);
+            if (rowCacheInvalid ||
+                (hasFrozenColumns && prevRenderedWidth != canvasWidth) ||
+                hasFrozenColumns != prevHasFrozenColumns) {
+                frozenRowCacheInvalid = true;
+                focusVisual = null;
+                nonFrozenAreaClip = null;
+            }
 
-                if (visibleColumns.Count > 0) {
-                    RenderCells(
-                        dc, viewport, canvasWidth, columnHeight, columnEdges,
-                        firstVisibleColumn, lastVisibleColumn,
-                        firstVisibleRow, lastVisibleRow,
-                        firstNonFrozenColumn, lastNonFrozenColumn);
-                }
+            prevHasFrozenColumns = hasFrozenColumns;
+            prevRenderedWidth = canvasWidth;
 
-                PostTrimRowCache(firstVisibleRow, lastVisibleRow);
+            PreTrimRowCache(firstVisibleRow, lastVisibleRow);
 
-                frozenRowCacheInvalid = false;
+            if (visibleColumns.Count > 0) {
+                RenderCells(
+                    dc, viewport, canvasWidth, columnHeight, columnEdges,
+                    firstVisibleColumn, lastVisibleColumn,
+                    firstVisibleRow, lastVisibleRow,
+                    firstNonFrozenColumn, lastNonFrozenColumn);
+            }
 
-                int focusIndex = viewModel.FocusIndex;
-                Pen focusBorderPen = cellsPresenter.FocusBorderPen;
-                if (IsSelectionActive
-                    && focusBorderPen != null
-                    && focusIndex >= firstVisibleRow
-                    && focusIndex <= lastVisibleRow) {
-                    if (focusVisual == null) {
-                        double width;
-                        if (hasRightFrozenColumns) {
-                            width = canvasWidth;
-                            if (!hasLeftFrozenColumns)
-                                width += horizontalOffset;
-                        } else {
-                            width = columnEdges[columnEdges.Length - 1];
-                            if (hasLeftFrozenColumns)
-                                width -= horizontalOffset;
-                        }
+            PostTrimRowCache(firstVisibleRow, lastVisibleRow);
 
-                        var bounds = new Rect(0, 0, width - 1, rowHeight - 1);
+            frozenRowCacheInvalid = false;
 
-                        focusVisual = new DrawingVisual();
-                        focusVisual.Transform = new TranslateTransform();
-                        var context = focusVisual.RenderOpen();
-                        context.DrawRectangleSnapped(null, focusBorderPen, bounds);
-                        context.Close();
+            int focusIndex = viewModel.FocusIndex;
+            Pen focusBorderPen = cellsPresenter.FocusBorderPen;
+            if (IsSelectionActive
+                && focusBorderPen != null
+                && focusIndex >= firstVisibleRow
+                && focusIndex <= lastVisibleRow) {
+                if (focusVisual == null) {
+                    double width;
+                    if (hasRightFrozenColumns) {
+                        width = canvasWidth;
+                        if (!hasLeftFrozenColumns)
+                            width += horizontalOffset;
+                    } else {
+                        width = columnEdges[columnEdges.Length - 1];
+                        if (hasLeftFrozenColumns)
+                            width -= horizontalOffset;
                     }
 
-                    double x = hasLeftFrozenColumns ? 0 : -horizontalOffset;
-                    double y = (focusIndex * rowHeight) - verticalOffset;
-                    AddAtOffset(focusVisual, x, y);
+                    var bounds = new Rect(0, 0, width - 1, rowHeight - 1);
+
+                    focusVisual = new DrawingVisual();
+                    focusVisual.Transform = new TranslateTransform();
+                    var context = focusVisual.RenderOpen();
+                    context.DrawRectangleSnapped(null, focusBorderPen, bounds);
+                    context.Close();
                 }
+
+                double x = hasLeftFrozenColumns ? 0 : -horizontalOffset;
+                double y = (focusIndex * rowHeight) - verticalOffset;
+                AddAtOffset(focusVisual, x, y);
             }
         }
 

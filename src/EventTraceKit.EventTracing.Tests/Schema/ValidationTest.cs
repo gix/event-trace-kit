@@ -201,8 +201,8 @@ namespace EventTraceKit.EventTracing.Tests.Schema
                 CheckCharacters = false,
                 Indent = true
             };
-            using (var xmlWriter = XmlWriter.Create(writer, settings))
-                doc.WriteTo(xmlWriter);
+            using var xmlWriter = XmlWriter.Create(writer, settings);
+            doc.WriteTo(xmlWriter);
         }
 
         private static XDocument LoadUnchecked(Stream stream)
@@ -210,8 +210,8 @@ namespace EventTraceKit.EventTracing.Tests.Schema
             var settings = new XmlReaderSettings {
                 CheckCharacters = false
             };
-            using (var reader = XmlReader.Create(stream, settings, "<stdin>"))
-                return XDocument.Load(reader, LoadOptions.SetBaseUri | LoadOptions.SetLineInfo);
+            using var reader = XmlReader.Create(stream, settings, "<stdin>");
+            return XDocument.Load(reader, LoadOptions.SetBaseUri | LoadOptions.SetLineInfo);
         }
     }
 }

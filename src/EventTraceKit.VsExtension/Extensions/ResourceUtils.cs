@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Extensions
+namespace EventTraceKit.VsExtension.Extensions
 {
     using System;
     using System.Diagnostics;
@@ -30,14 +30,13 @@
 
         public static Cursor LoadCursorFromResource(Type type, string resourceName)
         {
-            Stream stream = type.Assembly.GetManifestResourceStream(type, resourceName);
+            using Stream stream = type.Assembly.GetManifestResourceStream(type, resourceName);
 
             Debug.Assert(stream != null, "Resource stream is null");
             if (stream == null)
                 return null;
 
-            using (stream)
-                return LoadCursor(stream);
+            return LoadCursor(stream);
         }
     }
 }

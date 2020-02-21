@@ -96,8 +96,8 @@ namespace EventTraceKit.VsExtension.Settings
             }
 
             EnsureDirectoryExists(filePath);
-            using (var output = File.Open(filePath, FileMode.Create, FileAccess.Write))
-                SaveEntries(output);
+            using var output = File.Open(filePath, FileMode.Create, FileAccess.Write);
+            SaveEntries(output);
         }
 
         private void SaveEntries(Stream output)
@@ -131,8 +131,8 @@ namespace EventTraceKit.VsExtension.Settings
                 if (!File.Exists(filePath))
                     return;
 
-                using (var input = File.Open(filePath, FileMode.Open, FileAccess.Read))
-                    Load(input);
+                using var input = File.Open(filePath, FileMode.Open, FileAccess.Read);
+                Load(input);
             } catch (FileNotFoundException) {
             } finally {
                 state = State.Unmodified;

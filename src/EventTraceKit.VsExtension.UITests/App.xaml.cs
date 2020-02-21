@@ -130,12 +130,11 @@ namespace EventTraceKit.VsExtension.UITests
         private bool LoadThemeFromResource(string name)
         {
             var assembly = Assembly.GetExecutingAssembly();
-            var stream = assembly.GetManifestResourceStream(typeof(App), "Themes." + name);
+            using var stream = assembly.GetManifestResourceStream(typeof(App), "Themes." + name);
             if (stream == null)
                 return false;
 
-            using (stream)
-                LoadThemeFromStream(stream);
+            LoadThemeFromStream(stream);
 
             return true;
         }
@@ -145,7 +144,7 @@ namespace EventTraceKit.VsExtension.UITests
             var doc = XDocument.Load(input);
 
             foreach (var category in doc.XPathSelectElements("Themes/Theme/Category")) {
-                Guid id = Guid.Parse(category.Attribute("GUID").Value);
+                var id = Guid.Parse(category.Attribute("GUID").Value);
 
                 foreach (var color in category.Elements("Color")) {
                     string name = color.Attribute("Name")?.Value;

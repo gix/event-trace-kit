@@ -41,7 +41,7 @@ namespace TraceLaunchTester
                 PipeOptions.WriteThrough | PipeOptions.Asynchronous, 4, 4);
             pipe.ReadMode = PipeTransmissionMode.Message;
 
-            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
             using (pipe) {
                 Log("[SERVER] Starting launcher");
                 if (!launcher.Start()) {

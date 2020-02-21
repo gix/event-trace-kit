@@ -117,14 +117,13 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
 
         public void Generate(EventManifest manifest, Stream output)
         {
-            using (var baseWriter = IO.CreateStreamWriter(output))
-            using (var writer = new IndentableTextWriter(baseWriter)) {
-                try {
-                    ow = writer;
-                    GenerateCore(manifest);
-                } finally {
-                    ow = null;
-                }
+            using var baseWriter = IO.CreateStreamWriter(output);
+            using var writer = new IndentableTextWriter(baseWriter);
+            try {
+                ow = writer;
+                GenerateCore(manifest);
+            } finally {
+                ow = null;
             }
         }
 

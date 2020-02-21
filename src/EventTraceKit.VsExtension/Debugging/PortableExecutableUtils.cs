@@ -30,28 +30,27 @@ namespace EventTraceKit.VsExtension.Debugging
         {
             subsystem = ImageSubsystem.Unknown;
 
-            using (var stream = new FileStream(imagePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            using (var reader = new BinaryReader(stream, Encoding.Default, true)) {
-                if (!SkipToImageNtHeaders(reader))
-                    return ProcessorArchitecture.None;
+            using var stream = new FileStream(imagePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var reader = new BinaryReader(stream, Encoding.Default, true);
+            if (!SkipToImageNtHeaders(reader))
+                return ProcessorArchitecture.None;
 
-                if (reader.ReadUInt32() != IMAGE_NT_SIGNATURE)
-                    return ProcessorArchitecture.None;
+            if (reader.ReadUInt32() != IMAGE_NT_SIGNATURE)
+                return ProcessorArchitecture.None;
 
-                var machine = MapMachine(reader.ReadUInt16());
-                // Skip the rest of IMAGE_FILE_HEADER
-                reader.BaseStream.Position += IMAGE_FILE_HEADER_SIZE - 2;
+            var machine = MapMachine(reader.ReadUInt16());
+            // Skip the rest of IMAGE_FILE_HEADER
+            reader.BaseStream.Position += IMAGE_FILE_HEADER_SIZE - 2;
 
-                if (machine == ProcessorArchitecture.X86) {
-                    if (SkipToSubsystem32(reader))
-                        subsystem = (ImageSubsystem)reader.ReadUInt16();
-                } else if (machine == ProcessorArchitecture.Amd64) {
-                    if (SkipToSubsystem64(reader))
-                        subsystem = (ImageSubsystem)reader.ReadUInt16();
-                }
-
-                return machine;
+            if (machine == ProcessorArchitecture.X86) {
+                if (SkipToSubsystem32(reader))
+                    subsystem = (ImageSubsystem)reader.ReadUInt16();
+            } else if (machine == ProcessorArchitecture.Amd64) {
+                if (SkipToSubsystem64(reader))
+                    subsystem = (ImageSubsystem)reader.ReadUInt16();
             }
+
+            return machine;
         }
 
         private static ProcessorArchitecture MapMachine(ushort machine)

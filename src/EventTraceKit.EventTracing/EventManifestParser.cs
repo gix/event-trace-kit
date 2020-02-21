@@ -112,8 +112,8 @@ namespace EventTraceKit.EventTracing
             if (input == null)
                 throw new ArgumentNullException(nameof(input));
 
-            using (var reader = CreateXmlReader(input, inputUri))
-                return ParseManifest(reader);
+            using var reader = CreateXmlReader(input, inputUri);
+            return ParseManifest(reader);
         }
 
         public IEventManifestMetadata ParseMetadata(Stream input, string inputUri = null)
@@ -121,8 +121,8 @@ namespace EventTraceKit.EventTracing
             if (input == null)
                 throw new ArgumentNullException(nameof(input));
 
-            using (var reader = CreateXmlReader(input, inputUri))
-                return ParseMetadata(reader);
+            using var reader = CreateXmlReader(input, inputUri);
+            return ParseMetadata(reader);
         }
 
         public IEventManifestMetadata ParseWinmeta(Stream input, string inputUri = null)
@@ -1574,22 +1574,22 @@ namespace EventTraceKit.EventTracing
         public static EventManifest ParseManifest(
             this IEventManifestParser parser, string filePath)
         {
-            using (var input = File.OpenRead(filePath))
-                return parser.ParseManifest(input, filePath);
+            using var input = File.OpenRead(filePath);
+            return parser.ParseManifest(input, filePath);
         }
 
         public static IEventManifestMetadata ParseWinmeta(
             this IEventManifestParser parser, string filePath)
         {
-            using (var input = File.OpenRead(filePath))
-                return parser.ParseWinmeta(input, filePath);
+            using var input = File.OpenRead(filePath);
+            return parser.ParseWinmeta(input, filePath);
         }
 
         public static IEventManifestMetadata ParseMetadata(
             this IEventManifestParser parser, string filePath)
         {
-            using (var input = File.OpenRead(filePath))
-                return parser.ParseMetadata(input, filePath);
+            using var input = File.OpenRead(filePath);
+            return parser.ParseMetadata(input, filePath);
         }
     }
 }

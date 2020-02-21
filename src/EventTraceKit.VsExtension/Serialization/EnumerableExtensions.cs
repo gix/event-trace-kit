@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Serialization
+namespace EventTraceKit.VsExtension.Serialization
 {
     using System;
     using System.Collections.Generic;
@@ -28,14 +28,13 @@
                 }
             }
 
-            using (var enumerator = source.GetEnumerator()) {
-                if (!enumerator.MoveNext())
-                    return default;
+            using var enumerator = source.GetEnumerator();
+            if (!enumerator.MoveNext())
+                return default;
 
-                TSource current = enumerator.Current;
-                if (!enumerator.MoveNext())
-                    return current;
-            }
+            TSource current = enumerator.Current;
+            if (!enumerator.MoveNext())
+                return current;
 
             return default;
         }

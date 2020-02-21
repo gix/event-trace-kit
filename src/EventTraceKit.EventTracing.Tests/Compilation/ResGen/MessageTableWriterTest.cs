@@ -19,12 +19,11 @@ namespace EventTraceKit.EventTracing.Tests.Compilation.ResGen
         {
             Assert.Single(inputManifest.Value.Resources);
 
-            using (var tempStream = new MemoryStream()) {
-                using (var writer = new MessageTableWriter(tempStream))
-                    writer.Write(inputManifest.Value.Resources[0].Strings.Select(CreateMessage), diags);
+            using var tempStream = new MemoryStream();
+            using (var writer = new MessageTableWriter(tempStream))
+                writer.Write(inputManifest.Value.Resources[0].Strings.Select(CreateMessage), diags);
 
-                StreamAssert.SequenceEqual(tempStream, expectedMsgTable, DumpMsg);
-            }
+            StreamAssert.SequenceEqual(tempStream, expectedMsgTable, DumpMsg);
         }
 
         private static Message CreateMessage(LocalizedString str)
@@ -35,11 +34,10 @@ namespace EventTraceKit.EventTracing.Tests.Compilation.ResGen
         private static string DumpMsg(Stream stream)
         {
             stream.Position = 0;
-            using (var writer = new StringWriter()) {
-                var dumper = new EventTemplateDumper(writer);
-                dumper.DumpMessageTable(stream);
-                return writer.ToString();
-            }
+            using var writer = new StringWriter();
+            var dumper = new EventTemplateDumper(writer);
+            dumper.DumpMessageTable(stream);
+            return writer.ToString();
         }
     }
 }

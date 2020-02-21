@@ -43,8 +43,8 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
 
         public IEnumerable<Message> ReadMessageTable(Stream input)
         {
-            using (var reader = IO.CreateBinaryReader(input))
-                return ReadMessageTable(reader);
+            using var reader = IO.CreateBinaryReader(input);
+            return ReadMessageTable(reader);
         }
 
         public EventManifest ReadWevtTemplate(Stream input, IEnumerable<Message> messages)
@@ -53,8 +53,8 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
                 messageMap = messages.ToDictionary(m => m.Id);
 
             try {
-                using (var reader = new BinaryReader(input))
-                    return ReadCrimBlock(reader);
+                using var reader = new BinaryReader(input);
+                return ReadCrimBlock(reader);
             } finally {
                 messageMap = null;
             }

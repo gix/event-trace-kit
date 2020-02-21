@@ -23,8 +23,8 @@ namespace EventTraceKit.EventTracing.Compilation.BinXml
 
         public static XDocument Read(Stream input, IList<BinXmlType> substitutionTypes = null)
         {
-            using (var reader = new BinXmlReader(input, substitutionTypes))
-                return reader.Read();
+            using var reader = new BinXmlReader(input, substitutionTypes);
+            return reader.Read();
         }
 
         public void Dispose()

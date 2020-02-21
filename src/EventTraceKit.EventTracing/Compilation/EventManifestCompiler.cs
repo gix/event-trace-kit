@@ -199,11 +199,10 @@ namespace EventTraceKit.EventTracing.Compilation
             if (codeGen == null)
                 return;
 
-            using (var output = TryCreateFile(opts.CodeGenOptions.CodeHeaderFile)) {
-                if (output == null)
-                    return;
-                codeGen.Generate(manifest, output);
-            }
+            using var output = TryCreateFile(opts.CodeGenOptions.CodeHeaderFile);
+            if (output == null)
+                return;
+            codeGen.Generate(manifest, output);
         }
 
         private ICodeGenerator SelectCodeGenerator()
@@ -233,38 +232,35 @@ namespace EventTraceKit.EventTracing.Compilation
         {
             foreach (var resourceSet in manifest.Resources) {
                 string fileName = AddCultureName(opts.MessageTableFile, resourceSet.Culture);
-                FileStream output = TryCreateFile(fileName);
+                using FileStream output = TryCreateFile(fileName);
                 if (output == null)
                     continue;
 
-                using (output)
-                using (var writer = new MessageTableWriter(output))
-                    writer.Write(resourceSet.Strings.Select(CreateMessage), diags);
+                using var writer = new MessageTableWriter(output);
+                writer.Write(resourceSet.Strings.Select(CreateMessage), diags);
             }
         }
 
         private void WriteResourceFile(EventManifest manifest)
         {
-            FileStream output = TryCreateFile(opts.ResourceFile);
+            using FileStream output = TryCreateFile(opts.ResourceFile);
             if (output == null)
                 return;
 
-            using (output)
-            using (var writer = IO.CreateStreamWriter(output)) {
-                writer.NewLine = "\n";
+            using var writer = IO.CreateStreamWriter(output);
+            writer.NewLine = "\n";
 
-                foreach (var resourceSet in manifest.Resources.OrderBy(ResourceSortKey)) {
-                    CultureInfo culture = resourceSet.Culture;
-                    string fileName = AddCultureName(opts.MessageTableFile, culture);
-                    int primaryLangId = culture.GetPrimaryLangId();
-                    int subLangId = culture.GetSubLangId();
+            foreach (var resourceSet in manifest.Resources.OrderBy(ResourceSortKey)) {
+                CultureInfo culture = resourceSet.Culture;
+                string fileName = AddCultureName(opts.MessageTableFile, culture);
+                int primaryLangId = culture.GetPrimaryLangId();
+                int subLangId = culture.GetSubLangId();
 
-                    writer.WriteLine("LANGUAGE 0x{0:X},0x{1:X}", primaryLangId, subLangId);
-                    writer.WriteLine("1 11 \"{0}\"", fileName);
-                }
-
-                writer.WriteLine("1 WEVT_TEMPLATE \"{0}\"", opts.EventTemplateFile);
+                writer.WriteLine("LANGUAGE 0x{0:X},0x{1:X}", primaryLangId, subLangId);
+                writer.WriteLine("1 11 \"{0}\"", fileName);
             }
+
+            writer.WriteLine("1 WEVT_TEMPLATE \"{0}\"", opts.EventTemplateFile);
         }
 
         private FileStream TryCreateFile(string fileName)

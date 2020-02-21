@@ -53,8 +53,8 @@ namespace EventTraceKit.VsExtension.Serialization
                 ConformanceLevel = ConformanceLevel.Document,
             };
 
-            using (var reader = XmlReader.Create(inputStream, settings))
-                return LoadObject(reader);
+            using var reader = XmlReader.Create(inputStream, settings);
+            return LoadObject(reader);
         }
 
         public object Load(XmlReader reader)
@@ -76,8 +76,8 @@ namespace EventTraceKit.VsExtension.Serialization
                 ConformanceLevel = ConformanceLevel.Fragment,
             };
 
-            using (var reader = XmlReader.Create(inputStream, settings))
-                return LoadObjects(reader);
+            using var reader = XmlReader.Create(inputStream, settings);
+            return LoadObjects(reader);
         }
 
         public IReadOnlyList<object> LoadMultiple(XmlReader reader)
@@ -100,8 +100,8 @@ namespace EventTraceKit.VsExtension.Serialization
                 ConformanceLevel = ConformanceLevel.Document,
             };
 
-            using (var writer = XmlWriter.Create(outputStream, settings))
-                SaveObject(element, writer);
+            using var writer = XmlWriter.Create(outputStream, settings);
+            SaveObject(element, writer);
         }
 
         public void Save(object element, XmlWriter writer)
@@ -121,8 +121,8 @@ namespace EventTraceKit.VsExtension.Serialization
                 ConformanceLevel = ConformanceLevel.Fragment,
             };
 
-            using (var writer = XmlWriter.Create(outputStream, settings))
-                SaveObjects(elements, writer);
+            using var writer = XmlWriter.Create(outputStream, settings);
+            SaveObjects(elements, writer);
         }
 
         public void Save(IEnumerable<object> elements, XmlWriter writer)
@@ -132,8 +132,8 @@ namespace EventTraceKit.VsExtension.Serialization
 
         private object LoadObject(XmlReader reader)
         {
-            using (var xamlReader = new XamlXmlReader(reader, schemaContext))
-                return XamlServices.Load(xamlReader);
+            using var xamlReader = new XamlXmlReader(reader, schemaContext);
+            return XamlServices.Load(xamlReader);
         }
 
         private IReadOnlyList<object> LoadObjects(XmlReader reader)

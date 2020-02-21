@@ -49,8 +49,8 @@ namespace EventTraceKit.EventTracing.Tests.Compilation.ResGen
 
                 ExceptionOr<EventManifest> manifest;
                 try {
-                    using (var stream = assembly.GetManifestResourceStream(resourceName))
-                        manifest = TestHelper.LoadManifest(stream, testCase);
+                    using var stream = assembly.GetManifestResourceStream(resourceName);
+                    manifest = TestHelper.LoadManifest(stream, testCase);
                 } catch (Exception ex) {
                     manifest = ex;
                 }

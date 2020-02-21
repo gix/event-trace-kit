@@ -72,22 +72,21 @@ namespace EventTraceKit.VsExtension.Extensions
                 comparer = Comparer<T>.Default;
 
             int cmp;
-            using (IEnumerator<T> e1 = first.GetEnumerator())
-            using (IEnumerator<T> e2 = second.GetEnumerator()) {
-                do {
-                    bool atEnd1 = !e1.MoveNext();
-                    bool atEnd2 = !e2.MoveNext();
+            using IEnumerator<T> e1 = first.GetEnumerator();
+            using IEnumerator<T> e2 = second.GetEnumerator();
+            do {
+                bool atEnd1 = !e1.MoveNext();
+                bool atEnd2 = !e2.MoveNext();
 
-                    if (atEnd1 && atEnd2)
-                        return 0;
-                    if (atEnd1)
-                        return -1;
-                    if (atEnd2)
-                        return 1;
+                if (atEnd1 && atEnd2)
+                    return 0;
+                if (atEnd1)
+                    return -1;
+                if (atEnd2)
+                    return 1;
 
-                    cmp = comparer.Compare(e1.Current, e2.Current);
-                } while (cmp == 0);
-            }
+                cmp = comparer.Compare(e1.Current, e2.Current);
+            } while (cmp == 0);
 
             return cmp;
         }

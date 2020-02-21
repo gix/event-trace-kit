@@ -33,14 +33,14 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
 
         public void DumpMessageTable(string inputFile)
         {
-            using (var input = File.OpenRead(inputFile))
-                DumpMessageTable(input);
+            using var input = File.OpenRead(inputFile);
+            DumpMessageTable(input);
         }
 
         public void DumpMessageTable(Stream input)
         {
-            using (var reader = IO.CreateBinaryReader(input))
-                DumpMessageTable(reader);
+            using var reader = IO.CreateBinaryReader(input);
+            DumpMessageTable(reader);
         }
 
         public void DumpMessageTableResource(string moduleFile)
@@ -57,14 +57,14 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
 
         public void DumpWevtTemplate(string inputFile)
         {
-            using (var input = File.OpenRead(inputFile))
-                DumpWevtTemplate(input);
+            using var input = File.OpenRead(inputFile);
+            DumpWevtTemplate(input);
         }
 
         public void DumpWevtTemplate(Stream input)
         {
-            using (var reader = new BinaryReader(input))
-                DumpCrimBlock(reader);
+            using var reader = new BinaryReader(input);
+            DumpCrimBlock(reader);
         }
 
         public void DumpWevtTemplate(Stream input, IEnumerable<Message> messages)
@@ -73,8 +73,8 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
                 messageMap = messages.ToDictionary(m => m.Id);
 
             try {
-                using (var reader = new BinaryReader(input))
-                    DumpCrimBlock(reader);
+                using var reader = new BinaryReader(input);
+                DumpCrimBlock(reader);
             } finally {
                 messageMap = null;
             }
@@ -96,9 +96,9 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
             if (moduleHandle == IntPtr.Zero)
                 throw new ArgumentNullException(nameof(moduleHandle));
 
-            using (var module = new SafeModuleHandle(moduleHandle, false))
-            using (var stream = module.OpenResource("WEVT_TEMPLATE", 1))
-                DumpWevtTemplate(stream);
+            using var module = new SafeModuleHandle(moduleHandle, false);
+            using var stream = module.OpenResource("WEVT_TEMPLATE", 1);
+            DumpWevtTemplate(stream);
         }
 
         private void DumpMessageTable(BinaryReader r)
