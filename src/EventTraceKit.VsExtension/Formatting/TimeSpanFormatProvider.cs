@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension.Formatting
+namespace EventTraceKit.VsExtension.Formatting
 {
     using System;
 
@@ -16,22 +16,16 @@
         public string Format(string format, object arg, IFormatProvider formatProvider)
         {
             if (arg is TimeSpan time) {
-                switch (format) {
-                    case "G":
-                        return time.ToString(@"hh\:mm\:ss\.fffffff", formatProvider);
-                    case "g":
-                        return time.ToString(@"mm\:ss\.fffffff", formatProvider);
-                    case "s":
-                        return time.TotalSeconds.ToString("F7", formatProvider);
-                    case "m":
-                        return time.TotalMilliseconds.ToString("F4", formatProvider);
-                    case "u":
-                        return (time.Ticks / 10.0).ToString("F1", formatProvider);
-                    case "t":
-                        return time.Ticks.ToString(formatProvider);
-                    default:
-                        return time.ToString(format, formatProvider);
-                }
+                return format switch
+                {
+                    "G" => time.ToString(@"hh\:mm\:ss\.fffffff", formatProvider),
+                    "g" => time.ToString(@"mm\:ss\.fffffff", formatProvider),
+                    "s" => time.TotalSeconds.ToString("F7", formatProvider),
+                    "m" => time.TotalMilliseconds.ToString("F4", formatProvider),
+                    "u" => (time.Ticks / 10.0).ToString("F1", formatProvider),
+                    "t" => time.Ticks.ToString(formatProvider),
+                    _ => time.ToString(format, formatProvider),
+                };
             }
 
             return arg?.ToString() ?? string.Empty;

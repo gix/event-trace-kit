@@ -31,21 +31,24 @@ namespace EventTraceKit.VsExtension.Filtering
         {
             this.filterable = filterable;
 
-            var simpleRelations = new List<FilterRelation>();
-            simpleRelations.Add(new FilterRelation("==", FilterRelationKind.Equal));
-            simpleRelations.Add(new FilterRelation("!=", FilterRelationKind.NotEqual));
+            var simpleRelations = new List<FilterRelation> {
+                new FilterRelation("==", FilterRelationKind.Equal),
+                new FilterRelation("!=", FilterRelationKind.NotEqual)
+            };
 
-            var numericRelations = new List<FilterRelation>(simpleRelations);
-            numericRelations.Add(new FilterRelation(">", FilterRelationKind.GreaterThan));
-            numericRelations.Add(new FilterRelation(">=", FilterRelationKind.GreaterThanOrEqual));
-            numericRelations.Add(new FilterRelation("<", FilterRelationKind.LessThan));
-            numericRelations.Add(new FilterRelation("<=", FilterRelationKind.LessThanorEqual));
+            var numericRelations = new List<FilterRelation>(simpleRelations) {
+                new FilterRelation(">", FilterRelationKind.GreaterThan),
+                new FilterRelation(">=", FilterRelationKind.GreaterThanOrEqual),
+                new FilterRelation("<", FilterRelationKind.LessThan),
+                new FilterRelation("<=", FilterRelationKind.LessThanorEqual)
+            };
 
-            var stringRelations = new List<FilterRelation>(simpleRelations);
-            stringRelations.Add(new FilterRelation("starts with", FilterRelationKind.StartsWith));
-            stringRelations.Add(new FilterRelation("ends with", FilterRelationKind.EndsWith));
-            stringRelations.Add(new FilterRelation("contains", FilterRelationKind.Contains));
-            stringRelations.Add(new FilterRelation("excludes", FilterRelationKind.Excludes));
+            var stringRelations = new List<FilterRelation>(simpleRelations) {
+                new FilterRelation("starts with", FilterRelationKind.StartsWith),
+                new FilterRelation("ends with", FilterRelationKind.EndsWith),
+                new FilterRelation("contains", FilterRelationKind.Contains),
+                new FilterRelation("excludes", FilterRelationKind.Excludes)
+            };
 
             Properties.Add(new NumericProperty<ushort>("Id", numericRelations, builder.Id));
             Properties.Add(new NumericProperty<byte>("Version", numericRelations, builder.Version));

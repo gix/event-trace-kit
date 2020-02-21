@@ -34,23 +34,17 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
             new DelegateValueConverter<int, string>(
                 x => x.ToString(CultureInfo.CurrentCulture),
                 x => {
-                    int width;
-                    if (!int.TryParse(x, NumberStyles.Integer, CultureInfo.CurrentCulture, out width))
+                    if (!int.TryParse(x, NumberStyles.Integer, CultureInfo.CurrentCulture, out int width))
                         return 100;
                     return width;
                 });
 
         public static IValueConverter SeparatorToColorBrushConverter { get; } =
-            new DelegateValueConverter<PresetManagerColumnViewModel, Brush>(x => {
-                switch (x.ColumnType) {
-                    case PresetManagerColumnType.LeftFreezableAreaSeparator:
-                        return Brushes.Gray;
-                    case PresetManagerColumnType.RightFreezableAreaSeparator:
-                        return Brushes.DarkGray;
-                    default:
-                        return Brushes.Black;
-                }
-            });
+            new DelegateValueConverter<PresetManagerColumnViewModel, Brush>(x => x.ColumnType switch {
+                    PresetManagerColumnType.LeftFreezableAreaSeparator => Brushes.Gray,
+                    PresetManagerColumnType.RightFreezableAreaSeparator => Brushes.DarkGray,
+                    _ => Brushes.Black,
+                });
 
         private void OnCloseButtonClick(object sender, RoutedEventArgs e)
         {

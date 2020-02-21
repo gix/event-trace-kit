@@ -262,15 +262,17 @@ namespace EventTraceKit.VsExtension.Tests.Controls
 
         private MultiRange R(int index)
         {
-            var range = new MultiRange();
-            range.Add(new Range(index, index + 1));
+            var range = new MultiRange {
+                new Range(index, index + 1)
+            };
             return range;
         }
 
         private MultiRange R(int begin, int end)
         {
-            var range = new MultiRange();
-            range.Add(new Range(begin, end));
+            var range = new MultiRange {
+                new Range(begin, end)
+            };
             return range;
         }
 
@@ -279,8 +281,9 @@ namespace EventTraceKit.VsExtension.Tests.Controls
             if (indices.Length % 2 != 0)
                 throw new ArgumentException();
 
-            var range = new MultiRange();
-            range.Add(new Range(begin, end));
+            var range = new MultiRange {
+                new Range(begin, end)
+            };
             for (int i = 0; i < indices.Length / 2; i += 2)
                 range.Add(new Range(indices[i], indices[i + 1]));
 

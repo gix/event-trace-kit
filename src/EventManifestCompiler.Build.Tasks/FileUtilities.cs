@@ -30,7 +30,7 @@ namespace EventManifestCompiler.Build.Tasks
 
             string path;
             try {
-                directory = directory ?? Path.GetTempPath();
+                directory ??= Path.GetTempPath();
                 if (!Directory.Exists(directory))
                     Directory.CreateDirectory(directory);
                 path = Path.Combine(directory, "tmp" + Guid.NewGuid().ToString("N") + extension);

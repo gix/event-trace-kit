@@ -541,14 +541,14 @@ namespace EventManifestCompiler
 
         private string ToXml(ChannelType type)
         {
-            switch (type) {
-                case ChannelType.Admin: return "Admin";
-                case ChannelType.Operational: return "Operational";
-                case ChannelType.Analytic: return "Analytic";
-                case ChannelType.Debug: return "Debug";
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(type));
-            }
+            return type switch
+            {
+                ChannelType.Admin => "Admin",
+                ChannelType.Operational => "Operational",
+                ChannelType.Analytic => "Analytic",
+                ChannelType.Debug => "Debug",
+                _ => throw new ArgumentOutOfRangeException(nameof(type)),
+            };
         }
 
         private static void AddOptionalMessage(XElement elem, LocalizedString message)

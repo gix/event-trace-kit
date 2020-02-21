@@ -12,14 +12,12 @@ namespace EventTraceKit.VsExtension.Windows
 
         public static object Int32(int value)
         {
-            switch (value) {
-                case -1:
-                    return Int32Minus1;
-                case 0:
-                    return Int32Zero;
-            }
-
-            return value;
+            return value switch
+            {
+                -1 => Int32Minus1,
+                0 => Int32Zero,
+                _ => value,
+            };
         }
 
         public static object Bool(bool value)
@@ -37,18 +35,14 @@ namespace EventTraceKit.VsExtension.Windows
 
         internal static object Box(TextAlignment value)
         {
-            switch (value) {
-                case TextAlignment.Left:
-                    return Left;
-                case TextAlignment.Center:
-                    return Center;
-                case TextAlignment.Right:
-                    return Right;
-                case TextAlignment.Justify:
-                    return Justify;
-            }
-
-            return value;
+            return value switch
+            {
+                TextAlignment.Left => Left,
+                TextAlignment.Center => Center,
+                TextAlignment.Right => Right,
+                TextAlignment.Justify => Justify,
+                _ => value,
+            };
         }
     }
 }

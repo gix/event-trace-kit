@@ -107,60 +107,39 @@ namespace EventTraceKit.VsExtension.Filtering
 
         private SyntaxKind GetBinExprKind(TokenKind kind)
         {
-            switch (kind) {
-                case TokenKind.Less:
-                    return SyntaxKind.LessThanExpression;
-                case TokenKind.LessLess:
-                    return SyntaxKind.LeftShiftExpression;
-                case TokenKind.LessEqual:
-                    return SyntaxKind.LessThanOrEqualExpression;
-                case TokenKind.Greater:
-                    return SyntaxKind.GreaterThanExpression;
-                case TokenKind.GreaterGreater:
-                    return SyntaxKind.RightShiftExpression;
-                case TokenKind.GreaterEqual:
-                    return SyntaxKind.GreaterThanOrEqualExpression;
-                case TokenKind.ExclaimEqual:
-                    return SyntaxKind.NotEqualExpression;
-                case TokenKind.Amp:
-                    return SyntaxKind.BitwiseAndExpression;
-                case TokenKind.AmpAmp:
-                    return SyntaxKind.LogicalAndExpression;
-                case TokenKind.Pipe:
-                    return SyntaxKind.BitwiseOrExpression;
-                case TokenKind.PipePipe:
-                    return SyntaxKind.LogicalOrExpression;
-                case TokenKind.Plus:
-                    return SyntaxKind.AddExpression;
-                case TokenKind.Minus:
-                    return SyntaxKind.SubtractExpression;
-                case TokenKind.Percent:
-                    return SyntaxKind.ModuloExpression;
-                case TokenKind.Star:
-                    return SyntaxKind.MultiplyExpression;
-                case TokenKind.Slash:
-                    return SyntaxKind.DivideExpression;
-                case TokenKind.EqualEqual:
-                    return SyntaxKind.EqualExpression;
-                case TokenKind.Caret:
-                    return SyntaxKind.ExclusiveOrExpression;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
-            }
+            return kind switch
+            {
+                TokenKind.Less => SyntaxKind.LessThanExpression,
+                TokenKind.LessLess => SyntaxKind.LeftShiftExpression,
+                TokenKind.LessEqual => SyntaxKind.LessThanOrEqualExpression,
+                TokenKind.Greater => SyntaxKind.GreaterThanExpression,
+                TokenKind.GreaterGreater => SyntaxKind.RightShiftExpression,
+                TokenKind.GreaterEqual => SyntaxKind.GreaterThanOrEqualExpression,
+                TokenKind.ExclaimEqual => SyntaxKind.NotEqualExpression,
+                TokenKind.Amp => SyntaxKind.BitwiseAndExpression,
+                TokenKind.AmpAmp => SyntaxKind.LogicalAndExpression,
+                TokenKind.Pipe => SyntaxKind.BitwiseOrExpression,
+                TokenKind.PipePipe => SyntaxKind.LogicalOrExpression,
+                TokenKind.Plus => SyntaxKind.AddExpression,
+                TokenKind.Minus => SyntaxKind.SubtractExpression,
+                TokenKind.Percent => SyntaxKind.ModuloExpression,
+                TokenKind.Star => SyntaxKind.MultiplyExpression,
+                TokenKind.Slash => SyntaxKind.DivideExpression,
+                TokenKind.EqualEqual => SyntaxKind.EqualExpression,
+                TokenKind.Caret => SyntaxKind.ExclusiveOrExpression,
+                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+            };
         }
 
         private static SyntaxKind GetUnaryExprKind(TokenKind kind)
         {
-            switch (kind) {
-                case TokenKind.Plus:
-                    return SyntaxKind.UnaryPlusExpression;
-                case TokenKind.Minus:
-                    return SyntaxKind.UnaryMinusExpression;
-                case TokenKind.Exclaim:
-                    return SyntaxKind.LogicalNotExpression;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
-            }
+            return kind switch
+            {
+                TokenKind.Plus => SyntaxKind.UnaryPlusExpression,
+                TokenKind.Minus => SyntaxKind.UnaryMinusExpression,
+                TokenKind.Exclaim => SyntaxKind.LogicalNotExpression,
+                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+            };
         }
 
         private static bool IsOperator(TokenKind kind)

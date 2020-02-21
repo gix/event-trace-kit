@@ -16,7 +16,7 @@ namespace EventTraceKit.EventTracing.Compilation.BinXml
     {
         private readonly BinaryWriter w;
         private readonly IList<byte> substitutionTypes;
-        private bool useEmptyElements = false;
+        private readonly bool useEmptyElements = false;
 
         public BinXmlWriter(Stream output, IList<byte> substitutionTypes)
         {

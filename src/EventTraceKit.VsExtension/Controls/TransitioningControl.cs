@@ -299,9 +299,8 @@ namespace EventTraceKit.VsExtension.Controls
 
         private void OnTransitionCompleted(object sender, EventArgs e)
         {
-            var clockGroup = sender as ClockGroup;
             AbortTransition();
-            if (clockGroup == null || clockGroup.CurrentState == ClockState.Stopped)
+            if (!(sender is ClockGroup clockGroup) || clockGroup.CurrentState == ClockState.Stopped)
                 TransitionCompleted?.Invoke(this, new RoutedEventArgs());
         }
 
@@ -329,26 +328,18 @@ namespace EventTraceKit.VsExtension.Controls
 
         private string GetTransitionName(TransitionType transition)
         {
-            switch (transition) {
-                case TransitionType.Normal:
-                    return NormalState;
-                case TransitionType.Up:
-                    return "UpTransition";
-                case TransitionType.Down:
-                    return "DownTransition";
-                case TransitionType.Right:
-                    return "RightTransition";
-                case TransitionType.RightReplace:
-                    return "RightReplaceTransition";
-                case TransitionType.Left:
-                    return "LeftTransition";
-                case TransitionType.LeftReplace:
-                    return "LeftReplaceTransition";
-                case TransitionType.Custom:
-                    return CustomVisualStatesName;
-                default:
-                    return "DefaultTransition";
-            }
+            return transition switch
+            {
+                TransitionType.Normal => NormalState,
+                TransitionType.Up => "UpTransition",
+                TransitionType.Down => "DownTransition",
+                TransitionType.Right => "RightTransition",
+                TransitionType.RightReplace => "RightReplaceTransition",
+                TransitionType.Left => "LeftTransition",
+                TransitionType.LeftReplace => "LeftReplaceTransition",
+                TransitionType.Custom => CustomVisualStatesName,
+                _ => "DefaultTransition",
+            };
         }
     }
 }

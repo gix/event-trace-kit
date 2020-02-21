@@ -20,41 +20,35 @@ namespace EventTraceKit.VsExtension.Filtering
             var builder = TraceLogFilterBuilder.Instance;
             var name = expr.Identifier.GetText();
 
-            switch (name.ToLowerInvariant()) {
-                case "providerid": return builder.ProviderId;
-
-                case "processid": return builder.ProcessId;
-                case "pid": return builder.ProcessId;
-                case "threadid": return builder.ThreadId;
-                case "tid": return builder.ThreadId;
-                case "activityid": return builder.ActivityId;
-                case "relatedactivityid": return builder.RelatedActivityId;
-
-                case "id": return builder.Id;
-                case "version": return builder.Version;
-                case "channel": return builder.Channel;
-                case "level": return builder.Level;
-                case "opcode": return builder.Opcode;
-                case "task": return builder.Task;
-                case "keyword": return builder.Keyword;
-
-                default:
-                    throw new InvalidOperationException($"Unknown identifier '{name}'");
-            }
+            return (name.ToLowerInvariant()) switch
+            {
+                "providerid" => builder.ProviderId,
+                "processid" => builder.ProcessId,
+                "pid" => builder.ProcessId,
+                "threadid" => builder.ThreadId,
+                "tid" => builder.ThreadId,
+                "activityid" => builder.ActivityId,
+                "relatedactivityid" => builder.RelatedActivityId,
+                "id" => builder.Id,
+                "version" => builder.Version,
+                "channel" => builder.Channel,
+                "level" => builder.Level,
+                "opcode" => builder.Opcode,
+                "task" => builder.Task,
+                "keyword" => builder.Keyword,
+                _ => throw new InvalidOperationException($"Unknown identifier '{name}'"),
+            };
         }
 
         public override Expression VisitLiteralExpression(LiteralExpressionSyntax expr)
         {
-            switch (expr.Kind) {
-                case SyntaxKind.StringLiteralExpression:
-                    return Expression.Constant(expr.Text.Substring(1, expr.Text.Length - 2));
-                case SyntaxKind.GuidLiteralExpression:
-                    return CreateValueExpression(Guid.Parse(expr.Text));
-                case SyntaxKind.NumericLiteralExpression:
-                    return Expression.Constant(ConvertToNumber(expr.Text));
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            return expr.Kind switch
+            {
+                SyntaxKind.StringLiteralExpression => Expression.Constant(expr.Text.Substring(1, expr.Text.Length - 2)),
+                SyntaxKind.GuidLiteralExpression => CreateValueExpression(Guid.Parse(expr.Text)),
+                SyntaxKind.NumericLiteralExpression => Expression.Constant(ConvertToNumber(expr.Text)),
+                _ => throw new ArgumentOutOfRangeException(),
+            };
         }
 
         private static object ConvertToNumber(string numericLiteral)
@@ -82,16 +76,13 @@ namespace EventTraceKit.VsExtension.Filtering
 
         public override Expression VisitPrefixUnaryExpression(PrefixUnaryExpressionSyntax expr)
         {
-            switch (expr.Kind) {
-                case SyntaxKind.UnaryPlusExpression:
-                    return Expression.UnaryPlus(Visit(expr.Operand));
-                case SyntaxKind.UnaryMinusExpression:
-                    return Expression.Negate(VerifyNegate(Visit(expr.Operand)));
-                case SyntaxKind.LogicalNotExpression:
-                    return Expression.Not(Visit(expr.Operand));
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            return expr.Kind switch
+            {
+                SyntaxKind.UnaryPlusExpression => Expression.UnaryPlus(Visit(expr.Operand)),
+                SyntaxKind.UnaryMinusExpression => Expression.Negate(VerifyNegate(Visit(expr.Operand))),
+                SyntaxKind.LogicalNotExpression => Expression.Not(Visit(expr.Operand)),
+                _ => throw new ArgumentOutOfRangeException(),
+            };
         }
 
         private Expression VerifyNegate(Expression expr)
@@ -219,28 +210,28 @@ namespace EventTraceKit.VsExtension.Filtering
 
         private static ExpressionType GetExpressionType(SyntaxKind kind)
         {
-            switch (kind) {
-                case SyntaxKind.AddExpression: return ExpressionType.Add;
-                case SyntaxKind.SubtractExpression: return ExpressionType.Subtract;
-                case SyntaxKind.MultiplyExpression: return ExpressionType.Multiply;
-                case SyntaxKind.DivideExpression: return ExpressionType.Divide;
-                case SyntaxKind.ModuloExpression: return ExpressionType.Modulo;
-                case SyntaxKind.EqualExpression: return ExpressionType.Equal;
-                case SyntaxKind.NotEqualExpression: return ExpressionType.NotEqual;
-                case SyntaxKind.BitwiseAndExpression: return ExpressionType.And;
-                case SyntaxKind.BitwiseOrExpression: return ExpressionType.Or;
-                case SyntaxKind.ExclusiveOrExpression: return ExpressionType.ExclusiveOr;
-                case SyntaxKind.LogicalAndExpression: return ExpressionType.AndAlso;
-                case SyntaxKind.LogicalOrExpression: return ExpressionType.OrElse;
-                case SyntaxKind.LeftShiftExpression: return ExpressionType.LeftShift;
-                case SyntaxKind.RightShiftExpression: return ExpressionType.RightShift;
-                case SyntaxKind.LessThanExpression: return ExpressionType.LessThan;
-                case SyntaxKind.LessThanOrEqualExpression: return ExpressionType.LessThanOrEqual;
-                case SyntaxKind.GreaterThanExpression: return ExpressionType.GreaterThan;
-                case SyntaxKind.GreaterThanOrEqualExpression: return ExpressionType.GreaterThanOrEqual;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
-            }
+            return kind switch
+            {
+                SyntaxKind.AddExpression => ExpressionType.Add,
+                SyntaxKind.SubtractExpression => ExpressionType.Subtract,
+                SyntaxKind.MultiplyExpression => ExpressionType.Multiply,
+                SyntaxKind.DivideExpression => ExpressionType.Divide,
+                SyntaxKind.ModuloExpression => ExpressionType.Modulo,
+                SyntaxKind.EqualExpression => ExpressionType.Equal,
+                SyntaxKind.NotEqualExpression => ExpressionType.NotEqual,
+                SyntaxKind.BitwiseAndExpression => ExpressionType.And,
+                SyntaxKind.BitwiseOrExpression => ExpressionType.Or,
+                SyntaxKind.ExclusiveOrExpression => ExpressionType.ExclusiveOr,
+                SyntaxKind.LogicalAndExpression => ExpressionType.AndAlso,
+                SyntaxKind.LogicalOrExpression => ExpressionType.OrElse,
+                SyntaxKind.LeftShiftExpression => ExpressionType.LeftShift,
+                SyntaxKind.RightShiftExpression => ExpressionType.RightShift,
+                SyntaxKind.LessThanExpression => ExpressionType.LessThan,
+                SyntaxKind.LessThanOrEqualExpression => ExpressionType.LessThanOrEqual,
+                SyntaxKind.GreaterThanExpression => ExpressionType.GreaterThan,
+                SyntaxKind.GreaterThanOrEqualExpression => ExpressionType.GreaterThanOrEqual,
+                _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+            };
         }
 
         private string GetOperationDescription(ExpressionType exprType)

@@ -76,14 +76,12 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
 
         public uint CreateId(MapItem item, Map map, Provider provider)
         {
-            switch (map.Kind) {
-                case MapKind.BitMap:
-                    return CreateId((BitMapItem)item, (BitMap)map, provider);
-                case MapKind.ValueMap:
-                    return CreateId((ValueMapItem)item, (ValueMap)map, provider);
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            return map.Kind switch
+            {
+                MapKind.BitMap => CreateId((BitMapItem)item, (BitMap)map, provider),
+                MapKind.ValueMap => CreateId((ValueMapItem)item, (ValueMap)map, provider),
+                _ => throw new ArgumentOutOfRangeException(),
+            };
         }
 
         public uint CreateId(ValueMapItem item, ValueMap map, Provider provider)

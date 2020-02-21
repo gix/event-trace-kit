@@ -52,8 +52,10 @@ namespace EventTraceKit.VsExtension.Views
 
         private IReadOnlyList<ProjectInfo> FindProjects()
         {
-            var projects = new List<ProjectInfo>();
-            projects.Add(new ProjectInfo(Guid.Empty, null, string.Empty));
+            var projects = new List<ProjectInfo> {
+                new ProjectInfo(Guid.Empty, null, string.Empty)
+            };
+
             if (solutionBrowser != null) {
                 try {
                     var supportedProjects = solutionBrowser.EnumerateProjects()

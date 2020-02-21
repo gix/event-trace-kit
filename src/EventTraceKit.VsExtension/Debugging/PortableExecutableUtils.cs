@@ -55,18 +55,14 @@ namespace EventTraceKit.VsExtension.Debugging
 
         private static ProcessorArchitecture MapMachine(ushort machine)
         {
-            switch (machine) {
-                case IMAGE_FILE_MACHINE_AMD64:
-                    return ProcessorArchitecture.Amd64;
-                case IMAGE_FILE_MACHINE_IA64:
-                    return ProcessorArchitecture.IA64;
-                case IMAGE_FILE_MACHINE_I386:
-                    return ProcessorArchitecture.X86;
-                case IMAGE_FILE_MACHINE_ARM:
-                    return ProcessorArchitecture.Arm;
-                default:
-                    return ProcessorArchitecture.None;
-            }
+            return machine switch
+            {
+                IMAGE_FILE_MACHINE_AMD64 => ProcessorArchitecture.Amd64,
+                IMAGE_FILE_MACHINE_IA64 => ProcessorArchitecture.IA64,
+                IMAGE_FILE_MACHINE_I386 => ProcessorArchitecture.X86,
+                IMAGE_FILE_MACHINE_ARM => ProcessorArchitecture.Arm,
+                _ => ProcessorArchitecture.None,
+            };
         }
 
         private static bool SkipToImageNtHeaders(BinaryReader r)

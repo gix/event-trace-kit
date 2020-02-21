@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension
+namespace EventTraceKit.VsExtension
 {
     using System;
     using System.Globalization;
@@ -30,8 +30,7 @@
             if (FormatProvider?.GetFormat(Value?.GetType()) is ICustomFormatter formatter)
                 result = formatter.Format(Format, Value, CultureInfo.CurrentCulture);
 
-            IFormattable formattable;
-            if (result == null && (formattable = Value as IFormattable) != null)
+            if (result == null && Value is IFormattable formattable)
                 result = formattable.ToString(Format, FormatProvider);
 
             return result ?? Value?.ToString() ?? string.Empty;

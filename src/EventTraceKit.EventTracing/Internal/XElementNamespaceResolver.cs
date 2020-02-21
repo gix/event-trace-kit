@@ -21,8 +21,7 @@ namespace EventTraceKit.EventTracing.Internal
 
         public string LookupNamespace(string prefix)
         {
-            var ns = element.GetNamespaceOfPrefix(prefix);
-            return ns != null ? ns.NamespaceName : null;
+            return element.GetNamespaceOfPrefix(prefix)?.NamespaceName;
         }
 
         public string LookupPrefix(string namespaceName)

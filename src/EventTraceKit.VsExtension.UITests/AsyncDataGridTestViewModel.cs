@@ -48,17 +48,18 @@ namespace EventTraceKit.VsExtension.UITests
                 SelectableBrushes.Add(new BrushEntry(property.Name, brush));
             }
 
-            PropertyEditors = new ObservableCollection<PropertyEditor>();
-            PropertyEditors.Add(new SliderPropertyEditor(nameof(RowFontSize), x => RowFontSize = x));
-            PropertyEditors.Add(new BrushPropertyEditor(nameof(Background), SelectableBrushes, x => Background = x));
-            PropertyEditors.Add(new BrushPropertyEditor(nameof(RowForeground), SelectableBrushes, x => RowForeground = x));
-            PropertyEditors.Add(new BrushPropertyEditor(nameof(RowBackground), SelectableBrushes, x => RowBackground = x));
-            PropertyEditors.Add(new BrushPropertyEditor(nameof(RowBackground) + "Alt", SelectableBrushes, x => AlternatingRowBackground = x));
-            PropertyEditors.Add(new BrushPropertyEditor(nameof(RowSelectionForeground), SelectableBrushes, x => RowSelectionForeground = x));
-            PropertyEditors.Add(new BrushPropertyEditor(nameof(RowSelectionBackground), SelectableBrushes, x => RowSelectionBackground = x));
-            PropertyEditors.Add(new BrushPropertyEditor(nameof(RowInactiveSelectionForeground), SelectableBrushes, x => RowInactiveSelectionForeground = x));
-            PropertyEditors.Add(new BrushPropertyEditor(nameof(RowInactiveSelectionBackground), SelectableBrushes, x => RowInactiveSelectionBackground = x));
-            PropertyEditors.Add(new BrushPropertyEditor(nameof(RowFocusBorderBrush), SelectableBrushes, x => RowFocusBorderBrush = x));
+            PropertyEditors = new ObservableCollection<PropertyEditor> {
+                new SliderPropertyEditor(nameof(RowFontSize), x => RowFontSize = x),
+                new BrushPropertyEditor(nameof(Background), SelectableBrushes, x => Background = x),
+                new BrushPropertyEditor(nameof(RowForeground), SelectableBrushes, x => RowForeground = x),
+                new BrushPropertyEditor(nameof(RowBackground), SelectableBrushes, x => RowBackground = x),
+                new BrushPropertyEditor(nameof(RowBackground) + "Alt", SelectableBrushes, x => AlternatingRowBackground = x),
+                new BrushPropertyEditor(nameof(RowSelectionForeground), SelectableBrushes, x => RowSelectionForeground = x),
+                new BrushPropertyEditor(nameof(RowSelectionBackground), SelectableBrushes, x => RowSelectionBackground = x),
+                new BrushPropertyEditor(nameof(RowInactiveSelectionForeground), SelectableBrushes, x => RowInactiveSelectionForeground = x),
+                new BrushPropertyEditor(nameof(RowInactiveSelectionBackground), SelectableBrushes, x => RowInactiveSelectionBackground = x),
+                new BrushPropertyEditor(nameof(RowFocusBorderBrush), SelectableBrushes, x => RowFocusBorderBrush = x)
+            };
 
             RowFontFamily = new FontFamily("Consolas");
             RowFontSize = (double)new FontSizeConverter().ConvertFromInvariantString("9pt");

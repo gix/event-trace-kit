@@ -26,22 +26,22 @@ namespace EventTraceKit.VsExtension.Views
 
         private static RoutedUICommand CreateCommand(CommandId idCommand)
         {
-            switch (idCommand) {
-                case CommandId.Toggle:
-                    return new RoutedUICommand("Toggle", "Toggle", typeof(ExtensionCommands)) {
-                        InputGestures = {
+            return idCommand switch
+            {
+                CommandId.Toggle => new RoutedUICommand("Toggle", "Toggle", typeof(ExtensionCommands)) {
+                    InputGestures = {
                             new KeyGesture(Key.T, ModifierKeys.Control)
                         }
-                    };
-                case CommandId.Rename:
-                    return new RoutedUICommand("Rename", "Rename", typeof(ExtensionCommands)) {
-                        InputGestures = {
+                },
+
+                CommandId.Rename => new RoutedUICommand("Rename", "Rename", typeof(ExtensionCommands)) {
+                    InputGestures = {
                             new KeyGesture(Key.F2)
                         }
-                    };
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(idCommand), idCommand, null);
-            }
+                },
+
+                _ => throw new ArgumentOutOfRangeException(nameof(idCommand), idCommand, null),
+            };
         }
 
         private enum CommandId : byte

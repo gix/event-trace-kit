@@ -513,9 +513,8 @@ namespace EventTraceKit.VsExtension.Controls
         {
             var source = (DropDownTextBox)sender;
 
-            var originalSource = e.OriginalSource as Visual;
             var textBox = source.TextBoxSite;
-            if (originalSource == null || textBox == null || !textBox.IsAncestorOf(originalSource))
+            if (!(e.OriginalSource is Visual originalSource) || textBox == null || !textBox.IsAncestorOf(originalSource))
                 return;
 
             if (source.IsDropDownOpen) {

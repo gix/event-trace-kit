@@ -294,14 +294,12 @@ namespace EventTraceKit.VsExtension.Debugging
             if (subsystem == ImageSubsystem.WindowsGui)
                 return EventTraceKitPackage.GetToolPath("TraceLaunch.Windows.exe");
 
-            switch (arch) {
-                case ProcessorArchitecture.X86:
-                    return EventTraceKitPackage.GetToolPath("TraceLaunch.x86.exe");
-                case ProcessorArchitecture.Amd64:
-                    return EventTraceKitPackage.GetToolPath("TraceLaunch.x64.exe");
-                default:
-                    throw new NotSupportedException($"Unsupported processor architecture {arch}");
-            }
+            return arch switch
+            {
+                ProcessorArchitecture.X86 => EventTraceKitPackage.GetToolPath("TraceLaunch.x86.exe"),
+                ProcessorArchitecture.Amd64 => EventTraceKitPackage.GetToolPath("TraceLaunch.x64.exe"),
+                _ => throw new NotSupportedException($"Unsupported processor architecture {arch}"),
+            };
         }
 
         private static Process GetProcess(in VsDebugTargetProcessInfo process)

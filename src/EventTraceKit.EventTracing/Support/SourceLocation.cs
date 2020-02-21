@@ -30,7 +30,7 @@ namespace EventTraceKit.EventTracing.Support
 
         public bool Equals(SourceLocation other)
         {
-            if (ReferenceEquals(null, other))
+            if (other is null)
                 return false;
             if (ReferenceEquals(this, other))
                 return true;

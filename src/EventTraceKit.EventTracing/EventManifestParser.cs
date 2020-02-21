@@ -254,7 +254,7 @@ namespace EventTraceKit.EventTracing
             foreach (XElement child in metaElem.XPathSelectElements("e:types/e:inTypes/e:inType", nsResolver)) {
                 var inType = InType.Create(child, nsResolver);
                 foreach (XElement outElem in child.XPathSelectElements("e:outType", nsResolver)) {
-                    OutType outType = OutType.Create(outElem, nsResolver);
+                    var outType = OutType.Create(outElem, nsResolver);
                     if (!meta.TryGetXmlType(outType.XmlType, out var xmlType)) {
                         diags.ReportError(
                             outElem.GetLocation(),
@@ -1035,16 +1035,15 @@ namespace EventTraceKit.EventTracing
             if (attrib == null)
                 throw CreateSchemaException(elem, "Missing channel type.");
 
-            ChannelType type;
-            switch (attrib.Value) {
-                case "Admin": type = ChannelType.Admin; break;
-                case "Operational": type = ChannelType.Operational; break;
-                case "Analytic": type = ChannelType.Analytic; break;
-                case "Debug": type = ChannelType.Debug; break;
-                default:
-                    throw CreateSchemaException(
-                        attrib, "Unknown channel type '{0}'.", attrib.Value);
-            }
+            var type = attrib.Value switch
+            {
+                "Admin" => ChannelType.Admin,
+                "Operational" => ChannelType.Operational,
+                "Analytic" => ChannelType.Analytic,
+                "Debug" => ChannelType.Debug,
+                _ => throw CreateSchemaException(
+                    attrib, "Unknown channel type '{0}'.", attrib.Value),
+            };
 
             return Located.CreateStruct(type, attrib.GetValueLocation());
         }
@@ -1054,17 +1053,16 @@ namespace EventTraceKit.EventTracing
             if (attrib == null)
                 return Located.Create((ChannelIsolationType?)null);
 
-            ChannelIsolationType? type;
-            switch (attrib.Value) {
-                case "Application": type = ChannelIsolationType.Application; break;
-                case "System": type = ChannelIsolationType.System; break;
-                case "Custom": type = ChannelIsolationType.Custom; break;
-                default:
-                    throw CreateSchemaException(
-                        attrib, "Unknown channel isolation type '{0}'.", attrib.Value);
-            }
+            var type = attrib.Value switch
+            {
+                "Application" => ChannelIsolationType.Application,
+                "System" => ChannelIsolationType.System,
+                "Custom" => ChannelIsolationType.Custom,
+                _ => throw CreateSchemaException(
+                    attrib, "Unknown channel isolation type '{0}'.", attrib.Value),
+            };
 
-            return Located.Create(type, attrib.GetValueLocation());
+            return Located.Create((ChannelIsolationType?)type, attrib.GetValueLocation());
         }
 
         private Exception CreateSchemaException(

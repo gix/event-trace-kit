@@ -622,7 +622,7 @@ namespace EventManifestCompiler.Build.Tasks
                 char c = directoryName[directoryName.Length - 1];
                 if (c != Path.DirectorySeparatorChar &&
                     c != Path.AltDirectorySeparatorChar)
-                    directoryName = directoryName + Path.DirectorySeparatorChar;
+                    directoryName += Path.DirectorySeparatorChar;
             }
 
             return directoryName;

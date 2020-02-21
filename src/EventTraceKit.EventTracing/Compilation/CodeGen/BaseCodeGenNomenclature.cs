@@ -261,31 +261,31 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             if (type.Name.Namespace != WinEventSchema.Namespace)
                 throw new InternalException("cannot mangle type '{0}'", type);
 
-            switch (type.Name.LocalName) {
-                case "UnicodeString": return "z";
-                case "AnsiString": return "s";
-                case "Int8": return "c";
-                case "UInt8": return "c";
-                case "Int16": return "l";
-                case "UInt16": return "h";
-                case "Int32": return "d";
-                case "UInt32": return "q";
-                case "Int64": return "i";
-                case "UInt64": return "x";
-                case "Float": return "f";
-                case "Double": return "g";
-                case "Boolean": return "t";
-                case "Binary": return "b";
-                case "GUID": return "j";
-                case "Pointer": return "p";
-                case "FILETIME": return "m";
-                case "SYSTEMTIME": return "y";
-                case "SID": return "k";
-                case "HexInt32": return "q";
-                case "HexInt64": return "x";
-                default:
-                    throw new InternalException("cannot mangle type '{0}'", type);
-            }
+            return type.Name.LocalName switch
+            {
+                "UnicodeString" => "z",
+                "AnsiString" => "s",
+                "Int8" => "c",
+                "UInt8" => "c",
+                "Int16" => "l",
+                "UInt16" => "h",
+                "Int32" => "d",
+                "UInt32" => "q",
+                "Int64" => "i",
+                "UInt64" => "x",
+                "Float" => "f",
+                "Double" => "g",
+                "Boolean" => "t",
+                "Binary" => "b",
+                "GUID" => "j",
+                "Pointer" => "p",
+                "FILETIME" => "m",
+                "SYSTEMTIME" => "y",
+                "SID" => "k",
+                "HexInt32" => "q",
+                "HexInt64" => "x",
+                _ => throw new InternalException("cannot mangle type '{0}'", type),
+            };
         }
 
         protected string GetIdentifierFromName(QName name)

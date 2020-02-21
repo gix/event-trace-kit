@@ -11,12 +11,12 @@ namespace EventTraceKit.VsExtension.Views
 
         public AcqRelObservableCollection(Action<T> releaseItem, Action<T> acquireItem)
         {
-            void Dummy(T t)
+            static void NoAction(T _)
             {
             }
 
-            this.releaseItem = releaseItem ?? Dummy;
-            this.acquireItem = acquireItem ?? Dummy;
+            this.releaseItem = releaseItem ?? NoAction;
+            this.acquireItem = acquireItem ?? NoAction;
         }
 
         protected override void ClearItems()

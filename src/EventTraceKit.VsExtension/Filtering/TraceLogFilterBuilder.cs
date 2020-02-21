@@ -133,50 +133,40 @@ namespace EventTraceKit.VsExtension.Filtering
 
             var property = condition.Property;
             var value = CreateValueExpression(condition.Value);
-            switch (condition.Relation) {
-                case FilterRelationKind.Equal:
-                    return Expression.Equal(property, value);
-                case FilterRelationKind.NotEqual:
-                    return Expression.NotEqual(property, value);
-                case FilterRelationKind.GreaterThan:
-                    return Expression.GreaterThan(property, value);
-                case FilterRelationKind.GreaterThanOrEqual:
-                    return Expression.GreaterThanOrEqual(property, value);
-                case FilterRelationKind.LessThan:
-                    return Expression.LessThan(property, value);
-                case FilterRelationKind.LessThanorEqual:
-                    return Expression.LessThanOrEqual(property, value);
-                case FilterRelationKind.StartsWith:
-                    return property.IfNull(
-                        Expression.Call(property, nameof(string.StartsWith), null, value),
-                        Expression.Constant(false));
-                case FilterRelationKind.EndsWith:
-                    return property.IfNull(
-                        Expression.Call(property, nameof(string.EndsWith), null, value),
-                        Expression.Constant(false));
-                case FilterRelationKind.Contains:
-                    return property.IfNull(
-                        Expression.Call(property, nameof(string.Contains), null, value),
-                        Expression.Constant(false));
-                case FilterRelationKind.Excludes:
-                    return property.IfNull(
-                        Expression.Not(Expression.Call(property, nameof(string.Contains), null, value)),
-                        Expression.Constant(false));
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            return condition.Relation switch
+            {
+                FilterRelationKind.Equal => Expression.Equal(property, value),
+                FilterRelationKind.NotEqual => Expression.NotEqual(property, value),
+                FilterRelationKind.GreaterThan => Expression.GreaterThan(property, value),
+                FilterRelationKind.GreaterThanOrEqual => Expression.GreaterThanOrEqual(property, value),
+                FilterRelationKind.LessThan => Expression.LessThan(property, value),
+                FilterRelationKind.LessThanorEqual => Expression.LessThanOrEqual(property, value),
+                FilterRelationKind.StartsWith => property.IfNull(
+                    Expression.Call(property, nameof(string.StartsWith), null, value),
+                    Expression.Constant(false)),
+                FilterRelationKind.EndsWith => property.IfNull(
+                    Expression.Call(property, nameof(string.EndsWith), null, value),
+                    Expression.Constant(false)),
+                FilterRelationKind.Contains => property.IfNull(
+                    Expression.Call(property, nameof(string.Contains), null, value),
+                    Expression.Constant(false)),
+                FilterRelationKind.Excludes => property.IfNull(
+                    Expression.Not(Expression.Call(property, nameof(string.Contains), null, value)),
+                    Expression.Constant(false)),
+                _ => throw new ArgumentOutOfRangeException(),
+            };
         }
 
         private static Expression CreateValueExpression(object value)
         {
-            switch (value) {
-                case Guid guid:
-                    return Expression.New(
-                        typeof(Guid).GetConstructor(new[] { typeof(string) }),
-                        Expression.Constant(guid.ToString()));
-            }
+            return value switch
+            {
+                Guid guid => Expression.New(
+                    typeof(Guid).GetConstructor(new[] { typeof(string) }),
+                    Expression.Constant(guid.ToString())),
 
-            return Expression.Constant(value);
+                _ => Expression.Constant(value),
+            };
         }
 
         private static Expression ConvertExpr(string expr)

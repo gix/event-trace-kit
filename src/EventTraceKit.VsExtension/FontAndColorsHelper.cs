@@ -1,4 +1,4 @@
-﻿namespace EventTraceKit.VsExtension
+namespace EventTraceKit.VsExtension
 {
     using System;
     using System.Globalization;
@@ -63,27 +63,15 @@
 
         public static FontFamily GetWPFDefaultFontFamily()
         {
-            string name;
-            switch (CultureInfo.CurrentUICulture.ThreeLetterWindowsLanguageName) {
-                case "ENU":
-                    name = "Consolas";
-                    break;
-                case "JPN":
-                    name = "MS Gothic";
-                    break;
-                case "KOR":
-                    name = "DotumChe";
-                    break;
-                case "CHS":
-                    name = "NSimSun";
-                    break;
-                case "CHT":
-                    name = "MingLiU";
-                    break;
-                default:
-                    name = "Consolas";
-                    break;
-            }
+            var name = CultureInfo.CurrentUICulture.ThreeLetterWindowsLanguageName switch
+            {
+                "ENU" => "Consolas",
+                "JPN" => "MS Gothic",
+                "KOR" => "DotumChe",
+                "CHS" => "NSimSun",
+                "CHT" => "MingLiU",
+                _ => "Consolas",
+            };
 
             if (NativeMethods.IsSystemFontAvailable(name))
                 return new FontFamily(name);

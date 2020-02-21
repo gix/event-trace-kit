@@ -13,19 +13,16 @@ namespace EventTraceKit.VsExtension.Views.PresetManager
             if (!(item is PresetManagerColumnViewModel model))
                 return base.SelectTemplate(item, container);
 
-            switch (model.ColumnType) {
-                case PresetManagerColumnType.LeftFreezableAreaSeparator:
-                    return LeftFreezableAreaSeparatorColumnTemplate;
-                case PresetManagerColumnType.RightFreezableAreaSeparator:
-                    return RightFreezableAreaSeparatorColumnTemplate;
-                case PresetManagerColumnType.Configurable:
-                    return ConfigurableColumnTemplate;
-                default:
-                    throw new InvalidEnumArgumentException(
-                        nameof(model.ColumnType),
-                        Convert.ToInt32(model.ColumnType, CultureInfo.CurrentCulture),
-                        typeof(PresetManagerColumnType));
-            }
+            return model.ColumnType switch
+            {
+                PresetManagerColumnType.LeftFreezableAreaSeparator => LeftFreezableAreaSeparatorColumnTemplate,
+                PresetManagerColumnType.RightFreezableAreaSeparator => RightFreezableAreaSeparatorColumnTemplate,
+                PresetManagerColumnType.Configurable => ConfigurableColumnTemplate,
+                _ => throw new InvalidEnumArgumentException(
+                    nameof(model.ColumnType),
+                    Convert.ToInt32(model.ColumnType, CultureInfo.CurrentCulture),
+                    typeof(PresetManagerColumnType)),
+            };
         }
 
         public DataTemplate ConfigurableColumnTemplate { get; set; }

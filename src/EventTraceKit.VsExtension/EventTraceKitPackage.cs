@@ -114,7 +114,7 @@ namespace EventTraceKit.VsExtension
                 return new TraceLogToolContent { DataContext = traceLog };
             }
 
-            void OnClose(object context)
+            static void OnClose(object context)
             {
                 if (context is TraceLogToolViewModel viewModel)
                     viewModel.OnClose();

@@ -48,12 +48,11 @@ namespace EventTraceKit.EventTracing.Support
 
         public override bool Equals(object obj)
         {
-            switch (obj) {
-                case LocatedVal<T> other:
-                    return Equals(other);
-                default:
-                    return Value.Equals(obj);
-            }
+            return obj switch
+            {
+                LocatedVal<T> other => Equals(other),
+                _ => Value.Equals(obj),
+            };
         }
 
         public bool Equals(LocatedVal<T> other)

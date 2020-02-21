@@ -144,7 +144,7 @@ namespace EventTraceKit.VsExtension.Threading
             private readonly DispatcherTimer timer;
             private readonly TaskCompletionSource<byte> tcs =
                 new TaskCompletionSource<byte>();
-            private CancellationTokenRegistration registration;
+            private readonly CancellationTokenRegistration registration;
 
             internal DelayPromise(Dispatcher dispatcher, CancellationToken token, TimeSpan delay)
             {

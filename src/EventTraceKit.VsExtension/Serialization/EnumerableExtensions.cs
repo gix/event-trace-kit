@@ -11,21 +11,19 @@ namespace EventTraceKit.VsExtension.Serialization
                 throw new ArgumentNullException(nameof(source));
 
             if (source is IList<TSource> list) {
-                switch (list.Count) {
-                    case 1:
-                        return list[0];
-                    default:
-                        return default;
-                }
+                return list.Count switch
+                {
+                    1 => list[0],
+                    _ => default,
+                };
             }
 
             if (source is IReadOnlyList<TSource> readOnlyList) {
-                switch (readOnlyList.Count) {
-                    case 1:
-                        return readOnlyList[0];
-                    default:
-                        return default;
-                }
+                return readOnlyList.Count switch
+                {
+                    1 => readOnlyList[0],
+                    _ => default,
+                };
             }
 
             using var enumerator = source.GetEnumerator();

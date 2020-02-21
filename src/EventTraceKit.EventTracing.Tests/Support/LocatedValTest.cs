@@ -134,9 +134,7 @@ namespace EventTraceKit.EventTracing.Tests.Support
 
             public int CompareTo(ComparableX other)
             {
-                if (ReferenceEquals(this, other)) return 0;
-                if (ReferenceEquals(null, other)) return 1;
-                return Value.CompareTo((int)other.Value);
+                return Value.CompareTo(other.Value);
             }
         }
 
@@ -191,13 +189,12 @@ namespace EventTraceKit.EventTracing.Tests.Support
             public int CompareTo(object other)
             {
                 if (ReferenceEquals(this, other)) return 0;
-                if (ReferenceEquals(null, other)) return 1;
-                switch (other) {
-                    case UntypedComparableX obj:
-                        return Value.CompareTo((int)obj.Value);
-                    default:
-                        return Value.CompareTo(other);
-                }
+                return other switch
+                {
+                    UntypedComparableX obj => Value.CompareTo(obj.Value),
+                    null => 1,
+                    _ => Value.CompareTo(other),
+                };
             }
         }
 
