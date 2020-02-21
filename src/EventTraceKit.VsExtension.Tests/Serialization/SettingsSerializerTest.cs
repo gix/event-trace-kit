@@ -14,6 +14,7 @@ namespace EventTraceKit.VsExtension.Tests.Serialization
     using Xunit;
     using Xunit.Abstractions;
 
+    [Collection("VisualStudioAssemblyResolver")]
     public class SettingsSerializerTest
     {
         private readonly ITestOutputHelper output;
