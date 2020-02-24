@@ -8,7 +8,7 @@ namespace EventTraceKit.EventTracing.Tests.Compilation.TestSupport
         public TempFile()
         {
             FileName = Path.GetTempFileName();
-            Stream = File.Open(Path.GetTempFileName(), FileMode.Create, FileAccess.ReadWrite);
+            Stream = File.Open(Path.GetTempFileName(), FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
         }
 
         public string FileName { get; }

@@ -4,7 +4,7 @@ namespace EventTraceKit.EventTracing.Compilation.Support
     using System.Collections.Generic;
     using System.IO;
 
-    internal class ScopedWriter
+    internal class ScopedWriter : IDisposable
     {
         private readonly TextWriter writer;
         private int indentLevel;
@@ -12,6 +12,11 @@ namespace EventTraceKit.EventTracing.Compilation.Support
         public ScopedWriter(TextWriter writer)
         {
             this.writer = writer;
+        }
+
+        public void Dispose()
+        {
+            writer.Dispose();
         }
 
         public void Flush()

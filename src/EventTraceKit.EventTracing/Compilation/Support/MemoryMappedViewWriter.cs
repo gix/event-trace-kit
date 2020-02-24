@@ -13,7 +13,6 @@ namespace EventTraceKit.EventTracing.Compilation.Support
         private MemoryMappedFile mappedFile;
         private MemoryMappedViewAccessor accessor;
         private byte[] stringBuffer = new byte[0x100];
-        private long capacity;
         private long position;
 
         public MemoryMappedViewWriter(FileStream output, long initialCapacity = 0x10000)
@@ -23,7 +22,7 @@ namespace EventTraceKit.EventTracing.Compilation.Support
             Allocate(initialCapacity);
         }
 
-        public long Capacity => capacity;
+        public long Capacity { get; private set; }
 
         public long Position
         {
@@ -31,7 +30,7 @@ namespace EventTraceKit.EventTracing.Compilation.Support
             set
             {
                 position = value;
-                if (position > capacity)
+                if (position > Capacity)
                     GrowTo(position);
             }
         }
@@ -59,10 +58,7 @@ namespace EventTraceKit.EventTracing.Compilation.Support
 
         public void WriteResource<T>(ref T resource) where T : struct
         {
-            var size = Marshal.SizeOf<T>();
-            EnsureSpace(size);
-            accessor.Write(position, ref resource);
-            position += size;
+            WriteResource(ref position, ref resource);
         }
 
         private int GetByteCount(string name)
@@ -90,20 +86,14 @@ namespace EventTraceKit.EventTracing.Compilation.Support
             WriteArray(ref offset, stringBuffer, 0, count);
         }
 
-        public void WriteArray<T>(T[] array) where T : struct
+        public void WriteArray<T>(T[] values) where T : struct
         {
-            int byteCount = array.Length * Marshal.SizeOf<T>();
-            EnsureSpace(byteCount);
-            accessor.WriteArray(position, array, 0, array.Length);
-            position += byteCount;
+            WriteArray(ref position, values);
         }
 
         public void WriteArray<T>(ref long offset, T[] values) where T : struct
         {
-            int size = values.Length * Marshal.SizeOf<T>();
-            EnsureSpace(offset, size);
-            accessor.WriteArray(offset, values, 0, values.Length);
-            offset += size;
+            WriteArray(ref offset, values, 0, values.Length);
         }
 
         public void WriteArray<T>(ref long offset, T[] values, int index, int count) where T : struct
@@ -112,6 +102,20 @@ namespace EventTraceKit.EventTracing.Compilation.Support
             EnsureSpace(offset, byteCount);
             accessor.WriteArray(offset, values, index, count);
             offset += byteCount;
+        }
+
+        public void WriteUInt8(ref long offset, byte value)
+        {
+            EnsureSpace(1);
+            accessor.Write(offset, value);
+            offset += 1;
+        }
+
+        public void WriteUInt16(ref long offset, ushort value)
+        {
+            EnsureSpace(2);
+            accessor.Write(offset, value);
+            offset += 2;
         }
 
         public void WriteUInt32(ref long offset, uint value)
@@ -123,23 +127,17 @@ namespace EventTraceKit.EventTracing.Compilation.Support
 
         public void WriteUInt8(byte value)
         {
-            EnsureSpace(1);
-            accessor.Write(position, value);
-            position += 1;
+            WriteUInt8(ref position, value);
         }
 
         public void WriteUInt16(ushort value)
         {
-            EnsureSpace(2);
-            accessor.Write(position, value);
-            position += 2;
+            WriteUInt16(ref position, value);
         }
 
         public void WriteUInt32(uint value)
         {
-            EnsureSpace(4);
-            accessor.Write(position, value);
-            position += 4;
+            WriteUInt32(ref position, value);
         }
 
         public void FillAlignment(int alignment)
@@ -169,26 +167,26 @@ namespace EventTraceKit.EventTracing.Compilation.Support
                 true);
 
             accessor = mappedFile.CreateViewAccessor();
-            capacity = newCapacity;
+            Capacity = newCapacity;
         }
 
         private void EnsureSpace(long offset, int byteCount)
         {
             long requiredCapacity = offset + byteCount;
-            if (requiredCapacity > capacity)
+            if (requiredCapacity > Capacity)
                 GrowTo(requiredCapacity);
         }
 
         private void EnsureSpace(int byteCount)
         {
             long requiredCapacity = position + byteCount;
-            if (requiredCapacity > capacity)
+            if (requiredCapacity > Capacity)
                 GrowTo(requiredCapacity);
         }
 
         private void GrowTo(long requiredCapacity)
         {
-            long newCapacity = capacity;
+            long newCapacity = Capacity;
             while (newCapacity < requiredCapacity)
                 newCapacity *= 2;
             Allocate(newCapacity);

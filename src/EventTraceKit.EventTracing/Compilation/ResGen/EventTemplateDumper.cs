@@ -19,7 +19,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
     using EventDescriptor = Crimson.EventDescriptor;
     using PropertyFlags = Crimson.PropertyFlags;
 
-    public sealed class EventTemplateDumper
+    public sealed class EventTemplateDumper : IDisposable
     {
         private readonly ScopedWriter writer;
 
@@ -29,6 +29,13 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
         public EventTemplateDumper(TextWriter writer)
         {
             this.writer = new ScopedWriter(writer);
+        }
+
+        public bool Verify { get; set; } = true;
+
+        public void Dispose()
+        {
+            writer.Dispose();
         }
 
         public void DumpMessageTable(string inputFile)
@@ -171,7 +178,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
 
         private void VerifyMagic(long offset, uint magic, uint expected)
         {
-            if (magic != expected) {
+            if (Verify && magic != expected) {
                 throw ParseError(
                     offset,
                     "Invalid magic 0x{0:X8} ({1}), expected 0x{2:X8} ({3})",

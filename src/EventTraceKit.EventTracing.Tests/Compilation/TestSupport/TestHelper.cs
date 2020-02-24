@@ -1,5 +1,6 @@
 namespace EventTraceKit.EventTracing.Tests.Compilation.TestSupport
 {
+    using System;
     using System.IO;
     using EventTraceKit.EventTracing;
     using EventTraceKit.EventTracing.Compilation;
@@ -9,6 +10,12 @@ namespace EventTraceKit.EventTracing.Tests.Compilation.TestSupport
 
     public static class TestHelper
     {
+        public static EventManifest LoadManifest(Type resourceAnchor, string inputName)
+        {
+            using var stream = resourceAnchor.GetManifestResourceStream(inputName);
+            return LoadManifest(stream, inputName);
+        }
+
         public static EventManifest LoadManifest(Stream input, string inputName)
         {
             var diagSink = new DiagnosticSink();

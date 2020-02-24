@@ -170,5 +170,58 @@ namespace EventTraceKit.EventTracing.Tests.Compilation.TestSupport
 
             return totalBytesRead;
         }
+
+        /// <summary>
+        ///   Reads all bytes from the specified seekable stream.
+        /// </summary>
+        /// <param name="input">
+        ///   The stream from which to read from. The stream ust be seekable.
+        /// </param>
+        /// <returns>
+        ///   A byte array containing the contents of the stream.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">
+        ///   <paramref name="input"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="IOException">
+        ///   An I/O error occured.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        ///   The stream does not support reading or seeking.
+        /// </exception>
+        /// <exception cref="ObjectDisposedException">
+        ///   Methods were called after the stream was closed.
+        /// </exception>
+        public static byte[] ReadAllBytes(this Stream input)
+        {
+            input.Position = 0;
+
+            var buffer = new byte[input.Length];
+            using (var memoryStream = new MemoryStream(buffer))
+                input.CopyTo(memoryStream);
+
+            return buffer;
+        }
+
+        /// <summary>
+        ///   Loads the specified manifest resource, scoped by the namespace of
+        ///   the specified type, from the type's assembly.
+        /// </summary>
+        /// <param name="type">
+        ///   The type whose namespace is used to scope the manifest resource
+        ///   name.
+        /// </param>
+        /// <param name="name">
+        ///   The case-sensitive name of the manifest resource being requested.
+        /// </param>
+        /// <returns>
+        ///   The manifest resource; or <see langword="null"/> if no resources
+        ///   were specified during compilation or if the resource is not
+        ///   visible to the caller.
+        /// </returns>
+        public static Stream GetManifestResourceStream(this Type type, string name)
+        {
+            return type.Assembly.GetManifestResourceStream(type, name);
+        }
     }
 }

@@ -1,5 +1,6 @@
 namespace EventTraceKit.EventTracing.Tests.Compilation.ResGen
 {
+    using System;
     using System.IO;
     using System.Linq;
     using EventTraceKit.EventTracing.Compilation.ResGen;
@@ -15,15 +16,17 @@ namespace EventTraceKit.EventTracing.Tests.Compilation.ResGen
 
         [Theory]
         [ResGenTestData(typeof(ResGenTestCases), ".msg.bin")]
-        public void Write(ExceptionOr<EventManifest> inputManifest, Stream expectedMsgTable)
+        public void Write(string inputResourceName, Type resourceAnchor, byte[] expectedMsgTable)
         {
-            Assert.Single(inputManifest.Value.Resources);
+            var manifest = TestHelper.LoadManifest(resourceAnchor, inputResourceName);
+
+            Assert.Single(manifest.Resources);
 
             using var tempStream = new MemoryStream();
             using (var writer = new MessageTableWriter(tempStream))
-                writer.Write(inputManifest.Value.Resources[0].Strings.Select(CreateMessage), diags);
+                writer.Write(manifest.Resources[0].Strings.Select(CreateMessage), diags);
 
-            StreamAssert.SequenceEqual(tempStream, expectedMsgTable, DumpMsg);
+            SequenceAssert.SequenceEqual(expectedMsgTable, tempStream.ReadAllBytes());
         }
 
         private static Message CreateMessage(LocalizedString str)
