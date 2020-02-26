@@ -13,15 +13,12 @@ namespace EventManifestCompiler
     {
         public static int Main(string[] args)
         {
-            if (Debugger.IsAttached)
-                return Run(args);
-
             try {
                 return Run(args);
-            } catch (UserException) {
+            } catch (UserException) when (!Debugger.IsAttached) {
                 // Any errors should have been reported through diagnostics.
                 return ExitCode.UserError;
-            } catch (Exception ex) {
+            } catch (Exception ex) when (!Debugger.IsAttached) {
                 WriteInternalError(ex, args);
                 return ExitCode.InternalError;
             }
