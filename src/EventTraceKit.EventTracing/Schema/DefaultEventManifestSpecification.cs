@@ -301,6 +301,27 @@ namespace EventTraceKit.EventTracing.Schema
                 // FIXME
                 //UInt8, UInt16, UInt32, or HexInt32
             }
+
+            if (property.InType.Name == WinEventSchema.Binary) {
+                if (!property.Length.IsSpecified) {
+                    diags.ReportError(
+                        property.Location,
+                        "Property '{0}' with inType '{1}' requires a length.",
+                        property.Name,
+                        property.InType.Name.AsPrefixedString);
+                }
+            } else if (property.InType.Name == WinEventSchema.CountedUnicodeString ||
+                       property.InType.Name == WinEventSchema.CountedAnsiString ||
+                       property.InType.Name == WinEventSchema.CountedBinary) {
+                if (property.Length.IsSpecified) {
+                    diags.ReportError(
+                        property.Location,
+                        "Property '{0}' with inType '{1}' must not have a length.",
+                        property.Name,
+                        property.InType.Name.AsPrefixedString);
+                }
+            }
+
             return true;
         }
 

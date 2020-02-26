@@ -158,6 +158,9 @@
             <data name="Data19" inType="win:SID"/>
             <data name="Data20" inType="win:HexInt32"/>
             <data name="Data21" inType="win:HexInt64"/>
+            <data name="Data22" inType="win:CountedUnicodeString"/>
+            <data name="Data23" inType="win:CountedAnsiString"/>
+            <data name="Data24" inType="win:CountedBinary"/>
           </template>
           <template tid="Template2">
             <data name="OutData1" inType="win:UnicodeString" outType="xs:string"/>
@@ -564,7 +567,7 @@
 
       <provider name="ProviderName3" guid="{D2EB3575-B9AE-4B4F-A0B7-61034A28C268}" symbol="ProviderSym3" message="$(string.provider.3)" resourceFileName="C:\Users\nrieck\dev\ffmf\src\build\Win32\Debug\bin\Sculptor.dll" messageFileName="C:\Users\nrieck\dev\ffmf\src\build\Win32\Debug\bin\Sculptor.dll">
         <events>
-          <event symbol="EventSym1" value="1" message="$(string.event.3.1)" channel="P3/ChannelName1"/>
+          <event symbol="EventSym1" value="1" message="$(string.event.3.1)" channel="P3/ChannelName1" template="Template4"/>
         </events>
         <channels>
           <channel name="P3/ChannelName1" value="33" chid="Channel1" type="Debug" message="$(string.channel.3.1)"/>

@@ -41,5 +41,8 @@ namespace EventTraceKit.EventTracing.Schema
         public static readonly QName SecurityId = new QName("SID", "win", Namespace);
         public static readonly QName HexInt32 = new QName("HexInt32", "win", Namespace);
         public static readonly QName HexInt64 = new QName("HexInt64", "win", Namespace);
+        public static readonly QName CountedUnicodeString = new QName("CountedUnicodeString", "win", Namespace);
+        public static readonly QName CountedAnsiString = new QName("CountedAnsiString", "win", Namespace);
+        public static readonly QName CountedBinary = new QName("CountedBinary", "win", Namespace);
     }
 }

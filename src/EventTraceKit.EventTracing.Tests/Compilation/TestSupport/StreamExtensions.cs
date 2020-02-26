@@ -203,6 +203,12 @@ namespace EventTraceKit.EventTracing.Tests.Compilation.TestSupport
             return buffer;
         }
 
+        public static string ReadAllText(this Stream input)
+        {
+            input.Position = 0;
+            return new StreamReader(input).ReadToEnd();
+        }
+
         /// <summary>
         ///   Loads the specified manifest resource, scoped by the namespace of
         ///   the specified type, from the type's assembly.

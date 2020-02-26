@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<instrumentationManifest
+    xsi:schemaLocation="http://schemas.microsoft.com/win/2004/08/events eventman.xsd"
+    xmlns="http://schemas.microsoft.com/win/2004/08/events"
+    xmlns:win="http://manifests.microsoft.com/win/2004/08/windows/events"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:trace="http://schemas.microsoft.com/win/2004/08/events/trace">
+  <instrumentation>
+    <events>
+      <provider name="TypeMangling" guid="{00000000-0000-0000-0000-000000000001}" symbol="TypeMangling" resourceFileName="res.dll" messageFileName="msg.dll">
+        <events>
+          <event value="1"  symbol="Evt01" template="Template01"/>
+          <event value="2"  symbol="Evt02" template="Template02"/>
+          <event value="3"  symbol="Evt03" template="Template03"/>
+          <event value="4"  symbol="Evt04" template="Template04"/>
+          <event value="5"  symbol="Evt05" template="Template05"/>
+          <event value="6"  symbol="Evt06" template="Template06"/>
+          <event value="7"  symbol="Evt07" template="Template07"/>
+          <event value="8"  symbol="Evt08" template="Template08"/>
+          <event value="9"  symbol="Evt09" template="Template09"/>
+          <event value="10" symbol="Evt10" template="Template10"/>
+          <event value="11" symbol="Evt11" template="Template11"/>
+          <event value="12" symbol="Evt12" template="Template12"/>
+          <event value="13" symbol="Evt13" template="Template13"/>
+          <event value="14" symbol="Evt14" template="Template14"/>
+          <event value="15" symbol="Evt15" template="Template15"/>
+          <event value="16" symbol="Evt16" template="Template16"/>
+          <event value="17" symbol="Evt17" template="Template17"/>
+          <event value="18" symbol="Evt18" template="Template18"/>
+          <event value="19" symbol="Evt19" template="Template19"/>
+          <event value="20" symbol="Evt20" template="Template20"/>
+          <event value="21" symbol="Evt21" template="Template21"/>
+          <event value="22" symbol="Evt22" template="Template22"/>
+          <event value="23" symbol="Evt23" template="Template23"/>
+          <event value="24" symbol="Evt24" template="Template24"/>
+
+          <event value="101" symbol="EvtFixedCount01" template="TemplateFixedCount01"/>
+          <event value="102" symbol="EvtFixedCount02" template="TemplateFixedCount02"/>
+          <event value="103" symbol="EvtFixedCount03" template="TemplateFixedCount03"/>
+          <event value="104" symbol="EvtFixedCount04" template="TemplateFixedCount04"/>
+          <event value="105" symbol="EvtFixedCount05" template="TemplateFixedCount05"/>
+          <event value="106" symbol="EvtFixedCount06" template="TemplateFixedCount06"/>
+          <event value="107" symbol="EvtFixedCount07" template="TemplateFixedCount07"/>
+          <event value="108" symbol="EvtFixedCount08" template="TemplateFixedCount08"/>
+          <event value="109" symbol="EvtFixedCount09" template="TemplateFixedCount09"/>
+          <event value="110" symbol="EvtFixedCount10" template="TemplateFixedCount10"/>
+          <event value="111" symbol="EvtFixedCount11" template="TemplateFixedCount11"/>
+          <event value="112" symbol="EvtFixedCount12" template="TemplateFixedCount12"/>
+          <event value="113" symbol="EvtFixedCount13" template="TemplateFixedCount13"/>
+          <event value="114" symbol="EvtFixedCount14" template="TemplateFixedCount14"/>
+          <event value="115" symbol="EvtFixedCount15" template="TemplateFixedCount15"/>
+          <event value="116" symbol="EvtFixedCount16" template="TemplateFixedCount16"/>
+          <event value="117" symbol="EvtFixedCount17" template="TemplateFixedCount17"/>
+          <event value="118" symbol="EvtFixedCount18" template="TemplateFixedCount18"/>
+          <event value="119" symbol="EvtFixedCount19" template="TemplateFixedCount19"/>
+          <event value="120" symbol="EvtFixedCount20" template="TemplateFixedCount20"/>
+          <event value="121" symbol="EvtFixedCount21" template="TemplateFixedCount21"/>
+          <event value="122" symbol="EvtFixedCount22" template="TemplateFixedCount22"/>
+          <event value="123" symbol="EvtFixedCount23" template="TemplateFixedCount23"/>
+          <event value="124" symbol="EvtFixedCount24" template="TemplateFixedCount24"/>
+
+          <event value="201" symbol="EvtFixedCount01_0" template="TemplateFixedCount01_0"/>
+          <event value="202" symbol="EvtFixedCount02_0" template="TemplateFixedCount02_0"/>
+          <event value="203" symbol="EvtFixedCount03_0" template="TemplateFixedCount03_0"/>
+          <event value="204" symbol="EvtFixedCount04_0" template="TemplateFixedCount04_0"/>
+          <event value="205" symbol="EvtFixedCount05_0" template="TemplateFixedCount05_0"/>
+          <event value="206" symbol="EvtFixedCount06_0" template="TemplateFixedCount06_0"/>
+          <event value="207" symbol="EvtFixedCount07_0" template="TemplateFixedCount07_0"/>
+          <event value="208" symbol="EvtFixedCount08_0" template="TemplateFixedCount08_0"/>
+          <event value="209" symbol="EvtFixedCount09_0" template="TemplateFixedCount09_0"/>
+          <event value="210" symbol="EvtFixedCount10_0" template="TemplateFixedCount10_0"/>
+          <event value="211" symbol="EvtFixedCount11_0" template="TemplateFixedCount11_0"/>
+          <event value="212" symbol="EvtFixedCount12_0" template="TemplateFixedCount12_0"/>
+          <event value="213" symbol="EvtFixedCount13_0" template="TemplateFixedCount13_0"/>
+          <event value="214" symbol="EvtFixedCount14_0" template="TemplateFixedCount14_0"/>
+          <event value="215" symbol="EvtFixedCount15_0" template="TemplateFixedCount15_0"/>
+          <event value="216" symbol="EvtFixedCount16_0" template="TemplateFixedCount16_0"/>
+          <event value="217" symbol="EvtFixedCount17_0" template="TemplateFixedCount17_0"/>
+          <event value="218" symbol="EvtFixedCount18_0" template="TemplateFixedCount18_0"/>
+          <event value="219" symbol="EvtFixedCount19_0" template="TemplateFixedCount19_0"/>
+          <event value="220" symbol="EvtFixedCount20_0" template="TemplateFixedCount20_0"/>
+          <event value="221" symbol="EvtFixedCount21_0" template="TemplateFixedCount21_0"/>
+          <event value="222" symbol="EvtFixedCount22_0" template="TemplateFixedCount22_0"/>
+          <event value="223" symbol="EvtFixedCount23_0" template="TemplateFixedCount23_0"/>
+          <event value="224" symbol="EvtFixedCount24_0" template="TemplateFixedCount24_0"/>
+
+          <event value="301" symbol="EvtFixedCount01_1" template="TemplateFixedCount01_1"/>
+          <event value="302" symbol="EvtFixedCount02_1" template="TemplateFixedCount02_1"/>
+          <event value="303" symbol="EvtFixedCount03_1" template="TemplateFixedCount03_1"/>
+          <event value="304" symbol="EvtFixedCount04_1" template="TemplateFixedCount04_1"/>
+          <event value="305" symbol="EvtFixedCount05_1" template="TemplateFixedCount05_1"/>
+          <event value="306" symbol="EvtFixedCount06_1" template="TemplateFixedCount06_1"/>
+          <event value="307" symbol="EvtFixedCount07_1" template="TemplateFixedCount07_1"/>
+          <event value="308" symbol="EvtFixedCount08_1" template="TemplateFixedCount08_1"/>
+          <event value="309" symbol="EvtFixedCount09_1" template="TemplateFixedCount09_1"/>
+          <event value="310" symbol="EvtFixedCount10_1" template="TemplateFixedCount10_1"/>
+          <event value="311" symbol="EvtFixedCount11_1" template="TemplateFixedCount11_1"/>
+          <event value="312" symbol="EvtFixedCount12_1" template="TemplateFixedCount12_1"/>
+          <event value="313" symbol="EvtFixedCount13_1" template="TemplateFixedCount13_1"/>
+          <event value="314" symbol="EvtFixedCount14_1" template="TemplateFixedCount14_1"/>
+          <event value="315" symbol="EvtFixedCount15_1" template="TemplateFixedCount15_1"/>
+          <event value="316" symbol="EvtFixedCount16_1" template="TemplateFixedCount16_1"/>
+          <event value="317" symbol="EvtFixedCount17_1" template="TemplateFixedCount17_1"/>
+          <event value="318" symbol="EvtFixedCount18_1" template="TemplateFixedCount18_1"/>
+          <event value="319" symbol="EvtFixedCount19_1" template="TemplateFixedCount19_1"/>
+          <event value="320" symbol="EvtFixedCount20_1" template="TemplateFixedCount20_1"/>
+          <event value="321" symbol="EvtFixedCount21_1" template="TemplateFixedCount21_1"/>
+          <event value="322" symbol="EvtFixedCount22_1" template="TemplateFixedCount22_1"/>
+          <event value="323" symbol="EvtFixedCount23_1" template="TemplateFixedCount23_1"/>
+          <event value="324" symbol="EvtFixedCount24_1" template="TemplateFixedCount24_1"/>
+
+          <event value="401" symbol="EvtVarCount01" template="TemplateVarCount01"/>
+          <event value="402" symbol="EvtVarCount02" template="TemplateVarCount02"/>
+          <event value="403" symbol="EvtVarCount03" template="TemplateVarCount03"/>
+          <event value="404" symbol="EvtVarCount04" template="TemplateVarCount04"/>
+          <event value="405" symbol="EvtVarCount05" template="TemplateVarCount05"/>
+          <event value="406" symbol="EvtVarCount06" template="TemplateVarCount06"/>
+          <event value="407" symbol="EvtVarCount07" template="TemplateVarCount07"/>
+          <event value="408" symbol="EvtVarCount08" template="TemplateVarCount08"/>
+          <event value="409" symbol="EvtVarCount09" template="TemplateVarCount09"/>
+          <event value="410" symbol="EvtVarCount10" template="TemplateVarCount10"/>
+          <event value="411" symbol="EvtVarCount11" template="TemplateVarCount11"/>
+          <event value="412" symbol="EvtVarCount12" template="TemplateVarCount12"/>
+          <event value="413" symbol="EvtVarCount13" template="TemplateVarCount13"/>
+          <event value="414" symbol="EvtVarCount14" template="TemplateVarCount14"/>
+          <event value="415" symbol="EvtVarCount15" template="TemplateVarCount15"/>
+          <event value="416" symbol="EvtVarCount16" template="TemplateVarCount16"/>
+          <event value="417" symbol="EvtVarCount17" template="TemplateVarCount17"/>
+          <event value="418" symbol="EvtVarCount18" template="TemplateVarCount18"/>
+          <event value="419" symbol="EvtVarCount19" template="TemplateVarCount19"/>
+          <event value="420" symbol="EvtVarCount20" template="TemplateVarCount20"/>
+          <event value="421" symbol="EvtVarCount21" template="TemplateVarCount21"/>
+          <event value="422" symbol="EvtVarCount22" template="TemplateVarCount22"/>
+          <event value="423" symbol="EvtVarCount23" template="TemplateVarCount23"/>
+          <event value="424" symbol="EvtVarCount24" template="TemplateVarCount24"/>
+
+          <event value="501" symbol="EvtVarLength1" template="TemplateVarLength1"/>
+          <event value="502" symbol="EvtVarLength2" template="TemplateVarLength2"/>
+          <event value="503" symbol="EvtVarLength3" template="TemplateVarLength3"/>
+          <event value="504" symbol="EvtVarLength4" template="TemplateVarLength4"/>
+
+          <event value="601" symbol="EvtVarLengthFixedCount1_0" template="TemplateVarLengthFixedCount1_0"/>
+          <event value="602" symbol="EvtVarLengthFixedCount2_0" template="TemplateVarLengthFixedCount2_0"/>
+          <event value="603" symbol="EvtVarLengthFixedCount3_0" template="TemplateVarLengthFixedCount3_0"/>
+          <event value="604" symbol="EvtVarLengthFixedCount4_0" template="TemplateVarLengthFixedCount4_0"/>
+          <event value="605" symbol="EvtVarLengthFixedCount1_1" template="TemplateVarLengthFixedCount1_1"/>
+          <event value="606" symbol="EvtVarLengthFixedCount2_1" template="TemplateVarLengthFixedCount2_1"/>
+          <event value="607" symbol="EvtVarLengthFixedCount3_1" template="TemplateVarLengthFixedCount3_1"/>
+          <event value="608" symbol="EvtVarLengthFixedCount4_1" template="TemplateVarLengthFixedCount4_1"/>
+          <event value="609" symbol="EvtVarLengthFixedCount1_2" template="TemplateVarLengthFixedCount1_2"/>
+          <event value="610" symbol="EvtVarLengthFixedCount2_2" template="TemplateVarLengthFixedCount2_2"/>
+          <event value="611" symbol="EvtVarLengthFixedCount3_2" template="TemplateVarLengthFixedCount3_2"/>
+          <event value="612" symbol="EvtVarLengthFixedCount4_2" template="TemplateVarLengthFixedCount4_2"/>
+
+          <event value="1000" symbol="EvtOutTypes" template="TemplateOutTypes"/>
+        </events>
+        <templates>
+          <template tid="Template01"><data name="Field" inType="win:UnicodeString"/></template>
+          <template tid="Template02"><data name="Field" inType="win:AnsiString"/></template>
+          <template tid="Template03"><data name="Field" inType="win:Int8"/></template>
+          <template tid="Template04"><data name="Field" inType="win:UInt8"/></template>
+          <template tid="Template05"><data name="Field" inType="win:Int16"/></template>
+          <template tid="Template06"><data name="Field" inType="win:UInt16"/></template>
+          <template tid="Template07"><data name="Field" inType="win:Int32"/></template>
+          <template tid="Template08"><data name="Field" inType="win:UInt32"/></template>
+          <template tid="Template09"><data name="Field" inType="win:Int64"/></template>
+          <template tid="Template10"><data name="Field" inType="win:UInt64"/></template>
+          <template tid="Template11"><data name="Field" inType="win:Float"/></template>
+          <template tid="Template12"><data name="Field" inType="win:Double"/></template>
+          <template tid="Template13"><data name="Field" inType="win:Boolean"/></template>
+          <template tid="Template14"><data name="Field" inType="win:Binary" length="3"/></template>
+          <template tid="Template15"><data name="Field" inType="win:GUID"/></template>
+          <template tid="Template16"><data name="Field" inType="win:Pointer"/></template>
+          <template tid="Template17"><data name="Field" inType="win:FILETIME"/></template>
+          <template tid="Template18"><data name="Field" inType="win:SYSTEMTIME"/></template>
+          <template tid="Template19"><data name="Field" inType="win:SID"/></template>
+          <template tid="Template20"><data name="Field" inType="win:HexInt32"/></template>
+          <template tid="Template21"><data name="Field" inType="win:HexInt64"/></template>
+          <template tid="Template22"><data name="Field" inType="win:CountedUnicodeString"/></template>
+          <template tid="Template23"><data name="Field" inType="win:CountedAnsiString"/></template>
+          <template tid="Template24"><data name="Field" inType="win:CountedBinary"/></template>
+
+          <template tid="TemplateFixedCount01"><data name="Field" inType="win:UnicodeString" count="5"/></template>
+          <template tid="TemplateFixedCount02"><data name="Field" inType="win:AnsiString" count="5"/></template>
+          <template tid="TemplateFixedCount03"><data name="Field" inType="win:Int8" count="5"/></template>
+          <template tid="TemplateFixedCount04"><data name="Field" inType="win:UInt8" count="5"/></template>
+          <template tid="TemplateFixedCount05"><data name="Field" inType="win:Int16" count="5"/></template>
+          <template tid="TemplateFixedCount06"><data name="Field" inType="win:UInt16" count="5"/></template>
+          <template tid="TemplateFixedCount07"><data name="Field" inType="win:Int32" count="5"/></template>
+          <template tid="TemplateFixedCount08"><data name="Field" inType="win:UInt32" count="5"/></template>
+          <template tid="TemplateFixedCount09"><data name="Field" inType="win:Int64" count="5"/></template>
+          <template tid="TemplateFixedCount10"><data name="Field" inType="win:UInt64" count="5"/></template>
+          <template tid="TemplateFixedCount11"><data name="Field" inType="win:Float" count="5"/></template>
+          <template tid="TemplateFixedCount12"><data name="Field" inType="win:Double" count="5"/></template>
+          <template tid="TemplateFixedCount13"><data name="Field" inType="win:Boolean" count="5"/></template>
+          <template tid="TemplateFixedCount14"><data name="Field" inType="win:Binary" length="3" count="5"/></template>
+          <template tid="TemplateFixedCount15"><data name="Field" inType="win:GUID" count="5"/></template>
+          <template tid="TemplateFixedCount16"><data name="Field" inType="win:Pointer" count="5"/></template>
+          <template tid="TemplateFixedCount17"><data name="Field" inType="win:FILETIME" count="5"/></template>
+          <template tid="TemplateFixedCount18"><data name="Field" inType="win:SYSTEMTIME" count="5"/></template>
+          <template tid="TemplateFixedCount19"><data name="Field" inType="win:SID" count="5"/></template>
+          <template tid="TemplateFixedCount20"><data name="Field" inType="win:HexInt32" count="5"/></template>
+          <template tid="TemplateFixedCount21"><data name="Field" inType="win:HexInt64" count="5"/></template>
+          <template tid="TemplateFixedCount22"><data name="Field" inType="win:CountedUnicodeString" count="5"/></template>
+          <template tid="TemplateFixedCount23"><data name="Field" inType="win:CountedAnsiString" count="5"/></template>
+          <template tid="TemplateFixedCount24"><data name="Field" inType="win:CountedBinary" count="5"/></template>
+
+          <template tid="TemplateFixedCount01_0"><data name="Field" inType="win:UnicodeString" count="0"/></template>
+          <template tid="TemplateFixedCount02_0"><data name="Field" inType="win:AnsiString" count="0"/></template>
+          <template tid="TemplateFixedCount03_0"><data name="Field" inType="win:Int8" count="0"/></template>
+          <template tid="TemplateFixedCount04_0"><data name="Field" inType="win:UInt8" count="0"/></template>
+          <template tid="TemplateFixedCount05_0"><data name="Field" inType="win:Int16" count="0"/></template>
+          <template tid="TemplateFixedCount06_0"><data name="Field" inType="win:UInt16" count="0"/></template>
+          <template tid="TemplateFixedCount07_0"><data name="Field" inType="win:Int32" count="0"/></template>
+          <template tid="TemplateFixedCount08_0"><data name="Field" inType="win:UInt32" count="0"/></template>
+          <template tid="TemplateFixedCount09_0"><data name="Field" inType="win:Int64" count="0"/></template>
+          <template tid="TemplateFixedCount10_0"><data name="Field" inType="win:UInt64" count="0"/></template>
+          <template tid="TemplateFixedCount11_0"><data name="Field" inType="win:Float" count="0"/></template>
+          <template tid="TemplateFixedCount12_0"><data name="Field" inType="win:Double" count="0"/></template>
+          <template tid="TemplateFixedCount13_0"><data name="Field" inType="win:Boolean" count="0"/></template>
+          <template tid="TemplateFixedCount14_0"><data name="Field" inType="win:Binary" length="3" count="0"/></template>
+          <template tid="TemplateFixedCount15_0"><data name="Field" inType="win:GUID" count="0"/></template>
+          <template tid="TemplateFixedCount16_0"><data name="Field" inType="win:Pointer" count="0"/></template>
+          <template tid="TemplateFixedCount17_0"><data name="Field" inType="win:FILETIME" count="0"/></template>
+          <template tid="TemplateFixedCount18_0"><data name="Field" inType="win:SYSTEMTIME" count="0"/></template>
+          <template tid="TemplateFixedCount19_0"><data name="Field" inType="win:SID" count="0"/></template>
+          <template tid="TemplateFixedCount20_0"><data name="Field" inType="win:HexInt32" count="0"/></template>
+          <template tid="TemplateFixedCount21_0"><data name="Field" inType="win:HexInt64" count="0"/></template>
+          <template tid="TemplateFixedCount22_0"><data name="Field" inType="win:CountedUnicodeString" count="0"/></template>
+          <template tid="TemplateFixedCount23_0"><data name="Field" inType="win:CountedAnsiString" count="0"/></template>
+          <template tid="TemplateFixedCount24_0"><data name="Field" inType="win:CountedBinary" count="0"/></template>
+
+          <template tid="TemplateFixedCount01_1"><data name="Field" inType="win:UnicodeString" count="1"/></template>
+          <template tid="TemplateFixedCount02_1"><data name="Field" inType="win:AnsiString" count="1"/></template>
+          <template tid="TemplateFixedCount03_1"><data name="Field" inType="win:Int8" count="1"/></template>
+          <template tid="TemplateFixedCount04_1"><data name="Field" inType="win:UInt8" count="1"/></template>
+          <template tid="TemplateFixedCount05_1"><data name="Field" inType="win:Int16" count="1"/></template>
+          <template tid="TemplateFixedCount06_1"><data name="Field" inType="win:UInt16" count="1"/></template>
+          <template tid="TemplateFixedCount07_1"><data name="Field" inType="win:Int32" count="1"/></template>
+          <template tid="TemplateFixedCount08_1"><data name="Field" inType="win:UInt32" count="1"/></template>
+          <template tid="TemplateFixedCount09_1"><data name="Field" inType="win:Int64" count="1"/></template>
+          <template tid="TemplateFixedCount10_1"><data name="Field" inType="win:UInt64" count="1"/></template>
+          <template tid="TemplateFixedCount11_1"><data name="Field" inType="win:Float" count="1"/></template>
+          <template tid="TemplateFixedCount12_1"><data name="Field" inType="win:Double" count="1"/></template>
+          <template tid="TemplateFixedCount13_1"><data name="Field" inType="win:Boolean" count="1"/></template>
+          <template tid="TemplateFixedCount14_1"><data name="Field" inType="win:Binary" length="3" count="1"/></template>
+          <template tid="TemplateFixedCount15_1"><data name="Field" inType="win:GUID" count="1"/></template>
+          <template tid="TemplateFixedCount16_1"><data name="Field" inType="win:Pointer" count="1"/></template>
+          <template tid="TemplateFixedCount17_1"><data name="Field" inType="win:FILETIME" count="1"/></template>
+          <template tid="TemplateFixedCount18_1"><data name="Field" inType="win:SYSTEMTIME" count="1"/></template>
+          <template tid="TemplateFixedCount19_1"><data name="Field" inType="win:SID" count="1"/></template>
+          <template tid="TemplateFixedCount20_1"><data name="Field" inType="win:HexInt32" count="1"/></template>
+          <template tid="TemplateFixedCount21_1"><data name="Field" inType="win:HexInt64" count="1"/></template>
+          <template tid="TemplateFixedCount22_1"><data name="Field" inType="win:CountedUnicodeString" count="1"/></template>
+          <template tid="TemplateFixedCount23_1"><data name="Field" inType="win:CountedAnsiString" count="1"/></template>
+          <template tid="TemplateFixedCount24_1"><data name="Field" inType="win:CountedBinary" count="1"/></template>
+
+          <template tid="TemplateVarCount01"><data name="VarCount" inType="win:UInt32"/><data name="Field" inType="win:UnicodeString" count="VarCount"/></template>
+          <template tid="TemplateVarCount02"><data name="VarCount" inType="win:UInt32"/><data name="Field" inType="win:AnsiString" count="VarCount"/></template>
+          <template tid="TemplateVarCount03"><data name="VarCount" inType="win:UInt32"/><data name="Field" inType="win:Int8" count="VarCount"/></template>
+          <template tid="TemplateVarCount04"><data name="VarCount" inType="win:UInt32"/><data name="Field" inType="win:UInt8" count="VarCount"/></template>
+          <template tid="TemplateVarCount05"><data name="VarCount" inType="win:UInt32"/><data name="Field" inType="win:Int16" count="VarCount"/></template>
+          <template tid="TemplateVarCount06"><data name="VarCount" inType="win:UInt32"/><data name="Field" inType="win:UInt16" count="VarCount"/></template>
+          <template tid="TemplateVarCount07"><data name="VarCount" inType="win:UInt32"/><data name="Field" inType="win:Int32" count="VarCount"/></template>
+          <template tid="TemplateVarCount08"><data name="VarCount" inType="win:UInt32"/><data name="Field" inType="win:UInt32" count="VarCount"/></template>
+          <template tid="TemplateVarCount09"><data name="VarCount" inType="win:UInt32"/><data name="Field" inType="win:Int64" count="VarCount"/></template>
+          <template tid="TemplateVarCount10"><data name="VarCount" inType="win:UInt32"/><data name="Field" inType="win:UInt64" count="VarCount"/></template>
+          <template tid="TemplateVarCount11"><data name="VarCount" inType="win:UInt32"/><data name="Field" inType="win:Float" count="VarCount"/></template>
+          <template tid="TemplateVarCount12"><data name="VarCount" inType="win:UInt32"/><data name="Field" inType="win:Double" count="VarCount"/></template>
+          <template tid="TemplateVarCount13"><data name="VarCount" inType="win:UInt32"/><data name="Field" inType="win:Boolean" count="VarCount"/></template>
+          <template tid="TemplateVarCount14"><data name="VarCount" inType="win:UInt32"/><data name="Field" inType="win:Binary" length="3" count="VarCount"/></template>
+          <template tid="TemplateVarCount15"><data name="VarCount" inType="win:UInt32"/><data name="Field" inType="win:GUID" count="VarCount"/></template>
+          <template tid="TemplateVarCount16"><data name="VarCount" inType="win:UInt32"/><data name="Field" inType="win:Pointer" count="VarCount"/></template>
+          <template tid="TemplateVarCount17"><data name="VarCount" inType="win:UInt32"/><data name="Field" inType="win:FILETIME" count="VarCount"/></template>
+          <template tid="TemplateVarCount18"><data name="VarCount" inType="win:UInt32"/><data name="Field" inType="win:SYSTEMTIME" count="VarCount"/></template>
+          <template tid="TemplateVarCount19"><data name="VarCount" inType="win:UInt32"/><data name="Field" inType="win:SID" count="VarCount"/></template>
+          <template tid="TemplateVarCount20"><data name="VarCount" inType="win:UInt32"/><data name="Field" inType="win:HexInt32" count="VarCount"/></template>
+          <template tid="TemplateVarCount21"><data name="VarCount" inType="win:UInt32"/><data name="Field" inType="win:HexInt64" count="VarCount"/></template>
+          <template tid="TemplateVarCount22"><data name="VarCount" inType="win:UInt32"/><data name="Field" inType="win:CountedUnicodeString" count="VarCount"/></template>
+          <template tid="TemplateVarCount23"><data name="VarCount" inType="win:UInt32"/><data name="Field" inType="win:CountedAnsiString" count="VarCount"/></template>
+          <template tid="TemplateVarCount24"><data name="VarCount" inType="win:UInt32"/><data name="Field" inType="win:CountedBinary" count="VarCount"/></template>
+
+          <template tid="TemplateFixedLength01"><data name="Field01" inType="win:UnicodeString" length="0"/></template>
+          <template tid="TemplateFixedLength02"><data name="Field02" inType="win:UnicodeString" length="1"/></template>
+          <template tid="TemplateFixedLength03"><data name="Field03" inType="win:UnicodeString" length="2"/></template>
+          <template tid="TemplateFixedLength04"><data name="Field04" inType="win:AnsiString" length="0"/></template>
+          <template tid="TemplateFixedLength05"><data name="Field05" inType="win:AnsiString" length="1"/></template>
+          <template tid="TemplateFixedLength06"><data name="Field06" inType="win:AnsiString" length="2"/></template>
+          <!--<template tid="TemplateFixedLength07"><data name="Field07" inType="win:Binary" length="0"/></template>-->
+          <template tid="TemplateFixedLength08"><data name="Field08" inType="win:Binary" length="1"/></template>
+          <template tid="TemplateFixedLength09"><data name="Field09" inType="win:Binary" length="2"/></template>
+          <template tid="TemplateFixedLength10"><data name="Field10" inType="win:SID" length="0"/></template>
+          <template tid="TemplateFixedLength11"><data name="Field11" inType="win:SID" length="1"/></template>
+          <template tid="TemplateFixedLength12"><data name="Field12" inType="win:SID" length="2"/></template>
+
+          <template tid="TemplateVarLength1"><data name="VarLength" inType="win:UInt8"/><data name="Field" inType="win:UnicodeString" length="VarLength"/></template>
+          <template tid="TemplateVarLength2"><data name="VarLength" inType="win:UInt8"/><data name="Field" inType="win:AnsiString" length="VarLength"/></template>
+          <template tid="TemplateVarLength3"><data name="VarLength" inType="win:UInt8"/><data name="Field" inType="win:Binary" length="VarLength"/></template>
+          <template tid="TemplateVarLength4"><data name="VarLength" inType="win:UInt8"/><data name="Field" inType="win:SID" length="VarLength"/></template>
+
+          <template tid="TemplateVarLengthFixedCount1_0"><data name="VarLength" inType="win:UInt8"/><data name="Field" inType="win:UnicodeString" length="VarLength" count="0"/></template>
+          <template tid="TemplateVarLengthFixedCount2_0"><data name="VarLength" inType="win:UInt8"/><data name="Field" inType="win:AnsiString" length="VarLength" count="0"/></template>
+          <template tid="TemplateVarLengthFixedCount3_0"><data name="VarLength" inType="win:UInt8"/><data name="Field" inType="win:Binary" length="VarLength" count="0"/></template>
+          <template tid="TemplateVarLengthFixedCount4_0"><data name="VarLength" inType="win:UInt8"/><data name="Field" inType="win:SID" length="VarLength" count="0"/></template>
+          <template tid="TemplateVarLengthFixedCount1_1"><data name="VarLength" inType="win:UInt8"/><data name="Field" inType="win:UnicodeString" length="VarLength" count="0"/></template>
+          <template tid="TemplateVarLengthFixedCount2_1"><data name="VarLength" inType="win:UInt8"/><data name="Field" inType="win:AnsiString" length="VarLength" count="0"/></template>
+          <template tid="TemplateVarLengthFixedCount3_1"><data name="VarLength" inType="win:UInt8"/><data name="Field" inType="win:Binary" length="VarLength" count="0"/></template>
+          <template tid="TemplateVarLengthFixedCount4_1"><data name="VarLength" inType="win:UInt8"/><data name="Field" inType="win:SID" length="VarLength" count="0"/></template>
+          <template tid="TemplateVarLengthFixedCount1_2"><data name="VarLength" inType="win:UInt8"/><data name="Field" inType="win:UnicodeString" length="VarLength" count="0"/></template>
+          <template tid="TemplateVarLengthFixedCount2_2"><data name="VarLength" inType="win:UInt8"/><data name="Field" inType="win:AnsiString" length="VarLength" count="0"/></template>
+          <template tid="TemplateVarLengthFixedCount3_2"><data name="VarLength" inType="win:UInt8"/><data name="Field" inType="win:Binary" length="VarLength" count="0"/></template>
+          <template tid="TemplateVarLengthFixedCount4_2"><data name="VarLength" inType="win:UInt8"/><data name="Field" inType="win:SID" length="VarLength" count="0"/></template>
+
+          <template tid="TemplateVarLengthVarCount1"><data name="VarLength" inType="win:UInt8"/><data name="VarCount" inType="win:UInt8"/><data name="Field" inType="win:UnicodeString" length="VarLength" count="VarCount"/></template>
+          <template tid="TemplateVarLengthVarCount2"><data name="VarLength" inType="win:UInt8"/><data name="VarCount" inType="win:UInt8"/><data name="Field" inType="win:AnsiString" length="VarLength" count="VarCount"/></template>
+          <template tid="TemplateVarLengthVarCount3"><data name="VarLength" inType="win:UInt8"/><data name="VarCount" inType="win:UInt8"/><data name="Field" inType="win:Binary" length="VarLength" count="VarCount"/></template>
+          <template tid="TemplateVarLengthVarCount4"><data name="VarLength" inType="win:UInt8"/><data name="VarCount" inType="win:UInt8"/><data name="Field" inType="win:SID" length="VarLength" count="VarCount"/></template>
+
+          <template tid="TemplateOutTypes">
+            <data name="OutData1" inType="win:UnicodeString" outType="xs:string"/>
+            <data name="OutData2" inType="win:UnicodeString" outType="win:Xml"/>
+            <data name="OutData3" inType="win:UnicodeString" outType="win:Json"/>
+            <data name="OutData4" inType="win:AnsiString" outType="xs:string"/>
+            <data name="OutData5" inType="win:AnsiString" outType="win:Xml"/>
+            <data name="OutData6" inType="win:AnsiString" outType="win:Json"/>
+            <data name="OutData7" inType="win:AnsiString" outType="win:Utf8"/>
+            <data name="OutData8" inType="win:Int8" outType="xs:byte"/>
+            <data name="OutData9" inType="win:Int8" outType="xs:string"/>
+            <data name="OutData10" inType="win:UInt8" outType="xs:unsignedByte"/>
+            <data name="OutData11" inType="win:UInt8" outType="win:HexInt8"/>
+            <data name="OutData12" inType="win:UInt8" outType="xs:string"/>
+            <data name="OutData13" inType="win:UInt8" outType="xs:boolean"/>
+            <data name="OutData14" inType="win:Int16" outType="xs:short"/>
+            <data name="OutData15" inType="win:UInt16" outType="xs:unsignedShort"/>
+            <data name="OutData16" inType="win:UInt16" outType="win:Port"/>
+            <data name="OutData17" inType="win:UInt16" outType="win:HexInt16"/>
+            <data name="OutData18" inType="win:UInt16" outType="xs:string"/>
+            <data name="OutData19" inType="win:Int32" outType="xs:int"/>
+            <data name="OutData20" inType="win:Int32" outType="win:HResult"/>
+            <data name="OutData21" inType="win:UInt32" outType="xs:unsignedInt"/>
+            <data name="OutData22" inType="win:UInt32" outType="win:PID"/>
+            <data name="OutData23" inType="win:UInt32" outType="win:TID"/>
+            <data name="OutData24" inType="win:UInt32" outType="win:IPv4"/>
+            <data name="OutData25" inType="win:UInt32" outType="win:ETWTIME"/>
+            <data name="OutData26" inType="win:UInt32" outType="win:ErrorCode"/>
+            <data name="OutData27" inType="win:UInt32" outType="win:Win32Error"/>
+            <data name="OutData28" inType="win:UInt32" outType="win:NTSTATUS"/>
+            <data name="OutData29" inType="win:UInt32" outType="win:HexInt32"/>
+            <data name="OutData30" inType="win:UInt32" outType="win:CodePointer"/>
+            <data name="OutData31" inType="win:Int64" outType="xs:long"/>
+            <data name="OutData32" inType="win:UInt64" outType="xs:unsignedLong"/>
+            <data name="OutData33" inType="win:UInt64" outType="win:ETWTIME"/>
+            <data name="OutData34" inType="win:UInt64" outType="win:HexInt64"/>
+            <data name="OutData35" inType="win:UInt64" outType="win:CodePointer"/>
+            <data name="OutData36" inType="win:Float" outType="xs:float"/>
+            <data name="OutData37" inType="win:Double" outType="xs:double"/>
+            <data name="OutData38" inType="win:Boolean" outType="xs:boolean"/>
+            <data name="OutData39" inType="win:Binary" outType="xs:hexBinary" length="16"/>
+            <data name="OutData40" inType="win:Binary" outType="win:IPv6" length="16"/>
+            <data name="OutData41" inType="win:Binary" outType="win:SocketAddress" length="16"/>
+            <data name="OutData42" inType="win:Binary" outType="win:Pkcs7WithTypeInfo" length="16"/>
+            <data name="OutData43" inType="win:GUID" outType="xs:GUID"/>
+            <data name="OutData44" inType="win:Pointer" outType="win:HexInt64"/>
+            <data name="OutData45" inType="win:Pointer" outType="win:CodePointer"/>
+            <data name="OutData46" inType="win:Pointer" outType="xs:long"/>
+            <data name="OutData47" inType="win:Pointer" outType="xs:unsignedLong"/>
+            <data name="OutData48" inType="win:FILETIME" outType="xs:dateTime"/>
+            <data name="OutData49" inType="win:FILETIME" outType="win:DateTimeCultureInsensitive"/>
+            <data name="OutData50" inType="win:FILETIME" outType="win:DateTimeUtc"/>
+            <data name="OutData51" inType="win:SYSTEMTIME" outType="xs:dateTime"/>
+            <data name="OutData52" inType="win:SYSTEMTIME" outType="win:DateTimeCultureInsensitive"/>
+            <data name="OutData53" inType="win:SYSTEMTIME" outType="win:DateTimeUtc"/>
+            <data name="OutData54" inType="win:SID" outType="xs:string"/>
+            <data name="OutData55" inType="win:HexInt32" outType="win:HexInt32"/>
+            <data name="OutData56" inType="win:HexInt32" outType="win:ErrorCode"/>
+            <data name="OutData57" inType="win:HexInt32" outType="win:Win32Error"/>
+            <data name="OutData58" inType="win:HexInt32" outType="win:NTSTATUS"/>
+            <data name="OutData59" inType="win:HexInt32" outType="win:CodePointer"/>
+            <data name="OutData60" inType="win:HexInt64" outType="win:HexInt64"/>
+            <data name="OutData61" inType="win:HexInt64" outType="win:CodePointer"/>
+            <data name="OutData62" inType="win:CountedUnicodeString" outType="xs:string"/>
+            <data name="OutData63" inType="win:CountedUnicodeString" outType="win:Xml"/>
+            <data name="OutData64" inType="win:CountedUnicodeString" outType="win:Json"/>
+            <data name="OutData65" inType="win:CountedAnsiString" outType="xs:string"/>
+            <data name="OutData66" inType="win:CountedAnsiString" outType="win:Xml"/>
+            <data name="OutData67" inType="win:CountedAnsiString" outType="win:Json"/>
+            <data name="OutData68" inType="win:CountedAnsiString" outType="win:Utf8"/>
+            <data name="OutData69" inType="win:CountedBinary" outType="xs:hexBinary"/>
+            <data name="OutData70" inType="win:CountedBinary" outType="win:IPv6"/>
+            <data name="OutData71" inType="win:CountedBinary" outType="win:SocketAddress"/>
+            <data name="OutData72" inType="win:CountedBinary" outType="win:Pkcs7WithTypeInfo"/>
+          </template>
+        </templates>
+      </provider>
+    </events>
+  </instrumentation>
+</instrumentationManifest>

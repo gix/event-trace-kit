@@ -30,5 +30,6 @@
   <ItemGroup>
     <EmbeddedResource Include="Compilation\ResGen\TestCases\*.man" />
     <EmbeddedResource Include="Compilation\ResGen\TestCases\*.bin" />
+    <EmbeddedResource Include="Compilation\ResGen\TestCases\*.h" />
   </ItemGroup>
 </Project>

@@ -30,6 +30,11 @@ namespace EventTraceKit.EventTracing.Tests.Compilation.ResGen
             var assembly = type.Assembly;
             var resourceNames = assembly.GetManifestResourceNames();
 
+            var testMethodParameters = testMethod.GetParameters();
+            var expectedType = testMethodParameters.Length == 3
+                ? testMethodParameters[2].ParameterType
+                : typeof(byte[]);
+
             foreach (var resourceName in resourceNames) {
                 if (!resourceName.StartsWith(resourcePrefix))
                     continue;
@@ -37,16 +42,25 @@ namespace EventTraceKit.EventTracing.Tests.Compilation.ResGen
                 if (!resourceName.EndsWith(".man"))
                     continue;
 
-                var testCase = resourceName.Substring(
-                    resourcePrefix.Length, resourceName.Length - resourcePrefix.Length - 4);
-
                 var expectedOutput = assembly.GetManifestResourceStream(
                     Path.ChangeExtension(resourceName, fileExt));
 
                 if (expectedOutput == null)
                     continue;
 
-                yield return new object[] { resourceName.Substring(resourcePrefix.Length), type, expectedOutput.ReadAllBytes() };
+                object expected;
+                if (expectedType == typeof(string)) {
+                    using var reader = new StreamReader(expectedOutput);
+                    expected = reader.ReadToEnd();
+                } else {
+                    expected = expectedOutput.ReadAllBytes();
+                }
+
+                yield return new[] {
+                    resourceName.Substring(resourcePrefix.Length),
+                    type,
+                    expected
+                };
             }
         }
     }

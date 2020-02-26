@@ -569,7 +569,7 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             ow.WriteLine("inline ULONG");
             ow.WriteLine("{0}(", templateId);
             using (ow.IndentScope()) {
-                ow.WriteLine("_In_ REGHANDLE {0},", naming.RegHandleId);
+                ow.WriteLine("_In_ TraceContext& {0},", naming.ContextId);
                 ow.WriteLine("_In_ EVENT_DESCRIPTOR const* {0}{1}",
                              naming.EventDescriptorId,
                              properties.Count > 0 ? "," : string.Empty);
@@ -584,8 +584,8 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
                         AppendDataDesc(property, properties, ow);
                 }
                 ow.WriteLine(
-                    "return EventWrite({0}, {1}, {2}, {3});",
-                    naming.RegHandleId,
+                    "return EventWrite(&{0}, {1}, {2}, {3});",
+                    naming.ContextId,
                     naming.EventDescriptorId,
                     countExpr,
                     properties.Count > 0 ? naming.EventDataDescriptorId : "nullptr");

@@ -27,8 +27,9 @@ $manifests = @(
 $manifests2 = @(
     'EventAttributes',
     'Large',
+    'ProviderTraits',
     'ReferenceChannels',
-    'ProviderTraits'
+    'TypeMangling'
 )
 
 if ($Regenerate) {
@@ -36,6 +37,7 @@ if ($Regenerate) {
     if (! $?) { throw "mc failed" }
     Move-Item -Force xTEMP.BIN "wpf-etw.wevt.v3-8.1-compat.bin"
     Move-Item -Force x_MSG00001.bin "wpf-etw.msg.v3-8.1-compat.bin"
+    Move-Item -Force x.h "wpf-etw.wevt.v3-8.1-compat.h"
 
     foreach ($manifest in $manifests) {
         mc-15063 -um -z x "${manifest}.man"
@@ -45,17 +47,19 @@ if ($Regenerate) {
         mc-18362 -um -z x "${manifest}.man"
         if (! $?) { throw "mc failed" }
         Move-Item -Force xTEMP.BIN "${manifest}.wevt.v5.bin"
-        Move-Item -Force x_MSG00001.bin "${manifest}.msg.bin"
+        Move-Item -Force x_MSG00001.bin "${manifest}.msg.bin" -ErrorAction SilentlyContinue
+        Move-Item -Force x.h "${manifest}.h"
     }
 
     foreach ($manifest in $manifests2) {
         mc-18362 -um -z x "${manifest}.man"
         if (! $?) { throw "mc failed" }
         Move-Item -Force xTEMP.BIN "${manifest}.wevt.v5.bin"
-        Move-Item -Force x_MSG00001.bin "${manifest}.msg.bin"
+        Move-Item -Force x_MSG00001.bin "${manifest}.msg.bin" -ErrorAction SilentlyContinue
+        Move-Item -Force x.h "${manifest}.h"
     }
 
-    Remove-Item x.h,x.rc
+    Remove-Item x.rc
 }
 
 if ($CompareVersions) {

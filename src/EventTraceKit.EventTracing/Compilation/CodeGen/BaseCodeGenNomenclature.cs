@@ -10,10 +10,8 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
 
     internal abstract class BaseCodeGenNomenclature : ICodeGenNomenclature
     {
+        public virtual string ContextId => "context";
         public virtual string EventDataDescriptorId => "data";
-
-        public virtual string RegHandleId => "regHandle";
-
         public virtual string EventDescriptorId => "descriptor";
 
         public virtual string GetIdentifier(Provider provider)
@@ -83,18 +81,19 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
 
         public virtual string GetIdentifier(Event evt)
         {
-            if (evt.Symbol == null)
+            if (evt.Symbol == null) {
                 return string.Format(
                     CultureInfo.InvariantCulture,
                     "{0}_EVENT_0x{1:x}_{2:x}_{3:x}_{4:x}_{5:x}_{6:x}_{7:x}",
                     evt.Provider.Symbol,
                     evt.Value,
                     evt.Version,
-                    evt.ChannelValue,
+                    evt.GetDescriptorChannelValue(),
                     evt.LevelValue,
                     evt.OpcodeValue,
                     evt.TaskValue,
                     evt.KeywordMask);
+            }
 
             return evt.Symbol;
         }
@@ -158,11 +157,16 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
 
         public abstract string GetProviderGuidId(Provider provider);
 
+        public virtual string GetProviderControlGuidId(Provider provider)
+        {
+            return GetProviderGuidId(provider) + "_ControlGuid";
+        }
+
         public abstract string GetProviderContextId(Provider provider);
 
         public virtual string GetProviderHandleId(Provider provider)
         {
-            return GetIdentifier(provider) + "Handle";
+            return GetIdentifier(provider) + "_Handle";
         }
 
         public virtual string GetProviderLevelsId(Provider provider)
@@ -207,12 +211,10 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
                 throw new InternalException("cannot mangle type '{0}'", data.InType);
 
             string t = MangleType(data.InType);
-            if (data.InType.Name == WinEventSchema.SecurityId) {
-                return t;
-            }
 
             if (data.InType.Name != WinEventSchema.UnicodeString &&
-                data.InType.Name != WinEventSchema.AnsiString) {
+                data.InType.Name != WinEventSchema.AnsiString &&
+                data.InType.Name != WinEventSchema.Binary) {
                 if (data.Count.IsFixedMultiple) {
                     t = t.ToUpperInvariant();
                     t += data.Count.Value.Value;
@@ -266,7 +268,7 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
                 "UnicodeString" => "z",
                 "AnsiString" => "s",
                 "Int8" => "c",
-                "UInt8" => "c",
+                "UInt8" => "u",
                 "Int16" => "l",
                 "UInt16" => "h",
                 "Int32" => "d",
@@ -282,8 +284,11 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
                 "FILETIME" => "m",
                 "SYSTEMTIME" => "y",
                 "SID" => "k",
-                "HexInt32" => "q",
-                "HexInt64" => "x",
+                "HexInt32" => "d",
+                "HexInt64" => "i",
+                "CountedUnicodeString" => "w",
+                "CountedAnsiString" => "a",
+                "CountedBinary" => "e",
                 _ => throw new InternalException("cannot mangle type '{0}'", type),
             };
         }

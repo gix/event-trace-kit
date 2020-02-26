@@ -4,8 +4,8 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
 
     internal interface ICodeGenNomenclature
     {
+        string ContextId { get; }
         string EventDataDescriptorId { get; }
-        string RegHandleId { get; }
         string EventDescriptorId { get; }
 
         string GetIdentifier(Provider provider);
@@ -28,6 +28,7 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
         string GetTaskGuidId(Task task);
 
         string GetProviderGuidId(Provider provider);
+        string GetProviderControlGuidId(Provider provider);
         string GetProviderContextId(Provider provider);
         string GetProviderHandleId(Provider provider);
         string GetProviderLevelsId(Provider provider);
