@@ -10,7 +10,7 @@ namespace EventTraceKit.EventTracing.Internal.Native
     [SuppressUnmanagedCodeSecurity]
     internal static class UnsafeNativeMethods
     {
-        public static readonly IntPtr RT_MESSAGETABLE = MAKEINTRESOURCE(11);
+        public const short RT_MESSAGETABLE = 11;
 
         public static bool IS_INTRESOURCE(IntPtr ptr)
         {

@@ -56,9 +56,8 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
             if (module.IsInvalid)
                 throw new Win32Exception();
 
-            const int RT_MESSAGETABLE = 11;
             using (module)
-            using (var stream = module.OpenResource((IntPtr)RT_MESSAGETABLE, 1))
+            using (var stream = module.OpenResource(UnsafeNativeMethods.RT_MESSAGETABLE, 1))
                 DumpMessageTable(stream);
         }
 

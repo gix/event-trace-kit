@@ -1,31 +1,24 @@
 namespace EventTraceKit.EventTracing.Internal.Native
 {
     using System;
+    using System.Collections.Generic;
     using System.ComponentModel;
     using System.IO;
     using System.Runtime.InteropServices;
 
     internal static class SafeModuleHandleExtensions
     {
-        public static Stream OpenResource(this SafeModuleHandle module, IntPtr type, short name)
+        public static List<ResourceName> GetResourceTypes(this SafeModuleHandle module)
         {
-            return module.OpenResource(type, new IntPtr(name));
+            return UnsafeNativeMethods.GetResourceTypesEx(module);
         }
 
-        public static Stream OpenResource(this SafeModuleHandle module, string type, short name)
+        public static List<ResourceName> GetResourceNames(this SafeModuleHandle module, ResourceName type)
         {
-            return module.OpenResource(type, new IntPtr(name));
+            return UnsafeNativeMethods.GetResourceNamesEx(module, type);
         }
 
-        public static Stream OpenResource(this SafeModuleHandle module, IntPtr type, IntPtr name)
-        {
-            IntPtr resourceHandle = UnsafeNativeMethods.FindResourceEx(module, type, name, 0);
-            if (resourceHandle == IntPtr.Zero)
-                throw new Win32Exception();
-            return module.OpenResource(resourceHandle);
-        }
-
-        public static Stream OpenResource(this SafeModuleHandle module, string type, IntPtr name)
+        public static Stream OpenResource(this SafeModuleHandle module, ResourceName type, ResourceName name)
         {
             IntPtr resourceHandle = UnsafeNativeMethods.FindResourceEx(module, type, name, 0);
             if (resourceHandle == IntPtr.Zero)

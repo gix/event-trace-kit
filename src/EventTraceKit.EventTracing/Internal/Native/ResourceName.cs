@@ -26,6 +26,16 @@ namespace EventTraceKit.EventTracing.Internal.Native
         public short Id { get; }
         public string Name { get; }
 
+        public static implicit operator ResourceName(short id)
+        {
+            return new ResourceName(id);
+        }
+
+        public static implicit operator ResourceName(string name)
+        {
+            return new ResourceName(name);
+        }
+
         public override string ToString()
         {
             if (Name != null)

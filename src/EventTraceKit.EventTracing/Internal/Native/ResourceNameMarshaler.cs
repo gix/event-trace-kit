@@ -18,9 +18,8 @@ namespace EventTraceKit.EventTracing.Internal.Native
 
         public IntPtr MarshalManagedToNative(object ManagedObj)
         {
-            if (!(ManagedObj is ResourceName))
+            if (!(ManagedObj is ResourceName name))
                 throw new ArgumentException("ManagedObj");
-            var name = (ResourceName)ManagedObj;
             if (name.Name != null)
                 return Marshal.StringToCoTaskMemUni(name.Name);
             return UnsafeNativeMethods.MAKEINTRESOURCE(name.Id);
