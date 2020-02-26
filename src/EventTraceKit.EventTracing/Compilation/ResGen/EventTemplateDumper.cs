@@ -24,13 +24,13 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
         private readonly ScopedWriter writer;
 
         private Dictionary<uint, Message> messageMap;
-        private bool terse = true;
 
         public EventTemplateDumper(TextWriter writer)
         {
             this.writer = new ScopedWriter(writer);
         }
 
+        public bool Verbose { get; set; } = false;
         public bool Verify { get; set; } = true;
 
         public void Dispose()
@@ -210,7 +210,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
             for (uint i = 0; i < header.NumProviders; ++i) {
                 var provider = r.ReadStruct<ProviderEntry>();
                 providerEntries.Add(provider);
-                writer.WriteLine("Guid={0}, Offset=0x{1:X}", provider.Guid, provider.Offset);
+                writer.WriteLine("Provider(Guid={0}, Offset=0x{1:X})", provider.Guid, provider.Offset);
             }
 
             foreach (var entry in providerEntries) {
@@ -289,7 +289,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
                 return;
             }
 
-            if (terse) {
+            if (!Verbose) {
                 writer.PushDictScope($"EVNT ({block.NumEvents} entries)");
             } else {
                 writer.PushDictScope("EVNT");
@@ -320,7 +320,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
         {
             return string.Format(
                 CultureInfo.InvariantCulture,
-                "EvtDescr({0} V={1} C={2} L={3} O={4} T={5} K=0x{6:X})",
+                "Descriptor({0} V={1} C={2} L={3} O={4} T={5} K=0x{6:X})",
                 d.Id, d.Version, d.Channel, d.Level, d.Opcode, d.Task, d.Keyword);
         }
 
@@ -335,7 +335,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
                 return block;
             }
 
-            if (terse) {
+            if (!Verbose) {
                 writer.PushDictScope($"{name} ({block.NumEntries} entries)");
             } else {
                 writer.PushDictScope(name);
@@ -355,7 +355,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
                 var entry = r.ReadStruct<ChannelEntry>();
                 var name = ReadStringAt(r, entry.NameOffset);
 
-                if (terse) {
+                if (!Verbose) {
                     writer.WriteLine(
                         "Channel(Name=0x{0} ({1}), Flags={2}, Value={3}, Message=0x{4:X})",
                         entry.NameOffset, name, entry.Flags, entry.Value, entry.MessageId);
@@ -578,7 +578,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
                 return;
             }
 
-            if (terse) {
+            if (!Verbose) {
                 writer.PushDictScope($"FLTR ({block.NumFilters} entries)");
             } else {
                 writer.PushDictScope("FLTR");
@@ -600,7 +600,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
             writer.PopScope();
         }
 
-        private string ReadStringAt(BinaryReader r, long offset)
+        private static string ReadStringAt(BinaryReader r, long offset)
         {
             Stream stream = r.BaseStream;
             long old = stream.Position;
@@ -613,7 +613,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
             }
         }
 
-        private uint[] ReadUInt32At(BinaryReader r, long offset, uint count)
+        private static uint[] ReadUInt32At(BinaryReader r, long offset, uint count)
         {
             Stream stream = r.BaseStream;
             long old = stream.Position;
