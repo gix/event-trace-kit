@@ -326,7 +326,7 @@ namespace EventTraceKit.EventTracing
                     args.Exception.SourceUri,
                     args.Exception.LineNumber,
                     args.Exception.LinePosition);
-                diags.ReportError(location, args.Exception.Message);
+                diags.ReportError(location, args.Exception.Message.EscapeFormatting());
                 failedValidation = true;
             }
         }
