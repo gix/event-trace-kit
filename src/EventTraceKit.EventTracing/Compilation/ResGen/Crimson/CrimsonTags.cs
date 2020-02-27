@@ -6,11 +6,15 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen.Crimson
         public const uint CHAN = 0x4E414843;
         public const uint CRIM = 0x4D495243;
         public const uint EVNT = 0x544E5645;
+        public const uint CTRT = 0x54525443;
+        public const uint EVTF = 0x46545645;
+        public const uint EVTA = 0x41545645;
         public const uint FLTR = 0x52544C46;
         public const uint LEVL = 0x4C56454C;
         public const uint KEYW = 0x5759454B;
         public const uint MAPS = 0x5350414D;
         public const uint OPCO = 0x4F43504F;
+        public const uint PRVA = 0x41565250;
         public const uint QUER = 0x52455551;
         public const uint QTAB = 0x42415451;
         public const uint TASK = 0x4B534154;

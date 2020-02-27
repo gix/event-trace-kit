@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Check provider traits (group id, provider name). -->
+<instrumentationManifest
+    xsi:schemaLocation="http://schemas.microsoft.com/win/2004/08/events eventman.xsd"
+    xmlns="http://schemas.microsoft.com/win/2004/08/events"
+    xmlns:win="http://manifests.microsoft.com/win/2004/08/windows/events"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:trace="http://schemas.microsoft.com/win/2004/08/events/trace">
+  <instrumentation>
+    <events>
+      <provider name="ProviderName1{646E035B+4651-4D15-BC40-1897CC99E967)"
+                guid="{646E035B-4651-4D15-BC40-1897CC99E967}"
+                controlGuid="{35919CDE-6E0D-458F-84C1-D8930E18AC57}"
+                symbol="ProviderSym1"
+                namespace="ProviderNamespace1"
+                message="$(string.provider.1)"
+                resourceFileName="res.dll"
+                messageFileName="msg.dll">
+        <traits groupGuid="{5FA0E8FD-0AC9-4EE1-98DE-73C69912E6D1}" includeName="true"/>
+        <events>
+          <event value="10"/>
+        </events>
+      </provider>
+      <provider name="ProviderName2.ABC5D6FFABF642C19174417F87643B00"
+                guid="{ABC5D6FF-ABF6-42C1-9174-417F87643B00}"
+                controlGuid="{1BE03D10-B7D7-4592-A26C-6929E038B328}"
+                symbol="ProviderSym2"
+                namespace="ProviderNamespace2"
+                message="$(string.provider.2)"
+                resourceFileName="res.dll"
+                messageFileName="msg.dll">
+        <traits groupGuid="{5FA0E8FD-0AC9-4EE1-98DE-73C69912E6D1}" includeName="false"/>
+        <events>
+          <event value="20"/>
+        </events>
+      </provider>
+      <provider name="ProviderName3.418DACB3DA4B47FD851803EA8A6552E9"
+                guid="{418DACB3-DA4B-47FD-8518-03EA8A6552E9}"
+                controlGuid="{A97BB888-DEB4-40B7-9C46-52C21F4FD0DE}"
+                symbol="ProviderSym3"
+                namespace="ProviderNamespace3"
+                message="$(string.provider.3)"
+                resourceFileName="res.dll"
+                messageFileName="msg.dll">
+        <traits includeName="true"/>
+        <events>
+          <event value="30"/>
+        </events>
+      </provider>
+    </events>
+  </instrumentation>
+  <localization>
+    <resources culture="en-US">
+      <stringTable>
+        <string id="provider.1" value="Provider.1"/>
+        <string id="provider.2" value="Provider.2"/>
+        <string id="provider.3" value="Provider.3"/>
+      </stringTable>
+    </resources>
+  </localization>
+</instrumentationManifest>

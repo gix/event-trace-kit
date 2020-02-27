@@ -28,23 +28,7 @@
     <ProjectReference Include="..\EventTraceKit.EventTracing\EventTraceKit.EventTracing.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Compilation\ResGen\TestCases\Empty.man" />
-    <EmbeddedResource Include="Compilation\ResGen\TestCases\Empty.wevt.bin" />
-    <EmbeddedResource Include="Compilation\ResGen\TestCases\ImportChannelFromProvider.man" />
-    <EmbeddedResource Include="Compilation\ResGen\TestCases\ImportChannelFromProvider.msg.bin" />
-    <EmbeddedResource Include="Compilation\ResGen\TestCases\ImportChannelFromProvider.wevt.bin" />
-    <EmbeddedResource Include="Compilation\ResGen\TestCases\ImportChannels.man" />
-    <EmbeddedResource Include="Compilation\ResGen\TestCases\ImportChannels.msg.bin" />
-    <EmbeddedResource Include="Compilation\ResGen\TestCases\ImportChannels.wevt.bin" />
-    <EmbeddedResource Include="Compilation\ResGen\TestCases\makefile" />
-    <EmbeddedResource Include="Compilation\ResGen\TestCases\ReferenceChannels.man" />
-    <EmbeddedResource Include="Compilation\ResGen\TestCases\ReferenceChannels.msg.bin" />
-    <EmbeddedResource Include="Compilation\ResGen\TestCases\ReferenceChannels.wevt.bin" />
-    <EmbeddedResource Include="Compilation\ResGen\TestCases\TaskOpcodes.man" />
-    <EmbeddedResource Include="Compilation\ResGen\TestCases\TaskOpcodes.msg.bin" />
-    <EmbeddedResource Include="Compilation\ResGen\TestCases\TaskOpcodes.wevt.bin" />
-    <EmbeddedResource Include="Compilation\ResGen\TestCases\wpf-etw.man" />
-    <EmbeddedResource Include="Compilation\ResGen\TestCases\wpf-etw.msg.bin" />
-    <EmbeddedResource Include="Compilation\ResGen\TestCases\wpf-etw.wevt.bin" />
+    <EmbeddedResource Include="Compilation\ResGen\TestCases\*.man" />
+    <EmbeddedResource Include="Compilation\ResGen\TestCases\*.bin" />
   </ItemGroup>
 </Project>

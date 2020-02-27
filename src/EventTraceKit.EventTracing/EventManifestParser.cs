@@ -404,6 +404,7 @@ namespace EventTraceKit.EventTracing
             var resourceFileName = elem.GetOptionalString("resourceFileName");
             var messageFileName = elem.GetOptionalString("messageFileName");
             var parameterFileName = elem.GetOptionalString("parameterFileName");
+            var controlGuid = elem.GetOptionalGuid("controlGuid");
 
             LocalizedString message = null;
             if (msgRef != null) {
@@ -421,10 +422,23 @@ namespace EventTraceKit.EventTracing
                 ParameterFileName = parameterFileName,
             };
 
+            if (controlGuid != null && controlGuid.Value != Guid.Empty)
+                provider.ControlGuid = controlGuid;
+
             var ctx = new ProviderContext(provider, manifest, metadata);
 
             var importChannelName = EventManifestSchema.Namespace + "importChannel";
             var valueMapName = EventManifestSchema.Namespace + "valueMap";
+
+            var traitsElem = elem.XPathSelectElement("e:traits", nsResolver);
+            if (traitsElem != null) {
+                var groupGuid = traitsElem.GetOptionalGuid("groupGuid");
+                var includeName = traitsElem.GetOptionalBool("includeName");
+
+                if (groupGuid != null && groupGuid.Value != Guid.Empty)
+                    provider.GroupGuid = groupGuid;
+                provider.IncludeNameInTraits = includeName;
+            }
 
             foreach (XElement child in elem.XPathSelectElements("e:channels/e:channel | e:channels/e:importChannel", nsResolver)) {
                 Channel channel;
@@ -434,10 +448,12 @@ namespace EventTraceKit.EventTracing
                     channel = ReadChannel(child, ctx);
 
                 channel.Index = provider.Channels.Count;
+                provider.Channels.TryAdd(channel, diags);
+            }
+
+            foreach (var channel in provider.Channels) {
                 if (channel.Value == null)
                     channel.Value = provider.CreateChannelValue();
-
-                provider.Channels.TryAdd(channel, diags);
             }
 
             foreach (var child in elem.XPathSelectElements("e:levels/e:level", nsResolver))
@@ -736,7 +752,7 @@ namespace EventTraceKit.EventTracing
             return item;
         }
 
-        private PatternMap ReadPatternMap(XElement elem, IEventManifestContext ctx)
+        private PatternMap ReadPatternMap(XElement elem, IEventManifestContext _)
         {
             var name = elem.GetString("name");
             var format = elem.GetString("format");
@@ -957,6 +973,8 @@ namespace EventTraceKit.EventTracing
             var templateToken = elem.GetOptionalString("template");
             var msgRef = elem.GetOptionalString("message");
             var notLogged = elem.GetOptionalBool("notLogged");
+            var name = elem.GetOptionalString("name");
+            var attributes = elem.GetOptionalString("attributes");
 
             var task = ctx.GetTask(taskName);
             var evt = new Event(value, version.GetValueOrDefault()) {
@@ -969,7 +987,13 @@ namespace EventTraceKit.EventTracing
                 Task = task,
                 Template = ctx.GetTemplate(templateToken),
                 Location = elem.GetLocation(),
+                Name = name,
             };
+
+            if (attributes != null) {
+                foreach (var attrib in ParseEventAttributes(attributes))
+                    evt.Attributes.Add(attrib);
+            }
 
             if (msgRef != null && evt.Message == null)
                 ReportMissingMessage(msgRef, new EventName(value, version, symbol));
@@ -1000,6 +1024,30 @@ namespace EventTraceKit.EventTracing
             manifestSpec.IsSatisfiedBy(evt);
 
             return evt;
+        }
+
+        private IEnumerable<EventAttribute> ParseEventAttributes(LocatedRef<string> attributes)
+        {
+            var match = Regex.Match(attributes.Value, @"\A(?:(?<pair>[^""=;]+?=(?:""(?:""""|[^"";])+?""|[^"";]+?))(?:;|\z))*\z");
+            if (!match.Success) {
+                diags.ReportError(attributes.Location, "Invalid event attributes");
+                yield break;
+            }
+
+            var attribValueColumn = attributes.Location.ColumnNumber + "attributes='".Length;
+
+            foreach (Capture capture in match.Groups["pair"].Captures) {
+                string source = capture.Value;
+
+                var location = new SourceLocation(
+                    attributes.Location.FilePath,
+                    attributes.Location.LineNumber,
+                    attribValueColumn + capture.Index);
+
+                yield return new EventAttribute(source) {
+                    Location = location
+                };
+            }
         }
 
         private void ReportMissingMessage(LocatedRef<string> msgRef, EntityName referencing)
@@ -1323,8 +1371,7 @@ namespace EventTraceKit.EventTracing
                 if (idOrName == null)
                     return null;
 
-                Channel channel = provider.Channels.GetById(idOrName) ??
-                                  provider.Channels.GetByName(idOrName);
+                Channel channel = provider.Channels.GetByIdOrName(idOrName);
                 if (channel != null)
                     return channel;
 

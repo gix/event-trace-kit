@@ -1,5 +1,6 @@
 namespace EventTraceKit.EventTracing.Schema
 {
+    using System;
     using System.Linq;
     using EventTraceKit.EventTracing.Internal.Native;
     using EventTraceKit.EventTracing.Support;
@@ -21,7 +22,55 @@ namespace EventTraceKit.EventTracing.Schema
 
         public bool IsSatisfiedBy(Provider provider)
         {
-            return true;
+            bool result = true;
+
+            if (provider.ControlGuid != null) {
+                var trailingGuid = ExtractGuidFromProviderName(provider.Name.Value);
+                if (trailingGuid == null || trailingGuid != provider.Id) {
+                    result = false;
+                    diags.ReportError(
+                        provider.Name.Location,
+                        "Invalid provider name '{0}'. When controlGuid is specified, the provider name must end with the provider guid.",
+                        provider.Name.Value);
+                }
+            }
+
+            return result;
+        }
+
+        /// <devdoc>
+        ///   Microsoft's message compiler reads 32 hexadecimal characters (as
+        ///   determined by <c>std::iswxdigit</c>) from the back, skipping any
+        ///   other characters.
+        /// </devdoc>
+        private static Guid? ExtractGuidFromProviderName(string name)
+        {
+            var guidChars = new char[32];
+
+            int nameIdx = name.Length - 1;
+            for (int i = guidChars.Length - 1; i >= 0; --i) {
+                char c;
+                do {
+                    if (nameIdx < 0) {
+                        // Input string exhausted before reading characters.
+                        return null;
+                    }
+
+                    c = name[nameIdx--];
+                } while (!IsHexChar(c));
+
+                guidChars[i] = c;
+            }
+
+            if (!Guid.TryParse(new string(guidChars), out var id))
+                return null;
+
+            return id;
+        }
+
+        private static bool IsHexChar(char c)
+        {
+            return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
         }
 
         public bool IsSatisfiedBy(Event @event)

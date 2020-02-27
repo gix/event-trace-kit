@@ -1,0 +1,782 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<instrumentationManifest
+    xsi:schemaLocation="http://schemas.microsoft.com/win/2004/08/events eventman.xsd"
+    xmlns="http://schemas.microsoft.com/win/2004/08/events"
+    xmlns:win="http://manifests.microsoft.com/win/2004/08/windows/events"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:trace="http://schemas.microsoft.com/win/2004/08/events/trace"
+    xmlns:ns1="urn:uuid:00000000-0000-0000-0000-000000000001"
+    xmlns:ns2="urn:uuid:00000000-0000-0000-0000-000000000002">
+  <instrumentation>
+    <events>
+      <provider name="ProviderName1.716EFEF75AC24EE08277D9226411A155"
+                guid="{716EFEF7-5AC2-4EE0-8277-D9226411A155}"
+                controlGuid="{35919CDE-6E0D-458F-84C1-D8930E18AC57}"
+                symbol="ProviderSym1"
+                namespace="ProviderNamespace1"
+                message="$(string.provider.1)"
+                resourceFileName="res.dll"
+                messageFileName="msg.dll"
+                parameterFileName="param.dll">
+        <traits groupGuid="{5FA0E8FD-0AC9-4EE1-98DE-73C69912E6D1}" includeName="true"/>
+        <events>
+          <event value="5" version="11" name="EventName511" channel="P1/ChannelName2" level="ns1:LevelName1" task="ns1:TaskName1" opcode="OpcodeName1" keywords="ns1:KeywordName1 KeywordName2" template="Template1" message="$(string.event.1.1)"/>
+          <event value="4"/>
+          <event value="3" symbol="EventSym3" name="EventName3" version="33" attributes="FILE=source.cpp;LINE=1" level="LevelName3" task="ns2:TaskName2" notLogged="true" template="Template2" message="$(string.event.1.3)"/>
+          <event value="2" symbol="EventSym4" name="EventName4" version="44" attributes="LINE=2;FILE=source.cpp;FUNC=fun" level="LevelName4" opcode="OpcodeName1" template="Template3" message="$(string.event.1.4)"/>
+          <event value="1" symbol="EventSym5" name="EventName5" version="55" attributes='FILE=source.cpp;MJ="major comp";LINE=6' level="LevelName5" keywords="ns1:KeywordName1" template="Template4" message="$(string.event.1.5)"/>
+          <event value="6" symbol="EventSym6" name="ZzEventName6" version="66" attributes="FILE=source.cpp;LINE=5;FUNC=g1" level="LevelName6" keywords="ns1:KeywordName1 KeywordName2" template="Template5" message="$(string.event.1.6)"/>
+          <event value="7" symbol="EventSym7" version="0" level="LevelName7" keywords="ns1:KeywordName1 KeywordName2" template="Template6" message="$(string.event.1.7)"/>
+          <event value="8" symbol="EventSym8" version="0" level="win:Error" task="win:None" opcode="win:Info" keywords="ns1:KeywordName1 KeywordName2 win:ResponseTime" template="Template7" message="$(string.event.1.8)"/>
+          <event value="9" version="0xFE" level="LevelName9" keywords="ns1:KeywordName1 KeywordName2" template="Template8" message="$(string.event.1.9)"/>
+          <event value="0xFFFF" version="0xFF" level="LevelName8" keywords="ns1:KeywordName1 KeywordName2" template="Template9" message="$(string.event.1.10)"/>
+        </events>
+        <channels>
+          <channel name="P1/ChannelName1" type="Admin" value="20" chid="Channel1" isolation="Application" access="O:BAG:SYD:" enabled="false" message="$(string.channel.1.1)">
+            <logging>
+              <autoBackup>true</autoBackup>
+              <retention>true</retention>
+              <maxSize>12345</maxSize>
+            </logging>
+            <publishing>
+              <level>1</level>
+              <controlGuid>{D0883FA6-F3FD-43C3-A0E4-1FCECC87AF8B}</controlGuid>
+            </publishing>
+          </channel>
+          <channel name="P1/ChannelName2" type="Operational"/>
+          <channel name="P1/ChannelName3" type="Analytic" value="16" chid="Channel3" symbol="ChannelSym3" isolation="System" enabled="true" message="$(string.channel.1.3)"/>
+          <channel name="P1/ChannelName4" type="Debug" value="255" chid="Channel4" symbol="ChannelSym4" isolation="Custom" enabled="1" message="$(string.channel.1.4)"/>
+          <importChannel name="Security" chid="Security"/>
+          <importChannel name="Application" chid="Application"/>
+          <importChannel name="System" chid="System"/>
+          <importChannel name="TraceClassic" chid="TraceClassic"/>
+        </channels>
+        <levels>
+          <level name="ns1:LevelName1" value="105" symbol="LevelSym1" message="$(string.level.1.1)"/>
+          <level name="ns2:LevelName2" value="104"/>
+          <level name="LevelName3" value="103" symbol="LevelSym3" message="$(string.level.1.3)"/>
+          <level name="LevelName4" value="102" symbol="LevelSym4" message="$(string.level.1.4)"/>
+          <level name="LevelName5" value="101" symbol="LevelSym5" message="$(string.level.1.5)"/>
+          <level name="LevelName6" value="106" symbol="LevelSym6" message="$(string.level.1.6)"/>
+          <level name="LevelName7" value="107" symbol="LevelSym7" message="$(string.level.1.7)"/>
+          <level name="LevelName8" value="108" symbol="LevelSym8" message="$(string.level.1.8)"/>
+          <level name="LevelName9" value="0xFF" symbol="LevelSym9" message="$(string.level.1.9)"/>
+        </levels>
+        <tasks>
+          <task name="ns1:TaskName1" value="103" symbol="TaskSym1" eventGUID="{D0883FA6-F3FD-43C3-A0E4-000000000001}" message="$(string.task.1.1)"/>
+          <task name="ns2:TaskName2" value="102"/>
+          <task name="TaskName3" value="101" symbol="TaskSym3" eventGUID="{00000000-0000-0000-0000-000000000000}" message="$(string.task.1.3)"/>
+          <task name="TaskName4" value="0xFFFF" symbol="TaskSym4" eventGUID="{D0883FA6-F3FD-43C3-A0E4-000000000003}" message="$(string.task.1.4)"/>
+        </tasks>
+        <opcodes>
+          <opcode name="ns1:OpcodeName3" value="103" symbol="OpcodeSym3" mofValue="66" message="$(string.opcode.1.3)"/>
+          <opcode name="ns2:OpcodeName2" value="10"/>
+          <opcode name="OpcodeName1" value="239" symbol="OpcodeSym1" message="$(string.opcode.1.1)"/>
+        </opcodes>
+        <keywords>
+          <keyword name="ns1:KeywordName1" mask="0x0000400000000000" symbol="KeywordSym1" message="$(string.keyword.1.1)"/>
+          <keyword name="KeywordName2" mask="0x0000800000000000"/>
+          <keyword name="KeywordName0000000000000001" mask="0x0000000000000001" message="$(string.keyword.1.0000000000000001)"/>
+          <keyword name="KeywordName0000000000000002" mask="0x0000000000000002" message="$(string.keyword.1.0000000000000002)"/>
+          <keyword name="KeywordName0000000000000004" mask="0x0000000000000004" message="$(string.keyword.1.0000000000000004)"/>
+          <keyword name="KeywordName0000000000000008" mask="0x0000000000000008" message="$(string.keyword.1.0000000000000008)"/>
+          <keyword name="KeywordName0000000000000010" mask="0x0000000000000010" message="$(string.keyword.1.0000000000000010)"/>
+          <keyword name="KeywordName0000000000000020" mask="0x0000000000000020" message="$(string.keyword.1.0000000000000020)"/>
+          <keyword name="KeywordName0000000000000040" mask="0x0000000000000040" message="$(string.keyword.1.0000000000000040)"/>
+          <keyword name="KeywordName0000000000000080" mask="0x0000000000000080" message="$(string.keyword.1.0000000000000080)"/>
+          <keyword name="KeywordName0000000000000100" mask="0x0000000000000100" message="$(string.keyword.1.0000000000000100)"/>
+          <keyword name="KeywordName0000000000000200" mask="0x0000000000000200" message="$(string.keyword.1.0000000000000200)"/>
+          <keyword name="KeywordName0000000000000400" mask="0x0000000000000400" message="$(string.keyword.1.0000000000000400)"/>
+          <keyword name="KeywordName0000000000000800" mask="0x0000000000000800" message="$(string.keyword.1.0000000000000800)"/>
+          <keyword name="KeywordName0000000000001000" mask="0x0000000000001000" message="$(string.keyword.1.0000000000001000)"/>
+          <keyword name="KeywordName0000000000002000" mask="0x0000000000002000" message="$(string.keyword.1.0000000000002000)"/>
+          <keyword name="KeywordName0000000000004000" mask="0x0000000000004000" message="$(string.keyword.1.0000000000004000)"/>
+          <keyword name="KeywordName0000000000008000" mask="0x0000000000008000" message="$(string.keyword.1.0000000000008000)"/>
+          <keyword name="KeywordName0000000000010000" mask="0x0000000000010000" message="$(string.keyword.1.0000000000010000)"/>
+          <keyword name="KeywordName0000000000020000" mask="0x0000000000020000" message="$(string.keyword.1.0000000000020000)"/>
+          <keyword name="KeywordName0000000000040000" mask="0x0000000000040000" message="$(string.keyword.1.0000000000040000)"/>
+          <keyword name="KeywordName0000000000080000" mask="0x0000000000080000" message="$(string.keyword.1.0000000000080000)"/>
+          <keyword name="KeywordName0000000000100000" mask="0x0000000000100000" message="$(string.keyword.1.0000000000100000)"/>
+          <keyword name="KeywordName0000000000200000" mask="0x0000000000200000" message="$(string.keyword.1.0000000000200000)"/>
+          <keyword name="KeywordName0000000000400000" mask="0x0000000000400000" message="$(string.keyword.1.0000000000400000)"/>
+          <keyword name="KeywordName0000000000800000" mask="0x0000000000800000" message="$(string.keyword.1.0000000000800000)"/>
+          <keyword name="KeywordName0000000001000000" mask="0x0000000001000000" message="$(string.keyword.1.0000000001000000)"/>
+          <keyword name="KeywordName0000000002000000" mask="0x0000000002000000" message="$(string.keyword.1.0000000002000000)"/>
+          <keyword name="KeywordName0000000004000000" mask="0x0000000004000000" message="$(string.keyword.1.0000000004000000)"/>
+          <keyword name="KeywordName0000000008000000" mask="0x0000000008000000" message="$(string.keyword.1.0000000008000000)"/>
+          <keyword name="KeywordName0000000010000000" mask="0x0000000010000000" message="$(string.keyword.1.0000000010000000)"/>
+          <keyword name="KeywordName0000000020000000" mask="0x0000000020000000" message="$(string.keyword.1.0000000020000000)"/>
+          <keyword name="KeywordName0000000040000000" mask="0x0000000040000000" message="$(string.keyword.1.0000000040000000)"/>
+          <keyword name="KeywordName0000000080000000" mask="0x0000000080000000" message="$(string.keyword.1.0000000080000000)"/>
+          <keyword name="KeywordName0000000100000000" mask="0x0000000100000000" message="$(string.keyword.1.0000000100000000)"/>
+          <keyword name="KeywordName0000000200000000" mask="0x0000000200000000" message="$(string.keyword.1.0000000200000000)"/>
+          <keyword name="KeywordName0000000400000000" mask="0x0000000400000000" message="$(string.keyword.1.0000000400000000)"/>
+          <keyword name="KeywordName0000000800000000" mask="0x0000000800000000" message="$(string.keyword.1.0000000800000000)"/>
+        </keywords>
+        <maps>
+          <valueMap name="ns1:ValueMap1" symbol="ValueMapSym1">
+            <map value="22" symbol="ValueMap1ItemSym1" message="$(string.valuemap.1.1.1)"/>
+            <map value="1" message="$(string.valuemap.1.1.2)"/>
+            <map value="0" symbol="ValueMap1ItemSym3" message="$(string.valuemap.1.1.3)"/>
+            <map value="0xFFFFFFFF" symbol="ValueMap1ItemSym2" message="$(string.valuemap.1.1.4)"/>
+          </valueMap>
+          <bitMap name="ns2:BitMap1" symbol="BitMapSym1">
+            <map value="0x4" symbol="BitMap1ItemSym1" message="$(string.bitmap.1.1.1)"/>
+            <map value="0x1" message="$(string.bitmap.1.1.2)"/>
+            <map value="0x80000000" symbol="BitMap1ItemSym3" message="$(string.bitmap.1.1.3)"/>
+          </bitMap>
+          <valueMap name="AValueMap2">
+            <map value="1" message="$(string.valuemap.1.2.1)"/>
+            <map value="2" message="$(string.valuemap.1.2.2)"/>
+          </valueMap>
+          <bitMap name="BitMap2">
+            <map value="0x2" message="$(string.bitmap.1.2.2)"/>
+            <map value="0x0" message="$(string.bitmap.1.2.1)"/>
+          </bitMap>
+        </maps>
+        <templates>
+          <template name="ns1:TemplateName1" tid="Template1">
+            <data name="Data1" inType="win:UnicodeString"/>
+            <data name="Data2" inType="win:AnsiString"/>
+            <data name="Data3" inType="win:Int8"/>
+            <data name="Data4" inType="win:UInt8"/>
+            <data name="Data5" inType="win:Int16"/>
+            <data name="Data6" inType="win:UInt16"/>
+            <data name="Data7" inType="win:Int32"/>
+            <data name="Data8" inType="win:UInt32"/>
+            <data name="Data9" inType="win:Int64"/>
+            <data name="Data10" inType="win:UInt64"/>
+            <data name="Data11" inType="win:Float"/>
+            <data name="Data12" inType="win:Double"/>
+            <data name="Data13" inType="win:Boolean"/>
+            <data name="Data14" inType="win:Binary" length="3"/>
+            <data name="Data15" inType="win:GUID"/>
+            <data name="Data16" inType="win:Pointer"/>
+            <data name="Data17" inType="win:FILETIME"/>
+            <data name="Data18" inType="win:SYSTEMTIME"/>
+            <data name="Data19" inType="win:SID"/>
+            <data name="Data20" inType="win:HexInt32"/>
+            <data name="Data21" inType="win:HexInt64"/>
+          </template>
+          <template tid="Template2">
+            <data name="OutData1" inType="win:UnicodeString" outType="xs:string"/>
+            <data name="OutData2" inType="win:UnicodeString" outType="win:Xml"/>
+            <data name="OutData3" inType="win:UnicodeString" outType="win:Json"/>
+            <data name="OutData4" inType="win:AnsiString" outType="xs:string"/>
+            <data name="OutData5" inType="win:AnsiString" outType="win:Xml"/>
+            <data name="OutData6" inType="win:AnsiString" outType="win:Json"/>
+            <data name="OutData7" inType="win:AnsiString" outType="win:Utf8"/>
+            <data name="OutData8" inType="win:Int8" outType="xs:byte"/>
+            <data name="OutData9" inType="win:Int8" outType="xs:string"/>
+            <data name="OutData10" inType="win:UInt8" outType="xs:unsignedByte"/>
+            <data name="OutData11" inType="win:UInt8" outType="win:HexInt8"/>
+            <data name="OutData12" inType="win:UInt8" outType="xs:string"/>
+            <data name="OutData13" inType="win:UInt8" outType="xs:boolean"/>
+            <data name="OutData14" inType="win:Int16" outType="xs:short"/>
+            <data name="OutData15" inType="win:UInt16" outType="xs:unsignedShort"/>
+            <data name="OutData16" inType="win:UInt16" outType="win:Port"/>
+            <data name="OutData17" inType="win:UInt16" outType="win:HexInt16"/>
+            <data name="OutData18" inType="win:UInt16" outType="xs:string"/>
+            <data name="OutData19" inType="win:Int32" outType="xs:int"/>
+            <data name="OutData20" inType="win:Int32" outType="win:HResult"/>
+            <data name="OutData21" inType="win:UInt32" outType="xs:unsignedInt"/>
+            <data name="OutData22" inType="win:UInt32" outType="win:PID"/>
+            <data name="OutData23" inType="win:UInt32" outType="win:TID"/>
+            <data name="OutData24" inType="win:UInt32" outType="win:IPv4"/>
+            <data name="OutData25" inType="win:UInt32" outType="win:ETWTIME"/>
+            <data name="OutData26" inType="win:UInt32" outType="win:ErrorCode"/>
+            <data name="OutData27" inType="win:UInt32" outType="win:Win32Error"/>
+            <data name="OutData28" inType="win:UInt32" outType="win:NTSTATUS"/>
+            <data name="OutData29" inType="win:UInt32" outType="win:HexInt32"/>
+            <data name="OutData30" inType="win:UInt32" outType="win:CodePointer"/>
+            <data name="OutData31" inType="win:Int64" outType="xs:long"/>
+            <data name="OutData32" inType="win:UInt64" outType="xs:unsignedLong"/>
+            <data name="OutData33" inType="win:UInt64" outType="win:ETWTIME"/>
+            <data name="OutData34" inType="win:UInt64" outType="win:HexInt64"/>
+            <data name="OutData35" inType="win:UInt64" outType="win:CodePointer"/>
+            <data name="OutData36" inType="win:Float" outType="xs:float"/>
+            <data name="OutData37" inType="win:Double" outType="xs:double"/>
+            <data name="OutData38" inType="win:Boolean" outType="xs:boolean"/>
+            <data name="OutData39" inType="win:Binary" outType="xs:hexBinary" length="16"/>
+            <data name="OutData40" inType="win:Binary" outType="win:IPv6" length="16"/>
+            <data name="OutData41" inType="win:Binary" outType="win:SocketAddress" length="16"/>
+            <data name="OutData42" inType="win:Binary" outType="win:Pkcs7WithTypeInfo" length="16"/>
+            <data name="OutData43" inType="win:GUID" outType="xs:GUID"/>
+            <data name="OutData44" inType="win:Pointer" outType="win:HexInt64"/>
+            <data name="OutData45" inType="win:Pointer" outType="win:CodePointer"/>
+            <data name="OutData46" inType="win:Pointer" outType="xs:long"/>
+            <data name="OutData47" inType="win:Pointer" outType="xs:unsignedLong"/>
+            <data name="OutData48" inType="win:FILETIME" outType="xs:dateTime"/>
+            <data name="OutData49" inType="win:FILETIME" outType="win:DateTimeCultureInsensitive"/>
+            <data name="OutData50" inType="win:FILETIME" outType="win:DateTimeUtc"/>
+            <data name="OutData51" inType="win:SYSTEMTIME" outType="xs:dateTime"/>
+            <data name="OutData52" inType="win:SYSTEMTIME" outType="win:DateTimeCultureInsensitive"/>
+            <data name="OutData53" inType="win:SYSTEMTIME" outType="win:DateTimeUtc"/>
+            <data name="OutData54" inType="win:SID" outType="xs:string"/>
+            <data name="OutData55" inType="win:HexInt32" outType="win:HexInt32"/>
+            <data name="OutData56" inType="win:HexInt32" outType="win:ErrorCode"/>
+            <data name="OutData57" inType="win:HexInt32" outType="win:Win32Error"/>
+            <data name="OutData58" inType="win:HexInt32" outType="win:NTSTATUS"/>
+            <data name="OutData59" inType="win:HexInt32" outType="win:CodePointer"/>
+            <data name="OutData60" inType="win:HexInt64" outType="win:HexInt64"/>
+            <data name="OutData61" inType="win:HexInt64" outType="win:CodePointer"/>
+            <data name="OutData62" inType="win:CountedUnicodeString" outType="xs:string"/>
+            <data name="OutData63" inType="win:CountedUnicodeString" outType="win:Xml"/>
+            <data name="OutData64" inType="win:CountedUnicodeString" outType="win:Json"/>
+            <data name="OutData65" inType="win:CountedAnsiString" outType="xs:string"/>
+            <data name="OutData66" inType="win:CountedAnsiString" outType="win:Xml"/>
+            <data name="OutData67" inType="win:CountedAnsiString" outType="win:Json"/>
+            <data name="OutData68" inType="win:CountedAnsiString" outType="win:Utf8"/>
+            <data name="OutData69" inType="win:CountedBinary" outType="xs:hexBinary"/>
+            <data name="OutData70" inType="win:CountedBinary" outType="win:IPv6"/>
+            <data name="OutData71" inType="win:CountedBinary" outType="win:SocketAddress"/>
+            <data name="OutData72" inType="win:CountedBinary" outType="win:Pkcs7WithTypeInfo"/>
+          </template>
+          <template tid="Template3">
+            <data name="Data4" inType="win:UInt8" map="AValueMap2"/>
+            <data name="Data6" inType="win:UInt16" map="ns2:BitMap1"/>
+            <data name="Data8" inType="win:UInt32" map="ns1:ValueMap1"/>
+            <data name="Data22" inType="win:HexInt32" map="BitMap2"/>
+          </template>
+          <template tid="Template4">
+            <data name="CountData1" inType="win:UInt8" count="0"/>
+            <data name="CountData2" inType="win:Int8" count="1"/>
+            <data name="CountData3" inType="win:UnicodeString" count="2"/>
+            <data name="CountData4" inType="win:AnsiString" count="3"/>
+            <data name="CountData5" inType="win:Int8" count="4"/>
+            <data name="CountData6" inType="win:UInt8" count="5"/>
+            <data name="CountData7" inType="win:Int16" count="5"/>
+            <data name="CountData8" inType="win:UInt16" count="5"/>
+            <data name="CountData9" inType="win:Int32" count="5"/>
+            <data name="CountData10" inType="win:UInt32" count="5"/>
+            <data name="CountData11" inType="win:Int64" count="5"/>
+            <data name="CountData12" inType="win:UInt64" count="5"/>
+            <data name="CountData13" inType="win:Float" count="5"/>
+            <data name="CountData14" inType="win:Double" count="5"/>
+            <data name="CountData15" inType="win:Boolean" count="5"/>
+            <data name="CountData16" inType="win:Binary" length="3" count="5"/>
+            <data name="CountData17" inType="win:GUID" count="5"/>
+            <data name="CountData18" inType="win:Pointer" count="5"/>
+            <data name="CountData19" inType="win:FILETIME" count="5"/>
+            <data name="CountData20" inType="win:SYSTEMTIME" count="5"/>
+            <data name="CountData21" inType="win:SID" count="5"/>
+            <data name="CountData22" inType="win:HexInt32" count="5"/>
+            <data name="CountData23" inType="win:HexInt64" count="5"/>
+          </template>
+          <template tid="Template5">
+            <data name="Count1" inType="win:UInt8"/>
+            <data name="Count2" inType="win:UInt8"/>
+            <data name="Count3" inType="win:UInt8"/>
+            <data name="VarCountData1" inType="win:UInt8" count="Count1"/>
+            <data name="VarCountData2" inType="win:Int8" count="Count2"/>
+            <data name="VarCountData3" inType="win:UnicodeString" count="Count3"/>
+            <data name="VarCountData4" inType="win:AnsiString" count="Count1"/>
+            <data name="VarCountData5" inType="win:Int8" count="Count1"/>
+            <data name="VarCountData6" inType="win:UInt8" count="Count1"/>
+            <data name="VarCountData7" inType="win:Int16" count="Count1"/>
+            <data name="VarCountData8" inType="win:UInt16" count="Count1"/>
+            <data name="VarCountData9" inType="win:Int32" count="Count1"/>
+            <data name="VarCountData10" inType="win:UInt32" count="Count1"/>
+            <data name="VarCountData11" inType="win:Int64" count="Count1"/>
+            <data name="VarCountData12" inType="win:UInt64" count="Count1"/>
+            <data name="VarCountData13" inType="win:Float" count="Count1"/>
+            <data name="VarCountData14" inType="win:Double" count="Count1"/>
+            <data name="VarCountData15" inType="win:Boolean" count="Count1"/>
+            <data name="VarCountData16" inType="win:Binary" length="3" count="Count1"/>
+            <data name="VarCountData17" inType="win:GUID" count="Count1"/>
+            <data name="VarCountData18" inType="win:Pointer" count="Count1"/>
+            <data name="VarCountData19" inType="win:FILETIME" count="Count1"/>
+            <data name="VarCountData20" inType="win:SYSTEMTIME" count="Count1"/>
+            <data name="VarCountData21" inType="win:SID" count="Count1"/>
+            <data name="VarCountData22" inType="win:HexInt32" count="Count1"/>
+            <data name="VarCountData23" inType="win:HexInt64" count="Count1"/>
+          </template>
+          <template tid="Template6">
+            <data name="LengthData1" inType="win:UnicodeString" length="0"/>
+            <data name="LengthData2" inType="win:UnicodeString" length="1"/>
+            <data name="LengthData3" inType="win:UnicodeString" length="2"/>
+            <data name="LengthData4" inType="win:AnsiString" length="0"/>
+            <data name="LengthData5" inType="win:AnsiString" length="1"/>
+            <data name="LengthData6" inType="win:AnsiString" length="2"/>
+            <data name="LengthData7" inType="win:Binary" length="1"/>
+            <data name="LengthData8" inType="win:Binary" length="2"/>
+            <data name="LengthData9" inType="win:SID" length="0"/>
+            <data name="LengthData10" inType="win:SID" length="1"/>
+            <data name="LengthData11" inType="win:SID" length="2"/>
+          </template>
+          <template tid="Template7">
+            <data name="Length1" inType="win:UInt8"/>
+            <data name="Length2" inType="win:UInt8"/>
+            <data name="Length3" inType="win:UInt8"/>
+            <data name="VarLengthData3" inType="win:UnicodeString" length="Length1"/>
+            <data name="VarLengthData4" inType="win:AnsiString" length="Length2"/>
+            <data name="VarLengthData16" inType="win:Binary" length="Length3"/>
+            <data name="VarLengthData21" inType="win:SID" count="Length3"/>
+          </template>
+          <template tid="Template8">
+            <data name="Count1" inType="win:UInt8"/>
+            <data name="Count2" inType="win:UInt8"/>
+            <data name="Count3" inType="win:UInt8"/>
+            <data name="Length1" inType="win:UInt8"/>
+            <data name="Length2" inType="win:UInt8"/>
+            <data name="Length3" inType="win:UInt8"/>
+            <data name="CountLengthData1_L0_C0" inType="win:UnicodeString" length="0" count="0"/>
+            <data name="CountLengthData1_L0_C1" inType="win:UnicodeString" length="0" count="1"/>
+            <data name="CountLengthData1_L0_C2" inType="win:UnicodeString" length="0" count="2"/>
+            <data name="CountLengthData1_L1_C0" inType="win:UnicodeString" length="1" count="0"/>
+            <data name="CountLengthData1_L1_C1" inType="win:UnicodeString" length="1" count="1"/>
+            <data name="CountLengthData1_L1_C2" inType="win:UnicodeString" length="1" count="2"/>
+            <data name="CountLengthData1_L2_C0" inType="win:UnicodeString" length="2" count="0"/>
+            <data name="CountLengthData1_L2_C1" inType="win:UnicodeString" length="2" count="1"/>
+            <data name="CountLengthData1_L2_C2" inType="win:UnicodeString" length="2" count="2"/>
+            <data name="CountLengthData1_LV_C0" inType="win:UnicodeString" length="Length3" count="0"/>
+            <data name="CountLengthData1_LV_C1" inType="win:UnicodeString" length="Length2" count="1"/>
+            <data name="CountLengthData1_LV_C2" inType="win:UnicodeString" length="Length1" count="2"/>
+            <data name="CountLengthData1_L0_CV" inType="win:UnicodeString" length="0" count="Count3"/>
+            <data name="CountLengthData1_L1_CV" inType="win:UnicodeString" length="1" count="Count2"/>
+            <data name="CountLengthData1_L2_CV" inType="win:UnicodeString" length="2" count="Count1"/>
+            <data name="CountLengthData1_LV1_CV3" inType="win:UnicodeString" length="Length1" count="Count3"/>
+            <data name="CountLengthData1_LV2_CV2" inType="win:UnicodeString" length="Length2" count="Count2"/>
+            <data name="CountLengthData1_LV3_CV1" inType="win:UnicodeString" length="Length3" count="Count1"/>
+            <data name="CountLengthData2_L0_C0" inType="win:AnsiString" length="0" count="0"/>
+            <data name="CountLengthData2_L0_C1" inType="win:AnsiString" length="0" count="1"/>
+            <data name="CountLengthData2_L0_C2" inType="win:AnsiString" length="0" count="2"/>
+            <data name="CountLengthData2_L1_C0" inType="win:AnsiString" length="1" count="0"/>
+            <data name="CountLengthData2_L1_C1" inType="win:AnsiString" length="1" count="1"/>
+            <data name="CountLengthData2_L1_C2" inType="win:AnsiString" length="1" count="2"/>
+            <data name="CountLengthData2_L2_C0" inType="win:AnsiString" length="2" count="0"/>
+            <data name="CountLengthData2_L2_C1" inType="win:AnsiString" length="2" count="1"/>
+            <data name="CountLengthData2_L2_C2" inType="win:AnsiString" length="2" count="2"/>
+            <data name="CountLengthData2_LV_C0" inType="win:AnsiString" length="Length3" count="0"/>
+            <data name="CountLengthData2_LV_C1" inType="win:AnsiString" length="Length2" count="1"/>
+            <data name="CountLengthData2_LV_C2" inType="win:AnsiString" length="Length1" count="2"/>
+            <data name="CountLengthData2_L0_CV" inType="win:AnsiString" length="0" count="Count3"/>
+            <data name="CountLengthData2_L1_CV" inType="win:AnsiString" length="1" count="Count2"/>
+            <data name="CountLengthData2_L2_CV" inType="win:AnsiString" length="2" count="Count1"/>
+            <data name="CountLengthData2_LV1_CV3" inType="win:AnsiString" length="Length1" count="Count3"/>
+            <data name="CountLengthData2_LV2_CV2" inType="win:AnsiString" length="Length2" count="Count2"/>
+            <data name="CountLengthData2_LV3_CV1" inType="win:AnsiString" length="Length3" count="Count1"/>
+            <data name="CountLengthData3_L1_C0" inType="win:Binary" length="1" count="0"/>
+            <data name="CountLengthData3_L1_C1" inType="win:Binary" length="1" count="1"/>
+            <data name="CountLengthData3_L1_C2" inType="win:Binary" length="1" count="2"/>
+            <data name="CountLengthData3_L2_C0" inType="win:Binary" length="2" count="0"/>
+            <data name="CountLengthData3_L2_C1" inType="win:Binary" length="2" count="1"/>
+            <data name="CountLengthData3_L2_C2" inType="win:Binary" length="2" count="2"/>
+            <data name="CountLengthData3_LV_C0" inType="win:Binary" length="Length3" count="0"/>
+            <data name="CountLengthData3_LV_C1" inType="win:Binary" length="Length2" count="1"/>
+            <data name="CountLengthData3_LV_C2" inType="win:Binary" length="Length1" count="2"/>
+            <data name="CountLengthData3_L1_CV" inType="win:Binary" length="1" count="Count2"/>
+            <data name="CountLengthData3_L2_CV" inType="win:Binary" length="2" count="Count1"/>
+            <data name="CountLengthData3_LV1_CV3" inType="win:Binary" length="Length1" count="Count3"/>
+            <data name="CountLengthData3_LV2_CV2" inType="win:Binary" length="Length2" count="Count2"/>
+            <data name="CountLengthData3_LV3_CV1" inType="win:Binary" length="Length3" count="Count1"/>
+            <data name="CountLengthData4_L0_C0" inType="win:SID" length="0" count="0"/>
+            <data name="CountLengthData4_L0_C1" inType="win:SID" length="0" count="1"/>
+            <data name="CountLengthData4_L0_C2" inType="win:SID" length="0" count="2"/>
+            <data name="CountLengthData4_L1_C0" inType="win:SID" length="1" count="0"/>
+            <data name="CountLengthData4_L1_C1" inType="win:SID" length="1" count="1"/>
+            <data name="CountLengthData4_L1_C2" inType="win:SID" length="1" count="2"/>
+            <data name="CountLengthData4_L2_C0" inType="win:SID" length="2" count="0"/>
+            <data name="CountLengthData4_L2_C1" inType="win:SID" length="2" count="1"/>
+            <data name="CountLengthData4_L2_C2" inType="win:SID" length="2" count="2"/>
+            <data name="CountLengthData4_LV_C0" inType="win:SID" length="Length3" count="0"/>
+            <data name="CountLengthData4_LV_C1" inType="win:SID" length="Length2" count="1"/>
+            <data name="CountLengthData4_LV_C2" inType="win:SID" length="Length1" count="2"/>
+            <data name="CountLengthData4_L0_CV" inType="win:SID" length="0" count="Count3"/>
+            <data name="CountLengthData4_L1_CV" inType="win:SID" length="1" count="Count2"/>
+            <data name="CountLengthData4_L2_CV" inType="win:SID" length="2" count="Count1"/>
+            <data name="CountLengthData4_LV1_CV3" inType="win:SID" length="Length1" count="Count3"/>
+            <data name="CountLengthData4_LV2_CV2" inType="win:SID" length="Length2" count="Count2"/>
+            <data name="CountLengthData4_LV3_CV1" inType="win:SID" length="Length3" count="Count1"/>
+          </template>
+          <template tid="Template9">
+            <struct name="Struct1">
+              <data name="Field1" inType="win:UInt8"/>
+              <data name="Field2" inType="win:Int8"/>
+              <data name="Field3" inType="win:UnicodeString"/>
+              <data name="Field4" inType="win:AnsiString"/>
+              <data name="Field5" inType="win:Int8"/>
+              <data name="Field6" inType="win:UInt8"/>
+              <data name="Field7" inType="win:Int16"/>
+              <data name="Field8" inType="win:UInt16"/>
+              <data name="Field9" inType="win:Int32"/>
+              <data name="Field10" inType="win:UInt32"/>
+              <data name="Field11" inType="win:Int64"/>
+              <data name="Field12" inType="win:UInt64"/>
+              <data name="Field13" inType="win:Float"/>
+              <data name="Field14" inType="win:Double"/>
+              <data name="Field15" inType="win:Boolean"/>
+              <data name="Field16" inType="win:Binary" length="3"/>
+              <data name="Field17" inType="win:GUID"/>
+              <data name="Field18" inType="win:Pointer"/>
+              <data name="Field19" inType="win:FILETIME"/>
+              <data name="Field20" inType="win:SYSTEMTIME"/>
+              <data name="Field21" inType="win:SID"/>
+              <data name="Field22" inType="win:HexInt32"/>
+              <data name="Field23" inType="win:HexInt64"/>
+            </struct>
+            <data name="Field2" inType="win:UInt8"/>
+            <struct name="Struct3" count="0">
+              <data name="Field1" inType="win:UInt8"/>
+              <data name="Field2" inType="win:Binary" length="3"/>
+              <data name="Field3" inType="win:UInt8"/>
+            </struct>
+            <struct name="Struct4" count="1">
+              <data name="Field1" inType="win:UInt8"/>
+              <data name="Field2" inType="win:Binary" length="3"/>
+              <data name="Field3" inType="win:UInt8"/>
+            </struct>
+            <struct name="Struct5" count="3">
+              <data name="Field1" inType="win:UInt8"/>
+              <data name="Field2" inType="win:Binary" length="3"/>
+              <data name="Field3" inType="win:UInt8"/>
+            </struct>
+            <data name="Field6" inType="win:UInt8"/>
+            <data name="Field7" inType="win:UInt8"/>
+            <struct name="Struct8" count="Field6">
+              <data name="Field1" inType="win:FILETIME"/>
+              <data name="Field2" inType="win:UInt8"/>
+              <data name="Field3" inType="win:Double"/>
+              <data name="Field4" inType="win:UInt8"/>
+            </struct>
+            <UserData>
+              <Root xmlns="urn:uuid:d899d334-4b00-44bd-93db-42f3be07837d">
+                <Field7>%7</Field7>
+                <Field6>%6</Field6>
+              </Root>
+            </UserData>
+          </template>
+        </templates>
+        <filters>
+          <filter name="ns1:FilterName1" value="33" version="0x22" symbol="FilterSym1" tid="Template2" message="$(string.filter.1.1)"/>
+          <filter name="FilterName2" value="22"/>
+          <filter name="FilterName3" value="11" version="0x11" symbol="FilterSym3" message="$(string.filter.1.3)"/>
+          <filter name="FilterName4" value="0xFE" version="2" symbol="FilterSym4" tid="Template2" message="$(string.filter.1.4)"/>
+          <filter name="FilterName5" value="0xFF" version="0xFF" symbol="FilterSym5" tid="Template1" message="$(string.filter.1.5)"/>
+        </filters>
+        <namedQueries>
+          <patternMaps>
+            <patternMap name="PatternMap1" format="winrxv1" symbol="PatternMapSym1">
+              <map name="/${1}/" value="/http:\/\/www\.*\.com\/"/>
+              <map name="/${2}/" value="/http:\/\/www\.*\.org\/"/>
+              <map name="/${3}/" value="/http:\/\/www\.*\.net\/"/>
+            </patternMap>
+            <patternMap name="PatternMap2" format="regex-engine">
+              <map name="/${1}/" value="/f([0-9]+)/"/>
+            </patternMap>
+            <patternMap name="PatternMap3" format="f3" symbol="PatternMapSym3">
+              <map name="/${1}-${2}/" value="/([0-9]+)-([0-9]+)/"/>
+            </patternMap>
+          </patternMaps>
+        </namedQueries>
+      </provider>
+
+      <provider name="ProviderName2" guid="{D2EB3575-B9AE-4B4F-A0B7-61034A28C267}" symbol="ProviderSym2" resourceFileName="C:\Users\nrieck\dev\ffmf\src\build\Win32\Debug\bin\Sculptor.dll" messageFileName="C:\Users\nrieck\dev\ffmf\src\build\Win32\Debug\bin\Sculptor.dll">
+        <events>
+          <event symbol="EventSym1" value="1" message="$(string.event.2.1)"/>
+        </events>
+        <levels>
+          <level name="LevelName5" value="105" message="$(string.level.2.5)"/>
+          <level name="LevelName1" value="101" message="$(string.level.2.1)"/>
+          <level name="LevelName2" value="102" message="$(string.level.2.2)"/>
+          <level name="LevelName3" value="103" message="$(string.level.2.3)"/>
+          <level name="LevelName4" value="104" message="$(string.level.2.4)"/>
+          <level name="LevelName6" value="106" message="$(string.level.2.6)"/>
+          <level name="LevelName7" value="107" message="$(string.level.2.7)"/>
+          <level name="LevelName8" value="108" message="$(string.level.2.8)"/>
+          <level name="LevelName9" value="109" message="$(string.level.2.9)"/>
+        </levels>
+        <channels>
+          <channel name="P2/ChannelName2" value="44" chid="Channel2" type="Debug" message="$(string.channel.2.2)"/>
+          <channel name="P2/ChannelName1" value="33" chid="Channel1" type="Debug" message="$(string.channel.2.1)"/>
+        </channels>
+        <tasks>
+          <task name="TaskName3" symbol="TaskSym3" value="103" eventGUID="{00000000-0000-0000-0000-000000000000}" message="$(string.task.2.3)"/>
+          <task name="TaskName1" symbol="TaskSym1" value="101" eventGUID="{D0883FA6-F3FD-43C3-A0E4-1FCECC87AF8B}" message="$(string.task.2.1)"/>
+          <task name="TaskName2" symbol="TaskSym2" value="102" eventGUID="{00000000-0000-0000-0000-000000000000}" message="$(string.task.2.2)"/>
+        </tasks>
+        <opcodes>
+          <opcode name="OpcodeName2" symbol="OpcodeSym2" value="22" mofValue="66" message="$(string.opcode.2.2)"/>
+          <opcode name="OpcodeName1" symbol="OpcodeSym1" value="11" mofValue="55" message="$(string.opcode.2.1)"/>
+        </opcodes>
+        <keywords>
+          <keyword name="KeywordName3" mask="0x0000400000000000" message="$(string.keyword.2.3)"/>
+          <keyword name="KeywordName1" mask="0x0000100000000000" message="$(string.keyword.2.1)"/>
+          <keyword name="KeywordName2" mask="0x0000200000000000" message="$(string.keyword.2.2)"/>
+        </keywords>
+        <maps>
+          <valueMap name="ValueMap1">
+            <map value="2" message="$(string.valuemap.2.1.2)"/>
+            <map value="1" message="$(string.valuemap.2.1.1)"/>
+          </valueMap>
+          <valueMap name="ValueMap2">
+            <map value="22" message="$(string.valuemap.2.2.2)"/>
+            <map value="11" message="$(string.valuemap.2.2.1)"/>
+          </valueMap>
+          <bitMap name="BitMap1">
+            <map value="0x4" message="$(string.bitmap.2.1.3)"/>
+            <map value="0x2" message="$(string.bitmap.2.1.2)"/>
+            <map value="0x1" message="$(string.bitmap.2.1.1)"/>
+          </bitMap>
+          <bitMap name="BitMap2">
+            <map value="0x2" message="$(string.bitmap.2.2.2)"/>
+            <map value="0x1" message="$(string.bitmap.2.2.1)"/>
+          </bitMap>
+        </maps>
+        <templates>
+          <template tid="Template1">
+            <data name="Field1" inType="win:UInt8"/>
+            <struct name="Struct1">
+              <data name="Field.1.1" inType="win:Int8"/>
+              <data name="Field.1.2" inType="win:Int8"/>
+              <data name="Field.1.3" inType="win:UInt8"/>
+            </struct>
+            <struct name="Struct2" count="5">
+              <data name="Field.2.1" inType="win:Int8"/>
+              <data name="Field.2.2" inType="win:UInt8"/>
+            </struct>
+            <struct name="Struct3" count="Field1">
+              <data name="Field.3.1" inType="win:Int8"/>
+              <data name="Field.3.2" inType="win:UInt8"/>
+            </struct>
+            <struct name="Struct4" count="Field1">
+              <data name="Field.4.1" inType="win:Int8"/>
+              <data name="Field.4.2" inType="win:UInt8"/>
+            </struct>
+            <data name="Field2" inType="win:UInt16"/>
+            <struct name="Struct5" count="Field2">
+              <data name="Field.5.1" inType="win:Int8"/>
+              <data name="Field.5.2" inType="win:UInt8"/>
+            </struct>
+            <data name="Field3" inType="win:UInt16"/>
+          </template>
+          <template tid="Template2">
+            <data name="Data1" inType="win:Int8" outType="xs:byte"/>
+            <data name="Data2" inType="win:Int32" outType="xs:int"/>
+          </template>
+        </templates>
+        <filters>
+          <filter name="FilterName1" value="3" version="0" symbol="FilterSym1" message="$(string.filter.2.1)"/>
+          <filter name="FilterName2" value="2" version="0" symbol="FilterSym2" tid="Template2" message="$(string.filter.2.2)"/>
+        </filters>
+      </provider>
+
+      <provider name="ProviderName3" guid="{D2EB3575-B9AE-4B4F-A0B7-61034A28C268}" symbol="ProviderSym3" message="$(string.provider.3)" resourceFileName="C:\Users\nrieck\dev\ffmf\src\build\Win32\Debug\bin\Sculptor.dll" messageFileName="C:\Users\nrieck\dev\ffmf\src\build\Win32\Debug\bin\Sculptor.dll">
+        <events>
+          <event symbol="EventSym1" value="1" message="$(string.event.3.1)" channel="P3/ChannelName1"/>
+        </events>
+        <channels>
+          <channel name="P3/ChannelName1" value="33" chid="Channel1" type="Debug" message="$(string.channel.3.1)"/>
+        </channels>
+        <tasks>
+          <task name="TaskName1" symbol="TaskSym1" value="101" eventGUID="{D0883FA6-F3FD-43C3-A0E4-1FCECC87AF8B}" message="$(string.task.3.1)"/>
+          <task name="TaskName2" symbol="TaskSym2" value="102" eventGUID="{00000000-0000-0000-0000-000000000000}" message="$(string.task.3.2)"/>
+          <task name="TaskName3" symbol="TaskSym3" value="103" eventGUID="{00000000-0000-0000-0000-000000000000}" message="$(string.task.3.3)"/>
+        </tasks>
+        <opcodes>
+          <opcode name="OpcodeName1" symbol="OpcodeSym1" value="11" mofValue="55" message="$(string.opcode.3.1)"/>
+          <opcode name="OpcodeName2" symbol="OpcodeSym2" value="22" mofValue="66" message="$(string.opcode.3.2)"/>
+        </opcodes>
+        <keywords>
+          <keyword name="KeywordName1" mask="0x0000100000000000" message="$(string.keyword.3.1)"/>
+          <keyword name="KeywordName2" mask="0x0000200000000000" message="$(string.keyword.3.2)"/>
+          <keyword name="KeywordName3" mask="0x0000400000000000" message="$(string.keyword.3.3)"/>
+        </keywords>
+        <maps>
+          <valueMap name="ValueMap1">
+            <map value="2" message="$(string.valuemap.3.1.2)"/>
+            <map value="1" message="$(string.valuemap.3.1.1)"/>
+          </valueMap>
+          <valueMap name="ValueMap2">
+            <map value="22" message="$(string.valuemap.3.2.2)"/>
+            <map value="11" message="$(string.valuemap.3.2.1)"/>
+          </valueMap>
+          <bitMap name="BitMap1">
+            <map value="0x4" message="$(string.bitmap.3.1.3)"/>
+            <map value="0x2" message="$(string.bitmap.3.1.2)"/>
+            <map value="0x1" message="$(string.bitmap.3.1.1)"/>
+          </bitMap>
+          <bitMap name="BitMap2">
+            <map value="0x2" message="$(string.bitmap.3.2.2)"/>
+            <map value="0x1" message="$(string.bitmap.3.2.1)"/>
+          </bitMap>
+        </maps>
+        <templates>
+          <template tid="Template1">
+            <data name="A" inType="win:Int8"/>
+          </template>
+          <template tid="Template2">
+            <data name="B" inType="win:Int8"/>
+          </template>
+          <template tid="Template3">
+            <data name="C" inType="win:Int8"/>
+          </template>
+          <template tid="Template4">
+            <data name="Field1" inType="win:UInt8"/>
+          </template>
+        </templates>
+        <filters>
+          <filter name="FilterName1" value="3" version="0" symbol="FilterSym1" tid="Template3" message="$(string.filter.3.1)"/>
+          <filter name="FilterName2" value="2" version="0" symbol="FilterSym2" tid="Template4" message="$(string.filter.3.2)"/>
+        </filters>
+      </provider>
+
+      <provider name="ProviderName4" guid="{13BCF70A-AF93-4AD6-BB33-D9B383A110B8}" symbol="ProviderSym4" message="$(string.provider.4)" resourceFileName="C:\Users\nrieck\dev\ffmf\src\build\Win32\Debug\bin\Sculptor.dll" messageFileName="C:\Users\nrieck\dev\ffmf\src\build\Win32\Debug\bin\Sculptor.dll">
+      </provider>
+    </events>
+  </instrumentation>
+  <localization>
+    <resources culture="en-US">
+      <stringTable>
+        <string id="provider.1" value="Provider.1"/>
+        <string id="provider.2" value="Provider.2"/>
+        <string id="provider.3" value="Provider.3"/>
+        <string id="provider.4" value="Provider.4"/>
+        <string id="event.1.1" value="event.1.1"/>
+        <string id="event.1.2" value="event.1.2"/>
+        <string id="event.1.3" value="event.1.3"/>
+        <string id="event.1.4" value="event.1.4"/>
+        <string id="event.1.5" value="event.1.5"/>
+        <string id="event.1.6" value="event.1.6"/>
+        <string id="event.1.7" value="event.1.7"/>
+        <string id="event.1.8" value="event.1.8"/>
+        <string id="event.1.9" value="event.1.9"/>
+        <string id="event.1.10" value="event.1.10"/>
+        <string id="event.2.1" value="event.2.1"/>
+        <string id="event.3.1" value="event.3.1"/>
+        <string id="channel.1.1" value="Channel.1.1"/>
+        <string id="channel.1.2" value="Channel.1.2"/>
+        <string id="channel.1.3" value="Channel.1.3"/>
+        <string id="channel.1.4" value="Channel.1.4"/>
+        <string id="channel.2.1" value="Channel.2.1"/>
+        <string id="channel.2.2" value="Channel.2.2"/>
+        <string id="channel.3.1" value="Channel.3.1"/>
+        <string id="level.1.1" value="Level.1.1"/>
+        <string id="level.1.2" value="Level.1.2"/>
+        <string id="level.1.3" value="Level.1.3"/>
+        <string id="level.1.4" value="Level.1.4"/>
+        <string id="level.1.5" value="Level.1.5"/>
+        <string id="level.1.6" value="Level.1.6"/>
+        <string id="level.1.7" value="Level.1.7"/>
+        <string id="level.1.8" value="Level.1.8"/>
+        <string id="level.1.9" value="Level.1.9"/>
+        <string id="level.2.1" value="Level.2.1"/>
+        <string id="level.2.2" value="Level.2.2"/>
+        <string id="level.2.3" value="Level.2.3"/>
+        <string id="level.2.4" value="Level.2.4"/>
+        <string id="level.2.5" value="Level.2.5"/>
+        <string id="level.2.6" value="Level.2.6"/>
+        <string id="level.2.7" value="Level.2.7"/>
+        <string id="level.2.8" value="Level.2.8"/>
+        <string id="level.2.9" value="Level.2.9"/>
+        <string id="task.1.1" value="Task.1.1"/>
+        <string id="task.1.2" value="Task.1.2"/>
+        <string id="task.1.3" value="Task.1.3"/>
+        <string id="task.1.4" value="Task.1.4"/>
+        <string id="task.2.1" value="Task.2.1"/>
+        <string id="task.2.2" value="Task.2.2"/>
+        <string id="task.2.3" value="Task.2.3"/>
+        <string id="task.3.1" value="Task.3.1"/>
+        <string id="task.3.2" value="Task.3.2"/>
+        <string id="task.3.3" value="Task.3.3"/>
+        <string id="opcode.1.1" value="Opcode.1.1"/>
+        <string id="opcode.1.2" value="Opcode.1.2"/>
+        <string id="opcode.1.3" value="Opcode.1.3"/>
+        <string id="opcode.2.1" value="Opcode.2.1"/>
+        <string id="opcode.2.2" value="Opcode.2.2"/>
+        <string id="opcode.2.3" value="Opcode.2.3"/>
+        <string id="opcode.3.1" value="Opcode.3.1"/>
+        <string id="opcode.3.2" value="Opcode.3.2"/>
+        <string id="opcode.3.3" value="Opcode.3.3"/>
+        <string id="keyword.1.1" value="Keyword.1.1"/>
+        <string id="keyword.1.2" value="Keyword.1.2"/>
+        <string id="keyword.1.3" value="Keyword.1.3"/>
+        <string id="keyword.2.1" value="Keyword.2.1"/>
+        <string id="keyword.2.2" value="Keyword.2.2"/>
+        <string id="keyword.2.3" value="Keyword.2.3"/>
+        <string id="keyword.3.1" value="Keyword.3.1"/>
+        <string id="keyword.3.2" value="Keyword.3.2"/>
+        <string id="keyword.3.3" value="Keyword.3.3"/>
+        <string id="keyword.1.0000000000000001" value="Keyword.1.0000000000000001"/>
+        <string id="keyword.1.0000000000000002" value="Keyword.1.0000000000000002"/>
+        <string id="keyword.1.0000000000000004" value="Keyword.1.0000000000000004"/>
+        <string id="keyword.1.0000000000000008" value="Keyword.1.0000000000000008"/>
+        <string id="keyword.1.0000000000000010" value="Keyword.1.0000000000000010"/>
+        <string id="keyword.1.0000000000000020" value="Keyword.1.0000000000000020"/>
+        <string id="keyword.1.0000000000000040" value="Keyword.1.0000000000000040"/>
+        <string id="keyword.1.0000000000000080" value="Keyword.1.0000000000000080"/>
+        <string id="keyword.1.0000000000000100" value="Keyword.1.0000000000000100"/>
+        <string id="keyword.1.0000000000000200" value="Keyword.1.0000000000000200"/>
+        <string id="keyword.1.0000000000000400" value="Keyword.1.0000000000000400"/>
+        <string id="keyword.1.0000000000000800" value="Keyword.1.0000000000000800"/>
+        <string id="keyword.1.0000000000001000" value="Keyword.1.0000000000001000"/>
+        <string id="keyword.1.0000000000002000" value="Keyword.1.0000000000002000"/>
+        <string id="keyword.1.0000000000004000" value="Keyword.1.0000000000004000"/>
+        <string id="keyword.1.0000000000008000" value="Keyword.1.0000000000008000"/>
+        <string id="keyword.1.0000000000010000" value="Keyword.1.0000000000010000"/>
+        <string id="keyword.1.0000000000020000" value="Keyword.1.0000000000020000"/>
+        <string id="keyword.1.0000000000040000" value="Keyword.1.0000000000040000"/>
+        <string id="keyword.1.0000000000080000" value="Keyword.1.0000000000080000"/>
+        <string id="keyword.1.0000000000100000" value="Keyword.1.0000000000100000"/>
+        <string id="keyword.1.0000000000200000" value="Keyword.1.0000000000200000"/>
+        <string id="keyword.1.0000000000400000" value="Keyword.1.0000000000400000"/>
+        <string id="keyword.1.0000000000800000" value="Keyword.1.0000000000800000"/>
+        <string id="keyword.1.0000000001000000" value="Keyword.1.0000000001000000"/>
+        <string id="keyword.1.0000000002000000" value="Keyword.1.0000000002000000"/>
+        <string id="keyword.1.0000000004000000" value="Keyword.1.0000000004000000"/>
+        <string id="keyword.1.0000000008000000" value="Keyword.1.0000000008000000"/>
+        <string id="keyword.1.0000000010000000" value="Keyword.1.0000000010000000"/>
+        <string id="keyword.1.0000000020000000" value="Keyword.1.0000000020000000"/>
+        <string id="keyword.1.0000000040000000" value="Keyword.1.0000000040000000"/>
+        <string id="keyword.1.0000000080000000" value="Keyword.1.0000000080000000"/>
+        <string id="keyword.1.0000000100000000" value="Keyword.1.0000000100000000"/>
+        <string id="keyword.1.0000000200000000" value="Keyword.1.0000000200000000"/>
+        <string id="keyword.1.0000000400000000" value="Keyword.1.0000000400000000"/>
+        <string id="keyword.1.0000000800000000" value="Keyword.1.0000000800000000"/>
+        <string id="valuemap.1.1.1" value="VM.1.1.1"/>
+        <string id="valuemap.1.1.2" value="VM.1.1.2"/>
+        <string id="valuemap.1.1.3" value="VM.1.1.3"/>
+        <string id="valuemap.1.1.4" value="VM.1.1.4"/>
+        <string id="valuemap.1.2.1" value="VM.1.2.1"/>
+        <string id="valuemap.1.2.2" value="VM.1.2.2"/>
+        <string id="valuemap.2.1.1" value="VM.2.1.1"/>
+        <string id="valuemap.2.1.2" value="VM.2.1.2"/>
+        <string id="valuemap.2.2.1" value="VM.2.2.1"/>
+        <string id="valuemap.2.2.2" value="VM.2.2.2"/>
+        <string id="valuemap.3.1.1" value="VM.3.1.1"/>
+        <string id="valuemap.3.1.2" value="VM.3.1.2"/>
+        <string id="valuemap.3.2.1" value="VM.3.2.1"/>
+        <string id="valuemap.3.2.2" value="VM.3.2.2"/>
+        <string id="bitmap.1.1.1" value="BM.1.1.1"/>
+        <string id="bitmap.1.1.2" value="BM.1.1.2"/>
+        <string id="bitmap.1.1.3" value="BM.1.1.3"/>
+        <string id="bitmap.1.2.1" value="BM.1.2.1"/>
+        <string id="bitmap.1.2.2" value="BM.1.2.2"/>
+        <string id="bitmap.2.1.1" value="BM.2.1.1"/>
+        <string id="bitmap.2.1.2" value="BM.2.1.2"/>
+        <string id="bitmap.2.1.3" value="BM.2.1.3"/>
+        <string id="bitmap.2.2.1" value="BM.2.2.1"/>
+        <string id="bitmap.2.2.2" value="BM.2.2.2"/>
+        <string id="bitmap.3.1.1" value="BM.3.1.1"/>
+        <string id="bitmap.3.1.2" value="BM.3.1.2"/>
+        <string id="bitmap.3.1.3" value="BM.3.1.3"/>
+        <string id="bitmap.3.2.1" value="BM.3.2.1"/>
+        <string id="bitmap.3.2.2" value="BM.3.2.2"/>
+        <string id="filter.1.1" value="Filter.1.1"/>
+        <string id="filter.1.2" value="Filter.1.2"/>
+        <string id="filter.1.3" value="Filter.1.3"/>
+        <string id="filter.1.4" value="Filter.1.4"/>
+        <string id="filter.1.5" value="Filter.1.5"/>
+        <string id="filter.2.1" value="Filter.2.1"/>
+        <string id="filter.2.2" value="Filter.2.2"/>
+        <string id="filter.3.1" value="Filter.3.1"/>
+        <string id="filter.3.2" value="Filter.3.2"/>
+        <string id="unused.1" value="unused.1"/>
+        <string id="unused.2" value="unused.2"/>
+        <string id="unused.3" value="unused.3"/>
+        <string id="unused.4" value="unused.4"/>
+      </stringTable>
+    </resources>
+  </localization>
+</instrumentationManifest>

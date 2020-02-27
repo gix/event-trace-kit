@@ -26,6 +26,27 @@ namespace EventTraceKit.EventTracing.Schema
         public LocatedVal<byte> Version { get; }
         public LocatedRef<string> Symbol { get; set; }
 
+        /// <summary>
+        ///   Gets or sets the non-localized event name.
+        /// </summary>
+        /// <remarks>
+        ///   During event processing on Windows 10 1709 (16299) or later, this
+        ///   value can be retrieved from the TRACE_EVENT_INFO EventNameOffset
+        ///   field.
+        /// </remarks>
+        public LocatedRef<string> Name { get; set; }
+
+        /// <summary>
+        ///   Gets the non-localized event attributes, as a
+        ///   semicolon-delimited list of <c>name=value</c> pairs.
+        /// </summary>
+        /// <remarks>
+        ///   During event processing on Windows 10 1709 (16299) or later, this
+        ///   value can be retrieved from the TRACE_EVENT_INFO
+        ///   EventAttributesOffset field.
+        /// </remarks>
+        public List<EventAttribute> Attributes { get; } = new List<EventAttribute>();
+
         public Channel Channel
         {
             get => channel;

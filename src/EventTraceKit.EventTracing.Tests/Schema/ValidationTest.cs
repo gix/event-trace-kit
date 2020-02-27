@@ -110,6 +110,21 @@ namespace EventTraceKit.EventTracing.Tests.Schema
             return stream;
         }
 
+        protected MemoryStream CreateInput(ref XElement provider)
+        {
+            var ns = EventManifestSchema.Namespace;
+            var stream = CreateInputStream(provider.Document);
+            var doc = LoadUnchecked(stream);
+            provider = doc
+                .Element(ns + "instrumentationManifest")
+                .Element(ns + "instrumentation")
+                .Element(ns + "events")
+                .Element(ns + "provider");
+
+            stream.Position = 0;
+            return stream;
+        }
+
         protected MemoryStream CreateInput(string type, ref XElement elem1, ref XElement elem2)
         {
             var provider = CreateProvider();

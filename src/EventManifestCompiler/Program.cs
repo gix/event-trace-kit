@@ -112,7 +112,13 @@ namespace EventManifestCompiler
             }
             arguments.DecompilationOptions.OutputManifest = arguments.OutputManifest;
 
-            opts.CompatibilityLevel = args.GetLastArgValue(Opt.Gcompat_eq, "10.0");
+            var compatLevelString = args.GetLastArgValue(Opt.Gcompat_eq, "10.0.16299");
+            if (Version.TryParse(compatLevelString, out Version compatibilityLevel)) {
+                opts.CompatibilityLevel = compatibilityLevel;
+            } else {
+                diags.ReportError("Invalid compatibility level: {0}", compatLevelString);
+                success = false;
+            }
 
             opts.InferUnspecifiedOutputFiles();
 

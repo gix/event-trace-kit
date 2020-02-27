@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Event attributes. -->
+<instrumentationManifest
+    xsi:schemaLocation="http://schemas.microsoft.com/win/2004/08/events eventman.xsd"
+    xmlns="http://schemas.microsoft.com/win/2004/08/events"
+    xmlns:win="http://manifests.microsoft.com/win/2004/08/windows/events"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:trace="http://schemas.microsoft.com/win/2004/08/events/trace"
+    xmlns:etk="urn:uuid:fb199331-10b4-437d-88b3-adb0561c2e3f">
+  <instrumentation>
+    <events>
+      <provider name="ProviderName1"
+                guid="{00000001-0002-0003-0004-000000000005}"
+                symbol="ProviderSym1"
+                message="$(string.provider.1)"
+                resourceFileName="res.dll"
+                messageFileName="msg.dll">
+        <events>
+          <event value="1" version="0" name="EventName1" symbol="Evt1" channel="Channel" level="win:Error" attributes='FILE=source.cpp;LINE=123;MJ="Value ""Quoted""";MN="minor comp"'/>
+          <event value="1" version="1" name="EventName1" symbol="Evt2" channel="Channel" level="win:Warning" attributes="key=val"/>
+          <event value="2" version="23" name="EventName2" symbol="Evt3" channel="Channel" level="win:Informational"/>
+          <event value="3" version="22" name="EventName3" notLogged="true" attributes="key=val"/>
+          <event value="4" name="EventName4" notLogged="true"/>
+          <event value="5" suppressProjection="true"/>
+          <event value="6" suppressProjection="false"/>
+        </events>
+        <channels>
+          <channel name="Channel" type="Analytic" message="$(string.channel.1.1)"/>
+        </channels>
+      </provider>
+    </events>
+  </instrumentation>
+  <localization>
+    <resources culture="en-US">
+      <stringTable>
+        <string id="provider.1" value="Provider.1"/>
+        <string id="channel.1.1" value="Channel.1.1"/>
+      </stringTable>
+    </resources>
+  </localization>
+</instrumentationManifest>

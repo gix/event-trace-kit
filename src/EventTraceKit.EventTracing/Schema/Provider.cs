@@ -51,11 +51,15 @@ namespace EventTraceKit.EventTracing.Schema
         public int Index { get; set; }
         public LocatedRef<string> Name { get; }
         public LocatedVal<Guid> Id { get; }
+        public LocatedNullable<Guid> ControlGuid { get; set; }
         public LocatedRef<string> Symbol { get; }
         public LocatedRef<string> ResourceFileName { get; set; }
         public LocatedRef<string> MessageFileName { get; set; }
         public LocatedRef<string> ParameterFileName { get; set; }
         public LocalizedString Message { get; set; }
+
+        public LocatedNullable<bool> IncludeNameInTraits { get; set; }
+        public LocatedNullable<Guid> GroupGuid { get; set; }
 
         public ChannelCollection Channels { get; }
         public LevelCollection Levels { get; }

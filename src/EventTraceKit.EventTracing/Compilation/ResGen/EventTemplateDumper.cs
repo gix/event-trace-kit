@@ -270,6 +270,16 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
                     case EventFieldKind.Filter:
                         DumpFilters(r);
                         break;
+                    case EventFieldKind.ProviderAttribs:
+                        DumpProviderAttribs(r);
+                        break;
+                    case EventFieldKind.EventAttribs:
+                        DumpEventAttribs(r);
+                        break;
+                    case EventFieldKind.EventFlags:
+                        DumpEventFlags(r);
+                        break;
+                    case EventFieldKind.CTRT:
                     default:
                         writer.WriteLine("Unknown item type {0} at offset {1}.", list.Type, list.Offset);
                         break;
@@ -301,7 +311,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
 
             for (uint i = 0; i < block.NumEvents; ++i) {
                 var entry = r.ReadStruct<EventEntry>();
-                uint[] keywordOffsets = ReadUInt32At(r, entry.KeywordsOffset, entry.NumKeywords);
+                uint[] keywordOffsets = r.ReadUInt32At(entry.KeywordsOffset, entry.NumKeywords);
 
                 writer.WriteLine(
                     "Event({0}, Msg=0x{1:X} TP=0x{2:X} Op=0x{3:X} L=0x{4:X} T=0x{5:X} K={6}@0x{7:X}[{8}] C=0x{9:X}",
@@ -353,7 +363,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
 
             for (uint i = 0; i < block.NumEntries; ++i) {
                 var entry = r.ReadStruct<ChannelEntry>();
-                var name = ReadStringAt(r, entry.NameOffset);
+                var name = r.ReadCountedStringAt(entry.NameOffset);
 
                 if (!Verbose) {
                     writer.WriteLine(
@@ -379,7 +389,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
 
             for (uint i = 0; i < block.NumEntries; ++i) {
                 var entry = r.ReadStruct<LevelEntry>();
-                var name = ReadStringAt(r, entry.NameOffset);
+                var name = r.ReadCountedStringAt(entry.NameOffset);
 
                 writer.WriteLine(
                     "Level(Name=0x{0} ({1}), Value={2}, Message=0x{3:X})",
@@ -396,7 +406,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
 
             for (uint i = 0; i < block.NumEntries; ++i) {
                 var entry = r.ReadStruct<TaskEntry>();
-                var name = ReadStringAt(r, entry.NameOffset);
+                var name = r.ReadCountedStringAt(entry.NameOffset);
 
                 writer.WriteLine(
                     "Task(Name=0x{0} ({1}), Value={2}, Message=0x{3:X}, Guid={4})",
@@ -413,7 +423,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
 
             for (uint i = 0; i < block.NumEntries; ++i) {
                 var entry = r.ReadStruct<OpcodeEntry>();
-                var name = ReadStringAt(r, entry.NameOffset);
+                var name = r.ReadCountedStringAt(entry.NameOffset);
 
                 writer.WriteLine(
                     "Opcode(Name=0x{0} ({1}), Value={2}, Message=0x{3:X}, TaskId={4})",
@@ -430,7 +440,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
 
             for (uint i = 0; i < block.NumEntries; ++i) {
                 var entry = r.ReadStruct<KeywordEntry>();
-                var name = ReadStringAt(r, entry.NameOffset);
+                var name = r.ReadCountedStringAt(entry.NameOffset);
 
                 writer.WriteLine(
                     "Keyword(Name=0x{0} ({1}), Mask={2}, Message=0x{3:X})",
@@ -468,7 +478,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
             if (block.Magic != CrimsonTags.VMAP && block.Magic != CrimsonTags.BMAP)
                 throw new InternalException("Unknown map magic {0}", block.Magic);
 
-            var name = ReadStringAt(r, block.NameOffset);
+            var name = r.ReadCountedStringAt(block.NameOffset);
 
             writer.PushListScope(
                 "Map(Name=0x{0} ({1}), Flags={2})",
@@ -530,7 +540,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
             var entry = r.ReadStruct<PropertyEntry>();
 
             if ((entry.Flags & PropertyFlags.Struct) != 0) {
-                var name = ReadStringAt(r, entry.NameOffset).TrimEnd('\0');
+                var name = r.ReadCountedStringAt(entry.NameOffset).TrimEnd('\0');
 
                 writer.PushListScope(
                     "Struct(Name=0x{0:X} ({1}), flags={2} (0x{2:X}), fields={3} (@{4}), count={5}, length={6})",
@@ -553,7 +563,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
                 var inputType = entry.nonStructType.InputType;
                 var outputType = entry.nonStructType.OutputType;
                 uint mapOffset = entry.nonStructType.MapOffset;
-                var name = ReadStringAt(r, entry.NameOffset).TrimEnd('\0');
+                var name = r.ReadCountedStringAt(entry.NameOffset).TrimEnd('\0');
 
                 writer.WriteLine(
                     "Data(Name=0x{0:X} ({1}), flags={2} (0x{2:X}), in={3:D} ({3}), out={4:D} ({4}), count={5}, length={5}, map=0x{7:X})",
@@ -590,7 +600,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
 
             for (uint i = 0; i < block.NumFilters; ++i) {
                 var entry = r.ReadStruct<FilterEntry>();
-                var name = ReadStringAt(r, entry.NameOffset);
+                var name = r.ReadCountedStringAt(entry.NameOffset);
 
                 writer.WriteLine(
                     "Filter(Name=0x{0:X} ({1}), Value={2}, Version={3}, Message=0x{4:X}, Template=0x{5:X})",
@@ -600,32 +610,109 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
             writer.PopScope();
         }
 
-        private static string ReadStringAt(BinaryReader r, long offset)
+        private void DumpProviderAttribs(BinaryReader r)
         {
-            Stream stream = r.BaseStream;
-            long old = stream.Position;
-            try {
-                stream.Position = offset;
-                uint byteCount = r.ReadUInt32();
-                return r.ReadPaddedString(Encoding.Unicode, byteCount - 4);
-            } finally {
-                stream.Position = old;
+            var block = r.ReadStruct<ListBlock>();
+            VerifyMagic(0, block.Magic, CrimsonTags.PRVA);
+
+            if (!Verbose) {
+                writer.PushDictScope("PRVA ({0} entries)", block.NumEntries);
+            } else {
+                writer.PushDictScope("PRVA");
+                writer.WriteHex("Magic", block.Magic);
+                writer.WriteHex("Length", block.Length);
+                writer.WriteHex("NumEntries", block.NumEntries);
             }
+
+            for (uint i = 0; i < block.NumEntries; ++i) {
+                var entry = r.ReadStruct<ProviderAttribsEntry>();
+
+                switch (entry.Flags) {
+                    case 0x10000001:
+                        var name = r.ReadZStringAt(entry.ValueOffset);
+                        writer.WriteLine(
+                            "ProviderAttribs(Flags=0x{0:X}, {1}=0x{2:X} ({3}))",
+                            entry.Flags, "Name", entry.ValueOffset, name);
+                        break;
+                    case 0x20000001:
+                        var controlGuid = r.ReadGuidAt(entry.ValueOffset);
+                        writer.WriteLine(
+                            "ProviderAttribs(Flags=0x{0:X}, {1}=0x{2:X} ({3:N}))",
+                            entry.Flags, "ControlGuid", entry.ValueOffset, controlGuid);
+                        break;
+                    case 0x20000002:
+                        var groupGuid = r.ReadGuidAt(entry.ValueOffset);
+                        writer.WriteLine(
+                            "ProviderAttribs(Flags=0x{0:X}, {1}=0x{2:X} ({3:N}))",
+                            entry.Flags, "GroupGuid", entry.ValueOffset, groupGuid);
+                        break;
+                    default:
+                        writer.WriteLine(
+                            "ProviderAttribs(Flags=0x{0:X}, {1}=0x{2:X})",
+                            entry.Flags, "Unknown", entry.ValueOffset);
+                        break;
+                }
+            }
+
+            writer.PopScope();
         }
 
-        private static uint[] ReadUInt32At(BinaryReader r, long offset, uint count)
+        private void DumpEventAttribs(BinaryReader r)
         {
-            Stream stream = r.BaseStream;
-            long old = stream.Position;
-            try {
-                stream.Position = offset;
-                var values = new uint[count];
-                for (uint i = 0; i < count; ++i)
-                    values[i] = r.ReadUInt32();
-                return values;
-            } finally {
-                stream.Position = old;
+            var block = r.ReadStruct<ListBlock>();
+            VerifyMagic(0, block.Magic, CrimsonTags.EVTA);
+
+            if (!Verbose) {
+                writer.PushDictScope("EVTA ({0} entries)", block.NumEntries);
+            } else {
+                writer.PushDictScope("EVTA");
+                writer.WriteHex("Magic", block.Magic);
+                writer.WriteHex("Length", block.Length);
+                writer.WriteHex("NumEntries", block.NumEntries);
             }
+
+            if (block.NumEntries > int.MaxValue) {
+                writer.WriteLine("(Invalid NumEntries)");
+            } else {
+                for (uint i = 0; i < block.NumEntries; ++i) {
+                    var entry = r.ReadStruct<EventAttribsEntry>();
+                    var name = r.ReadZStringAt(entry.StringOffset);
+
+                    writer.WriteLine(
+                        "EventAttribs(Flags=0x{0:X}, Value={1}, Version={2}, {3}=0x{4:X} ({5}))",
+                        entry.Flags, entry.Value, entry.Version,
+                        entry.Flags == 0x11 ? "Name" : "Attribute",
+                        entry.StringOffset, name);
+                }
+            }
+
+            writer.PopScope();
+        }
+
+        private void DumpEventFlags(BinaryReader r)
+        {
+            var block = r.ReadStruct<ListBlock>();
+            VerifyMagic(0, block.Magic, CrimsonTags.EVTF);
+
+            if (!Verbose) {
+                writer.PushDictScope("EVTF ({0} entries)", block.NumEntries);
+            } else {
+                writer.PushDictScope("EVTF");
+                writer.WriteHex("Magic", block.Magic);
+                writer.WriteHex("Length", block.Length);
+                writer.WriteHex("NumEntries", block.NumEntries);
+            }
+
+            for (uint i = 0; i < block.NumEntries; ++i) {
+                var entry = r.ReadStruct<EventFlagsEntry>();
+
+                writer.WriteLine(
+                    "EventFlags({0}, Unknown={1})",
+                    FormatDescriptor(in entry.Descriptor),
+                    entry.qword10);
+            }
+
+            writer.PopScope();
         }
     }
 }

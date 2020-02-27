@@ -160,9 +160,6 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
 
         private Provider ReadWevtBlock(Guid providerId, BinaryReader r)
         {
-            string name = string.Format(
-                CultureInfo.InvariantCulture, "Provider_{0:N}", providerId);
-
             ReadMagic(r, CrimsonTags.WEVT);
             uint length = r.ReadUInt32();
             uint messageId = r.ReadUInt32();
@@ -176,46 +173,93 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
                 lists.Add(plo);
             }
 
-            var provider = new Provider(name, Located.Create(providerId), name);
-            provider.Message = ResolveMessage(messageId);
+            var providerMessage = ResolveMessage(messageId);
+
+            string providerName = string.Format(
+                CultureInfo.InvariantCulture, "Provider_{0:N}", providerId);
+            string providerSymbol = providerName;
+            Guid? controlGuid = null;
+            Guid? groupGuid = null;
 
             var allOpcodes = new List<Tuple<ushort, Opcode>>();
+            var levels = new List<Level>();
+            var tasks = new List<Task>();
+            var keywords = new List<Keyword>();
+            var events = new List<Event>();
+            var channels = new List<Channel>();
+            var maps = new List<Map>();
+            var templates = new List<Template>();
+            var filters = new List<Filter>();
+            Dictionary<uint, EventAttributeInfo> eventAttribMap = null;
 
             foreach (var list in lists) {
                 r.BaseStream.Position = list.Offset;
                 switch (list.Type) {
                     case EventFieldKind.Level:
-                        provider.Levels.AddRange(ReadLevels(r));
+                        levels.AddRange(ReadLevels(r));
                         break;
                     case EventFieldKind.Task:
-                        provider.Tasks.AddRange(ReadTasks(r));
+                        tasks.AddRange(ReadTasks(r));
                         break;
                     case EventFieldKind.Opcode:
                         allOpcodes.AddRange(ReadOpcodes(r));
                         break;
                     case EventFieldKind.Keyword:
-                        provider.Keywords.AddRange(ReadKeywords(r));
+                        keywords.AddRange(ReadKeywords(r));
                         break;
                     case EventFieldKind.Event:
-                        provider.Events.AddRange(ReadEvents(r));
+                        events.AddRange(ReadEvents(r));
                         break;
                     case EventFieldKind.Channel:
-                        provider.Channels.AddRange(ReadChannels(r));
+                        channels.AddRange(ReadChannels(r));
                         break;
                     case EventFieldKind.Maps:
-                        provider.Maps.AddRange(ReadMaps(r));
+                        maps.AddRange(ReadMaps(r));
                         break;
                     case EventFieldKind.Template:
-                        provider.Templates.AddRange(ReadTemplates(r));
+                        templates.AddRange(ReadTemplates(r));
                         break;
                     case EventFieldKind.Filter:
-                        provider.Filters.AddRange(ReadFilters(r));
+                        filters.AddRange(ReadFilters(r));
                         break;
-                    default: {
-                        }
+                    case EventFieldKind.ProviderAttribs:
+                        ReadProviderAttribs(r, out providerName, out controlGuid, out groupGuid);
+                        break;
+                    case EventFieldKind.EventAttribs:
+                        eventAttribMap = ReadEventAttribs(r);
+                        break;
+                    default:
                         break;
                 }
             }
+
+            if (eventAttribMap != null) {
+                foreach (var evt in events) {
+                    var key = evt.Value.Value | (uint)(evt.Version.Value << 16);
+
+                    if (eventAttribMap.TryGetValue(key, out var entry)) {
+                        if (entry.Name != null)
+                            evt.Name = entry.Name;
+                        if (entry.Attributes != null)
+                            evt.Attributes.AddRange(entry.Attributes);
+                    }
+                }
+            }
+
+            var provider = new Provider(providerName, Located.Create(providerId), providerName) {
+                Message = providerMessage,
+                ControlGuid = controlGuid,
+                GroupGuid = groupGuid,
+            };
+
+            provider.Levels.AddRange(levels);
+            provider.Tasks.AddRange(tasks);
+            provider.Keywords.AddRange(keywords);
+            provider.Events.AddRange(events);
+            provider.Channels.AddRange(channels);
+            provider.Maps.AddRange(maps);
+            provider.Templates.AddRange(templates);
+            provider.Filters.AddRange(filters);
 
             provider.Opcodes.AddRange(allOpcodes.Where(x => x.Item1 == 0).Select(x => x.Item2));
             foreach (var taskSpecificOpcode in allOpcodes.Where(x => x.Item1 != 0)) {
@@ -246,7 +290,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
                 uint keywordCount = r.ReadUInt32();
                 uint keywordsOffset = r.ReadUInt32();
                 uint channelOffset = r.ReadUInt32();
-                uint[] keywordOffsets = ReadUInt32At(r, keywordsOffset, keywordCount);
+                uint[] keywordOffsets = r.ReadUInt32At(keywordsOffset, keywordCount);
 
                 var @event = new Event(Located.Create((uint)desc.EventId), Located.Create(desc.Version));
                 @event.Channel = GetObject<Channel>(channelOffset);
@@ -303,7 +347,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
                 var nameOffset = r.ReadUInt32();
                 var value = r.ReadUInt32();
                 var messageId = r.ReadUInt32();
-                string name = ReadStringAt(r, nameOffset);
+                string name = r.ReadCountedStringAt(nameOffset);
                 channelEntries.Add(
                     new ChannelEntry {
                         Flags = (ChannelFlags)flags,
@@ -340,7 +384,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
                 var value = r.ReadUInt32();
                 var messageId = r.ReadUInt32();
                 var nameOffset = r.ReadUInt32();
-                string name = ReadStringAt(r, nameOffset);
+                string name = r.ReadCountedStringAt(nameOffset);
                 levelEntries.Add(
                     new LevelEntry {
                         Value = value,
@@ -375,7 +419,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
                 var messageId = r.ReadUInt32();
                 var guid = r.ReadGuid();
                 var nameOffset = r.ReadUInt32();
-                string name = ReadStringAt(r, nameOffset);
+                string name = r.ReadCountedStringAt(nameOffset);
                 taskEntries.Add(
                     new TaskEntry {
                         Value = value,
@@ -412,7 +456,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
                 var value = r.ReadUInt16();
                 var messageId = r.ReadUInt32();
                 var nameOffset = r.ReadUInt32();
-                string name = ReadStringAt(r, nameOffset);
+                string name = r.ReadCountedStringAt(nameOffset);
                 opcodeEntries.Add(
                     new OpcodeEntry {
                         TaskId = taskId,
@@ -447,7 +491,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
                 var mask = r.ReadUInt64();
                 var messageId = r.ReadUInt32();
                 var nameOffset = r.ReadUInt32();
-                string name = ReadStringAt(r, nameOffset);
+                string name = r.ReadCountedStringAt(nameOffset);
                 keywordEntries.Add(
                     new KeywordEntry {
                         Mask = mask,
@@ -516,7 +560,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
             if (r.BaseStream.Position != offset + length)
                 throw new IOException();
 
-            string name = ReadStringAt(r, nameOffset);
+            string name = r.ReadCountedStringAt(nameOffset);
             var mapEntry = new MapEntry {
                 Flags = (MapFlags)flags,
                 Name = name,
@@ -640,7 +684,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
                 ushort count = r.ReadUInt16();
                 ushort length = r.ReadUInt16();
                 uint nameOffset = r.ReadUInt32();
-                string name = ReadStringAt(r, nameOffset).TrimEnd('\0');
+                string name = r.ReadCountedStringAt(nameOffset).TrimEnd('\0');
 
                 var property = new StructProperty(name);
 
@@ -670,7 +714,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
                 ushort count = r.ReadUInt16();
                 ushort length = r.ReadUInt16();
                 uint nameOffset = r.ReadUInt32();
-                string name = ReadStringAt(r, nameOffset).TrimEnd('\0');
+                string name = r.ReadCountedStringAt(nameOffset).TrimEnd('\0');
 
                 DataProperty property;
                 if (metadata != null) {
@@ -714,7 +758,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
                 uint messageId = r.ReadUInt32();
                 uint nameOffset = r.ReadUInt32();
                 uint templateOffset = r.ReadUInt32();
-                string name = ReadStringAt(r, nameOffset);
+                string name = r.ReadCountedStringAt(nameOffset);
                 filterEntries.Add(
                     new FilterEntry {
                         Name = name,
@@ -737,32 +781,81 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
             return filters;
         }
 
-        private string ReadStringAt(BinaryReader r, long offset)
+        private void ReadProviderAttribs(
+            BinaryReader r, out string providerName, out Guid? controlGuid, out Guid? groupGuid)
         {
-            Stream stream = r.BaseStream;
-            long old = stream.Position;
-            try {
-                stream.Position = offset;
-                uint byteCount = r.ReadUInt32();
-                return r.ReadPaddedString(Encoding.Unicode, byteCount - 4);
-            } finally {
-                stream.Position = old;
+            providerName = null;
+            controlGuid = null;
+            groupGuid = null;
+
+            ReadMagic(r, CrimsonTags.PRVA);
+            uint length = r.ReadUInt32();
+            uint count = r.ReadUInt32();
+
+            for (uint i = 0; i < count; ++i) {
+                var e = new ProviderAttribsEntry();
+                e.Flags = r.ReadUInt32();
+                e.ValueOffset = r.ReadUInt32();
+
+                switch (e.Flags) {
+                    case ProviderAttribsEntry.NameFlags:
+                        providerName = r.ReadZStringAt(e.ValueOffset);
+                        break;
+                    case ProviderAttribsEntry.ControlGuidFlags:
+                        controlGuid = r.ReadGuidAt(e.ValueOffset);
+                        break;
+                    case ProviderAttribsEntry.GroupGuidFlags:
+                        groupGuid = r.ReadGuidAt(e.ValueOffset);
+                        break;
+                    default:
+                        diags.Report(DiagnosticSeverity.Warning, "Unknown provider attribute flags 0x{0:X}", e.Flags);
+                        break;
+                }
             }
         }
 
-        private uint[] ReadUInt32At(BinaryReader r, long offset, uint count)
+        private Dictionary<uint, EventAttributeInfo> ReadEventAttribs(BinaryReader r)
         {
-            Stream stream = r.BaseStream;
-            long old = stream.Position;
-            try {
-                stream.Position = offset;
-                var values = new uint[count];
-                for (uint i = 0; i < count; ++i)
-                    values[i] = r.ReadUInt32();
-                return values;
-            } finally {
-                stream.Position = old;
+            ReadMagic(r, CrimsonTags.EVTA);
+            uint length = r.ReadUInt32();
+            uint count = r.ReadUInt32();
+
+            var attribMap = new Dictionary<uint, EventAttributeInfo>();
+
+            for (uint i = 0; i < count; ++i) {
+                var e = new EventAttribsEntry();
+                e.Flags = r.ReadByte();
+                e.Version = r.ReadByte();
+                e.Value = r.ReadUInt16();
+                e.StringOffset = r.ReadUInt32();
+
+                uint key = e.Value | (uint)(e.Version << 16);
+                if (!attribMap.TryGetValue(key, out var entry))
+                    entry = attribMap[key] = new EventAttributeInfo();
+
+                switch (e.Flags) {
+                    case EventAttribsEntry.NameFlags:
+                        entry.Name = r.ReadZStringAt(e.StringOffset);
+                        break;
+                    case EventAttribsEntry.AttributesFlags:
+                        if (entry.Attributes == null)
+                            entry.Attributes = new List<EventAttribute>();
+                        var pair = r.ReadZStringAt(e.StringOffset);
+                        entry.Attributes.Add(new EventAttribute(pair));
+                        break;
+                    default:
+                        diags.Report(DiagnosticSeverity.Warning, "Unknown event attribute flags 0x{0:X}", e.Flags);
+                        break;
+                }
             }
+
+            return attribMap;
+        }
+
+        private class EventAttributeInfo
+        {
+            public string Name { get; set; }
+            public List<EventAttribute> Attributes { get; set; }
         }
 
         private LocalizedString ResolveMessage(uint messageId)

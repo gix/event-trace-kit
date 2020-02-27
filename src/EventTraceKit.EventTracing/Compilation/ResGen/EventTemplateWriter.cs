@@ -23,6 +23,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
         private readonly XmlNamespaceManager nsmgr = new XmlNamespaceManager(new NameTable());
         private readonly MemoryMappedViewWriter writer;
         private readonly Dictionary<object, long> offsetMap = new Dictionary<object, long>();
+        private int version = 5;
 
         public EventTemplateWriter(FileStream output)
         {
@@ -32,6 +33,18 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
 
         public bool EnableMessageCompilerCompat { get; set; } = true;
         public bool UseLegacyTemplateIds { get; set; }
+
+        public int Version
+        {
+            get => version;
+            set
+            {
+                if (value != 3 && value != 5)
+                    throw new ArgumentException("Invalid version (must be 3 or 5)");
+
+                version = value;
+            }
+        }
 
         public void Dispose()
         {
@@ -68,7 +81,7 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
             FileHeader b;
             b.Magic = CrimsonTags.CRIM;
             b.Length = (uint)(writer.Position - startPos);
-            b.Major = 3;
+            b.Major = (ushort)Version;
             b.Minor = 1;
             b.NumProviders = (uint)providers.Count;
             writer.WriteResource(ref startPos, ref b);
@@ -87,24 +100,34 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
                 types.Add(EventFieldKind.NamedQueries);
             if (provider.Templates.Count > 0)
                 types.Add(EventFieldKind.Template);
+            if (Version >= 5)
+                types.Add(EventFieldKind.ProviderAttribs);
             types.Add(EventFieldKind.Opcode);
             types.Add(EventFieldKind.Level);
             types.Add(EventFieldKind.Task);
             types.Add(EventFieldKind.Keyword);
-            if (provider.Events.Count > 0)
+            if (provider.Events.Count > 0) {
                 types.Add(EventFieldKind.Event);
+                if (Version >= 5 && ComputeEventAttributeCount(provider) != 0)
+                    types.Add(EventFieldKind.EventAttribs);
+            }
             if (provider.Filters.Count > 0)
                 types.Add(EventFieldKind.Filter);
 
-            var offsets = new long[11];
-            long offset = startPos + Marshal.SizeOf<ProviderBlock>();
-            long dataOffset = offset + (offsets.Length * Marshal.SizeOf<ProviderListOffset>());
+            var offsets = new ProviderListOffset[Version >= 5 ? types.Count : 11];
+            for (int i = 0; i < types.Count; ++i) {
+                offsets[i].Type = types[i];
+            }
+
+            long offsetsOffset = startPos + Marshal.SizeOf<ProviderBlock>();
+            long dataOffset = offsetsOffset + (offsets.Length * Marshal.SizeOf<ProviderListOffset>());
 
             writer.Position = dataOffset;
 
-            foreach (var type in types) {
-                offsets[(int)type] = writer.Position;
-                switch (type) {
+            for (int i = 0; i < types.Count; ++i) {
+                ref var block = ref offsets[i];
+                block.Offset = (uint)writer.Position;
+                switch (block.Type) {
                     case EventFieldKind.Level:
                         WriteLevels(provider.Levels);
                         break;
@@ -118,8 +141,8 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
                         WriteKeywords(provider.Keywords);
                         break;
                     case EventFieldKind.Event:
-                        writer.FillAlignment(8);
-                        offsets[(int)type] = writer.Position;
+                        writer.Align(8);
+                        block.Offset = (uint)writer.Position;
                         WriteEvents(provider.Events);
                         break;
                     case EventFieldKind.Channel:
@@ -137,21 +160,18 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
                     case EventFieldKind.Filter:
                         WriteFilters(provider.Filters);
                         break;
+                    case EventFieldKind.ProviderAttribs:
+                        WriteProviderAttribs(provider);
+                        break;
+                    case EventFieldKind.EventAttribs:
+                        WriteEventAttribs(provider);
+                        break;
                     default:
-                        throw new InternalException("Unknown item type {0}.", type);
+                        throw new InternalException("Unknown item type {0}.", block.Type);
                 }
             }
 
-            foreach (var type in types) {
-                var o = new ProviderListOffset();
-                o.Type = type;
-                o.Offset = (uint)offsets[(int)type];
-                writer.WriteResource(ref offset, ref o);
-            }
-            for (int i = types.Count; i < offsets.Length; ++i) {
-                var o = new ProviderListOffset();
-                writer.WriteResource(ref offset, ref o);
-            }
+            writer.WriteArray(ref offsetsOffset, offsets);
 
             ProviderBlock b;
             b.Magic = CrimsonTags.WEVT;
@@ -584,6 +604,122 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
             // This field is most likely just garbage. MC seems to reuse the
             // local struct to write the block header.
             b.Junk = GetObjectOffset(filters[filters.Count - 1].Template);
+            writer.WriteResource(ref startPos, ref b);
+        }
+
+        private void WriteProviderAttribs(Provider provider)
+        {
+            int entryCount = 1;
+            if (provider.ControlGuid != null)
+                ++entryCount;
+            if (provider.GroupGuid != null)
+                ++entryCount;
+
+            long startPos = writer.Position;
+            writer.Position += Marshal.SizeOf<ListBlock>();
+            long offset = writer.Position + (entryCount * Marshal.SizeOf<ProviderAttribsEntry>());
+
+            {
+                var entry = new ProviderAttribsEntry();
+                entry.Flags = ProviderAttribsEntry.NameFlags;
+                entry.ValueOffset = (uint)offset;
+
+                writer.WriteResource(ref entry);
+                writer.WriteZString(ref offset, provider.Name);
+            }
+
+            if (provider.ControlGuid != null) {
+                Guid guid = provider.ControlGuid.Value;
+                writer.Align(ref offset, 4);
+
+                var entry = new ProviderAttribsEntry();
+                entry.Flags = ProviderAttribsEntry.ControlGuidFlags;
+                entry.ValueOffset = (uint)offset;
+
+                writer.WriteResource(ref entry);
+                writer.WriteResource(ref offset, ref guid);
+            }
+
+            if (provider.GroupGuid != null) {
+                Guid guid = provider.GroupGuid.Value;
+                writer.Align(ref offset, 4);
+
+                var entry = new ProviderAttribsEntry();
+                entry.Flags = ProviderAttribsEntry.GroupGuidFlags;
+                entry.ValueOffset = (uint)offset;
+
+                writer.WriteResource(ref entry);
+                writer.WriteResource(ref offset, ref guid);
+            }
+
+            writer.AlignBlock(startPos, ref offset, 4);
+            writer.Position = offset;
+
+            ListBlock b;
+            b.Magic = CrimsonTags.PRVA;
+            b.Length = (uint)(offset - startPos);
+            b.NumEntries = (uint)entryCount;
+            writer.WriteResource(ref startPos, ref b);
+        }
+
+        private static int ComputeEventAttributeCount(Provider provider)
+        {
+            return provider.Events.Sum(x => (x.Name != null ? 1 : 0) + x.Attributes.Count);
+        }
+
+        private void WriteEventAttribs(Provider provider)
+        {
+            int attribCount = ComputeEventAttributeCount(provider);
+
+            long startPos = writer.Position;
+            writer.Position += Marshal.SizeOf<ListBlock>();
+            long offset = writer.Position + (attribCount * Marshal.SizeOf<ProviderAttribsEntry>());
+
+            var events = provider.Events.Where(x => (x.Name != null ? 1 : 0) + x.Attributes.Count != 0)
+                .OrderBy(x => x.Value).ThenBy(x => x.Version).ToList();
+
+            var eventNames = events.Where(x => x.Name != null).Select(x => x.Name.Value).ToList();
+            var eventAttribs = events.SelectMany(x => x.Attributes).Select(x => x.Source).ToList();
+            var strings = eventNames.Concat(eventAttribs).OrderBy(x => x, StringComparer.Ordinal).ToList();
+
+            var stringMap = new Dictionary<string, uint>();
+            foreach (var stringValue in strings) {
+                if (!stringMap.TryGetValue(stringValue, out uint stringOffset)) {
+                    stringOffset = (uint)offset;
+                    stringMap.Add(stringValue, stringOffset);
+                    writer.WriteZString(ref offset, stringValue);
+                }
+            }
+
+            foreach (var evt in events) {
+                if (evt.Name != null) {
+                    var e = new EventAttribsEntry();
+                    e.Flags = EventAttribsEntry.NameFlags;
+                    e.Version = evt.Version;
+                    e.Value = (ushort)evt.Value;
+                    e.StringOffset = stringMap[evt.Name];
+
+                    writer.WriteResource(ref e);
+                }
+
+                foreach (var attrib in evt.Attributes) {
+                    var e = new EventAttribsEntry();
+                    e.Flags = EventAttribsEntry.AttributesFlags;
+                    e.Version = evt.Version;
+                    e.Value = (ushort)evt.Value;
+                    e.StringOffset = stringMap[attrib.Source];
+
+                    writer.WriteResource(ref e);
+                }
+            }
+
+            writer.AlignBlock(startPos, ref offset, 4);
+            writer.Position = offset;
+
+            ListBlock b;
+            b.Magic = CrimsonTags.EVTA;
+            b.Length = (uint)(offset - startPos);
+            b.NumEntries = (uint)attribCount;
             writer.WriteResource(ref startPos, ref b);
         }
 

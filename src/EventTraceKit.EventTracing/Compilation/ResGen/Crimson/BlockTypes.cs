@@ -43,6 +43,10 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen.Crimson
         Template = 7,
         NamedQueries = 8,
         Filter = 9,
+        CTRT = 10,
+        EventFlags = 11,
+        EventAttribs = 12,
+        ProviderAttribs = 13,
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -225,6 +229,36 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen.Crimson
         public uint MessageId;
         public uint NameOffset;
         public uint TemplateOffset;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct ProviderAttribsEntry
+    {
+        public const uint NameFlags = 0x010000001;
+        public const uint ControlGuidFlags = 0x020000001;
+        public const uint GroupGuidFlags = 0x020000002;
+
+        public uint Flags;
+        public uint ValueOffset;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct EventAttribsEntry
+    {
+        public const byte NameFlags = 0x11;
+        public const byte AttributesFlags = 0x12;
+
+        public byte Flags;
+        public byte Version;
+        public ushort Value;
+        public uint StringOffset;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct EventFlagsEntry
+    {
+        public EventDescriptor Descriptor;
+        public ulong qword10;
     }
 
     [StructLayout(LayoutKind.Sequential)]

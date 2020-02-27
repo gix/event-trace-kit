@@ -62,7 +62,7 @@ namespace EventTraceKit.EventTracing.Compilation
         public string EventTemplateFile { get; set; }
         public string ResourceFile { get; set; }
 
-        public string CompatibilityLevel { get; set; }
+        public Version CompatibilityLevel { get; set; }
 
         public CodeGenOptions CodeGenOptions { get; } = new CodeGenOptions();
 
@@ -187,8 +187,10 @@ namespace EventTraceKit.EventTracing.Compilation
 
             using (output)
             using (var writer = new EventTemplateWriter(output)) {
-                if (opts.CompatibilityLevel == "8.1")
+                if (opts.CompatibilityLevel <= new Version(8, 1))
                     writer.UseLegacyTemplateIds = true;
+                else if (opts.CompatibilityLevel < new Version(10, 0, 16299))
+                    writer.Version = 3;
                 writer.Write(manifest.Providers);
             }
         }

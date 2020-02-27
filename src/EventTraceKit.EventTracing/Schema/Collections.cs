@@ -124,6 +124,7 @@ namespace EventTraceKit.EventTracing.Schema
                 .DiagnoseUsing(DiagUtils.ReportError);
             this.UniqueConstraintFor(e => e.Value)
                 .WithMessage("Duplicate channel value: {0} (0x{0:X})", e => e.Value)
+                .IfNotNull()
                 .DiagnoseUsing(DiagUtils.ReportError);
             this.UniqueConstraintFor(e => e.Symbol)
                 .IfNotNull()
@@ -373,6 +374,11 @@ namespace EventTraceKit.EventTracing.Schema
 
     internal static class CollectionExtensions
     {
+        public static Channel GetByIdOrName(this IEnumerable<Channel> collection, string str)
+        {
+            return collection.FirstOrDefault(e => e.Id == str || e.Name == str);
+        }
+
         public static Channel GetById(this IEnumerable<Channel> collection, string id)
         {
             return collection.FirstOrDefault(e => e.Id == id);

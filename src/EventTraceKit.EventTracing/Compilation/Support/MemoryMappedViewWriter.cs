@@ -80,9 +80,23 @@ namespace EventTraceKit.EventTracing.Compilation.Support
                 buf[i] = 0;
             return count;
         }
+
         public void WriteString(ref long offset, string str)
         {
             int count = EncodeName(str, ref stringBuffer);
+            WriteArray(ref offset, stringBuffer, 0, count);
+        }
+
+        public void WriteZString(ref long offset, string str)
+        {
+            // Includes NUL wchar_t.
+            int count = Encoding.Unicode.GetByteCount(str) + 2;
+            if (stringBuffer.Length < count)
+                stringBuffer = new byte[count];
+
+            int byteCount = Encoding.Unicode.GetBytes(str, 0, str.Length, stringBuffer, 0);
+            for (int i = byteCount; i < count; ++i)
+                stringBuffer[i] = 0;
             WriteArray(ref offset, stringBuffer, 0, count);
         }
 
@@ -140,14 +154,29 @@ namespace EventTraceKit.EventTracing.Compilation.Support
             WriteUInt32(ref position, value);
         }
 
-        public void FillAlignment(int alignment)
+        public void Align(ref long offset, int alignment)
         {
-            var mod = (int)(position % alignment);
+            var mod = (int)(offset % alignment);
             if (mod == 0)
                 return;
             int fill = alignment - mod;
             for (int i = 0; i < fill; ++i)
-                WriteUInt8(0);
+                WriteUInt8(ref offset, 0);
+        }
+
+        public void Align(int alignment)
+        {
+            Align(ref position, alignment);
+        }
+
+        public void AlignBlock(long start, ref long offset, int alignment)
+        {
+            var mod = (int)((offset - start) % alignment);
+            if (mod == 0)
+                return;
+            int fill = alignment - mod;
+            for (int i = 0; i < fill; ++i)
+                WriteUInt8(ref offset, 0);
         }
 
         private void Allocate(long newCapacity)

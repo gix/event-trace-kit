@@ -150,6 +150,11 @@ namespace EventManifestCompiler
                 x => x.Opcode.Name.Value.LocalName ?? string.Empty);
 
             foreach (var evt in provider.Events) {
+                if (evt.Name != null) {
+                    evt.Symbol = GetUniqueSymbol(evt.Name, symbolTable);
+                    continue;
+                }
+
                 if (evt.Task != null) {
                     string taskName = evt.Task.Name.Value.LocalName;
                     if (taskCounts[taskName] == 1) {
@@ -170,7 +175,10 @@ namespace EventManifestCompiler
                     }
                 }
 
-                evt.Symbol = GetUniqueSymbol("Event" + evt.Value.Value, symbolTable);
+                var symbol = "Event" + evt.Value.Value;
+                if (symbolTable.Contains(symbol) && evt.Version.Value != 0)
+                    symbol += $"_v{evt.Version.Value}";
+                evt.Symbol = GetUniqueSymbol(symbol, symbolTable);
             }
         }
 
@@ -181,8 +189,8 @@ namespace EventManifestCompiler
             if (symbolTable.Add(symbol))
                 return symbol;
 
-            for (int suffix = 1; ; ++suffix) {
-                string suffixed = symbol + suffix;
+            for (int suffix = 2; ; ++suffix) {
+                string suffixed = symbol + "_" + suffix;
                 if (symbolTable.Add(suffixed))
                     return suffixed;
             }
@@ -313,7 +321,15 @@ namespace EventManifestCompiler
                 elem.Add(new XAttribute("messageFileName", provider.MessageFileName.Value));
             if (provider.ParameterFileName != null)
                 elem.Add(new XAttribute("parameterFileName", provider.ParameterFileName.Value));
+            if (provider.ControlGuid != null)
+                elem.Add(new XAttribute("controlGuid", provider.ControlGuid.Value.ToString("B")));
             AddOptionalMessage(elem, provider.Message);
+
+            if (provider.GroupGuid != null) {
+                var traits = new XElement(ns + "traits");
+                traits.Add(new XAttribute("groupGuid", provider.GroupGuid.Value.ToString("B")));
+                elem.Add(traits);
+            }
 
             if (provider.Events.Count > 0)
                 elem.Add(new XElement(ns + "events", provider.Events.Select(ToXml)));
@@ -344,6 +360,8 @@ namespace EventManifestCompiler
                 new XAttribute("value", @event.Value));
             if (@event.Version != 0)
                 elem.Add(new XAttribute("version", @event.Version));
+            if (@event.Name != null)
+                elem.Add(new XAttribute("name", @event.Name));
             if (@event.Symbol != null)
                 elem.Add(new XAttribute("symbol", @event.Symbol));
             if (@event.Channel != null)
@@ -360,6 +378,8 @@ namespace EventManifestCompiler
                     string.Join(" ", @event.Keywords.Select(k => k.Name.Value.ToPrefixedString()))));
             if (@event.Template != null)
                 elem.Add(new XAttribute("template", @event.Template.Id.Value));
+            if (@event.Attributes.Count > 0)
+                elem.Add(new XAttribute("attributes", string.Join(";", @event.Attributes.Select(x => x.Source))));
             if (@event.NotLogged != null)
                 elem.Add(new XAttribute("notLogged", @event.NotLogged.GetValueOrDefault() ? "true" : "false"));
             AddOptionalMessage(elem, @event.Message);

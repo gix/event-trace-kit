@@ -10,7 +10,9 @@ namespace EventTraceKit.EventTracing.Internal.Native
     [SuppressUnmanagedCodeSecurity]
     internal static class UnsafeNativeMethods
     {
+        public const short RT_RCDATA = 10;
         public const short RT_MESSAGETABLE = 11;
+        public const short RT_HTML = 23;
 
         public static bool IS_INTRESOURCE(IntPtr ptr)
         {
@@ -91,6 +93,15 @@ namespace EventTraceKit.EventTracing.Internal.Native
                 0);
             return names;
         }
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern IntPtr FindResourceEx(
+            SafeModuleHandle hModule,
+            [MarshalAs(UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof(ResourceNameMarshaler))]
+            ResourceName lpType,
+            [MarshalAs(UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof(ResourceNameMarshaler))]
+            ResourceName lpName,
+            short wLanguage);
 
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         public static extern IntPtr FindResourceEx(
