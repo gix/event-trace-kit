@@ -405,6 +405,7 @@ namespace EventTraceKit.EventTracing
             var messageFileName = elem.GetOptionalString("messageFileName");
             var parameterFileName = elem.GetOptionalString("parameterFileName");
             var controlGuid = elem.GetOptionalGuid("controlGuid");
+            var namespaceName = elem.GetOptionalString("namespace");
 
             LocalizedString message = null;
             if (msgRef != null) {
@@ -420,6 +421,7 @@ namespace EventTraceKit.EventTracing
                 ResourceFileName = resourceFileName,
                 MessageFileName = messageFileName,
                 ParameterFileName = parameterFileName,
+                Namespace = namespaceName,
             };
 
             if (controlGuid != null && controlGuid.Value != Guid.Empty)

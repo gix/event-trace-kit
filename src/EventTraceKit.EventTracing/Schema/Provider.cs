@@ -57,6 +57,7 @@ namespace EventTraceKit.EventTracing.Schema
         public LocatedRef<string> MessageFileName { get; set; }
         public LocatedRef<string> ParameterFileName { get; set; }
         public LocalizedString Message { get; set; }
+        public LocatedRef<string> Namespace { get; set; }
 
         public LocatedNullable<bool> IncludeNameInTraits { get; set; }
         public LocatedNullable<Guid> GroupGuid { get; set; }
