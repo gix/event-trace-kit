@@ -8,7 +8,6 @@
     <RepoRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\'))</RepoRoot>
     <DeveloperBuild>false</DeveloperBuild>
     <DeveloperBuild Condition="'$(OfficialBuild)' != 'true' AND '$(JenkinsBuild)' != 'true'">true</DeveloperBuild>
-    <UseSharedOutputPath>true</UseSharedOutputPath>
   </PropertyGroup>
 
   <Import Project="Versions.props" />
@@ -24,18 +23,12 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <ConfigSuffix Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(Configuration)', 'Debug'))">-dbg</ConfigSuffix>
-    <OutputPlatform Condition="'$(Platform)' == 'AnyCPU'">any</OutputPlatform>
-    <OutputPlatform Condition="'$(Platform)' == 'x86'">x86</OutputPlatform>
-    <OutputPlatform Condition="'$(Platform)' == 'x64'">x64</OutputPlatform>
-    <OutputBaseName Condition="'$(OutputBaseName)' == ''">$(OutputPlatform)$(ConfigSuffix)</OutputBaseName>
-
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+    <BuildFolder Condition="'$(BuildFolder)' == ''">$(Configuration.ToLowerInvariant())</BuildFolder>
     <BuildRoot Condition="'$(BuildRoot)' == ''">$(RepoRoot)build\</BuildRoot>
-    <BaseOutputPath Condition="'$(BaseOutputPath)' == ''">$(BuildRoot)$(OutputBaseName)\bin\</BaseOutputPath>
-    <!-- BaseIntermediateOutputPath must be project-specific. -->
-    <BaseIntermediateOutputPath Condition="'$(BaseIntermediateOutputPath)' == ''">$(BuildRoot)$(OutputBaseName)\obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
-    <OutputPath Condition="'$(UseSharedOutputPath)' != 'true'">$(BaseOutputPath)$(MSBuildProjectName)\</OutputPath>
-    <OutputPath Condition="'$(UseSharedOutputPath)' == 'true'">$(BaseOutputPath)</OutputPath>
-    <IntermediateOutputPath>$(BuildRoot)$(OutputBaseName)\obj\$(MSBuildProjectName)\</IntermediateOutputPath>
+    <BaseOutputPath Condition="'$(BaseOutputPath)' == ''">$(BuildRoot)$(BuildFolder)\bin\$(MSBuildProjectName)\</BaseOutputPath>
+    <BaseIntermediateOutputPath Condition="'$(BaseIntermediateOutputPath)' == ''">$(BuildRoot)$(BuildFolder)\obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <OutputPath>$(BaseOutputPath)</OutputPath>
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
   </PropertyGroup>
 </Project>

@@ -10,10 +10,6 @@
 
   <Import Project="$(MSBuildThisFileDirectory)GenerateVersionInfo.targets" />
 
-  <Target Name="VerifyBuildProperties" BeforeTargets="PrepareForBuild">
-    <Error Condition="'$(OutputPlatform)' == ''" Text="OutputPlatform property is empty!"/>
-  </Target>
-
   <Target Name="UpdateTargetFrameworkMonikerAttributeCompile"
           BeforeTargets="ComputeReferenceCLInput;ClCompile"
           DependsOnTargets="GenerateTargetFrameworkMonikerAttribute"

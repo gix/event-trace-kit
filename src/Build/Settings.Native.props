@@ -8,31 +8,16 @@
     <RepoRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\'))</RepoRoot>
     <DeveloperBuild>false</DeveloperBuild>
     <DeveloperBuild Condition="'$(OfficialBuild)' != 'true' AND '$(JenkinsBuild)' != 'true'">true</DeveloperBuild>
-    <UseSharedOutputPath>true</UseSharedOutputPath>
   </PropertyGroup>
 
   <Import Project="Versions.props" />
 
   <PropertyGroup>
-    <ConfigSuffix Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(Configuration)', 'Debug'))">-dbg</ConfigSuffix>
-    <OutputPlatform Condition="'$(Platform)' == 'Win32'">x86</OutputPlatform>
-    <OutputPlatform Condition="'$(Platform)' == 'x86'">x86</OutputPlatform>
-    <OutputPlatform Condition="'$(Platform)' == 'x64'">x64</OutputPlatform>
-    <OutputPlatform Condition="'$(Platform)' == 'ia64'">ia64</OutputPlatform>
-    <Toolset>$(PlatformToolset)</Toolset>
-    <Toolset Condition="'$(PlatformToolset)' == 'v90'">vc90</Toolset>
-    <Toolset Condition="'$(PlatformToolset)' == 'v100'">vc100</Toolset>
-    <Toolset Condition="'$(PlatformToolset)' == 'Windows7.1SDK'">vc101</Toolset>
-    <Toolset Condition="'$(PlatformToolset)' == 'v110'">vc110</Toolset>
-    <Toolset Condition="'$(PlatformToolset)' == 'v120'">vc120</Toolset>
-    <Toolset Condition="'$(PlatformToolset)' == 'v140'">vc140</Toolset>
-    <Toolset Condition="'$(PlatformToolset)' == 'v141'">vc141</Toolset>
-    <OutputBaseName Condition="'$(OutputBaseName)' == ''">$(OutputPlatform)$(ConfigSuffix)</OutputBaseName>
+    <BuildFolder Condition="'$(BuildFolder)' == ''">$(Configuration.ToLowerInvariant())</BuildFolder>
 
     <BuildRoot Condition="'$(BuildRoot)' == ''">$(RepoRoot)build\</BuildRoot>
-    <OutDir Condition="'$(UseSharedOutputPath)' != 'true'">$(BuildRoot)$(OutputBaseName)\bin\$(MSBuildProjectName)\</OutDir>
-    <OutDir Condition="'$(UseSharedOutputPath)' == 'true'">$(BuildRoot)$(OutputBaseName)\bin\</OutDir>
-    <IntDir>$(BuildRoot)$(OutputBaseName)\obj\$(MSBuildProjectName)\</IntDir>
+    <OutDir>$(BuildRoot)$(BuildFolder)\bin\$(MSBuildProjectName)\</OutDir>
+    <IntDir>$(BuildRoot)$(BuildFolder)\obj\$(MSBuildProjectName)\</IntDir>
   </PropertyGroup>
 
   <ItemDefinitionGroup>
@@ -57,6 +42,7 @@
       <PreprocessorDefinitions>_HAS_AUTO_PTR_ETC=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard Condition="'$(CLRSupport)' != 'false'">stdcpp17</LanguageStandard>
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalOptions>-Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:externConstexpr -Gw %(AdditionalOptions)</AdditionalOptions>

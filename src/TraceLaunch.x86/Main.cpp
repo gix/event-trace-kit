@@ -111,7 +111,7 @@ void Log(char const* format, ...)
     fflush(logFile);
 }
 #else
-void Log(char const* format, ...)
+void Log(char const* /*format*/, ...)
 {
 }
 #endif

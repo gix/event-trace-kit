@@ -616,9 +616,9 @@
   </Target>
   <Target Name="IncludeCustomVsixSourceItems" DependsOnTargets="CreateVSIXChangelog">
     <ItemGroup>
-      <VSIXSourceItem Include="$(OutputPath)..\..\x86$(ConfigSuffix)\bin\TraceLaunch.Windows.exe" />
-      <VSIXSourceItem Include="$(OutputPath)..\..\x86$(ConfigSuffix)\bin\TraceLaunch.x86.exe" />
-      <VSIXSourceItem Include="$(OutputPath)..\..\x64$(ConfigSuffix)\bin\TraceLaunch.x64.exe" />
+      <VSIXSourceItem Include="$(OutputPath)..\TraceLaunch.Windows\TraceLaunch.Windows.exe" />
+      <VSIXSourceItem Include="$(OutputPath)..\TraceLaunch.x86\TraceLaunch.x86.exe" />
+      <VSIXSourceItem Include="$(OutputPath)..\TraceLaunch.x64\TraceLaunch.x64.exe" />
       <VSIXSourceItem Include="$(OutDir)CHANGELOG.txt" />
     </ItemGroup>
   </Target>

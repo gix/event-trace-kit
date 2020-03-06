@@ -2,8 +2,8 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
          ToolsVersion="15.0" DefaultTargets="Pack">
   <ItemGroup>
-    <ProjectItem Include="src\EventManifestFramework\EventManifestFramework.csproj"/>
-    <ProjectItem Include="src\EventManifestFramework.Tests\EventManifestFramework.Tests.csproj"/>
+    <ProjectItem Include="src\EventTraceKit.EventTracing\EventTraceKit.EventTracing.csproj"/>
+    <ProjectItem Include="src\EventTraceKit.EventTracing.Tests\EventTraceKit.EventTracing.Tests.csproj"/>
     <ProjectItem Include="src\EventTraceKit.Logger.Tests\EventTraceKit.Logger.Tests.vcxproj"/>
     <ProjectItem Include="src\TraceLaunch.Windows\TraceLaunch.Windows.vcxproj"/>
     <ProjectItem Include="src\TraceLaunch.x86\TraceLaunch.x86.vcxproj"/>
@@ -54,7 +54,7 @@
       <NuGetRestoreTarget Include="$(MSBuildThisFileDirectory)src\EventTraceKit.sln"/>
     </ItemGroup>
     <Exec Condition="'@(NuGetRestoreTarget)'!=''"
-          Command="&quot;$(NuGetExecutable)&quot; restore -NonInteractive -Source &quot;$(NuGetPackageSource)&quot; &quot;%(NuGetRestoreTarget.Identity)&quot;"/>
+          Command="set NUGET_RESTORE_MSBUILD_ARGS=/p:Configuration=$(Configuration) &amp; &quot;$(NuGetExecutable)&quot; restore -NonInteractive -Source &quot;$(NuGetPackageSource)&quot; &quot;%(NuGetRestoreTarget.Identity)&quot;"/>
   </Target>
 
   <Target Name="Build" DependsOnTargets="Restore" Condition="'$(Build)' != 'false'">
@@ -78,16 +78,16 @@
 
   <Target Name="Test" DependsOnTargets="Build;GetXunit" Condition="'$(Test)' != 'false'">
     <ItemGroup>
-      <TestAssemblies Include="build\x86\bin\EventManifestFramework.Tests.dll"/>
-      <TestAssemblies Include="build\x86\bin\EventTraceKit.VsExtension.Tests.dll"/>
-      <TestExecutables Include="build\x86\bin\EventTraceKit.Logger.Tests.exe"/>
+      <TestAssemblies Include="build\release\bin\EventTraceKit.EventTracing.Tests\**\EventTraceKit.EventTracing.Tests.dll"/>
+      <TestAssemblies Include="build\release\bin\EventTraceKit.VsExtension.Tests\**\EventTraceKit.VsExtension.Tests.dll"/>
+      <TestExecutables Include="build\release\bin\EventTraceKit.Logger.Tests\EventTraceKit.Logger.Tests.exe"/>
     </ItemGroup>
     <Exec Command="&quot;$(XunitRunner32)&quot; @(TestAssemblies, ' ')"/>
     <Exec Command="&quot;%(TestExecutables.Identity)&quot;"/>
   </Target>
 
   <Target Name="Pack" DependsOnTargets="Build;Test">
-    <Copy SourceFiles="build\x86\bin\EventTraceKit.VsExtension.vsix"
+    <Copy SourceFiles="build\release\bin\EventTraceKit.VsExtension\EventTraceKit.VsExtension.vsix"
           DestinationFiles="$(PackageDir)\EventTraceKit.VsExtension-$(VsixVersion).vsix"/>
   </Target>
 </Project>

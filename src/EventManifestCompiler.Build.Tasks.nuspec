@@ -14,11 +14,11 @@
     <developmentDependency>true</developmentDependency>
   </metadata>
   <files>
-    <file src="..\build\any\bin\emc.exe" target="build\native\emc.exe" />
-    <file src="..\build\any\bin\emc.exe.config" target="build\native\emc.exe.config" />
-    <file src="..\build\any\bin\EventManifestFramework.dll" target="build\native\EventManifestFramework.dll" />
-    <file src="..\build\any\bin\EventManifestCompiler.Build.Tasks.dll" target="build\native\EventManifestCompiler.Build.Tasks.dll" />
-    <file src="..\build\any\bin\NOption.dll" target="build\native\NOption.dll" />
+    <file src="..\build\release\bin\EventManifestCompiler\net46\emc.exe" target="build\native\emc.exe" />
+    <file src="..\build\release\bin\EventManifestCompiler\net46\emc.exe.config" target="build\native\emc.exe.config" />
+    <file src="..\build\release\bin\EventManifestCompiler\net46\NOption.dll" target="build\native\NOption.dll" />
+    <file src="..\build\release\bin\EventManifestCompiler.Build.Tasks\net46\EventManifestCompiler.Build.Tasks.dll" target="build\native\EventManifestCompiler.Build.Tasks.dll" />
+    <file src="..\build\release\bin\EventTraceKit.EventTracing\net46\EventTraceKit.EventTracing.dll" target="build\native\EventTraceKit.EventTracing.dll" />
     <file src="EventManifestCompiler.Build.Tasks\Resources\MSBuild\1033\emc.xml" target="build\native\1033\emc.xml" />
     <file src="EventManifestCompiler.Build.Tasks\Resources\MSBuild\1033\ProjectItemsSchema.xml" target="build\native\1033\ProjectItemsSchema.xml" />
     <file src="EventManifestCompiler.Build.Tasks\Resources\MSBuild\emc.targets" target="build\native\EventManifestCompiler.Build.Tasks.targets" />

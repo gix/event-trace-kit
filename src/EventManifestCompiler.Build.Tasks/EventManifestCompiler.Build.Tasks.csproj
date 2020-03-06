@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{E4279B17-44CD-4DAF-9BD1-8CE09FEC908F}</ProjectGuid>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <TargetFramework>net46</TargetFramework>
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

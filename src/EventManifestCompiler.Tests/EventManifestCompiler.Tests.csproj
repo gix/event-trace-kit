@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{A2DF0A84-0825-4521-BA83-D14F1A22633C}</ProjectGuid>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <TargetFramework>net46</TargetFramework>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <LangVersion>latest</LangVersion>

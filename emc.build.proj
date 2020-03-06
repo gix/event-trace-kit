@@ -5,8 +5,9 @@
     <ProjectItem Include="src\EventManifestCompiler\EventManifestCompiler.csproj"/>
     <ProjectItem Include="src\EventManifestCompiler.Tests\EventManifestCompiler.Tests.csproj"/>
     <ProjectItem Include="src\EventManifestCompiler.Build.Tasks\EventManifestCompiler.Build.Tasks.csproj"/>
-    <ProjectItem Include="src\EventManifestFramework\EventManifestFramework.csproj"/>
-    <ProjectItem Include="src\EventManifestFramework.Tests\EventManifestFramework.Tests.csproj"/>
+    <ProjectItem Include="src\EventManifestCompiler.Build.Tasks.Tests\EventManifestCompiler.Build.Tasks.Tests.csproj"/>
+    <ProjectItem Include="src\EventTraceKit.EventTracing\EventTraceKit.EventTracing.csproj"/>
+    <ProjectItem Include="src\EventTraceKit.EventTracing.Tests\EventTraceKit.EventTracing.Tests.csproj"/>
   </ItemGroup>
   <PropertyGroup>
     <Configuration Condition="'$(Configuration)' == ''">Release</Configuration>
@@ -24,17 +25,17 @@
 
   <Import Project="src\Build\Settings.props" />
 
-  <Target Name="Clean">
+  <Target Name="Clean" Condition="'$(Clean)' != 'false'">
     <MSBuild Projects="@(ProjectItem)"
              Properties="$(BuildProperties)"
              Targets="Clean"
              BuildInParallel="true"
              StopOnFirstFailure="true"/>
-    <RemoveDir Directories="build\any" ContinueOnError="WarnAndContinue"/>
-    <RemoveDir Directories="build\any"/>
+    <RemoveDir Directories="build\release" ContinueOnError="WarnAndContinue"/>
+    <RemoveDir Directories="build\release"/>
   </Target>
 
-  <Target Name="Restore">
+  <Target Name="Restore" Condition="'$(Restore)' != 'false'">
     <MSBuild Projects="@(ProjectItem)"
              Properties="$(BuildProperties)"
              Targets="Restore"
@@ -42,7 +43,7 @@
              StopOnFirstFailure="true"/>
   </Target>
 
-  <Target Name="Build" DependsOnTargets="Restore">
+  <Target Name="Build" DependsOnTargets="Restore" Condition="'$(Build)' != 'false'">
     <MSBuild Projects="@(ProjectItem)"
              Properties="$(BuildProperties)"
              BuildInParallel="true"
@@ -57,9 +58,10 @@
           Command="nuget install xunit.runner.console -Version 2.3.1 -OutputDirectory &quot;$(ToolsDir.TrimEnd('\'))&quot;"/>
   </Target>
 
-  <Target Name="Test" DependsOnTargets="Build;GetXunit">
+  <Target Name="Test" DependsOnTargets="Build;GetXunit" Condition="'$(Test)' != 'false'">
     <ItemGroup>
-      <TestAssemblies Include="build\any\bin\EventManifestFramework.Tests.dll"/>
+      <TestAssemblies Include="build\release\bin\EventManifestCompiler.Build.Tasks.Tests\**\EventManifestCompiler.Build.Tasks.Tests.dll"/>
+      <TestAssemblies Include="build\release\bin\EventTraceKit.EventTracing.Tests\**\EventTraceKit.EventTracing.Tests.dll"/>
     </ItemGroup>
     <Exec Command="&quot;$(XunitRunner32)&quot; @(TestAssemblies, ' ')"/>
   </Target>

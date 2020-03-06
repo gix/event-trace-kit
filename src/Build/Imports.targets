@@ -4,12 +4,14 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
+    <IsWpfTempProject>false</IsWpfTempProject>
+    <IsWpfTempProject Condition="'$(MSBuildProjectExtension)' == '.tmp_proj' or $(MSBuildProjectFile.Contains('_wpftmp.csproj'))">true</IsWpfTempProject>
+  </PropertyGroup>
+
   <PropertyGroup>
     <HighEntropyVA>true</HighEntropyVA>
     <Deterministic>true</Deterministic>
-
-    <IsWpfTempProject>false</IsWpfTempProject>
-    <IsWpfTempProject Condition="'$(MSBuildProjectExtension)' == '.tmp_proj'">true</IsWpfTempProject>
 
     <DocumentationFile Condition="'$(IsWpfTempProject)' == 'true'"></DocumentationFile>
     <DocumentationFile Condition="'$(IsWpfTempProject)' != 'true'">$(OutputPath)$(AssemblyName).xml</DocumentationFile>

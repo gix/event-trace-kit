@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{F8EF0352-C0F0-4DA0-9A81-83BC2EFD1EF5}</ProjectGuid>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <OutputType>Exe</OutputType>
     <AssemblyName>emc</AssemblyName>
     <TargetFramework>net46</TargetFramework>
@@ -29,9 +30,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\EventTraceKit.EventTracing\EventTraceKit.EventTracing.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="ResGen\EventTemplateDumperFast.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="ResGen\EventTemplateDumperFast.cs" />
