@@ -67,7 +67,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\TraceLaunch.x86\Main.cpp" />
+    <ClCompile Include="..\TraceLaunch.x86\Main.cpp">
+      <ObjectFileName>$(IntDir)Main.cpp</ObjectFileName>
+    </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
