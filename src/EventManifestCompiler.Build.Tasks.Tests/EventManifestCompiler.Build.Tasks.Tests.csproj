@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <ProjectGuid>{651B62CE-226C-440A-857F-EECE4D2C6E09}</ProjectGuid>
+    <ProjectGuid>{3A789D80-BAC1-4A89-B474-BA1CCFA77863}</ProjectGuid>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFramework>net46</TargetFramework>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <LangVersion>latest</LangVersion>
     <DebugType>full</DebugType>
@@ -16,9 +16,6 @@
     <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.CSharp" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="xunit">
       <Version>2.4.1</Version>
     </PackageReference>
@@ -29,11 +26,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\EventTraceKit.EventTracing\EventTraceKit.EventTracing.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Compilation\ResGen\TestCases\*.man" />
-    <EmbeddedResource Include="Compilation\ResGen\TestCases\*.bin" />
-    <EmbeddedResource Include="Compilation\ResGen\TestCases\*.h" />
+    <ProjectReference Include="..\EventManifestCompiler.Build.Tasks\EventManifestCompiler.Build.Tasks.csproj" />
   </ItemGroup>
 </Project>

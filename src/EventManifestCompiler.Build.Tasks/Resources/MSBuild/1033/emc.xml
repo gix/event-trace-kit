@@ -3,7 +3,7 @@
       Name="Emc"
       PageTemplate="tool"
       DisplayName="Event Manifest Compiler"
-      Order="170">
+      Order="65">
   <Rule.Categories>
     <Category Name="General" DisplayName="General"/>
     <Category Name="ResGen" DisplayName="Resource Generation"/>
@@ -110,7 +110,7 @@
     Description="Which code generator should be used (e.g. 'cxx', 'mc')."
     IsRequired="false"
     SwitchPrefix="-"
-    Switch="Ggenerator"
+    Switch="generator"
     Separator=":"/>
   <StringProperty
     Category="CodeGen"
@@ -119,7 +119,7 @@
     Description="Namespace where generated code is placed. Use '.' as separator (e.g. Company.Product.Tracing)."
     IsRequired="false"
     SwitchPrefix="-"
-    Switch="Gnamespace"
+    Switch="clog-ns"
     Separator=":"/>
   <StringProperty
     Category="CodeGen"
@@ -128,59 +128,42 @@
     Description="Namespace where common ETW code is placed. Use '.' as separator (e.g. Company.Product.ETW)."
     IsRequired="false"
     SwitchPrefix="-"
-    Switch="Getw-namespace"
+    Switch="cetw-ns"
     Separator=":"/>
+  <BoolProperty
+    Category="CodeGen"
+    Name="UseLoggingPrefix"
+    DisplayName="Use prefix"
+    Description="Use a prefix for generated logging functions/macros."
+    SwitchPrefix="-"
+    Switch="cuse-prefix"/>
   <StringProperty
     Category="CodeGen"
-    Name="LogCallPrefix"
-    DisplayName="Log call prefix"
-    Description=""
+    Name="LoggingPrefix"
+    DisplayName="Logging function/macro prefix"
+    Description="Prefix for generated logging functions/macros"
     IsRequired="false"
     SwitchPrefix="-"
-    Switch="Glog-prefix"
+    Switch="cprefix"
     Separator=":"
     Default="EventWrite"/>
   <BoolProperty
     Category="CodeGen"
-    Name="UseCustomEnabledChecks"
-    DisplayName="Use custom enabled checks"
-    Description="Specifies whether custom checks are used to check if events are enabled."
+    Name="GenerateDefines"
+    DisplayName="Generate definitions"
+    Description="Generate code definitions for non-essential resources."
     SwitchPrefix="-"
-    Switch="Gcustom-checks"
-    ReverseSwitch="Gno-custom-checks"/>
-  <BoolProperty
+    Switch="cdefines"
+    ReverseSwitch="cno-defines"/>
+  <StringListProperty
+    Subtype="file"
     Category="CodeGen"
-    Name="SkipDefines"
-    DisplayName="Skip definitions"
-    Description="Skip code definitions for non-essential resources."
-    SwitchPrefix="-"
-    Switch="Gskip-defines"
-    ReverseSwitch="Gno-skip-defines"/>
-  <BoolProperty
-    Category="CodeGen"
-    Name="GenerateStubs"
-    DisplayName="Generate stubs"
-    Description="Generate logging functions as stubs."
-    SwitchPrefix="-"
-    Switch="Gstubs"
-    ReverseSwitch="Gno-stubs"/>
-  <StringProperty
-    Category="CodeGen"
-    Name="AlwaysInlineAttribute"
-    DisplayName="always-inline Attribute"
-    Description="String used to mark always-inline functions, usually a macro name (e.g. FOO_ALWAYS_INLINE)."
+    Name="Extensions"
+    DisplayName="Extension path"
+    Description="Assembly path to discover custom code generators"
     IsRequired="false"
     SwitchPrefix="-"
-    Switch="Galways-inline-attr"
-    Separator=":"/>
-  <StringProperty
-    Category="CodeGen"
-    Name="NoinlineAttribute"
-    DisplayName="noinline Attribute"
-    Description="String used to mark noinline functions, usually a macro name (e.g. FOO_NOINLINE)."
-    IsRequired="false"
-    SwitchPrefix="-"
-    Switch="Gnoinline-attr"
+    Switch="ext"
     Separator=":"/>
 
   <!-- Additional Options -->

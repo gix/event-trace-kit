@@ -347,7 +347,7 @@ namespace EventTraceKit.EventTracing.Schema
         public LocalizedStringCollection()
         {
             this.UniqueConstraintFor(e => e.Name)
-                .WithMessage("Duplicate string id: '{0}'", e => e.Id)
+                .WithMessage("Duplicate string: '{0}' ({1})", e => e.Name, e => e.Location)
                 .DiagnoseUsing(DiagUtils.ReportError);
         }
 
@@ -365,6 +365,7 @@ namespace EventTraceKit.EventTracing.Schema
             if (@string == null) {
                 @string = new LocalizedString(str.Name, str.Value);
                 @string.Imported = true;
+                @string.Location = str.Location;
                 Add(@string);
             }
 

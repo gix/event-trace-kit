@@ -2,7 +2,7 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
 {
     using EventTraceKit.EventTracing.Schema;
 
-    internal interface ICodeGenNomenclature
+    internal interface ICodeGenNaming
     {
         string ContextId { get; }
         string EventDataDescriptorId { get; }
@@ -31,6 +31,7 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
         string GetProviderControlGuidId(Provider provider);
         string GetProviderContextId(Provider provider);
         string GetProviderHandleId(Provider provider);
+        string GetProviderTraitsId(Provider provider);
         string GetProviderLevelsId(Provider provider);
         string GetProviderKeywordsId(Provider provider);
         string GetProviderEnableBitsId(Provider provider);

@@ -116,12 +116,12 @@ namespace EventTraceKit.EventTracing.Compilation.ResGen
 
         private uint CreateId(SourceItem item, byte tag, int providerIdx, uint value)
         {
+            if (providerIdx < 0)
+                throw new ArgumentOutOfRangeException(nameof(providerIdx), providerIdx, "Negative provider index.");
             if (providerIdx > 15) {
                 diags.ReportError("Provider {0} requires manual message ids. Only the first 16 providers can receive automated message ids.", providerIdx);
                 throw new UserException();
             }
-            if (providerIdx < 0)
-                throw new Exception("Negative provider index.");
             return
                 ((uint)(tag & 0xF) << 28) +
                 (((uint)providerIdx & 0xF) << 24) +

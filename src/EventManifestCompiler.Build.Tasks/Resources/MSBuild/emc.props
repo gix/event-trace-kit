@@ -2,12 +2,15 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <ItemDefinitionGroup>
     <EventManifestCompile>
-      <OutputBaseName             Condition="'%(EventManifestCompile.OutputBaseName)'             == ''">%(RelativeDir)%(Filename).Generated</OutputBaseName>
+      <OutputBaseName             Condition="'%(EventManifestCompile.OutputBaseName)'             == ''">%(RelativeDir)%(Filename).Tracing</OutputBaseName>
       <GenerateResources          Condition="'%(EventManifestCompile.GenerateResources)'          == ''">true</GenerateResources>
       <GenerateCode               Condition="'%(EventManifestCompile.GenerateCode)'               == ''">true</GenerateCode>
-      <UseCustomEnabledChecks     Condition="'%(EventManifestCompile.UseCustomEnabledChecks)'     == ''">true</UseCustomEnabledChecks>
-      <SkipDefines                Condition="'%(EventManifestCompile.SkipDefines)'                == ''">true</SkipDefines>
-      <LoggingMacroPrefix         Condition="'%(EventManifestCompile.LoggingMacroPrefix)'         == ''">EventEnabled</LoggingMacroPrefix>
+      <CodeGenerator              Condition="'%(EventManifestCompile.CodeGenerator)'              == ''">cxx</CodeGenerator>
+      <UseLoggingPrefix           Condition="'%(EventManifestCompile.UseLoggingPrefix)'           == ''">false</UseLoggingPrefix>
+      <LoggingPrefix              Condition="'%(EventManifestCompile.LoggingPrefix)'              == ''">EventWrite</LoggingPrefix>
+      <LogNamespace               Condition="'%(EventManifestCompile.LogNamespace)'               == ''">trace</LogNamespace>
+      <EtwNamespace               Condition="'%(EventManifestCompile.EtwNamespace)'               == ''">etw</EtwNamespace>
+      <GenerateDefines            Condition="'%(EventManifestCompile.GenerateDefines)'            == ''">false</GenerateDefines>
 
       <TrackerLogDirectory        Condition="'%(EventManifestCompile.TrackerLogDirectory)'        == ''">$(TLogLocation)</TrackerLogDirectory>
       <MinimalRebuildFromTracking Condition="'%(EventManifestCompile.MinimalRebuildFromTracking)' == ''">true</MinimalRebuildFromTracking>

@@ -141,6 +141,17 @@ namespace EventTraceKit.EventTracing
 
         private EventManifest ParseManifest(XmlReader reader)
         {
+            try {
+                return ParseManifestCore(reader);
+            } catch (SchemaValidationException ex) {
+                var location = new SourceLocation(ex.BaseUri, ex.LineNumber, ex.ColumnNumber);
+                diags.ReportError(location, ex.OriginalMessage);
+                return null;
+            }
+        }
+
+        private EventManifest ParseManifestCore(XmlReader reader)
+        {
             var trap = diags.TrapError();
             XDocument doc = LoadDocument(reader);
             if (doc == null)

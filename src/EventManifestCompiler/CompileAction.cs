@@ -1,51 +1,39 @@
 namespace EventManifestCompiler
 {
     using System;
-    using EventTraceKit.EventTracing.Schema;
+    using EventTraceKit.EventTracing.Compilation;
     using EventTraceKit.EventTracing.Support;
 
     internal sealed class CompileAction : IAction
     {
         private readonly IDiagnosticsEngine diags;
-        private readonly EmcCommandLineArguments arguments;
+        private readonly CompilationOptions options;
 
-        public CompileAction(IDiagnosticsEngine diags, EmcCommandLineArguments arguments)
+        public CompileAction(IDiagnosticsEngine diags, CompilationOptions options)
         {
             this.diags = diags ?? throw new ArgumentNullException(nameof(diags));
-            this.arguments = arguments ?? throw new ArgumentNullException(nameof(arguments));
+            this.options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
         public int Execute()
         {
-            if (arguments.CompilationOptions.Inputs.Count == 0) {
+            if (options.Inputs == null || options.Inputs.Count == 0) {
                 diags.ReportError("No input manifest specified.");
                 Program.ShowBriefHelp();
                 return ExitCode.UserError;
             }
 
-            if (arguments.CompilationOptions.Inputs.Count > 1) {
+            if (options.Inputs.Count > 1) {
                 diags.ReportError("Too many input manifests specified.");
                 Program.ShowBriefHelp();
                 return ExitCode.UserError;
             }
 
-            string manifest = arguments.CompilationOptions.Inputs[0];
-            try {
-                return ProcessManifest(manifest) ? ExitCode.Success : ExitCode.Error;
-            } catch (SchemaValidationException ex) {
-                var location = new SourceLocation(ex.BaseUri, ex.LineNumber, ex.ColumnNumber);
-                diags.ReportError(location, ex.OriginalMessage);
-                diags.ReportError("Input manifest '{0}' is invalid.", manifest);
-                return ExitCode.UserError;
-            }
-        }
+            var manifestFile = options.Inputs[0];
+            var compilation = EventManifestCompilation.Create(
+                manifestFile, diags, options);
 
-        private bool ProcessManifest(string manifestFile)
-        {
-            var compiler = new EventTraceKit.EventTracing.Compilation.EventManifestCompiler(
-                diags, arguments.CompilationOptions, new[] { manifestFile });
-
-            return compiler.Run();
+            return compilation.Emit() ? ExitCode.Success : ExitCode.Error;
         }
     }
 }

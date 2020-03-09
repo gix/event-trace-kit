@@ -26,8 +26,6 @@ namespace EventManifestCompiler
         out_eq,
         h,
         header_file_eq,
-        s,
-        source_file_eq,
         m,
         msg_file_eq,
         w,
@@ -37,19 +35,12 @@ namespace EventManifestCompiler
 
         // CodeGen
         G_group,
-        Ggenerator_eq,
-        Galways_inline_attr_eq,
-        Gnoinline_attr_eq,
-        Glog_prefix_eq,
-        Gcustom_enabled_checks,
-        Gno_custom_enabled_checks,
-        Gskip_defines,
-        Gno_skip_defines,
-        Gstubs,
-        Gno_stubs,
-        Glog_ns_eq,
-        Getw_ns_eq,
-        Gcompat_eq
+        generator_eq,
+        g_eq,
+        compat_eq,
+        ext_eq,
+
+        custom
     }
 
     internal sealed class EmcOptTable : OptTable
@@ -59,9 +50,9 @@ namespace EventManifestCompiler
         {
         }
 
-        private static IEnumerable<Option> GetOptions()
+        public static OptTableBuilder AddOptions(OptTableBuilder builder)
         {
-            return new OptTableBuilder()
+            return builder
                 .AddUnknown(Opt.Unknown)
                 .AddInput(Opt.Input)
                 .AddFlag(Opt.help, "-", "help", "Display available options")
@@ -81,29 +72,22 @@ namespace EventManifestCompiler
                 .AddSeparate(Opt.w, "-", "w", metaVar: "<file>", groupId: Opt.O_group, aliasId: Opt.wevt_file_eq)
                 .AddSeparate(Opt.r, "-", "r", metaVar: "<file>", groupId: Opt.O_group, aliasId: Opt.rc_file_eq)
                 .AddJoined(Opt.header_file_eq, "-", "header-file:", "Generated header filename", metaVar: "<file>", groupId: Opt.O_group)
-                //.AddJoined(Opt.source_file_eq, "-", "source-file:", "Generated source filename", metaVar: "<file>", groupId: Opt.O_group)
                 .AddJoined(Opt.msg_file_eq, "-", "msg-file:", "Write message table to <file>", metaVar: "<file>", groupId: Opt.O_group)
-                .AddJoined(Opt.wevt_file_eq, "-", "etwbin-file:", "Write ETW binary template to <file>", metaVar: "<file>", groupId: Opt.O_group)
+                .AddJoined(Opt.wevt_file_eq, "-", "wevt-file:", "Write ETW binary template to <file>", metaVar: "<file>", groupId: Opt.O_group)
                 .AddJoined(Opt.rc_file_eq, "-", "rc-file:", "Write resource includes to <file>", metaVar: "<file>", groupId: Opt.O_group)
                 .AddFlag(Opt.code, "-", "code")
                 .AddFlag(Opt.no_code, "-", "no-code", "Do not generate logging code")
                 .AddSeparate(Opt.h, "-", "h", metaVar: "<file>", groupId: Opt.O_group, aliasId: Opt.header_file_eq)
-                .AddSeparate(Opt.s, "-", "s", metaVar: "<file>", groupId: Opt.O_group, aliasId: Opt.source_file_eq)
                 .AddGroup(Opt.G_group, "<G group>", "CodeGen Options")
-                .AddJoined(Opt.Ggenerator_eq, "-", "Ggenerator:", "Code generator to use (cxx, mc)", groupId: Opt.G_group)
-                .AddJoined(Opt.Glog_prefix_eq, "-", "Glog-prefix:", "Log call prefix", groupId: Opt.G_group)
-                .AddJoined(Opt.Glog_ns_eq, "-", "Glog-ns:", "Namespace where generated code is placed. Use '.' as separator (e.g. Company.Product.Tracing)", groupId: Opt.G_group)
-                .AddJoined(Opt.Getw_ns_eq, "-", "Getw-ns:", "Namespace where common ETW code is placed. Use '.' as separator (e.g. Company.Product.ETW)", groupId: Opt.G_group)
-                .AddFlag(Opt.Gcustom_enabled_checks, "-", "Gcustom-enabled-checks", "Use custom code to check whether events are enabled", groupId: Opt.G_group)
-                .AddFlag(Opt.Gno_custom_enabled_checks, "-", "Gno-custom-enabled-checks", "Use EventEnabled() to check whether events are enabled", groupId: Opt.G_group)
-                .AddFlag(Opt.Gskip_defines, "-", "Gskip-defines", "Skip code definitions for non-essential resources", groupId: Opt.G_group)
-                .AddFlag(Opt.Gno_skip_defines, "-", "Gno-skip-defines", "Do not skip definitions", groupId: Opt.G_group)
-                .AddFlag(Opt.Gstubs, "-", "Gstubs", "Generate logging functions as stubs", groupId: Opt.G_group)
-                .AddFlag(Opt.Gno_stubs, "-", "Gno-stubs", groupId: Opt.G_group)
-                .AddJoined(Opt.Galways_inline_attr_eq, "-", "Galways-inline-attr:", "String used to mark always-inline functions", groupId: Opt.G_group)
-                .AddJoined(Opt.Gnoinline_attr_eq, "-", "Gnoinline-attr:", "String used to mark no-inline functions", groupId: Opt.G_group)
-                .AddJoined(Opt.Gcompat_eq, "-", "Gcompat:", "Binary compatibility with specified mc.exe version (Supported values: 8.1)", groupId: Opt.G_group, metaVar: "<version>")
-                .GetList();
+                .AddJoined(Opt.generator_eq, "-", "generator:", "Code generator to use (cxx, mc)", groupId: Opt.G_group)
+                .AddJoined(Opt.g_eq, "-", "g:", aliasId: Opt.generator_eq)
+                .AddJoined(Opt.compat_eq, "-", "compat:", "Binary compatibility with specified mc.exe version (Supported values: 8.1)", groupId: Opt.G_group, metaVar: "<version>")
+                .AddJoined(Opt.ext_eq, "-", "ext:", "Assembly path to discover custom code generators", groupId: Opt.G_group, metaVar: "<path>");
+        }
+
+        private static IEnumerable<Option> GetOptions()
+        {
+            return AddOptions(new OptTableBuilder()).GetList();
         }
     }
 }

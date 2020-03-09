@@ -8,16 +8,47 @@ namespace EventManifestCompiler.Build.Tasks
     /// <summary>Event Manifest Compiler task.</summary>
     public sealed class Emc : NOptionTrackedToolTask
     {
+        private enum ExtOpt
+        {
+            cuse_prefix = Opt.custom,
+            cprefix_eq,
+            cdefines,
+            cno_defines,
+            clog_ns_eq,
+            cetw_ns_eq,
+        }
+
+        private class ExtendedOptTable : OptTable
+        {
+            public ExtendedOptTable()
+                : base(GetOptions())
+            {
+            }
+
+            private static IEnumerable<Option> GetOptions()
+            {
+                var builder = new OptTableBuilder();
+                EmcOptTable.AddOptions(builder);
+                builder
+                    .AddFlag(ExtOpt.cuse_prefix, "-", "cuse-prefix", "Use a prefix for generated logging functions", groupId: Opt.G_group)
+                    .AddJoined(ExtOpt.cprefix_eq, "-", "cprefix:", "Prefix for generated logging functions", groupId: Opt.G_group)
+                    .AddJoined(ExtOpt.clog_ns_eq, "-", "clog-ns:", "Namespace where generated code is placed. Use '.' as separator (e.g. Company.Product.Tracing)", groupId: Opt.G_group)
+                    .AddJoined(ExtOpt.cetw_ns_eq, "-", "cetw-ns:", "Namespace where common ETW code is placed. Use '.' as separator (e.g. Company.Product.ETW)", groupId: Opt.G_group)
+                    .AddFlag(ExtOpt.cdefines, "-", "cdefines", "Generate code definitions for non-essential resources", groupId: Opt.G_group)
+                    .AddFlag(ExtOpt.cno_defines, "-", "cno-defines", "Do not generate definitions", groupId: Opt.G_group);
+                return builder.GetList();
+            }
+        }
+
         /// <summary>
         ///   Initializes a new instance of the <see cref="Emc"/> class.
         /// </summary>
         public Emc()
-            : base(new EmcOptTable())
+            : base(new ExtendedOptTable())
         {
             OptionOrder = new List<OptSpecifier> {
                 Opt.out_eq,
                 Opt.header_file_eq,
-                Opt.source_file_eq,
                 Opt.msg_file_eq,
                 Opt.wevt_file_eq,
                 Opt.rc_file_eq,
@@ -25,15 +56,12 @@ namespace EventManifestCompiler.Build.Tasks
                 Opt.winmeta_eq,
                 Opt.res, Opt.no_res,
                 Opt.code, Opt.no_code,
-                Opt.Ggenerator_eq,
-                Opt.Glog_ns_eq,
-                Opt.Getw_ns_eq,
-                Opt.Glog_prefix_eq,
-                Opt.Gcustom_enabled_checks, Opt.Gno_custom_enabled_checks,
-                Opt.Gskip_defines, Opt.Gno_skip_defines,
-                Opt.Gstubs, Opt.Gno_stubs,
-                Opt.Galways_inline_attr_eq,
-                Opt.Gnoinline_attr_eq,
+                Opt.generator_eq,
+                ExtOpt.clog_ns_eq,
+                ExtOpt.cetw_ns_eq,
+                ExtOpt.cuse_prefix,
+                ExtOpt.cprefix_eq,
+                ExtOpt.cdefines, ExtOpt.cno_defines,
                 Opt.Input,
             };
         }
@@ -94,12 +122,6 @@ namespace EventManifestCompiler.Build.Tasks
             set => SetString(Opt.header_file_eq, value);
         }
 
-        public string SourceFile
-        {
-            get => GetString(Opt.source_file_eq);
-            set => SetString(Opt.source_file_eq, value);
-        }
-
         public string MessageTableFile
         {
             get => GetString(Opt.msg_file_eq);
@@ -132,56 +154,44 @@ namespace EventManifestCompiler.Build.Tasks
 
         public string CodeGenerator
         {
-            get => GetString(Opt.Ggenerator_eq);
-            set => SetString(Opt.Ggenerator_eq, value);
+            get => GetString(Opt.generator_eq);
+            set => SetString(Opt.generator_eq, value);
         }
 
         public string LogNamespace
         {
-            get => GetString(Opt.Glog_ns_eq);
-            set => SetString(Opt.Glog_ns_eq, value);
+            get => GetString(ExtOpt.clog_ns_eq);
+            set => SetString(ExtOpt.clog_ns_eq, value);
         }
 
         public string EtwNamespace
         {
-            get => GetString(Opt.Getw_ns_eq);
-            set => SetString(Opt.Getw_ns_eq, value);
+            get => GetString(ExtOpt.cetw_ns_eq);
+            set => SetString(ExtOpt.cetw_ns_eq, value);
         }
 
-        public string LogCallPrefix
+        public bool UseLoggingPrefix
         {
-            get => GetString(Opt.Glog_prefix_eq);
-            set => SetString(Opt.Glog_prefix_eq, value);
+            get => GetBool(ExtOpt.cuse_prefix);
+            set => SetBool(ExtOpt.cuse_prefix, value);
+        }
+        
+        public string LoggingPrefix
+        {
+            get => GetString(ExtOpt.cprefix_eq);
+            set => SetString(ExtOpt.cprefix_eq, value);
         }
 
-        public bool UseCustomEnabledChecks
+        public bool GenerateDefines
         {
-            get => GetBool(Opt.Gcustom_enabled_checks, Opt.Gno_custom_enabled_checks);
-            set => SetBool(Opt.Gcustom_enabled_checks, Opt.Gno_custom_enabled_checks, value);
+            get => GetBool(ExtOpt.cdefines, ExtOpt.cno_defines);
+            set => SetBool(ExtOpt.cdefines, ExtOpt.cno_defines, value);
         }
-
-        public bool SkipDefines
+        
+        public string[] Extensions
         {
-            get => GetBool(Opt.Gskip_defines, Opt.Gno_skip_defines);
-            set => SetBool(Opt.Gskip_defines, Opt.Gno_skip_defines, value);
-        }
-
-        public bool GenerateStubs
-        {
-            get => GetBool(Opt.Gstubs, Opt.Gno_stubs);
-            set => SetBool(Opt.Gstubs, Opt.Gno_stubs, value);
-        }
-
-        public string AlwaysInlineAttribute
-        {
-            get => GetString(Opt.Galways_inline_attr_eq);
-            set => SetString(Opt.Galways_inline_attr_eq, value);
-        }
-
-        public string NoinlineAttribute
-        {
-            get => GetString(Opt.Gnoinline_attr_eq);
-            set => SetString(Opt.Gnoinline_attr_eq, value);
+            get => GetStringList(Opt.ext_eq);
+            set => SetStringList(Opt.ext_eq, value);
         }
 
         protected override string GenerateCommandLineCommands()
@@ -192,19 +202,6 @@ namespace EventManifestCompiler.Build.Tasks
         protected override string GenerateResponseFileCommands()
         {
             return string.Empty;
-        }
-
-        protected override void PostProcessOptions()
-        {
-            // Work around a shortcoming in MSBuild because it cannot distinguish
-            // between not-set and empty property values. We want to be able to
-            // override the default log prefix with an empty string but the
-            // normal property setter is never called in such a case. If the log
-            // prefix option is not set we know that it should be interpreted as
-            // an empty string because emc.props sets a non-empty default value
-            // for LoggingMacroPrefix.
-            if (!IsOptionSet(Opt.Glog_prefix_eq))
-                LogCallPrefix = string.Empty;
         }
     }
 }

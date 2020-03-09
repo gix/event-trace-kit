@@ -94,11 +94,23 @@ namespace EventManifestCompiler.Build.Tasks
             return false;
         }
 
+        protected bool GetBool(OptSpecifier pos)
+        {
+            return IsOptionSet(pos);
+        }
+
         protected void SetBool(OptSpecifier pos, OptSpecifier neg, bool value)
         {
             activeArgs.Remove(pos.Id);
             activeArgs.Remove(neg.Id);
             AddActiveArg(CreateArg(pos, neg, value));
+        }
+
+        protected void SetBool(OptSpecifier pos, bool value)
+        {
+            activeArgs.Remove(pos.Id);
+            if (value)
+                AddActiveArg(CreateArg(pos));
         }
 
         protected string GetString(OptSpecifier opt)
@@ -109,6 +121,19 @@ namespace EventManifestCompiler.Build.Tasks
         }
 
         protected void SetString(OptSpecifier opt, string value)
+        {
+            activeArgs.Remove(opt.Id);
+            AddActiveArg(CreateArg(opt, value));
+        }
+
+        protected string[] GetStringList(OptSpecifier opt)
+        {
+            if (!IsOptionSet(opt))
+                return null;
+            return activeArgs[opt.Id].Values.ToArray();
+        }
+
+        protected void SetStringList(OptSpecifier opt, string[] value)
         {
             activeArgs.Remove(opt.Id);
             AddActiveArg(CreateArg(opt, value));
@@ -132,10 +157,22 @@ namespace EventManifestCompiler.Build.Tasks
             activeArgs.Add(arg.Option.Id, arg);
         }
 
+        private Arg CreateArg(OptSpecifier pos)
+        {
+            var option = optTable.GetOption(pos);
+            return new Arg(option, option.PrefixedName, 0);
+        }
+
         private Arg CreateArg(OptSpecifier opt, string value)
         {
             var option = optTable.GetOption(opt);
             return new Arg(option, option.PrefixedName, 0, value);
+        }
+
+        private Arg CreateArg(OptSpecifier opt, string[] value)
+        {
+            var option = optTable.GetOption(opt);
+            return new Arg(option, option.PrefixedName, 0, value ?? new string[0]);
         }
 
         private Arg CreateArg(OptSpecifier pos, OptSpecifier neg, bool value)

@@ -32,6 +32,17 @@
     <ProjectReference Include="..\EventTraceKit.EventTracing\EventTraceKit.EventTracing.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="**\*.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>$([System.String]::Copy('%(FileName)').Replace('.Designer', '.resx'))</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="**\*.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>$([System.String]::Copy('%(FileName)')).Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
     <None Include="..\Build\EventTraceKit.snk">
       <Link>Properties\EventTraceKit.snk</Link>
     </None>
@@ -41,6 +52,19 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Resources\MSBuild\1033\ProjectItemsSchema.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Strings.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Strings.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Strings.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Strings.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <Target Name="CopyMSBuildFiles" AfterTargets="Build">
     <ItemGroup>

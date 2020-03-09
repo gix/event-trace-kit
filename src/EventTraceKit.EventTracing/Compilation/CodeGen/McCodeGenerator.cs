@@ -3,7 +3,6 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
     using System;
     using System.Collections.Generic;
     using System.ComponentModel.Composition;
-    using System.Globalization;
     using System.IO;
     using System.Linq;
     using System.Text;
@@ -13,19 +12,39 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
     using EventTraceKit.EventTracing.Schema.Base;
     using EventTraceKit.EventTracing.Support;
 
-    [Export(typeof(ICodeGenerator))]
-    [ExportMetadata("Name", "mc")]
-    internal sealed class MCCompatibleCodeGenerator : ICodeGenerator
+    [CodeGenerator]
+    internal sealed class McCodeGeneratorProvider : ICodeGeneratorProvider
+    {
+        public string Name => "mc";
+        public object CreateOptions() => new McCodeGenOptions();
+
+        public ICodeGenerator CreateGenerator(object options)
+        {
+            return new McCodeGenerator(options as McCodeGenOptions ?? new McCodeGenOptions());
+        }
+    }
+
+    internal sealed class McCodeGenOptions
+    {
+        [JoinedOption("use-prefix", HelpText = "Prefix for generated logging functions")]
+        public bool UseLoggingPrefix { get; set; } = true;
+
+        [JoinedOption("prefix", HelpText = "Prefix for generated logging macros")]
+        public string LoggingPrefix { get; set; } = "EventWrite";
+    }
+
+    internal sealed class McCodeGenerator : ICodeGenerator
     {
         private static readonly Template DefaultTemplate = new Template(
             Located.Create("(null)"));
 
-        private readonly ICodeGenOptions options;
-        private readonly ICodeGenNomenclature naming = new Nomenclature();
+        private readonly McCodeGenOptions options;
+        private readonly ICodeGenNaming naming = new Nomenclature();
+        private readonly string loggingPrefix;
 
         private IndentableTextWriter ow;
 
-        private sealed class Nomenclature : BaseCodeGenNomenclature
+        private sealed class Nomenclature : CStyleCodeGenNaming
         {
             public override string ContextId => "Context";
             public override string EventDataDescriptorId => "EventData";
@@ -40,16 +59,6 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             public override string GetIdentifier(MapItem item, Map map)
             {
                 return map.Symbol + item.Symbol;
-            }
-
-            public override string GetTemplateSuffix(Template template)
-            {
-                if (template.Properties.Count == 0)
-                    return string.Empty;
-                var builder = new StringBuilder(template.Properties.Count);
-                foreach (var property in template.Properties)
-                    builder.Append(MangleProperty(property, template.Properties));
-                return builder.ToString();
             }
 
             public override string GetTemplateId(Template template)
@@ -111,12 +120,11 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
         }
 
         [ImportingConstructor]
-        public MCCompatibleCodeGenerator(ICodeGenOptions options)
+        public McCodeGenerator(McCodeGenOptions options)
         {
-            if (options == null)
-                throw new ArgumentNullException(nameof(options));
+            this.options = options ?? throw new ArgumentNullException(nameof(options));
 
-            this.options = options;
+            loggingPrefix = options.UseLoggingPrefix ? options.LoggingPrefix : null;
         }
 
         public void Generate(EventManifest manifest, Stream output)
@@ -187,11 +195,6 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             WritePreamble(includeEventSet);
         }
 
-        private static bool RequiresTraits(Provider provider)
-        {
-            return provider.ControlGuid != null || provider.GroupGuid != null;
-        }
-
         private void WriteRegistration(Provider provider)
         {
             string providerId = naming.GetIdentifier(provider);
@@ -205,7 +208,7 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
                 controlGuidId = naming.GetProviderControlGuidId(provider);
             }
 
-            if (RequiresTraits(provider)) {
+            if (provider.RequiresTraits()) {
                 registerFunction = "McGenEventRegisterContext";
                 handleOrContextId = contextId;
             }
@@ -299,13 +302,13 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
                     "EXTERN_C __declspec(selectany) MCGEN_TRACE_CONTEXT {0} " +
                     "= {{0, (ULONG_PTR){1}}};",
                     naming.GetProviderContextId(provider),
-                    $"{provider.Symbol}_Traits");
+                    naming.GetProviderTraitsId(provider));
             } else {
                 ow.WriteLine(
                     "EXTERN_C __declspec(selectany) MCGEN_TRACE_CONTEXT {0} " +
                     "= {{0, (ULONG_PTR){1}, 0, 0, 0, 0, 0, 0, {2}, {3}, {4}, {5}}};",
                     naming.GetProviderContextId(provider),
-                    $"{provider.Symbol}_Traits",
+                    naming.GetProviderTraitsId(provider),
                     enableBits.Count,
                     naming.GetProviderEnableBitsId(provider),
                     naming.GetProviderKeywordsId(provider),
@@ -340,56 +343,6 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             }
         }
 
-        private static IEnumerable<int> EnumerateCodePoints(string str)
-        {
-            for (int i = 0; i < str.Length;) {
-                int cp;
-                if (char.IsSurrogate(str, i)) {
-                    cp = char.ConvertToUtf32(str, i);
-                    i += 2;
-                } else {
-                    cp = str[i];
-                    ++i;
-                }
-
-                yield return cp;
-            }
-        }
-
-        private static string ToCStringLiteral(string str, out int length)
-        {
-            length = 0;
-
-            var builder = new StringBuilder();
-            var buffer = new byte[4];
-            foreach (int cp in EnumerateCodePoints(str)) {
-                if (IsPrintableAscii(cp)) {
-                    builder.Append((char)cp);
-                    ++length;
-                    continue;
-                }
-
-                string s = char.ConvertFromUtf32(cp);
-                int len = Encoding.UTF8.GetBytes(s, 0, s.Length, buffer, 0);
-                for (int i = 0; i < len; ++i) {
-                    builder.AppendFormat("\\{0:D03}", Convert.ToString(buffer[i], 8));
-                    ++length;
-                }
-            }
-
-            return builder.ToString();
-        }
-
-        private static string ToCStringLiteral(byte[] bytes)
-        {
-            return string.Concat(bytes.Select(x => $"\\x{x:X2}"));
-        }
-
-        private static bool IsPrintableAscii(int cp)
-        {
-            return cp >= 0x20 && cp <= 0x7E;
-        }
-
         private void WriteProviderTraits(Provider provider)
         {
             if (provider.ControlGuid != null) {
@@ -401,14 +354,14 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
                 ow.WriteLine();
             }
 
-            var traitsMacroId = $"{provider.Symbol}_Traits";
+            var traitsMacroId = naming.GetProviderTraitsId(provider);
             ow.WriteLine("#ifndef {0}", traitsMacroId);
             if (provider.ControlGuid != null || provider.GroupGuid != null || provider.IncludeNameInTraits == true) {
                 int totalSize = 2 /*Traits size*/;
 
                 string providerName;
                 if (provider.IncludeNameInTraits == true) {
-                    providerName = ToCStringLiteral(provider.Name, out var literalLength) + "\\x00";
+                    providerName = provider.Name.Value.ToCStringLiteral(out var literalLength) + "\\x00";
                     totalSize += literalLength + 1;
                 } else {
                     providerName = "\\x00";
@@ -417,20 +370,20 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
 
                 string groupGuidTrait = null;
                 if (provider.GroupGuid != null) {
-                    groupGuidTrait = "\\x13\\x00\\x01" + ToCStringLiteral(provider.GroupGuid.Value.ToByteArray());
+                    groupGuidTrait = "\\x13\\x00\\x01" + provider.GroupGuid.Value.ToByteArray().ToCStringLiteral();
                     totalSize += 2 /*Trait size*/ + 1 /*Trait type*/ + 16 /*Guid size*/;
                 }
 
                 string decodeGuidTrait = null;
                 if (provider.ControlGuid != null) {
-                    decodeGuidTrait = "\\x13\\x00\\x02" + ToCStringLiteral(provider.Id.Value.ToByteArray());
+                    decodeGuidTrait = "\\x13\\x00\\x02" + provider.Id.Value.ToByteArray().ToCStringLiteral();
                     totalSize += 2 /*Trait size*/ + 1 /*Trait type*/ + 16 /*Guid size*/;
                 }
 
                 byte[] sizeBytes = BitConverter.GetBytes((ushort)totalSize);
 
                 ow.WriteLine("#define {0} ( \\", traitsMacroId);
-                ow.WriteLine("    \"{0}\" /* Total size of traits = {1} */ \\", ToCStringLiteral(sizeBytes), totalSize);
+                ow.WriteLine("    \"{0}\" /* Total size of traits = {1} */ \\", sizeBytes.ToCStringLiteral(), totalSize);
                 if (provider.IncludeNameInTraits == true)
                     ow.WriteLine("    \"{0}\" /* Provider name */ \\", providerName);
                 else
@@ -603,7 +556,7 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             var properties = template.Properties;
             var enableFuncId = naming.GetEventFuncId(evt, "EventEnabled");
             var symbol = naming.GetIdentifier(evt);
-            var propImpls = properties.Select(x => CreatePropImpl(x)).ToList();
+            var parameters = properties.Select(x => CodeParameter.Create(naming, x)).ToList();
 
             ow.WriteLine("//");
             ow.WriteLine("// Enablement check macro for {0}", symbol);
@@ -617,19 +570,19 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
 
             var argsBuilder = new StringBuilder();
             using (var w = new StringWriter(argsBuilder))
-                AppendParams(w, propImpls, true, true);
+                AppendMacroArgNames(w, parameters);
             string args = argsBuilder.ToString();
 
             ow.WriteLine("//");
             ow.WriteLine("// Event write macros for {0}", symbol);
             ow.WriteLine("//");
-            if (propImpls.Any(x => x.RequiresPacking)) {
+            if (parameters.Any(x => x.RequiresPacking)) {
                 ow.WriteLine("// MC Note :: Macro for event id = {0}", evt.Value);
                 ow.WriteLine("// This event contains complex types that require the caller to pack the data.");
                 ow.WriteLine("// Refer to the note at the top of this header for additional details.");
                 ow.WriteLine("//");
             }
-            ow.WriteLine("#define {0}({1}) \\", naming.GetEventFuncId(evt, options.LogCallPrefix), args);
+            ow.WriteLine("#define {0}({1}) \\", naming.GetEventFuncId(evt, loggingPrefix), args);
             ow.WriteLine("        MCGEN_EVENT_ENABLED({0}) \\", symbol);
             ow.WriteLine("        ? {0}(&{1}, &{2}{3}{4}) : 0",
                          naming.GetTemplateId(template),
@@ -637,7 +590,7 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
                          naming.GetEventDescriptorId(evt),
                          properties.Count > 0 ? ", " : "",
                          args);
-            ow.WriteLine("#define {0}_AssumeEnabled({1}) \\", naming.GetEventFuncId(evt, options.LogCallPrefix), args);
+            ow.WriteLine("#define {0}_AssumeEnabled({1}) \\", naming.GetEventFuncId(evt, loggingPrefix), args);
             ow.WriteLine("        {0}(&{1}, &{2}{3}{4})",
                          naming.GetTemplateId(template),
                          naming.GetProviderContextId(evt.Provider),
@@ -688,8 +641,8 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             string templateId = naming.GetTemplateId(template);
             string guardId = naming.GetTemplateGuardId(template);
             string countMacroName = templateId + "_ARGCOUNT";
-            var propImpls = properties.Select(x => CreatePropImpl(x)).ToList();
-            int argCount = propImpls.Sum(x => x.GetArgCount());
+            var parameters = properties.Select(x => CodeParameter.Create(naming, x)).ToList();
+            int dataDescriptorCount = parameters.Sum(x => x.DataDescriptorCount);
 
             ow.WriteLine("//");
             ow.WriteLine("//Template from manifest : {0}", template.Id ?? "(null)");
@@ -705,17 +658,17 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
                 ow.WriteLine("_In_ PCEVENT_DESCRIPTOR {0}{1}",
                              naming.EventDescriptorId,
                              properties.Count > 0 ? "," : string.Empty);
-                AppendParams(ow, propImpls, false, false);
+                AppendArgs(ow, parameters);
                 ow.WriteLine(")");
             }
             ow.WriteLine("{");
-            ow.WriteLine("#define {0} {1}", countMacroName, argCount);
+            ow.WriteLine("#define {0} {1}", countMacroName, dataDescriptorCount);
             using (ow.IndentScope()) {
                 ow.WriteLine();
                 ow.WriteLine("EVENT_DATA_DESCRIPTOR {0}[{1} + 1];", naming.EventDataDescriptorId, countMacroName);
                 ow.WriteLine();
                 int index = 0;
-                foreach (var property in propImpls) {
+                foreach (var property in parameters) {
                     property.AppendDataDescriptor(ref index, ow);
                     ow.WriteLine();
                 }
@@ -748,35 +701,30 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             return guid.ToString("X").Replace(",", ", ");
         }
 
-        private void AppendParams(TextWriter writer, IList<PropImpl> properties, bool usePropertyName, bool nameOnly)
+        private void AppendMacroArgNames(TextWriter writer, IList<CodeParameter> properties)
         {
             int index = 0;
-            foreach (var property in properties) {
-                if (nameOnly)
-                    property.AppendParameterName(writer, usePropertyName);
-                else
-                    property.AppendParameter(writer, usePropertyName);
-
-                if (nameOnly) {
-                    if (index++ != properties.Count - 1)
-                        writer.Write(", ");
-                } else {
-                    if (index++ != properties.Count - 1)
-                        writer.Write(',');
-                    writer.WriteLine();
-                }
+            foreach (var name in properties.SelectMany(x => x.ParameterNames())) {
+                if (index++ != 0)
+                    writer.Write(", ");
+                writer.Write(name);
             }
         }
 
-        private static string GetNumberExpr(ICodeGenNomenclature naming, IPropertyNumber number, string prefix = "*")
+        private void AppendArgs(TextWriter writer, IList<CodeParameter> properties)
         {
-            if (number.IsVariable) {
-                int idx = number.DataProperty.Index;
-                return prefix + naming.GetNumberedArgId(idx);
+            int index = 0;
+            foreach (var p in properties.SelectMany(x => x.Parameters())) {
+                if (index++ != 0) {
+                    writer.Write(',');
+                    writer.WriteLine();
+                }
+
+                writer.Write(p);
             }
-            if (number.IsFixedMultiple)
-                return prefix + number.Value;
-            return string.Empty;
+
+            if (index != 0)
+                writer.WriteLine();
         }
 
         private void WritePreamble(bool includeEventSet)
@@ -1532,378 +1480,400 @@ Remarks:
             ow.WriteLine();
         }
 
-        private PropImpl CreatePropImpl(Property property)
+        private abstract class CodeParameter
         {
-            if (property.Kind == PropertyKind.Struct) {
-                return new StructPropImpl(naming, (StructProperty)property);
+            protected readonly ICodeGenNaming naming;
+
+            protected CodeParameter(ICodeGenNaming naming, Property property)
+            {
+                this.naming = naming;
+                Property = property;
             }
 
-            if (property.Kind == PropertyKind.Data) {
-                var dataProperty = (DataProperty)property;
-                if (dataProperty.InType.Name.Namespace != WinEventSchema.Namespace)
-                    throw new InternalException("unhandled type '{0}'", dataProperty.InType);
+            public static CodeParameter Create(ICodeGenNaming naming, Property property)
+            {
+                if (property.Kind == PropertyKind.Struct) {
+                    return new StructParameter(naming, (StructProperty)property);
+                }
 
-                switch (dataProperty.InType.Name.LocalName) {
-                    case "Int8":
-                    case "UInt8":
-                    case "Int16":
-                    case "UInt16":
-                    case "Int32":
-                    case "UInt32":
-                    case "Int64":
-                    case "UInt64":
-                    case "Float":
-                    case "Double":
-                    case "Boolean":
-                    case "HexInt32":
-                    case "HexInt64":
-                        return new PrimitivePropImpl(naming, dataProperty);
+                if (property.Kind == PropertyKind.Data) {
+                    var dataProperty = (DataProperty)property;
+                    if (dataProperty.InType.Name.Namespace != WinEventSchema.Namespace)
+                        throw new InternalException("unhandled type '{0}'", dataProperty.InType);
 
-                    case "UnicodeString":
-                    case "AnsiString":
-                        return new StringPropImpl(naming, dataProperty);
+                    switch (dataProperty.InType.Name.LocalName) {
+                        case "Int8":
+                        case "UInt8":
+                        case "Int16":
+                        case "UInt16":
+                        case "Int32":
+                        case "UInt32":
+                        case "Int64":
+                        case "UInt64":
+                        case "Float":
+                        case "Double":
+                        case "Boolean":
+                        case "HexInt32":
+                        case "HexInt64":
+                            return new PrimitiveParameter(naming, dataProperty);
 
-                    case "CountedUnicodeString":
-                    case "CountedAnsiString":
-                        return new CountedStringPropImpl(naming, dataProperty);
+                        case "UnicodeString":
+                        case "AnsiString":
+                            return new StringParameter(naming, dataProperty);
 
-                    case "Binary":
-                        return new BinaryPropImpl(naming, dataProperty);
+                        case "CountedUnicodeString":
+                        case "CountedAnsiString":
+                            return new CountedStringParameter(naming, dataProperty);
 
-                    case "CountedBinary":
-                        return new CountedBinaryPropImpl(naming, dataProperty);
+                        case "Binary":
+                            return new BinaryParameter(naming, dataProperty);
 
-                    case "GUID":
-                        return new RecordPropImpl(naming, dataProperty, "GUID");
-                    case "FILETIME":
-                        return new RecordPropImpl(naming, dataProperty, "FILETIME");
-                    case "SYSTEMTIME":
-                        return new RecordPropImpl(naming, dataProperty, "SYSTEMTIME");
+                        case "CountedBinary":
+                            return new CountedBinaryParameter(naming, dataProperty);
 
-                    case "SID":
-                        return new SecurityIdPropImpl(naming, dataProperty);
+                        case "GUID":
+                            return new RecordParameter(naming, dataProperty, "GUID");
+                        case "FILETIME":
+                            return new RecordParameter(naming, dataProperty, "FILETIME");
+                        case "SYSTEMTIME":
+                            return new RecordParameter(naming, dataProperty, "SYSTEMTIME");
 
-                    case "Pointer":
-                        return new PointerPropImpl(naming, dataProperty);
+                        case "SID":
+                            return new SecurityIdParameter(naming, dataProperty);
+
+                        case "Pointer":
+                            return new PointerParameter(naming, dataProperty);
+                    }
+                }
+
+                throw new InternalException("unhandled type '{0}'", property);
+            }
+
+            protected Property Property { get; }
+
+            public abstract int DataDescriptorCount { get; }
+            public bool RequiresPacking => IsComplex && Property.Count.IsMultiple;
+            protected virtual bool IsComplex => false;
+            protected virtual bool HasExtraLengthParam => false;
+            protected abstract string DataPtrQualifier { get; }
+            protected abstract string ParamQualifier { get; }
+
+            public IEnumerable<string> ParameterNames()
+            {
+                if (HasExtraLengthParam) {
+                    yield return naming.GetLengthArgumentId(Property, true);
+                }
+
+                yield return naming.GetArgumentId(Property, true);
+            }
+
+            public IEnumerable<string> Parameters()
+            {
+                if (HasExtraLengthParam) {
+                    string lenArgName = naming.GetLengthArgumentId(Property, false);
+                    yield return $"_In_ ULONG {lenArgName}";
+                }
+
+                string argName = naming.GetArgumentId(Property, false);
+                yield return $"{GetArgSalSpec()} {ArgType} {ParamQualifier}{argName}";
+            }
+
+            public void AppendDataDescriptor(ref int index, TextWriter writer)
+            {
+                if (RequiresPacking) {
+                    AppendPackedDataDescriptor(ref index, writer);
+                } else {
+                    AppendUnpackedDataDescriptor(ref index, writer);
                 }
             }
 
-            throw new InternalException("unhandled type '{0}'", property);
+            protected virtual void AppendUnpackedDataDescriptor(ref int index, TextWriter writer)
+            {
+                if (HasExtraLengthParam) {
+                    writer.WriteLine(
+                        "EventDataDescCreate(&{0}[{1}],&{0}[{2}].Size, {3});",
+                        naming.EventDataDescriptorId,
+                        index + 1,
+                        index + 2,
+                        "sizeof(USHORT)");
+                    ++index;
+
+                    writer.WriteLine();
+                    writer.WriteLine(
+                        "EventDataDescCreate(&{0}[{1}], {3}{2}, {4});",
+                        naming.EventDataDescriptorId,
+                        index + 1,
+                        naming.GetNumberedArgId(Property.Index),
+                        DataPtrQualifier,
+                        GetDataSizeExpr());
+                    ++index;
+                } else {
+                    writer.WriteLine(
+                        "EventDataDescCreate(&{0}[{1}],{3}{2}, {4});{5}",
+                        naming.EventDataDescriptorId,
+                        index + 1,
+                        naming.GetNumberedArgId(Property.Index),
+                        DataPtrQualifier,
+                        GetDataSizeExpr(),
+                        GetDataDescriptorComment());
+                    ++index;
+                }
+            }
+
+            protected virtual string GetDataDescriptorComment() => null;
+
+            protected virtual string GetDataDescriptorPackedComment()
+            {
+                return $" // Blob contains data for {GetCountExpr(string.Empty)} chunks; each chunk is a 16-bit ByteCount followed by ByteCount bytes of data.";
+            }
+
+            protected void AppendPackedDataDescriptor(ref int index, TextWriter writer)
+            {
+                writer.WriteLine(
+                    "EventDataDescCreate(&{0}[{1}],{3}{2}, {4});{5}",
+                    naming.EventDataDescriptorId,
+                    index + 1,
+                    naming.GetNumberedArgId(Property.Index),
+                    DataPtrQualifier,
+                    GetDataSizeExpr(),
+                    GetDataDescriptorPackedComment());
+                ++index;
+            }
+
+            protected abstract string ArgType { get; }
+            protected abstract string GetArgSalSpec();
+
+            protected abstract string GetDataSizeExpr();
+
+            protected virtual string GetCountExpr(string prefix = "*")
+            {
+                return GetNumberExpr(Property.Count, prefix);
+            }
+
+            protected virtual string GetLengthExpr(string prefix = "*")
+            {
+                return GetNumberExpr(Property.Length, prefix);
+            }
+
+            protected string GetNumberExpr(IPropertyNumber number, string prefix = "*")
+            {
+                if (number.IsVariable) {
+                    int idx = number.DataProperty.Index;
+                    return prefix + naming.GetNumberedArgId(idx);
+                }
+                if (number.IsFixedMultiple)
+                    return prefix + number.Value;
+                return string.Empty;
+            }
         }
 
-        private class StructPropImpl : PropImpl
+        private abstract class DataParameter : CodeParameter
         {
-            public StructPropImpl(ICodeGenNomenclature naming, StructProperty property)
+            protected DataParameter(ICodeGenNaming naming, DataProperty property)
                 : base(naming, property)
             {
             }
 
-            protected new StructProperty Property => (StructProperty)base.Property;
+            protected new DataProperty Property => (DataProperty)base.Property;
+        }
 
-            protected override string GetArgSalSpec(bool usePropertyName)
+        private sealed class StructParameter : CodeParameter
+        {
+            public StructParameter(ICodeGenNaming naming, StructProperty property)
+                : base(naming, property)
+            {
+            }
+
+            private new StructProperty Property => (StructProperty)base.Property;
+
+            public override int DataDescriptorCount => 1;
+            protected override bool HasExtraLengthParam => true;
+
+            protected override string ParamQualifier => " ";
+            protected override string DataPtrQualifier => string.Empty;
+
+            protected override string GetArgSalSpec()
             {
                 return "_In_";
             }
 
-            protected override string GetArgType()
-            {
-                return "const void*";
-            }
-
-            protected override bool IsPtrLike()
-            {
-                return true;
-            }
+            protected override string ArgType => "const void*";
 
             protected override string GetDataSizeExpr()
             {
-                string lengthExpr = naming.GetLengthArgumentId(Property, false);
                 string countExpr = null;
                 if (Property.Count.IsMultiple)
                     countExpr = GetCountExpr(string.Empty) + " * ";
+                string lengthExpr = naming.GetLengthArgumentId(Property, false);
                 return $"{countExpr}{lengthExpr}";
             }
 
-            public override int GetArgCount()
-            {
-                return 1;
-            }
-
-            protected override bool HasExtraLengthParam()
-            {
-                return true;
-            }
-
-            public override void AppendDataDescriptor(ref int index, TextWriter writer)
+            protected override void AppendUnpackedDataDescriptor(ref int index, TextWriter writer)
             {
                 writer.WriteLine(
                     "EventDataDescCreate(&{0}[{1}],{3}{2}, {4});",
                     naming.EventDataDescriptorId,
                     index + 1,
                     naming.GetNumberedArgId(Property.Index),
-                    GetDataPtrQualifier(),
+                    DataPtrQualifier,
                     GetDataSizeExpr());
                 ++index;
             }
         }
 
-        private class PointerPropImpl : DataPropImpl
+        private sealed class PointerParameter : DataParameter
         {
-            public PointerPropImpl(ICodeGenNomenclature naming, DataProperty property)
+            public PointerParameter(ICodeGenNaming naming, DataProperty property)
                 : base(naming, property)
             {
             }
 
-            protected override string GetDataSizeExpr()
-            {
-                if (!Property.Count.IsSpecified)
-                    return "sizeof(const void*)  ";
-                return "sizeof(const void*)" + GetCountExpr();
-            }
+            public override int DataDescriptorCount => 1;
+            protected override string ParamQualifier => Property.Count.IsMultiple ? "*" : " ";
+            protected override string DataPtrQualifier => Property.Count.IsMultiple ? " " : "&";
 
-            protected override string GetArgType()
-            {
-                return "const void*";
-            }
+            protected override string ArgType => "const void*";
 
-            protected override string GetArgSalSpec(bool usePropertyName)
+            protected override string GetArgSalSpec()
             {
                 if (Property.Count.IsMultiple)
                     return string.Format("_In_reads_({0})", GetCountExpr(string.Empty));
                 return "_In_opt_";
             }
+
+            protected override string GetDataSizeExpr()
+            {
+                if (Property.Count.IsMultiple)
+                    return $"sizeof(const void*){GetCountExpr()}";
+                return "sizeof(const void*)  ";
+            }
         }
 
-        private class RecordPropImpl : DataPropImpl
+        private sealed class RecordParameter : DataParameter
         {
             private readonly string structName;
 
-            public RecordPropImpl(ICodeGenNomenclature naming, DataProperty property, string structName)
+            public RecordParameter(ICodeGenNaming naming, DataProperty property, string structName)
                 : base(naming, property)
             {
                 this.structName = structName;
             }
 
+            public override int DataDescriptorCount => 1;
+            protected override string ParamQualifier => " ";
+            protected override string DataPtrQualifier => string.Empty;
+
             protected override string GetDataSizeExpr()
             {
-                if (!Property.Count.IsSpecified)
-                    return "sizeof(" + structName + ")  ";
-                return "sizeof(" + structName + ")" + GetCountExpr();
+                if (Property.Count.IsMultiple)
+                    return $"sizeof({structName}){GetCountExpr()}";
+                return $"sizeof({structName})  ";
             }
 
-            protected override string GetArgType()
+            protected override string ArgType => "const " + structName + "*";
+
+            protected override string GetArgSalSpec()
             {
-                return "const " + structName + "*";
+                if (Property.Count.IsMultiple)
+                    return $"_In_reads_({GetCountExpr(string.Empty)})";
+                return "_In_";
+            }
+        }
+
+        private sealed class PrimitiveParameter : DataParameter
+        {
+            public PrimitiveParameter(ICodeGenNaming naming, DataProperty property)
+                : base(naming, property)
+            {
             }
 
-            protected override string GetArgSalSpec(bool usePropertyName)
+            public override int DataDescriptorCount => 1;
+            protected override string ParamQualifier => Property.Count.IsMultiple ? "*" : " ";
+            protected override string DataPtrQualifier => Property.Count.IsMultiple ? " " : "&";
+
+            protected override string GetArgSalSpec()
             {
                 if (Property.Count.IsMultiple)
                     return $"_In_reads_({GetCountExpr(string.Empty)})";
                 return "_In_";
             }
 
-            protected override bool IsPtrLike()
+            protected override string ArgType => Property.InType.Name.LocalName switch
             {
-                return true;
-            }
-        }
-
-        private class PrimitivePropImpl : DataPropImpl
-        {
-            public PrimitivePropImpl(ICodeGenNomenclature naming, DataProperty property)
-                : base(naming, property)
-            {
-            }
-
-            protected override string GetArgSalSpec(bool usePropertyName)
-            {
-                if (Property.Count.IsMultiple)
-                    return $"_In_reads_({GetCountExpr(string.Empty)})";
-                return "_In_";
-            }
-
-            protected override string GetArgType()
-            {
-                return Property.InType.Name.LocalName switch
-                {
-                    "Int8" => "const signed char",
-                    "UInt8" => "const unsigned char",
-                    "Int16" => "const signed short",
-                    "UInt16" => "const unsigned short",
-                    "Int32" => "const signed int",
-                    "UInt32" => "const unsigned int",
-                    "Int64" => "const signed __int64",
-                    "UInt64" => "const unsigned __int64",
-                    "Float" => "const float",
-                    "Double" => "const double",
-                    "Boolean" => "const signed int",
-                    "HexInt32" => "const signed int",
-                    "HexInt64" => "const signed __int64",
-                    _ => throw new InternalException("unhandled type '{0}'", Property.InType),
-                };
-            }
+                "Int8" => "const signed char",
+                "UInt8" => "const unsigned char",
+                "Int16" => "const signed short",
+                "UInt16" => "const unsigned short",
+                "Int32" => "const signed int",
+                "UInt32" => "const unsigned int",
+                "Int64" => "const signed __int64",
+                "UInt64" => "const unsigned __int64",
+                "Float" => "const float",
+                "Double" => "const double",
+                "Boolean" => "const signed int",
+                "HexInt32" => "const signed int",
+                "HexInt64" => "const signed __int64",
+                _ => throw new InternalException("unhandled type '{0}'", Property.InType),
+            };
 
             protected override string GetDataSizeExpr()
             {
-                switch (Property.InType.Name.LocalName) {
-                    case "Int8":
-                    case "UInt8":
-                    case "Int16":
-                    case "UInt16":
-                    case "Int32":
-                    case "UInt32":
-                    case "Int64":
-                    case "UInt64":
-                    case "Float":
-                    case "Double":
-                    case "Boolean":
-                    case "HexInt32":
-                    case "HexInt64":
-                        string space = null;
-                        if (!Property.Count.IsMultiple)
-                            space = "  ";
-                        return string.Format("sizeof({0}){1}{2}", GetArgType(), GetCountExpr(), space);
-                }
-
-                throw new InternalException("unhandled type '{0}'", Property.InType);
-            }
-        }
-
-        private class CountedStringPropImpl : DataPropImpl
-        {
-            public CountedStringPropImpl(ICodeGenNomenclature naming, DataProperty property)
-                : base(naming, property)
-            {
-            }
-
-            public override bool RequiresPacking => Property.Count.IsMultiple;
-
-            public override void AppendDataDescriptor(ref int index, TextWriter writer)
-            {
-                if (Property.Count.IsMultiple) {
-                    AppendCountedDataDescriptor(ref index, writer);
-                    return;
-                }
-
-                base.AppendDataDescriptor(ref index, writer);
-            }
-
-            public override int GetArgCount()
-            {
                 if (Property.Count.IsMultiple)
-                    return 1;
-                return 2;
-            }
-
-            protected override bool HasExtraLengthParam()
-            {
-                return true;
-            }
-
-            protected override bool IsPtrLike()
-            {
-                return true;
-            }
-
-            protected override string GetArgType()
-            {
-                return Property.InType.Name.LocalName switch
-                {
-                    "CountedUnicodeString" => "const WCHAR*",
-                    "CountedAnsiString" => "const char*",
-                    _ => throw new InternalException("unhandled type '{0}'", Property.InType),
-                };
-            }
-
-            protected override string GetDataSizeExpr()
-            {
-                string lengthExpr = naming.GetLengthArgumentId(Property, false);
-
-                string countExpr = null;
-                if (Property.Count.IsSpecified && Property.Length.IsSpecified)
-                    countExpr = GetCountExpr();
-
-                string type = Property.InType.Name == WinEventSchema.CountedUnicodeString ? "WCHAR" : "char";
-
-                return string.Format(
-                    CultureInfo.InvariantCulture,
-                    "(USHORT)(sizeof({0}){1}*{2})",
-                    type,
-                    countExpr,
-                    lengthExpr);
-            }
-
-            protected override string GetArgSalSpec(bool usePropertyName)
-            {
-                string expr = naming.GetLengthArgumentId(Property, usePropertyName);
-                return $"_In_reads_({expr})";
+                    return $"sizeof({ArgType}){GetCountExpr()}";
+                return $"sizeof({ArgType}){GetCountExpr()}  ";
             }
         }
 
-        private class SecurityIdPropImpl : DataPropImpl
+        private sealed class SecurityIdParameter : DataParameter
         {
-            public SecurityIdPropImpl(ICodeGenNomenclature naming, DataProperty property)
+            public SecurityIdParameter(ICodeGenNaming naming, DataProperty property)
                 : base(naming, property)
             {
             }
 
-            public override bool RequiresPacking => Property.Count.IsMultiple;
+            public override int DataDescriptorCount => 1;
+            protected override bool IsComplex => true;
+            protected override bool HasExtraLengthParam => RequiresPacking;
+            protected override string ParamQualifier => " ";
+            protected override string DataPtrQualifier => " ";
 
-            public override void AppendDataDescriptor(ref int index, TextWriter writer)
+            protected override void AppendUnpackedDataDescriptor(ref int index, TextWriter writer)
             {
-                if (Property.Count.IsMultiple) {
-                    writer.WriteLine(
-                        "EventDataDescCreate(&{0}[{1}], {2}, {4});",
-                        naming.EventDataDescriptorId,
-                        index + 1,
-                       naming.GetNumberedArgId(Property.Index),
-                        "",
-                        GetDataSizeExpr());
-                } else {
-                    writer.WriteLine(
-                        "EventDataDescCreate(&{0}[{1}],({2} != NULL) ? {2} : (const void*)\"\\0\\0\\0\\0\\0\\0\\0\", {4});",
-                       naming.EventDataDescriptorId,
-                        index + 1,
-                        naming.GetNumberedArgId(Property.Index),
-                        "",
-                        GetDataSizeExpr());
-                }
+                writer.WriteLine(
+                    "EventDataDescCreate(&{0}[{1}],({2} != NULL) ? {2} : (const void*)\"\\0\\0\\0\\0\\0\\0\\0\", {4});",
+                    naming.EventDataDescriptorId,
+                    index + 1,
+                    naming.GetNumberedArgId(Property.Index),
+                    "",
+                    GetDataSizeExpr());
                 ++index;
             }
 
-            public override int GetArgCount()
+            protected override string GetDataDescriptorPackedComment()
             {
-                return 1;
+                return null;
             }
 
-            protected override bool HasExtraLengthParam()
+            protected override string ArgType
             {
-                return RequiresPacking;
+                get
+                {
+                    if (RequiresPacking)
+                        return "const unsigned char*";
+                    return "const SID*";
+                }
+            }
+
+            protected override string GetArgSalSpec()
+            {
+                if (RequiresPacking)
+                    return $"_In_reads_({GetCountExpr(string.Empty)})";
+                return "_In_";
             }
 
             protected override string GetCountExpr(string prefix = "*")
             {
                 return prefix + naming.GetLengthArgumentId(Property, false);
-            }
-
-            protected override bool IsPtrLike()
-            {
-                return true;
-            }
-
-            protected override string GetArgSalSpec(bool usePropertyName)
-            {
-                if (RequiresPacking)
-                    return $"_In_reads_({GetCountExpr(string.Empty)})";
-                return "_In_";
-            }
-
-            protected override string GetArgType()
-            {
-                if (RequiresPacking)
-                    return "const unsigned char*";
-                return "const SID*";
             }
 
             protected override string GetDataSizeExpr()
@@ -1916,156 +1886,129 @@ Remarks:
             }
         }
 
-        private class BinaryPropImpl : DataPropImpl
+        private sealed class BinaryParameter : DataParameter
         {
-            public BinaryPropImpl(ICodeGenNomenclature naming, DataProperty property)
+            public BinaryParameter(ICodeGenNaming naming, DataProperty property)
                 : base(naming, property)
             {
             }
 
-            protected override bool IsPtrLike()
+            public override int DataDescriptorCount => 1;
+            protected override string ParamQualifier => " ";
+            protected override string DataPtrQualifier => string.Empty;
+
+            protected override string GetArgSalSpec()
             {
-                return true;
+                return $"_In_reads_({GetLengthExpr(string.Empty)}{GetCountExpr()})";
             }
 
-            public override void AppendDataDescriptor(ref int index, TextWriter writer)
+            protected override string ArgType => "const unsigned char*";
+
+            protected override string GetDataSizeExpr()
             {
-                string comment = null;
+                return $"(ULONG)sizeof(char){GetLengthExpr()}{GetCountExpr()}";
+            }
+
+            protected override string GetDataDescriptorComment()
+            {
                 if (Property.Count.IsMultiple)
-                    comment = string.Format("  // Blob containing {0} concatenated strings; each string has the same length ({1})",
+                    return string.Format("  // Blob containing {0} concatenated strings; each string has the same length ({1})",
                         GetCountExpr(string.Empty),
                         GetLengthExpr(string.Empty));
 
-                writer.WriteLine(
-                    "EventDataDescCreate(&{0}[{1}],{3}{2}, {4});{5}",
-                    naming.EventDataDescriptorId,
-                    index + 1,
-                    naming.GetNumberedArgId(Property.Index),
-                    GetDataPtrQualifier(),
-                    GetDataSizeExpr(),
-                    comment);
-                ++index;
+                return null;
+            }
+        }
+
+        private sealed class CountedStringParameter : DataParameter
+        {
+            public CountedStringParameter(ICodeGenNaming naming, DataProperty property)
+                : base(naming, property)
+            {
             }
 
-            protected override string GetArgSalSpec(bool usePropertyName)
-            {
-                return string.Format(
-                    "_In_reads_({0}{1})",
-                    GetNumberExpr(naming, Property.Length, string.Empty),
-                    GetNumberExpr(naming, Property.Count));
-            }
+            public override int DataDescriptorCount => RequiresPacking ? 1 : 2;
+            protected override bool IsComplex => true;
+            protected override bool HasExtraLengthParam => true;
+            protected override string ParamQualifier => " ";
+            protected override string DataPtrQualifier => string.Empty;
 
-            protected override string GetArgType()
+            protected override string ArgType => Property.InType.Name.LocalName switch
             {
-                return "const unsigned char*";
+                "CountedUnicodeString" => "const WCHAR*",
+                "CountedAnsiString" => "const char*",
+                _ => throw new InternalException("unhandled type '{0}'", Property.InType),
+            };
+
+            protected override string GetArgSalSpec()
+            {
+                string expr = naming.GetLengthArgumentId(Property, false);
+                return $"_In_reads_({expr})";
             }
 
             protected override string GetDataSizeExpr()
             {
-                return string.Format(
-                    "(ULONG)sizeof(char){0}{1}",
-                    GetLengthExpr(),
-                    GetCountExpr());
+                string lengthExpr = naming.GetLengthArgumentId(Property, false);
+
+                string countExpr = null;
+                if (Property.Count.IsSpecified && Property.Length.IsSpecified)
+                    countExpr = GetCountExpr();
+
+                string type = Property.InType.Name == WinEventSchema.CountedUnicodeString ? "WCHAR" : "char";
+
+                return $"(USHORT)(sizeof({type}){countExpr}*{lengthExpr})";
             }
         }
 
-        private class CountedBinaryPropImpl : DataPropImpl
+        private sealed class CountedBinaryParameter : DataParameter
         {
-            public CountedBinaryPropImpl(ICodeGenNomenclature naming, DataProperty property)
+            public CountedBinaryParameter(ICodeGenNaming naming, DataProperty property)
                 : base(naming, property)
             {
             }
 
-            public override bool RequiresPacking => Property.Count.IsMultiple;
+            public override int DataDescriptorCount => RequiresPacking ? 1 : 2;
+            protected override bool IsComplex => true;
+            protected override bool HasExtraLengthParam => true;
+            protected override string ParamQualifier => " ";
+            protected override string DataPtrQualifier => string.Empty;
 
-            public override int GetArgCount()
+            protected override string ArgType => "const unsigned char*";
+
+            protected override string GetArgSalSpec()
             {
-                if (Property.Count.IsMultiple)
-                    return 1;
-                return 2;
+                string expr = naming.GetLengthArgumentId(Property, false);
+                return $"_In_reads_({expr})";
             }
 
-            protected override bool HasExtraLengthParam()
+            protected override string GetDataSizeExpr()
             {
-                return true;
-            }
-
-            public override void AppendDataDescriptor(ref int index, TextWriter writer)
-            {
-                if (Property.Count.IsMultiple) {
-                    AppendCountedDataDescriptor(ref index, writer);
-                    return;
-                }
-
-                base.AppendDataDescriptor(ref index, writer);
-            }
-
-            protected override bool IsPtrLike()
-            {
-                return true;
+                if (Property.Count.IsSpecified)
+                    return $"(USHORT)(sizeof(char){GetLengthExpr()})";
+                return $"(USHORT)(sizeof(char){GetLengthExpr()}{GetCountExpr()})";
             }
 
             protected override string GetLengthExpr(string prefix = "*")
             {
                 return prefix + naming.GetLengthArgumentId(Property, false);
             }
-
-            protected override string GetDataSizeExpr()
-            {
-                if (Property.Count.IsSpecified)
-                    return string.Format(
-                        "(USHORT)(sizeof(char){0})",
-                        GetLengthExpr());
-                return string.Format(
-                    "(USHORT)(sizeof(char){0}{1})",
-                    GetLengthExpr(),
-                    GetCountExpr());
-            }
-
-            protected override string GetArgSalSpec(bool usePropertyName)
-            {
-                string expr = naming.GetLengthArgumentId(Property, usePropertyName);
-                return $"_In_reads_({expr})";
-            }
-
-            protected override string GetArgType()
-            {
-                return "const unsigned char*";
-            }
         }
 
-        private class StringPropImpl : DataPropImpl
+        private sealed class StringParameter : DataParameter
         {
-            public StringPropImpl(ICodeGenNomenclature naming, DataProperty property)
+            public StringParameter(ICodeGenNaming naming, DataProperty property)
                 : base(naming, property)
             {
             }
 
-            public override bool RequiresPacking => Property.Count.IsMultiple;
+            public override int DataDescriptorCount => 1;
+            protected override bool IsComplex => true;
+            protected override bool HasExtraLengthParam => RequiresPacking && !Property.Length.IsSpecified;
+            protected override string ParamQualifier => " ";
+            protected override string DataPtrQualifier => string.Empty;
 
-            public override void AppendDataDescriptor(ref int index, TextWriter writer)
+            protected override void AppendUnpackedDataDescriptor(ref int index, TextWriter writer)
             {
-                if (Property.Count.IsMultiple) {
-                    string comment;
-                    if (Property.Length.IsSpecified) {
-                        comment = $" // Blob containing {GetCountExpr(string.Empty)} concatenated strings;" +
-                                  $" each string has the same length ({GetLengthExpr(string.Empty)})";
-                    } else {
-                        comment = $" // Blob containing {GetCountExpr(string.Empty)} concatenated nul-terminated strings";
-                    }
-
-                    writer.WriteLine(
-                        "EventDataDescCreate(&{0}[{1}],{2}, {3});{4}",
-                        naming.EventDataDescriptorId,
-                        index + 1,
-                        naming.GetNumberedArgId(Property.Index),
-                        GetDataSizeExpr(),
-                        comment);
-
-                    ++index;
-                    return;
-                }
-
                 if (!Property.Length.IsSpecified) {
                     string argName = naming.GetNumberedArgId(Property.Index);
 
@@ -2086,247 +2029,62 @@ Remarks:
                     return;
                 }
 
-                base.AppendDataDescriptor(ref index, writer);
+                base.AppendUnpackedDataDescriptor(ref index, writer);
             }
 
-            public override int GetArgCount()
+            protected override string GetDataDescriptorPackedComment()
             {
-                return 1;
+                string comment;
+                if (Property.Length.IsSpecified) {
+                    comment = $" // Blob containing {GetCountExpr(string.Empty)} concatenated strings;" +
+                              $" each string has the same length ({GetLengthExpr(string.Empty)})";
+                } else {
+                    comment = $" // Blob containing {GetCountExpr(string.Empty)} concatenated nul-terminated strings";
+                }
+
+                return comment;
             }
 
-            protected override bool HasExtraLengthParam()
+            protected override string ArgType => Property.InType.Name.LocalName switch
             {
-                if (Property.Count.IsMultiple && !Property.Length.IsSpecified)
-                    return true;
+                "UnicodeString" => Property.Length.IsSpecified ? "const WCHAR*" : "PCWSTR",
+                "AnsiString" => Property.Length.IsSpecified ? "const char*" : "PCSTR",
+                _ => throw new InternalException("unhandled type '{0}'", Property.InType),
+            };
 
-                return false;
-            }
-
-            protected override bool IsPtrLike()
-            {
-                return true;
-            }
-
-            protected override string GetArgSalSpec(bool usePropertyName)
+            protected override string GetArgSalSpec()
             {
                 if (!Property.Count.IsMultiple && !Property.Length.IsSpecified)
                     return "_In_opt_";
 
                 string expr;
-                if (Property.Count.IsSpecified && !Property.Length.IsSpecified) {
-                    if (Property.Count.IsVariable)
-                        expr = naming.GetNumberedArgId(Property.Count.DataProperty.Index);
-                    else
-                        expr = naming.GetLengthArgumentId(Property, usePropertyName);
-                } else {
-                    expr = string.Format(
-                        "{0}{1}",
-                        GetNumberExpr(naming, Property.Length, string.Empty),
-                        GetNumberExpr(naming, Property.Count));
-                }
+                if (!Property.Count.IsSpecified || Property.Length.IsSpecified)
+                    expr = $"{GetLengthExpr(string.Empty)}{GetCountExpr()}";
+                else if (Property.Count.IsVariable)
+                    expr = GetCountExpr(string.Empty);
+                else
+                    expr = naming.GetLengthArgumentId(Property, false);
+
                 return $"_In_reads_({expr})";
-            }
-
-            protected override string GetArgType()
-            {
-                switch (Property.InType.Name.LocalName) {
-                    case "UnicodeString":
-                        if (Property.Length.IsSpecified)
-                            return "const WCHAR*";
-                        return "PCWSTR";
-                    case "AnsiString":
-                        if (Property.Length.IsSpecified)
-                            return "const char*";
-                        return "PCSTR";
-                }
-
-                throw new InternalException("unhandled type '{0}'", Property.InType);
             }
 
             protected override string GetDataSizeExpr()
             {
-                if (!Property.Count.IsSpecified && !Property.Length.IsSpecified) {
+                if (!Property.Count.IsSpecified && !Property.Length.IsSpecified)
                     throw new Exception();
-                }
-                string lengthExpr;
-                if (Property.Count.IsSpecified && !Property.Length.IsSpecified)
-                    lengthExpr = naming.GetLengthArgumentId(Property, false);
-                else
-                    lengthExpr = GetLengthExpr(string.Empty);
 
-                string countExpr = null;
-                if (Property.Count.IsSpecified && Property.Length.IsSpecified)
-                    countExpr = GetCountExpr();
+                string expr;
+                if (!Property.Count.IsSpecified)
+                    expr = $"{GetLengthExpr()}";
+                else if (Property.Length.IsSpecified)
+                    expr = $"{GetCountExpr()}{GetLengthExpr()}";
+                else
+                    expr = "*" + naming.GetLengthArgumentId(Property, false);
 
                 string type = Property.InType.Name == WinEventSchema.UnicodeString ? "WCHAR" : "char";
 
-                return string.Format(
-                    CultureInfo.InvariantCulture,
-                    "(ULONG)(sizeof({0}){1}*{2})",
-                    type,
-                    countExpr,
-                    lengthExpr);
+                return $"(ULONG)(sizeof({type}){expr})";
             }
-        }
-
-        private abstract class DataPropImpl : PropImpl
-        {
-            protected DataPropImpl(ICodeGenNomenclature naming, DataProperty property)
-                : base(naming, property)
-            {
-            }
-
-            protected new DataProperty Property => (DataProperty)base.Property;
-
-            protected void AppendCountedDataDescriptor(ref int index, TextWriter writer)
-            {
-                writer.WriteLine(
-                    "EventDataDescCreate(&{0}[{1}],{2}, {4}); // Blob contains data for {3} chunks; each chunk is a 16-bit ByteCount followed by ByteCount bytes of data.",
-                    naming.EventDataDescriptorId,
-                    index + 1,
-                    naming.GetNumberedArgId(Property.Index),
-                    GetCountExpr(string.Empty),
-                    GetDataSizeExpr());
-                ++index;
-            }
-        }
-
-        private abstract class PropImpl
-        {
-            protected readonly ICodeGenNomenclature naming;
-
-            protected PropImpl(ICodeGenNomenclature naming, Property property)
-            {
-                this.naming = naming;
-                Property = property;
-            }
-
-            protected Property Property { get; }
-
-            public virtual bool RequiresPacking => false;
-
-            public void AppendParameterName(TextWriter writer, bool usePropertyName)
-            {
-                if (HasExtraLengthParam()) {
-                    string lenArgName = naming.GetLengthArgumentId(Property, usePropertyName);
-                    writer.Write("{0}, ", lenArgName);
-                }
-
-                string argName = naming.GetArgumentId(Property, usePropertyName);
-                writer.Write(argName);
-            }
-
-            public void AppendParameter(TextWriter writer, bool usePropertyName)
-            {
-                if (HasExtraLengthParam()) {
-                    string lenArgName = naming.GetLengthArgumentId(Property, usePropertyName);
-                    writer.WriteLine("_In_ ULONG {0},", lenArgName);
-                }
-
-                string argName = naming.GetArgumentId(Property, usePropertyName);
-                writer.Write(
-                    "{1} {2} {3}{0}",
-                    argName,
-                    GetArgSalSpec(usePropertyName),
-                    GetArgType(),
-                    GetParamQualifier());
-            }
-
-            public virtual void AppendDataDescriptor(ref int index, TextWriter writer)
-            {
-                if (HasExtraLengthParam()) {
-                    writer.WriteLine(
-                        "EventDataDescCreate(&{0}[{1}],&{0}[{2}].Size, {3});",
-                        naming.EventDataDescriptorId,
-                        index + 1,
-                        index + 2,
-                        "sizeof(USHORT)");
-                    writer.WriteLine();
-                    writer.WriteLine(
-                        "EventDataDescCreate(&{0}[{1}], {3}{2}, {4});",
-                        naming.EventDataDescriptorId,
-                        index + 2,
-                        naming.GetNumberedArgId(Property.Index),
-                        GetDataPtrQualifier(),
-                        GetDataSizeExpr());
-                    index += 2;
-                } else {
-                    writer.WriteLine(
-                        "EventDataDescCreate(&{0}[{1}],{3}{2}, {4});",
-                        naming.EventDataDescriptorId,
-                        index + 1,
-                        naming.GetNumberedArgId(Property.Index),
-                        GetDataPtrQualifier(),
-                        GetDataSizeExpr());
-                    ++index;
-                }
-            }
-
-            public virtual int GetArgCount()
-            {
-                return HasExtraLengthParam() ? 2 : 1;
-            }
-
-            protected virtual bool HasExtraLengthParam()
-            {
-                return false;
-            }
-
-            protected virtual bool IsPtrLike()
-            {
-                return false;
-            }
-
-            protected abstract string GetArgSalSpec(bool usePropertyName);
-
-            protected abstract string GetArgType();
-
-            protected string GetParamQualifier()
-            {
-                if (IsPtrLike())
-                    return " ";
-
-                if (this is PrimitivePropImpl) {
-                    return Property.Count.IsMultiple ? "*" : " ";
-                }
-
-                if (this is PointerPropImpl) {
-                    return Property.Count.IsMultiple ? "*" : " ";
-                }
-
-                return Property.Count.IsMultiple ? " *" : " ";
-            }
-
-            protected string GetDataPtrQualifier()
-            {
-                if (IsPtrLike())
-                    return string.Empty;
-                return Property.Count.IsMultiple ? " " : "&";
-            }
-
-            protected abstract string GetDataSizeExpr();
-
-            protected virtual string GetCountExpr(string prefix = "*")
-            {
-                return GetNumberExpr(naming, Property.Count, prefix);
-            }
-
-            protected virtual string GetLengthExpr(string prefix = "*")
-            {
-                return GetNumberExpr(naming, Property.Length, prefix);
-            }
-        }
-    }
-
-    public static class CodeGenExtensions
-    {
-        public static byte GetDescriptorChannelValue(this Event @event)
-        {
-            if (@event.Channel?.Value != null)
-                return @event.Channel.Value.Value;
-            if (@event.Provider.ControlGuid != null)
-                return 12; // ProviderMetadata
-            return 0;
         }
     }
 }
