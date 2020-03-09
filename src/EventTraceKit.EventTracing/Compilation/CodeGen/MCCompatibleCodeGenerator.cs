@@ -1233,6 +1233,7 @@ McGenEventWrite(
         EventData);
 }
 #endif // McGenEventWrite_def
+
 ";
 
             string eventSetCode = @"#ifndef McGenEventSetInformation_def
@@ -1428,6 +1429,7 @@ Remarks:
 }
 #pragma warning(pop)
 #endif // McGenEventRegisterContext_def
+
 ";
 
             string registerCode = @"#if !defined(McGenEventRegisterUnregister)
@@ -1520,6 +1522,7 @@ Remarks:
 }
 
 #endif // McGenEventRegisterUnregister
+
 ";
             ow.WriteLine(preamble);
             if (includeEventSet)
