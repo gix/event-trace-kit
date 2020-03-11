@@ -43,6 +43,9 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
 
         [JoinedOption("std", HelpText = "C++ standard version")]
         public CxxLangStandard LangStandard { get; set; } = CxxLangStandard.Cxx20;
+
+        [FlagOption("static", HelpText = "Enlists all providers in the list of static providers")]
+        public bool IsStaticProvider { get; set; }
     }
 
     internal sealed class CxxCodeGenerator : ICodeGenerator
@@ -77,14 +80,14 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
 
             public override string GetTemplateId(Template template)
             {
-                return "WriteEvent_" + GetTemplateSuffix(template);
+                return "EmcTemplate" + GetTemplateSuffix(template);
             }
 
             public override string GetTemplateGuardId(Template template)
             {
                 var prefix = etwMacroPrefix;
                 var suffix = GetTemplateSuffix(template);
-                return $"{prefix}ETW_TEMPLATE_{suffix}_DEFINED";
+                return $"{prefix}EMC_TEMPLATE_{suffix}_DEFINED";
             }
 
             public override string GetEventDescriptorId(Event evt)
@@ -306,7 +309,7 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             WriteMaps(provider);
 
             WriteProviderTraits(provider);
-            WriteRegistration(provider);
+            WriteRegistration(provider, inlineNS != null ? ns + "." + inlineNS : ns);
             WriteEventDescriptors(provider);
             WriteEvents(provider);
 
@@ -331,20 +334,18 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             return null;
         }
 
-        private void WriteRegistration(Provider provider)
+        private void WriteRegistration(Provider provider, string providerNamespace)
         {
             string providerId = naming.GetIdentifier(provider);
-            string registerFunction = etwNamespacePrefix + "EmcGenEventRegisterContext";
             string contextId = naming.GetProviderContextId(provider);
             string controlGuidId = naming.GetProviderGuidId(provider);
+            string registerFunction = etwNamespacePrefix + "EmcGenEventRegisterContext";
             string callbackFunction = etwNamespacePrefix + "EmcGenControlCallback";
 
             if (provider.ControlGuid != null)
                 controlGuidId = naming.GetProviderControlGuidId(provider);
 
             WriteEnableBits(provider);
-
-            string cb = etwNamespacePrefix + "EmcGenControlCallbackV2";
 
             ow.WriteLine("/// <summary>");
             ow.WriteLine("///   Registers with ETW using the control GUID specified in the manifest.");
@@ -361,7 +362,7 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
                 ow.WriteLine("return {0}({1}, {2}, &{3}, {3});",
                              registerFunction,
                              controlGuidId,
-                             cb,
+                             callbackFunction,
                              contextId);
             ow.WriteLine("}");
             ow.WriteLine();
@@ -375,7 +376,7 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             using (ow.IndentScope())
                 ow.WriteLine("return {0}(controlId, {1}, &{2}, {2});",
                              registerFunction,
-                             cb,
+                             callbackFunction,
                              contextId);
             ow.WriteLine("}");
             ow.WriteLine();
@@ -395,6 +396,12 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
                              etwNamespacePrefix, naming.GetProviderHandleId(provider));
             ow.WriteLine("}");
             ow.WriteLine();
+
+            if (options.IsStaticProvider) {
+                string mangledProviderNs = string.Concat(providerNamespace.Split('.').Reverse().Select(x => $"{x}@"));
+                ow.WriteLine("EMCGEN_ENLIST_STATIC_PROVIDER({0}, \"{1}\", &EventRegister{0}, &EventUnregister{0}); ", providerId, mangledProviderNs);
+                ow.WriteLine();
+            }
         }
 
         private void WriteEnableBits(Provider provider)
@@ -1318,7 +1325,7 @@ EmcGenEventSetInformation(
 namespace emcgen_details
 {
 
-std::string EmcGenU16To8(wchar_t const* const str, size_t const size)
+inline std::string EmcGenU16To8(wchar_t const* const str, size_t const size)
 {
     int ret = WideCharToMultiByte(CP_UTF8, 0, str, size, nullptr, 0, nullptr, nullptr);
     if (ret == 0)
@@ -1334,7 +1341,7 @@ std::string EmcGenU16To8(wchar_t const* const str, size_t const size)
     return buffer;
 }
 
-std::string EmcGenGetProcessName()
+inline std::string EmcGenGetProcessName()
 {
     size_t const MaxPath = MAX_PATH;
     size_t const MaxExtendedPath = 32767;
@@ -1391,7 +1398,7 @@ void const* EmcGenAddProcessNameTrait(
 
     std::uint8_t const EtwProviderTraitTypeProcessName = 128;
 
-    std::uint16_t const traitSize = 2 /*Size*/ + 1 /*Type*/ + processName.size() + 1 /*NUL*/;
+    std::uint16_t const traitSize = 2 /*Size*/ + 1 /*Type*/ + static_cast<std::uint16_t>(processName.size()) + 1 /*NUL*/;
     std::uint8_t const traitType = EtwProviderTraitTypeProcessName;
     std::uint16_t const newTraitsSize = inputTraitsSize + traitSize;
 
@@ -1490,7 +1497,59 @@ EmcGenEventUnregister(_Inout_ PREGHANDLE regHandle)
     return ec;
 }
 
-#endif // EMCGEN_REGISTRATION
+// Linker sections for the list of static providers.
+#pragma section(""EMCGEN$__a"", read)
+#pragma section(""EMCGEN$__m"", read)
+#pragma section(""EMCGEN$__z"", read)
+
+struct EmcGenStaticProviderList
+{
+    struct Entry
+    {
+        using FunctionType = ULONG();
+        FunctionType* Register;
+        FunctionType* Unregister;
+    };
+
+    /// <summary>
+    ///   Registers all enlisted static providers with ETW.
+    /// </summary>
+    static inline ULONG RegisterAll()
+    {
+        ULONG result = 0;
+        for (auto it = &first + 1; it != &last; ++it) {
+            if (*it) {
+                ULONG const ec = (*it)->Register();
+                if (ec != 0 && result == 0)
+                    result = ec;
+            }
+        }
+        return result;
+    }
+
+    /// <summary>
+    ///   Unregisters all enlisted static providers from ETW.
+    /// </summary>
+    static ULONG UnregisterAll()
+    {
+        ULONG result = 0;
+        for (auto it = &first + 1; it != &last; ++it) {
+            if (*it) {
+                ULONG const ec = (*it)->Unregister();
+                if (ec != 0 && result == 0)
+                    result = ec;
+            }
+        }
+        return result;
+    }
+
+private:
+    __declspec(allocate(""EMCGEN$__a"")) static Entry const* first;
+    __declspec(allocate(""EMCGEN$__z"")) static Entry const* last;
+};
+
+__declspec(selectany) __declspec(allocate(""EMCGEN$__a"")) EmcGenStaticProviderList::Entry const* EmcGenStaticProviderList::first = nullptr;
+__declspec(selectany) __declspec(allocate(""EMCGEN$__z"")) EmcGenStaticProviderList::Entry const* EmcGenStaticProviderList::last = nullptr;
 
 ";
 
@@ -1502,6 +1561,26 @@ EmcGenEventUnregister(_Inout_ PREGHANDLE regHandle)
             ow.WriteLine("#ifndef EMCGEN_DISABLE_PROVIDER_CODE_GENERATION");
             WriteNamespaceBegin(options.EtwNamespace);
             ow.WriteLine(sharedDefinitions);
+
+            string[] nsParts = options.EtwNamespace.Split('.');
+            string entryType = "::" + string.Join("::", nsParts) + "::EmcGenStaticProviderList::Entry";
+            string mangledEntryType = "Entry@EmcGenStaticProviderList@" + string.Join("@", nsParts.Reverse()) + "@";
+
+            ow.WriteLine("#ifdef _WIN64");
+            ow.WriteLine("#define EMCGEN_PROVIDER_ENTRY_PRAGMA(ProviderSymbol, MangledProviderNs) \\");
+            ow.WriteLine($"    __pragma(comment(linker, \"/include:?\" #ProviderSymbol \"Slot@\" MangledProviderNs \"@3QEBU{mangledEntryType}@EB\"))");
+            ow.WriteLine("#else");
+            ow.WriteLine("#define EMCGEN_PROVIDER_ENTRY_PRAGMA(ProviderSymbol, MangledProviderNs) \\");
+            ow.WriteLine($"    __pragma(comment(linker, \"/include:?\" #ProviderSymbol \"Slot@\" MangledProviderNs \"@3QBU{mangledEntryType}@B\"))");
+            ow.WriteLine("#endif");
+            ow.WriteLine();
+            ow.WriteLine("#define EMCGEN_ENLIST_STATIC_PROVIDER(ProviderSymbol, MangledProviderNs, RegisterFunc, UnregisterFunc) \\");
+            ow.WriteLine("    EMCGEN_PROVIDER_ENTRY_PRAGMA(ProviderSymbol, MangledProviderNs); \\");
+            ow.WriteLine($"    __declspec(selectany) {entryType} ProviderSymbol ## Entry = {{RegisterFunc, UnregisterFunc}}; \\");
+            ow.WriteLine($"    extern __declspec(allocate(\"EMCGEN$__m\")) __declspec(selectany) {entryType} const* const Provider ## Slot = &Provider ## Entry");
+            ow.WriteLine();
+            ow.WriteLine("#endif // EMCGEN_REGISTRATION");
+            ow.WriteLine();
             WriteNamespaceEnd(options.EtwNamespace);
             ow.WriteLine("#endif // EMCGEN_DISABLE_PROVIDER_CODE_GENERATION");
             ow.WriteLine();

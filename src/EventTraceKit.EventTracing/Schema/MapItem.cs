@@ -24,7 +24,7 @@ namespace EventTraceKit.EventTracing.Schema
         public abstract MapKind Kind { get; }
 
         public LocatedVal<uint> Value { get; }
-        public LocalizedString Message { get; }
+        public LocalizedString Message { get; set; }
         public LocatedRef<string> Symbol { get; }
     }
 }

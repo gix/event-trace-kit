@@ -66,7 +66,6 @@ namespace EventManifestCompiler
         {
             private readonly List<OptionInfo> infos = new List<OptionInfo>();
             private readonly string name;
-            private readonly ICodeGeneratorProvider provider;
             private readonly object optionBag;
 
             public CodeGeneratorInfo(string name, ICodeGeneratorProvider provider)
@@ -263,7 +262,6 @@ namespace EventManifestCompiler
             foreach (var arg in args.Matching(Opt.Unknown)) {
                 if (claimedArgs.Contains(arg.Index) || IsExtensionArgument(arg))
                     continue;
-                Console.WriteLine("Unknown arg: {0}", arg.Index);
 
                 diags.ReportError("Unknown argument: {0}", arg.GetAsString());
                 success = false;
@@ -278,6 +276,7 @@ namespace EventManifestCompiler
 
             var opts = arguments.CompilationOptions;
             opts.Inputs = args.GetAllArgValues(Opt.Input).ToList();
+            opts.ResourceGenOnlyInputs = args.GetAllArgValues(Opt.resgen_manifest_eq).ToList();
             opts.OutputBaseName = args.GetLastArgValue(Opt.out_eq);
             opts.GenerateResources = args.GetFlag(Opt.res, Opt.no_res, true);
             opts.MessageTableFile = args.GetLastArgValue(Opt.msg_file_eq);

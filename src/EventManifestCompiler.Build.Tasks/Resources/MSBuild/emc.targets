@@ -5,7 +5,6 @@
   </PropertyGroup>
 
   <UsingTask TaskName="EventManifestCompiler.Build.Tasks.Emc" AssemblyFile="$(EmcBuildTasksPath)"/>
-  <UsingTask TaskName="EventManifestCompiler.Build.Tasks.InprocEmc" AssemblyFile="$(EmcBuildTasksPath)"/>
 
   <!-- Property pages -->
   <ItemGroup Condition="'$(UseDefaultPropertyPageSchemas)' != 'false'">
@@ -45,16 +44,29 @@
       <EventManifestCompile>
         <MinimalRebuildFromTracking Condition="'$(BuildType)' != 'Build' or '$(ForceRebuild)' == 'true'">false</MinimalRebuildFromTracking>
       </EventManifestCompile>
+
+      <!-- Split off resgen-only manifests -->
+      <ResGenOnlyEventManifestCompile Include="@(EventManifestCompile)" Condition="'%(EventManifestCompile.ResGenOnly)' == 'true'"/>
+      <EventManifestCompile Remove="@(EventManifestCompile)" Condition="'%(EventManifestCompile.ResGenOnly)' == 'true'"/>
+
+      <EventManifestCompile Condition="'$(ConfigurationType)' == 'StaticLibrary'">
+        <AdditionalOptions>%(EventManifestCompile.AdditionalOptions) -cstatic</AdditionalOptions>
+      </EventManifestCompile>
     </ItemGroup>
 
-    <Emc Condition="'%(EventManifestCompile.ExcludedFromBuild)' != 'true'"
+    <Error Code="EMC0001" Condition="'@(EventManifestCompile->Count())' == 0 and '@(ResGenOnlyEventManifestCompile->Count())' != 0"
+           Text="Project '$(MSBuildProjectName)' requires an event manifest because it has static dependencies with event manifests.%0DTo solve this error, add an empty manifest to the project.%0DReferenced manifests: @(ResGenOnlyEventManifestCompile, ' ')."/>
+
+    <Emc Condition="'%(EventManifestCompile.ExcludedFromBuild)' != 'true' and '@(EventManifestCompile->Count())' != 0"
         EmcToolPath                = "$(EmcToolPath)"
-        Source                     = "%(Identity)"
+        Source                     = "@(EventManifestCompile)"
+        ResourceGenOnlySources     = "@(ResGenOnlyEventManifestCompile)"
         OutputBaseName             = "%(EventManifestCompile.OutputBaseName)"
 
         GenerateResources          = "%(EventManifestCompile.GenerateResources)"
-        MessageTableFile           = "%(EventManifestCompile.MessageTableFile)"
         EventTemplateFile          = "%(EventManifestCompile.EventTemplateFile)"
+        MessageTableFile           = "%(EventManifestCompile.MessageTableFile)"
+        ResourceFile               = "%(EventManifestCompile.ResourceFile)"
 
         GenerateCode               = "%(EventManifestCompile.GenerateCode)"
         HeaderFile                 = "%(EventManifestCompile.HeaderFile)"
@@ -65,9 +77,19 @@
         LoggingPrefix              = "%(EventManifestCompile.LoggingPrefix)"
         GenerateDefines            = "%(EventManifestCompile.GenerateDefines)"
 
+         AdditionalOptions          = "%(EventManifestCompile.AdditionalOptions)"
+
         TrackerLogDirectory        = "%(EventManifestCompile.TrackerLogDirectory)"
         TrackFileAccess            = "$(TrackFileAccess)"
         MinimalRebuildFromTracking = "%(EventManifestCompile.MinimalRebuildFromTracking)"
-    />
+    >
+      <Output TaskParameter="SourcesCompiled" ItemName="EmcSourcesCompiled"/>
+    </Emc>
+
+    <ItemGroup>
+      <ResourceCompile Include="%(EventManifestCompile.ResourceFile)" Condition="'%(EventManifestCompile.GenerateResources)' == 'true'">
+        <ResourceOutputFileName>%(EventManifestCompile.ResourceFile).res</ResourceOutputFileName>
+      </ResourceCompile>
+    </ItemGroup>
   </Target>
 </Project>

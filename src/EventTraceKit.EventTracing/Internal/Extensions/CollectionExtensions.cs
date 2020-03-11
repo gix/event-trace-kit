@@ -1,6 +1,7 @@
 namespace EventTraceKit.EventTracing.Internal.Extensions
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -128,6 +129,25 @@ namespace EventTraceKit.EventTracing.Internal.Extensions
             }
 
             return -1;
+        }
+
+        public static bool IsEmpty<T>(this IEnumerable<T> source)
+        {
+            switch (source) {
+                case IReadOnlyCollection<T> readOnlyCollection:
+                    return readOnlyCollection.Count == 0;
+                case ICollection<T> genericCollection:
+                    return genericCollection.Count == 0;
+                case string str:
+                    return str.Length == 0;
+                case null:
+                    return true;
+            }
+
+            foreach (var _ in source)
+                return false;
+
+            return true;
         }
     }
 }

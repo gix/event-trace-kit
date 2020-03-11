@@ -20,6 +20,7 @@ namespace EventManifestCompiler
         no_res,
         code,
         no_code,
+        resgen_manifest_eq,
 
         // Output
         O_group,
@@ -66,6 +67,7 @@ namespace EventManifestCompiler
                 .AddFlag(Opt.verify, "-", "verify", "Only parse and check inputs.")
                 .AddGroup(Opt.O_group, "<O group>", "Output")
                 .AddJoined(Opt.out_eq, "-", "out:", "Base output filename", metaVar: "<file>", groupId: Opt.O_group)
+                .AddJoined(Opt.resgen_manifest_eq, "-", "resgen-manifest:", "Manifest which is only used for resource generation", metaVar: "<file>")
                 .AddFlag(Opt.res, "-", "res")
                 .AddFlag(Opt.no_res, "-", "no-res", "Do not generate resources")
                 .AddSeparate(Opt.m, "-", "m", metaVar: "<file>", groupId: Opt.O_group, aliasId: Opt.msg_file_eq)

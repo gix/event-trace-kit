@@ -17,7 +17,7 @@ namespace EventTraceKit.EventTracing.Support
 
                 return File.Create(fileName);
             } catch (Exception ex) {
-                diags.ReportError("Failed to create '{0}': {1}", fileName, ex.Message);
+                diags.ReportError("Failed to create '{0}': {1}\n{2}", fileName, ex.Message, ex.StackTrace);
                 return null;
             }
         }

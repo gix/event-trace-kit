@@ -37,10 +37,7 @@ namespace EventManifestCompiler.Build.Tasks
                 ErrorUtilities.VerifyThrow(!File.Exists(path), "Guid should be unique");
                 File.WriteAllText(path, string.Empty);
             } catch (Exception ex) when (!ExceptionHandling.NotExpectedException(ex)) {
-                throw new IOException(
-                    //ResourceUtilities.FormatResourceString("Shared.FailedCreatingTempFile", ex.Message),
-                    ex.Message,
-                    ex);
+                throw new IOException($"Failed to create temp file: {ex.Message}", ex);
             }
 
             return path;

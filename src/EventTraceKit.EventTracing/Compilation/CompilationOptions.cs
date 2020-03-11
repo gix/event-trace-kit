@@ -13,6 +13,7 @@ namespace EventTraceKit.EventTracing.Compilation
         }
 
         public List<string> Inputs { get; set; }
+        public List<string> ResourceGenOnlyInputs { get; set; }
         public string WinmetaPath { get; set; }
         public string SchemaPath { get; set; }
         public string OutputBaseName { get; set; }

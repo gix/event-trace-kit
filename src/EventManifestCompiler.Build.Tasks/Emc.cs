@@ -1,6 +1,8 @@
 namespace EventManifestCompiler.Build.Tasks
 {
+    using System;
     using System.Collections.Generic;
+    using System.Linq;
     using Microsoft.Build.Framework;
     using Microsoft.Build.Utilities;
     using NOption;
@@ -54,8 +56,10 @@ namespace EventManifestCompiler.Build.Tasks
                 Opt.rc_file_eq,
                 Opt.schema_eq,
                 Opt.winmeta_eq,
+                Opt.resgen_manifest_eq,
                 Opt.res, Opt.no_res,
                 Opt.code, Opt.no_code,
+                Opt.ext_eq,
                 Opt.generator_eq,
                 ExtOpt.clog_ns_eq,
                 ExtOpt.cetw_ns_eq,
@@ -73,7 +77,21 @@ namespace EventManifestCompiler.Build.Tasks
         protected override List<OptSpecifier> OptionOrder { get; }
 
         /// <inheritdoc/>
-        protected override ITaskItem[] TrackedInputFiles => new[] { Source };
+        protected override ITaskItem[] TrackedInputFiles => Concat(Source, ResourceGenOnlySources);
+
+        private static T[] Concat<T>(T item, T[] items)
+        {
+            if (item == null && items == null)
+                return null;
+            if (item == null)
+                return items;
+            if (items == null)
+                return new[] { item };
+            var allItems = new T[1 + items.Length];
+            allItems[0] = item;
+            Array.Copy(items, 0, allItems, 1, items.Length);
+            return allItems;
+        }
 
         /// <inheritdoc/>
         protected override string[] ReadTLogNames =>
@@ -91,11 +109,16 @@ namespace EventManifestCompiler.Build.Tasks
         public string EmcToolPath { get; set; }
 
         /// <summary>Gets or sets the input event manifest.</summary>
-        [Required]
         public ITaskItem Source
         {
             get => GetTaskItem(Opt.Input);
             set => SetTaskItem(Opt.Input, value);
+        }
+
+        public ITaskItem[] ResourceGenOnlySources
+        {
+            get => GetTaskItemList(Opt.resgen_manifest_eq);
+            set => SetTaskItemList(Opt.resgen_manifest_eq, value);
         }
 
         public string EventmanPath
@@ -175,7 +198,7 @@ namespace EventManifestCompiler.Build.Tasks
             get => GetBool(ExtOpt.cuse_prefix);
             set => SetBool(ExtOpt.cuse_prefix, value);
         }
-        
+
         public string LoggingPrefix
         {
             get => GetString(ExtOpt.cprefix_eq);
@@ -187,7 +210,7 @@ namespace EventManifestCompiler.Build.Tasks
             get => GetBool(ExtOpt.cdefines, ExtOpt.cno_defines);
             set => SetBool(ExtOpt.cdefines, ExtOpt.cno_defines, value);
         }
-        
+
         public string[] Extensions
         {
             get => GetStringList(Opt.ext_eq);

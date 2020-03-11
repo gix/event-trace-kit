@@ -1,5 +1,6 @@
 namespace EventManifestCompiler.Build.Tasks
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using Microsoft.Build.Framework;
@@ -10,7 +11,7 @@ namespace EventManifestCompiler.Build.Tasks
     public abstract class NOptionTrackedToolTask : TrackedToolTask
     {
         private readonly OptTable optTable;
-        private readonly Dictionary<int, Arg> activeArgs = new Dictionary<int, Arg>();
+        private readonly Dictionary<int, object> activeArgs = new Dictionary<int, object>();
 
         /// <summary>
         ///   Initializes a new instance of the <see cref="NOptionTrackedToolTask"/> class.
@@ -57,21 +58,28 @@ namespace EventManifestCompiler.Build.Tasks
 
             var builder = new CommandLineBuilder(true);
             foreach (OptSpecifier opt in OptionOrder) {
-                if (IsOptionSet(opt)) {
-                    Arg arg = activeArgs[opt.Id];
-                    if (switchesToRemove == null || !switchesToRemove.Any(o => opt.Id == o.Id))
-                        GenerateCommandsAccordingToType(builder, arg);
+                if (!IsOptionSet(opt))
+                    continue;
+
+                if (switchesToRemove == null || !switchesToRemove.Any(o => opt.Id == o.Id)) {
+                    GenerateCommandsAccordingToType(builder, activeArgs[opt.Id]);
                 }
             }
+
             BuildAdditionalArgs(builder);
             return builder.ToString();
         }
 
-        private void GenerateCommandsAccordingToType(
-            CommandLineBuilder builder, Arg arg)
+        private void GenerateCommandsAccordingToType(CommandLineBuilder builder, object obj)
         {
             var list = new List<string>();
-            arg.RenderAsInput(list);
+            if (obj is Arg arg) {
+                arg.RenderAsInput(list);
+            } else if (obj is Arg[] args) {
+                foreach (var a in args)
+                    a.RenderAsInput(list);
+            }
+
             foreach (var str in list)
                 builder.AppendSwitch(str);
         }
@@ -117,7 +125,7 @@ namespace EventManifestCompiler.Build.Tasks
         {
             if (!IsOptionSet(opt))
                 return null;
-            return activeArgs[opt.Id].Value;
+            return ((Arg)activeArgs[opt.Id]).Value;
         }
 
         protected void SetString(OptSpecifier opt, string value)
@@ -130,20 +138,20 @@ namespace EventManifestCompiler.Build.Tasks
         {
             if (!IsOptionSet(opt))
                 return null;
-            return activeArgs[opt.Id].Values.ToArray();
+            return ((Arg[])activeArgs[opt.Id]).Select(x => x.Value).ToArray();
         }
 
         protected void SetStringList(OptSpecifier opt, string[] value)
         {
             activeArgs.Remove(opt.Id);
-            AddActiveArg(CreateArg(opt, value));
+            AddActiveArg(value?.Select(x => CreateArg(opt, x)).ToArray());
         }
 
         protected ITaskItem GetTaskItem(OptSpecifier opt)
         {
             if (!IsOptionSet(opt))
                 return null;
-            return new TaskItem(activeArgs[opt.Id].Value);
+            return new TaskItem(((Arg)activeArgs[opt.Id]).Value);
         }
 
         protected void SetTaskItem(OptSpecifier opt, ITaskItem value)
@@ -152,9 +160,33 @@ namespace EventManifestCompiler.Build.Tasks
             AddActiveArg(CreateArg(opt, value?.ItemSpec));
         }
 
+        protected ITaskItem[] GetTaskItemList(OptSpecifier opt)
+        {
+            if (!IsOptionSet(opt))
+                return null;
+            return ((Arg[])activeArgs[opt.Id]).Select(x => new TaskItem(x.Value)).ToArray();
+        }
+
+        protected void SetTaskItemList(OptSpecifier opt, ITaskItem[] value)
+        {
+            activeArgs.Remove(opt.Id);
+            AddActiveArg(value?.Select(x => CreateArg(opt, x.ItemSpec)).ToArray());
+        }
+
         private void AddActiveArg(Arg arg)
         {
             activeArgs.Add(arg.Option.Id, arg);
+        }
+
+        private void AddActiveArg(Arg[] args)
+        {
+            if (args == null || args.Length == 0)
+                return;
+
+            if (!args.All(x => x.Option.Id == args[0].Option.Id))
+                throw new InvalidOperationException();
+
+            activeArgs.Add(args[0].Option.Id, args);
         }
 
         private Arg CreateArg(OptSpecifier pos)
@@ -167,12 +199,6 @@ namespace EventManifestCompiler.Build.Tasks
         {
             var option = optTable.GetOption(opt);
             return new Arg(option, option.PrefixedName, 0, value);
-        }
-
-        private Arg CreateArg(OptSpecifier opt, string[] value)
-        {
-            var option = optTable.GetOption(opt);
-            return new Arg(option, option.PrefixedName, 0, value ?? new string[0]);
         }
 
         private Arg CreateArg(OptSpecifier pos, OptSpecifier neg, bool value)

@@ -33,7 +33,12 @@ namespace EventManifestCompiler.Build.Tasks.Tests
             emc.UseLoggingPrefix = true;
             emc.LoggingPrefix = "Write";
             emc.GenerateDefines = true;
-            emc.Extensions = null;
+            emc.Extensions = new[] { "ext1.dll", "ext2.dll" };
+            emc.ResourceGenOnlySources = new[] {
+                new TaskItem("extra1.man"),
+                new TaskItem("extra2.man")
+            };
+            emc.AdditionalOptions = "-cstatic";
 
             // Ignore the result of Execute as it will always fail. But the
             // executed command line will be logged. That's all we need.
@@ -41,22 +46,26 @@ namespace EventManifestCompiler.Build.Tasks.Tests
             var actualArgs = GetExecutedCommandLineArgs();
 
             var expectedArgs = new HashSet<string>() {
-                "-header-file:out.h",
-                "-schema:eventman.xsd",
-                "-winmeta:winmeta.xml",
                 "-out:t",
                 "-header-file:out.h",
                 "-msg-file:mt.bin",
                 "-wevt-file:wevt.bin",
                 "-rc-file:res.rc",
+                "-schema:eventman.xsd",
+                "-winmeta:winmeta.xml",
+                "-resgen-manifest:extra1.man",
+                "-resgen-manifest:extra2.man",
                 "-res",
                 "-code",
+                "-ext:ext1.dll",
+                "-ext:ext2.dll",
                 "-generator:cxx",
                 "-clog-ns:trace",
                 "-cetw-ns:etw",
                 "-cuse-prefix",
                 "-cprefix:Write",
                 "-cdefines",
+                "-cstatic",
                 "manifest.man",
             };
             Assert.EndsWith("emc.exe", actualArgs.First());

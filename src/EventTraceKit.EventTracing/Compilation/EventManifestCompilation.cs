@@ -1,6 +1,7 @@
 namespace EventTraceKit.EventTracing.Compilation
 {
     using System;
+    using System.Collections.Generic;
     using System.Globalization;
     using System.IO;
     using System.Linq;
@@ -14,42 +15,94 @@ namespace EventTraceKit.EventTracing.Compilation
 
     public sealed class EventManifestCompilation
     {
-        private readonly EventManifest manifest;
-        private readonly IDiagnosticsEngine diags;
+        private readonly List<EventManifest> resGenManifests = new List<EventManifest>();
+        private readonly List<EventManifest> codeGenManifests = new List<EventManifest>();
+        private readonly IDiagnostics diags;
         private readonly CompilationOptions opts;
         private readonly Func<IMessageIdGenerator> msgIdGenFactory;
 
-        private EventManifestCompilation(
-            EventManifest manifest, IDiagnosticsEngine diags, CompilationOptions opts)
+        private EventManifest combinedCodeGenManifest;
+        private EventManifest combinedResGenManifest;
+
+        private EventManifestCompilation(IDiagnostics diags, CompilationOptions opts)
         {
-            this.manifest = manifest ?? throw new ArgumentNullException(nameof(manifest));
             this.diags = diags ?? throw new ArgumentNullException(nameof(diags));
             this.opts = opts ?? throw new ArgumentNullException(nameof(opts));
 
             msgIdGenFactory = () => new StableMessageIdGenerator(diags);
-
-            MessageHelpers.AssignMessageIds(diags, manifest, msgIdGenFactory);
         }
 
         public static EventManifestCompilation Create(
-            EventManifest manifest, IDiagnosticsEngine diags, CompilationOptions opts)
+            IDiagnostics diags, CompilationOptions opts)
         {
-            return new EventManifestCompilation(manifest, diags, opts);
+            return new EventManifestCompilation(diags, opts);
         }
 
-        public static EventManifestCompilation Create(
-            string manifestFile, IDiagnosticsEngine diags, CompilationOptions opts)
+        private EventManifest CreateManifest(IEnumerable<EventManifest> manifests)
         {
-            if (!File.Exists(manifestFile)) {
-                diags.ReportError("No such file '{0}'.", manifestFile);
+            var combinedManifest = EventManifest.Combine(manifests);
+            if (combinedManifest == null)
                 return null;
-            }
 
-            var parser = EventManifestParser.CreateWithWinmeta(
-                diags, opts.SchemaPath, opts.WinmetaPath);
+            MessageHelpers.AssignMessageIds(diags, combinedManifest, msgIdGenFactory);
+            return combinedManifest;
+        }
 
-            var manifest = parser?.ParseManifest(manifestFile);
-            return new EventManifestCompilation(manifest, diags, opts);
+        public bool AddManifests(IEnumerable<EventManifest> manifests)
+        {
+            if (manifests is null)
+                throw new ArgumentNullException(nameof(manifests));
+
+            var manifestList = manifests.ToList();
+            return AddCodeGenManifests(manifestList) &&
+                   AddResourceGenManifests(manifestList);
+        }
+
+        public bool AddManifests(params EventManifest[] manifests)
+        {
+            return AddManifests((IEnumerable<EventManifest>)manifests);
+        }
+
+        public bool AddCodeGenManifests(IEnumerable<EventManifest> manifests)
+        {
+            if (manifests is null)
+                throw new ArgumentNullException(nameof(manifests));
+
+            codeGenManifests.AddRange(manifests);
+
+            var trap = diags.TrapError();
+            var combinedManifest = CreateManifest(codeGenManifests);
+            if (trap.ErrorOccurred)
+                return false;
+
+            combinedCodeGenManifest = combinedManifest;
+            return true;
+        }
+
+        public bool AddCodeGenManifests(params EventManifest[] manifests)
+        {
+            return AddCodeGenManifests((IEnumerable<EventManifest>)manifests);
+        }
+
+        public bool AddResourceGenManifests(IEnumerable<EventManifest> manifests)
+        {
+            if (manifests is null)
+                throw new ArgumentNullException(nameof(manifests));
+
+            resGenManifests.AddRange(manifests);
+
+            var trap = diags.TrapError();
+            var combinedManifest = CreateManifest(resGenManifests);
+            if (trap.ErrorOccurred)
+                return false;
+
+            combinedResGenManifest = combinedManifest;
+            return true;
+        }
+
+        public bool AddResourceGenManifests(params EventManifest[] manifests)
+        {
+            return AddResourceGenManifests((IEnumerable<EventManifest>)manifests);
         }
 
         public bool Emit()
@@ -57,20 +110,49 @@ namespace EventTraceKit.EventTracing.Compilation
             if (diags.ErrorOccurred)
                 return false;
 
-            if (opts.GenerateResources) {
-                EmitEventTemplate();
-                EmitMessageTables();
-                EmitResourceFile();
+            if (opts.GenerateResources && combinedResGenManifest != null) {
+                if (!EmitEventTemplate() || !EmitMessageTables() || !EmitResourceFile())
+                    return false;
             }
 
-            if (opts.CodeGenOptions.GenerateCode)
-                EmitCode();
+            if (opts.CodeGenOptions.GenerateCode && combinedCodeGenManifest != null) {
+                if (!EmitCode())
+                    return false;
+            }
 
             return !diags.ErrorOccurred;
         }
 
+        public bool EmitCode()
+        {
+            if (combinedCodeGenManifest == null) {
+                diags.ReportError("Compilation has no manifests for code generation.");
+                return false;
+            }
+
+            var trap = diags.TrapError();
+
+            ICodeGenerator codeGen = opts.CodeGenOptions.CodeGeneratorFactory?.Invoke();
+            if (codeGen == null) {
+                diags.ReportError("Failed to create the code generator instance.");
+                return false;
+            }
+
+            using var output = FileUtilities.TryCreateFile(diags, opts.CodeGenOptions.CodeHeaderFile);
+            if (output == null)
+                return false;
+            codeGen.Generate(combinedCodeGenManifest, output);
+
+            return !trap.ErrorOccurred;
+        }
+
         public bool EmitEventTemplate()
         {
+            if (combinedResGenManifest == null) {
+                diags.ReportError("Compilation has no manifests for resource generation.");
+                return false;
+            }
+
             var trap = diags.TrapError();
 
             FileStream output = FileUtilities.TryCreateFile(
@@ -80,37 +162,28 @@ namespace EventTraceKit.EventTracing.Compilation
 
             using (output)
             using (var writer = new EventTemplateWriter(output)) {
-                if (opts.CompatibilityLevel <= new Version(8, 1))
-                    writer.UseLegacyTemplateIds = true;
-                else if (opts.CompatibilityLevel < new Version(10, 0, 16299))
-                    writer.Version = 3;
-                writer.Write(manifest.Providers);
+                if (opts.CompatibilityLevel != null) {
+                    if (opts.CompatibilityLevel <= new Version(8, 1))
+                        writer.UseLegacyTemplateIds = true;
+                    else if (opts.CompatibilityLevel < new Version(10, 0, 16299))
+                        writer.Version = 3;
+                }
+                writer.Write(combinedResGenManifest.Providers);
             }
 
-            return trap.ErrorOccurred;
-        }
-
-        public bool EmitCode()
-        {
-            var trap = diags.TrapError();
-
-            ICodeGenerator codeGen = opts.CodeGenOptions.CodeGeneratorFactory?.Invoke();
-            if (codeGen == null)
-                return false;
-
-            using var output = FileUtilities.TryCreateFile(diags, opts.CodeGenOptions.CodeHeaderFile);
-            if (output == null)
-                return false;
-            codeGen.Generate(manifest, output);
-
-            return trap.ErrorOccurred;
+            return !trap.ErrorOccurred;
         }
 
         public bool EmitMessageTables()
         {
+            if (combinedResGenManifest == null) {
+                diags.ReportError("Compilation has no manifests for resource generation.");
+                return false;
+            }
+
             var trap = diags.TrapError();
 
-            foreach (var resourceSet in manifest.Resources) {
+            foreach (var resourceSet in combinedResGenManifest.Resources) {
                 string fileName = AddCultureName(opts.MessageTableFile, resourceSet.Culture);
                 using FileStream output = FileUtilities.TryCreateFile(diags, fileName);
                 if (output == null)
@@ -120,11 +193,16 @@ namespace EventTraceKit.EventTracing.Compilation
                 writer.Write(resourceSet.Strings.Select(CreateMessage), diags);
             }
 
-            return trap.ErrorOccurred;
+            return !trap.ErrorOccurred;
         }
 
         public bool EmitResourceFile()
         {
+            if (combinedResGenManifest == null) {
+                diags.ReportError("Compilation has no manifests for resource generation.");
+                return false;
+            }
+
             var trap = diags.TrapError();
 
             using FileStream output = FileUtilities.TryCreateFile(diags, opts.ResourceFile);
@@ -134,19 +212,24 @@ namespace EventTraceKit.EventTracing.Compilation
             using var writer = IO.CreateStreamWriter(output);
             writer.NewLine = "\n";
 
-            foreach (var resourceSet in manifest.Resources.OrderBy(ResourceSortKey)) {
+            foreach (var resourceSet in combinedResGenManifest.Resources.OrderBy(ResourceSortKey)) {
                 CultureInfo culture = resourceSet.Culture;
                 string fileName = AddCultureName(opts.MessageTableFile, culture);
                 int primaryLangId = culture.GetPrimaryLangId();
                 int subLangId = culture.GetSubLangId();
 
                 writer.WriteLine("LANGUAGE 0x{0:X},0x{1:X}", primaryLangId, subLangId);
-                writer.WriteLine("1 11 \"{0}\"", fileName);
+                writer.WriteLine("1 11 \"{0}\"", EscapeCStringLiteral(fileName));
             }
 
-            writer.WriteLine("1 WEVT_TEMPLATE \"{0}\"", opts.EventTemplateFile);
+            writer.WriteLine("1 WEVT_TEMPLATE \"{0}\"", EscapeCStringLiteral(opts.EventTemplateFile));
 
-            return trap.ErrorOccurred;
+            return !trap.ErrorOccurred;
+        }
+
+        private static string EscapeCStringLiteral(string value)
+        {
+            return value.Replace("\\", "\\\\");
         }
 
         private static Tuple<int, int> ResourceSortKey(LocalizedResourceSet resourceSet)
