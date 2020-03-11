@@ -62,6 +62,22 @@ namespace EventTraceKit.EventTracing.Schema
         public LocatedNullable<bool> IncludeNameInTraits { get; set; }
         public LocatedNullable<Guid> GroupGuid { get; set; }
 
+        /// <summary>
+        ///   Gets or sets whether the process name will be included in the
+        ///   provider traits. This allows for easier distinction between
+        ///   different processes using the same providers compared to process
+        ///   IDs, because loader events require kernel tracing. The default is
+        ///   <see langword="false"/>.
+        /// </summary>
+        /// <remarks>
+        ///   The process name is the base name without file extension of the
+        ///   executing process(e.g., "service2" for "Z:\path\service2.exe").
+        ///   The trait type is 128, and the trait data is the null-terminated
+        ///   UTF-8 encoded process name(e.g., "\x0C\x00\x80service2\x00").
+        ///   This trait is an ETK-only extension not supported by MC or TDH.
+        /// </remarks>
+        public LocatedNullable<bool> IncludeProcessName { get; set; }
+
         public ChannelCollection Channels { get; }
         public LevelCollection Levels { get; }
         public OpcodeCollection Opcodes { get; }

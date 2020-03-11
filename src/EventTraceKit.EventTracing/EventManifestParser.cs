@@ -311,6 +311,7 @@ namespace EventTraceKit.EventTracing
             var nsmgr = new XmlNamespaceManager(reader.NameTable ?? new NameTable());
             nsmgr.AddNamespace("e", EventManifestSchema.Namespace);
             nsmgr.AddNamespace("w", WinEventSchema.Namespace);
+            nsmgr.AddNamespace("etk", EventTraceKitSchema.Namespace);
             return nsmgr;
         }
 
@@ -323,6 +324,7 @@ namespace EventTraceKit.EventTracing
 
             var settings = new XmlReaderSettings();
             settings.Schemas.Add(EventManifestSchema.Namespace, schemaPath);
+            settings.Schemas.Add(LoadExtensionsSchema());
             settings.ValidationFlags = XmlSchemaValidationFlags.ReportValidationWarnings;
             settings.ValidationType = ValidationType.Schema;
             settings.ValidationEventHandler += OnSchemaValidationEvent;
@@ -330,16 +332,33 @@ namespace EventTraceKit.EventTracing
             return XmlReader.Create(input, settings, inputUri);
         }
 
+        private static XmlSchema LoadExtensionsSchema()
+        {
+            var anchor = typeof(EventManifest);
+            using var stream = anchor.Assembly.GetManifestResourceStream(anchor, "Extensions.xsd");
+            if (stream == null)
+                throw new InternalException("XML schema for extensions is missing.");
+            return XmlSchema.Read(stream, null);
+        }
+
         private void OnSchemaValidationEvent(object sender, ValidationEventArgs args)
         {
-            if (args.Severity == XmlSeverityType.Error) {
-                var location = new SourceLocation(
-                    args.Exception.SourceUri,
-                    args.Exception.LineNumber,
-                    args.Exception.LinePosition);
-                diags.ReportError(location, args.Exception.Message.EscapeFormatting());
-                failedValidation = true;
+            var location = new SourceLocation(
+                args.Exception.SourceUri,
+                args.Exception.LineNumber,
+                args.Exception.LinePosition);
+            var message = args.Exception.Message.EscapeFormatting();
+
+            switch (args.Severity) {
+                case XmlSeverityType.Error:
+                    diags.Report(DiagnosticSeverity.Error, location, message);
+                    failedValidation = true;
+                    break;
+                case XmlSeverityType.Warning:
+                    diags.Report(DiagnosticSeverity.Warning, location, message);
+                    break;
             }
+
         }
 
         private class MessageEntry
@@ -451,6 +470,11 @@ namespace EventTraceKit.EventTracing
                 if (groupGuid != null && groupGuid.Value != Guid.Empty)
                     provider.GroupGuid = groupGuid;
                 provider.IncludeNameInTraits = includeName;
+            }
+
+            var traitsExtElem = elem.XPathSelectElement("etk:traits", nsResolver);
+            if (traitsExtElem != null) {
+                provider.IncludeProcessName = traitsExtElem.GetOptionalBool("includeProcessName");
             }
 
             foreach (XElement child in elem.XPathSelectElements("e:channels/e:channel | e:channels/e:importChannel", nsResolver)) {

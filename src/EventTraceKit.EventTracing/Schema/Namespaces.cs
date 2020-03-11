@@ -45,4 +45,9 @@ namespace EventTraceKit.EventTracing.Schema
         public static readonly QName CountedAnsiString = new QName("CountedAnsiString", "win", Namespace);
         public static readonly QName CountedBinary = new QName("CountedBinary", "win", Namespace);
     }
+
+    public static class EventTraceKitSchema
+    {
+        public static readonly XNamespace Namespace = "urn:uuid:fb199331-10b4-437d-88b3-adb0561c2e3f";
+    }
 }

@@ -1,0 +1,28 @@
+<xs:schema targetNamespace="urn:uuid:fb199331-10b4-437d-88b3-adb0561c2e3f"
+           elementFormDefault="qualified"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:etk="urn:uuid:fb199331-10b4-437d-88b3-adb0561c2e3f">
+  <xs:complexType name="TraitsType">
+    <xs:annotation>
+      <xs:documentation>
+        Specifies additional provider traits.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="includeProcessName" type="xs:boolean" use="optional">
+      <xs:annotation>
+        <xs:documentation>
+          Optional. Default is false. If true, the process name will be included
+          in the provider traits. This allows for easier distinction between
+          different processes using the same providers compared to process IDs,
+          because loader events require kernel tracing.
+          The process name is the base name without file extension of the
+          executing process (e.g., "service2" for "Z:\path\service2.exe"). The
+          trait type is 128, and the trait data is the null-terminated UTF-8
+          encoded process name (e.g., "\x0C\x00\x80service2\x00").
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:element name="traits" type="etk:TraitsType"/>
+</xs:schema>

@@ -21,4 +21,7 @@
   <ItemGroup>
     <Compile Remove="Compilation\ResGen\EventTemplateDumperFast.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Schema\Extensions.xsd" />
+  </ItemGroup>
 </Project>

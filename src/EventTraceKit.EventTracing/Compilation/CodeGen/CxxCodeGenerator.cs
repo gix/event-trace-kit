@@ -402,6 +402,10 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             var enableBits = provider.EnableBits;
             int enableByteCount = (enableBits.Count + 31) / 32;
 
+            uint contextFlags = 0;
+            if (provider.IncludeProcessName == true)
+                contextFlags |= 1;
+
             if (enableByteCount != 0) {
                 ow.WriteLine("// Event Enablement Bits");
                 ow.WriteLine(
@@ -433,16 +437,18 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             var contextDecl = GlobalDecl($"{etwNamespacePrefix}EmcGenTraceContext");
             if (enableByteCount == 0) {
                 ow.WriteLine(
-                    "{0} {1} = {{0, {2}}};",
-                    contextDecl,
-                    naming.GetProviderContextId(provider),
-                    naming.GetProviderTraitsId(provider));
-            } else {
-                ow.WriteLine(
-                    "{0} {1} = {{0, {2}, 0, 0, 0, false, 0, {3}, {4}, {5}, {6}}};",
+                    "{0} {1} = {{0, {2}, 0, 0, {3}}};",
                     contextDecl,
                     naming.GetProviderContextId(provider),
                     naming.GetProviderTraitsId(provider),
+                    contextFlags);
+            } else {
+                ow.WriteLine(
+                    "{0} {1} = {{0, {2}, 0, 0, {3}, false, 0, {4}, {5}, {6}, {7}}};",
+                    contextDecl,
+                    naming.GetProviderContextId(provider),
+                    naming.GetProviderTraitsId(provider),
+                    contextFlags,
                     enableBits.Count,
                     naming.GetProviderEnableBitsId(provider),
                     naming.GetProviderKeywordsId(provider),
@@ -475,7 +481,8 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
                 ow.WriteLine();
             }
 
-            if (provider.ControlGuid != null || provider.GroupGuid != null || provider.IncludeNameInTraits == true) {
+            if (provider.ControlGuid != null || provider.GroupGuid != null || provider.IncludeNameInTraits == true ||
+                provider.IncludeProcessName == true) {
                 int totalSize = 2 /*Traits size*/;
 
                 string providerName;
@@ -929,6 +936,8 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
 #include <evntprov.h>
 
 #include <cstdint>
+#include <memory>
+#include <string>
 
 #pragma comment(lib, ""advapi32.lib"")
 
@@ -1306,6 +1315,107 @@ EmcGenEventSetInformation(
     return ec;
 }
 
+namespace emcgen_details
+{
+
+std::string EmcGenU16To8(wchar_t const* const str, size_t const size)
+{
+    int ret = WideCharToMultiByte(CP_UTF8, 0, str, size, nullptr, 0, nullptr, nullptr);
+    if (ret == 0)
+        return std::string();
+
+    std::string buffer(ret, '\0');
+
+    ret = WideCharToMultiByte(CP_UTF8, 0, str, size, &buffer[0],
+                              static_cast<int>(buffer.size() + 1), nullptr, nullptr);
+    if (ret == 0)
+        return std::string();
+
+    return buffer;
+}
+
+std::string EmcGenGetProcessName()
+{
+    size_t const MaxPath = MAX_PATH;
+    size_t const MaxExtendedPath = 32767;
+
+    std::wstring buffer;
+    DWORD ec = ERROR_INSUFFICIENT_BUFFER;
+
+    // GetModuleFileNameW has no way to indicate the required buffer length. So
+    // we have to retry with successively larger buffers. Start with the max
+    // short path length and double the size until we reach the documented file
+    // path limit.
+    for (size_t bufferSize = MaxPath;
+         bufferSize < MaxExtendedPath && ec == ERROR_INSUFFICIENT_BUFFER;
+         bufferSize *= 2) {
+        buffer.resize(bufferSize);
+
+        // std::string leaves space for the null terminator. While this is out
+        // of range of the string's size, the standard allows accessing and
+        // overwriting as long as it is kept a null terminator, and
+        // GetModuleFileNameW always writes one.
+        size_t const size = GetModuleFileNameW(
+            nullptr, &buffer[0], static_cast<DWORD>(buffer.size() + 1));
+
+        // The returned size s with a buffer length l falls into three categories:
+        //   s == 0:    Function failed.
+        //   s == l:    Success, but truncated path, s is the size with terminator.
+        //   0 < s < l: Success, s is the size without terminator.
+        if (size > 0 && size <= buffer.size()) {
+            // Remove directory and extensions.
+            size_t const nameSep = buffer.find_last_of(L""\\/:"");
+            size_t const extSep = buffer.find_last_of(L'.');
+            size_t const startIdx = nameSep != std::wstring::npos ? nameSep + 1 : 0;
+            size_t const endIdx = extSep != std::wstring::npos ? extSep : buffer.size();
+            return EmcGenU16To8(&buffer[0] + startIdx, endIdx - startIdx);
+        }
+
+        ec = GetLastError();
+    }
+
+    // Error other than ERROR_INSUFFICIENT_BUFFER occurred or somehow the path
+    // is longer than the maximum documented extended path length.
+    return std::string();
+}
+
+EMCGEN_NOINLINE
+void const* EmcGenAddProcessNameTrait(
+    _Inout_ std::unique_ptr<std::uint8_t[]>& buffer, _In_ void const* const providerTraits)
+{
+    std::string const processName = EmcGenGetProcessName();
+    if (processName.empty())
+        return providerTraits;
+
+    std::uint16_t const inputTraitsSize = *reinterpret_cast<std::uint16_t const UNALIGNED*>(providerTraits);
+
+    std::uint8_t const EtwProviderTraitTypeProcessName = 128;
+
+    std::uint16_t const traitSize = 2 /*Size*/ + 1 /*Type*/ + processName.size() + 1 /*NUL*/;
+    std::uint8_t const traitType = EtwProviderTraitTypeProcessName;
+    std::uint16_t const newTraitsSize = inputTraitsSize + traitSize;
+
+    buffer.reset(new std::uint8_t[newTraitsSize]);
+
+    // Copy input traits
+    std::memcpy(buffer.get(), providerTraits, inputTraitsSize);
+
+    // Overwrite total traits size
+    std::memcpy(buffer.get(), &newTraitsSize, sizeof(newTraitsSize));
+
+    // Write process name trait
+    std::uint8_t* trait = buffer.get() + inputTraitsSize;
+    std::memcpy(trait, &traitSize, sizeof(traitSize));
+    trait += sizeof(traitSize);
+    std::memcpy(trait, &traitType, sizeof(traitType));
+    trait += sizeof(traitType);
+    std::memcpy(trait, processName.data(), processName.size() + 1);
+
+    return buffer.get();
+}
+
+} // namespace emcgen_details
+
 /// <summary>
 ///   Registers the provider with ETW and registers provider traits.
 /// </summary>
@@ -1334,16 +1444,26 @@ EmcGenEventRegisterContext(
         enableCallback,
         callbackContext,
         &context.RegistrationHandle);
+    if (ec != 0)
+        return ec;
 
-    if (ec == 0 && context.ProviderTraits != nullptr) {
+    if (context.ProviderTraits) {
+        void const* providerTraits = const_cast<void*>(context.ProviderTraits);
+
+        std::unique_ptr<std::uint8_t[]> providerTraitsBuffer;
+        if (context.Flags & 1 /*IncludeProcessName*/) {
+            providerTraits = emcgen_details::EmcGenAddProcessNameTrait(
+                providerTraitsBuffer, providerTraits);
+        }
+
         (void)EmcGenEventSetInformation(
             context.RegistrationHandle,
             EventProviderSetTraits,
-            const_cast<void*>(context.ProviderTraits),
-            *reinterpret_cast<USHORT const UNALIGNED*>(context.ProviderTraits));
+            const_cast<void*>(providerTraits),
+            *reinterpret_cast<USHORT const UNALIGNED*>(providerTraits));
     }
 
-    return ec;
+    return 0;
 }
 
 /// <summary>
