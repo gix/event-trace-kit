@@ -43,6 +43,32 @@ namespace EventTraceKit.EventTracing.Tests.Schema
             Assert.Equal(provider.Attribute("name").GetLocation(), diags.Errors[0].Location);
         }
 
+        [Fact]
+        public void ResourceFileName_Required()
+        {
+            var provider = CreateProvider();
+            provider.SetAttributeValue("resourceFileName", null);
+
+            ParseInput(ref provider);
+
+            Assert.Single(diags.Errors);
+            Assert.Contains("resourceFileName", diags.Errors[0].FormattedMessage);
+            Assert.Equal(provider.GetLocation(), diags.Errors[0].Location);
+        }
+
+        [Fact]
+        public void MessageFileName_Required()
+        {
+            var provider = CreateProvider();
+            provider.SetAttributeValue("messageFileName", null);
+
+            ParseInput(ref provider);
+
+            Assert.Single(diags.Errors);
+            Assert.Contains("messageFileName", diags.Errors[0].FormattedMessage);
+            Assert.Equal(provider.GetLocation(), diags.Errors[0].Location);
+        }
+
         private void ParseInput(ref XElement provider)
         {
             parser.ParseManifest(CreateInput(ref provider), "<stdin>");

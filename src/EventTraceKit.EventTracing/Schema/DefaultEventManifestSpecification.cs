@@ -24,6 +24,22 @@ namespace EventTraceKit.EventTracing.Schema
         {
             bool result = true;
 
+            if (string.IsNullOrEmpty(provider.ResourceFileName)) {
+                result = false;
+                diags.ReportError(
+                    provider.Location,
+                    "Provider '{0}' must have a non-empty resourceFileName attribute.",
+                    provider.Name.Value);
+            }
+
+            if (string.IsNullOrEmpty(provider.MessageFileName)) {
+                result = false;
+                diags.ReportError(
+                    provider.Location,
+                    "Provider '{0}' must have a non-empty messageFileName attribute.",
+                    provider.Name.Value);
+            }
+
             if (provider.ControlGuid != null) {
                 var trailingGuid = ExtractGuidFromProviderName(provider.Name.Value);
                 if (trailingGuid == null || trailingGuid != provider.Id) {
