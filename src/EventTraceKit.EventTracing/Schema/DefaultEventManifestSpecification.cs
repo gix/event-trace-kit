@@ -96,13 +96,22 @@ namespace EventTraceKit.EventTracing.Schema
                     @event.Value);
             }
 
-            // Docs say: "You must specify a message if the channel type to which the event is written is Admin."
-            // but mc.exe does not enforce this.
-            if (false && @event.Channel.Type == ChannelType.Admin && @event.Message == null) {
+            // Admin events must have a message.
+            if (@event.Channel?.Type == ChannelType.Admin && @event.Message == null) {
                 result = false;
                 diags.ReportError(
                     @event.Location,
                     "Event '{0}' ('{1}') is written to an admin channel and must have a message.",
+                    @event.Symbol ?? "<no symbol>",
+                    @event.Value);
+            }
+
+            // Admin events must have a non-verbose log level.
+            if (@event.Channel?.Type == ChannelType.Admin && (@event.Level == null || @event.Level.Value < 1 || @event.Level.Value > 4)) {
+                result = false;
+                diags.ReportError(
+                    @event.Location,
+                    "Event '{0}' ('{1}') is written to an admin channel and must have a level of Critical, Error, Warning, or Informational.",
                     @event.Symbol ?? "<no symbol>",
                     @event.Value);
             }

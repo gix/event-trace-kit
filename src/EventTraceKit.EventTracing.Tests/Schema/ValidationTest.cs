@@ -151,7 +151,7 @@ namespace EventTraceKit.EventTracing.Tests.Schema
             return stream;
         }
 
-        protected XElement CreateProvider()
+        protected XElement CreateProvider(params object[] content)
         {
             XNamespace ns = EventManifestSchema.Namespace;
 
@@ -172,6 +172,8 @@ namespace EventTraceKit.EventTracing.Tests.Schema
                         new XElement(ns + "data",
                             new XAttribute("name", "Field1"),
                             new XAttribute("inType", "win:UInt8")))));
+
+            provider.Add(content);
 
             var doc = new XDocument(
                 new XDeclaration("1.0", "UTF-8", "yes"),

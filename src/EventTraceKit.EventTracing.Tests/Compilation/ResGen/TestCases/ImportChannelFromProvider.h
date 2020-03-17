@@ -570,14 +570,14 @@ EXTERN_C __declspec(selectany) const GUID ProviderSym2 = {0x00000000, 0x0000, 0x
 //
 // Event Descriptors
 //
-EXTERN_C __declspec(selectany) const EVENT_DESCRIPTOR ProviderSym2_EVENT_0x1_0_10_0_0_0_8000000000000000 = {0x1, 0x0, 0x10, 0x0, 0x0, 0x0, 0x8000000000000000};
-#define ProviderSym2_EVENT_0x1_0_10_0_0_0_8000000000000000_value 0x1
-EXTERN_C __declspec(selectany) const EVENT_DESCRIPTOR ProviderSym2_EVENT_0x2_0_11_0_0_0_4000000000000000 = {0x2, 0x0, 0x11, 0x0, 0x0, 0x0, 0x4000000000000000};
-#define ProviderSym2_EVENT_0x2_0_11_0_0_0_4000000000000000_value 0x2
-EXTERN_C __declspec(selectany) const EVENT_DESCRIPTOR ProviderSym2_EVENT_0x3_0_10_0_0_0_8000000000000000 = {0x3, 0x0, 0x10, 0x0, 0x0, 0x0, 0x8000000000000000};
-#define ProviderSym2_EVENT_0x3_0_10_0_0_0_8000000000000000_value 0x3
-EXTERN_C __declspec(selectany) const EVENT_DESCRIPTOR ProviderSym2_EVENT_0x4_0_11_0_0_0_4000000000000000 = {0x4, 0x0, 0x11, 0x0, 0x0, 0x0, 0x4000000000000000};
-#define ProviderSym2_EVENT_0x4_0_11_0_0_0_4000000000000000_value 0x4
+EXTERN_C __declspec(selectany) const EVENT_DESCRIPTOR ProviderSym2_EVENT_0x1_0_10_2_0_0_8000000000000000 = {0x1, 0x0, 0x10, 0x2, 0x0, 0x0, 0x8000000000000000};
+#define ProviderSym2_EVENT_0x1_0_10_2_0_0_8000000000000000_value 0x1
+EXTERN_C __declspec(selectany) const EVENT_DESCRIPTOR ProviderSym2_EVENT_0x2_0_11_2_0_0_4000000000000000 = {0x2, 0x0, 0x11, 0x2, 0x0, 0x0, 0x4000000000000000};
+#define ProviderSym2_EVENT_0x2_0_11_2_0_0_4000000000000000_value 0x2
+EXTERN_C __declspec(selectany) const EVENT_DESCRIPTOR ProviderSym2_EVENT_0x3_0_10_2_0_0_8000000000000000 = {0x3, 0x0, 0x10, 0x2, 0x0, 0x0, 0x8000000000000000};
+#define ProviderSym2_EVENT_0x3_0_10_2_0_0_8000000000000000_value 0x3
+EXTERN_C __declspec(selectany) const EVENT_DESCRIPTOR ProviderSym2_EVENT_0x4_0_11_2_0_0_4000000000000000 = {0x4, 0x0, 0x11, 0x2, 0x0, 0x0, 0x4000000000000000};
+#define ProviderSym2_EVENT_0x4_0_11_2_0_0_4000000000000000_value 0x4
 EXTERN_C __declspec(selectany) const EVENT_DESCRIPTOR ProviderSym2_EVENT_0x5_0_12_0_0_0_2000000000000000 = {0x5, 0x0, 0x12, 0x0, 0x0, 0x0, 0x2000000000000000};
 #define ProviderSym2_EVENT_0x5_0_12_0_0_0_2000000000000000_value 0x5
 EXTERN_C __declspec(selectany) const EVENT_DESCRIPTOR ProviderSym2_EVENT_0x6_0_13_0_0_0_1000000000000000 = {0x6, 0x0, 0x13, 0x0, 0x0, 0x0, 0x1000000000000000};
@@ -599,7 +599,7 @@ EXTERN_C __declspec(selectany) const EVENT_DESCRIPTOR ProviderSym2_EVENT_0x8_0_8
 //
 EXTERN_C __declspec(selectany) DECLSPEC_CACHEALIGN ULONG ProviderName2EnableBits[1];
 EXTERN_C __declspec(selectany) const ULONGLONG ProviderName2Keywords[6] = {0x8000000000000000, 0x4000000000000000, 0x2000000000000000, 0x1000000000000000, 0x800000000000000, 0x400000000000000};
-EXTERN_C __declspec(selectany) const unsigned char ProviderName2Levels[6] = {0, 0, 0, 0, 0, 2};
+EXTERN_C __declspec(selectany) const unsigned char ProviderName2Levels[6] = {2, 2, 0, 0, 0, 2};
 
 //
 // Provider context
@@ -651,60 +651,60 @@ EXTERN_C __declspec(selectany) MCGEN_TRACE_CONTEXT ProviderSym2_Context = {0, (U
 #endif
 
 //
-// Enablement check macro for ProviderSym2_EVENT_0x1_0_10_0_0_0_8000000000000000
+// Enablement check macro for ProviderSym2_EVENT_0x1_0_10_2_0_0_8000000000000000
 //
-#define EventEnabledProviderSym2_EVENT_0x1_0_10_0_0_0_8000000000000000() MCGEN_EVENT_BIT_SET(ProviderName2EnableBits, 0)
+#define EventEnabledProviderSym2_EVENT_0x1_0_10_2_0_0_8000000000000000() MCGEN_EVENT_BIT_SET(ProviderName2EnableBits, 0)
 
 //
-// Event write macros for ProviderSym2_EVENT_0x1_0_10_0_0_0_8000000000000000
+// Event write macros for ProviderSym2_EVENT_0x1_0_10_2_0_0_8000000000000000
 //
-#define EventWriteProviderSym2_EVENT_0x1_0_10_0_0_0_8000000000000000() \
-        MCGEN_EVENT_ENABLED(ProviderSym2_EVENT_0x1_0_10_0_0_0_8000000000000000) \
-        ? McTemplateU0(&ProviderSym2_Context, &ProviderSym2_EVENT_0x1_0_10_0_0_0_8000000000000000) : 0
-#define EventWriteProviderSym2_EVENT_0x1_0_10_0_0_0_8000000000000000_AssumeEnabled() \
-        McTemplateU0(&ProviderSym2_Context, &ProviderSym2_EVENT_0x1_0_10_0_0_0_8000000000000000)
+#define EventWriteProviderSym2_EVENT_0x1_0_10_2_0_0_8000000000000000() \
+        MCGEN_EVENT_ENABLED(ProviderSym2_EVENT_0x1_0_10_2_0_0_8000000000000000) \
+        ? McTemplateU0(&ProviderSym2_Context, &ProviderSym2_EVENT_0x1_0_10_2_0_0_8000000000000000) : 0
+#define EventWriteProviderSym2_EVENT_0x1_0_10_2_0_0_8000000000000000_AssumeEnabled() \
+        McTemplateU0(&ProviderSym2_Context, &ProviderSym2_EVENT_0x1_0_10_2_0_0_8000000000000000)
 
 //
-// Enablement check macro for ProviderSym2_EVENT_0x2_0_11_0_0_0_4000000000000000
+// Enablement check macro for ProviderSym2_EVENT_0x2_0_11_2_0_0_4000000000000000
 //
-#define EventEnabledProviderSym2_EVENT_0x2_0_11_0_0_0_4000000000000000() MCGEN_EVENT_BIT_SET(ProviderName2EnableBits, 1)
+#define EventEnabledProviderSym2_EVENT_0x2_0_11_2_0_0_4000000000000000() MCGEN_EVENT_BIT_SET(ProviderName2EnableBits, 1)
 
 //
-// Event write macros for ProviderSym2_EVENT_0x2_0_11_0_0_0_4000000000000000
+// Event write macros for ProviderSym2_EVENT_0x2_0_11_2_0_0_4000000000000000
 //
-#define EventWriteProviderSym2_EVENT_0x2_0_11_0_0_0_4000000000000000() \
-        MCGEN_EVENT_ENABLED(ProviderSym2_EVENT_0x2_0_11_0_0_0_4000000000000000) \
-        ? McTemplateU0(&ProviderSym2_Context, &ProviderSym2_EVENT_0x2_0_11_0_0_0_4000000000000000) : 0
-#define EventWriteProviderSym2_EVENT_0x2_0_11_0_0_0_4000000000000000_AssumeEnabled() \
-        McTemplateU0(&ProviderSym2_Context, &ProviderSym2_EVENT_0x2_0_11_0_0_0_4000000000000000)
+#define EventWriteProviderSym2_EVENT_0x2_0_11_2_0_0_4000000000000000() \
+        MCGEN_EVENT_ENABLED(ProviderSym2_EVENT_0x2_0_11_2_0_0_4000000000000000) \
+        ? McTemplateU0(&ProviderSym2_Context, &ProviderSym2_EVENT_0x2_0_11_2_0_0_4000000000000000) : 0
+#define EventWriteProviderSym2_EVENT_0x2_0_11_2_0_0_4000000000000000_AssumeEnabled() \
+        McTemplateU0(&ProviderSym2_Context, &ProviderSym2_EVENT_0x2_0_11_2_0_0_4000000000000000)
 
 //
-// Enablement check macro for ProviderSym2_EVENT_0x3_0_10_0_0_0_8000000000000000
+// Enablement check macro for ProviderSym2_EVENT_0x3_0_10_2_0_0_8000000000000000
 //
-#define EventEnabledProviderSym2_EVENT_0x3_0_10_0_0_0_8000000000000000() MCGEN_EVENT_BIT_SET(ProviderName2EnableBits, 0)
+#define EventEnabledProviderSym2_EVENT_0x3_0_10_2_0_0_8000000000000000() MCGEN_EVENT_BIT_SET(ProviderName2EnableBits, 0)
 
 //
-// Event write macros for ProviderSym2_EVENT_0x3_0_10_0_0_0_8000000000000000
+// Event write macros for ProviderSym2_EVENT_0x3_0_10_2_0_0_8000000000000000
 //
-#define EventWriteProviderSym2_EVENT_0x3_0_10_0_0_0_8000000000000000() \
-        MCGEN_EVENT_ENABLED(ProviderSym2_EVENT_0x3_0_10_0_0_0_8000000000000000) \
-        ? McTemplateU0(&ProviderSym2_Context, &ProviderSym2_EVENT_0x3_0_10_0_0_0_8000000000000000) : 0
-#define EventWriteProviderSym2_EVENT_0x3_0_10_0_0_0_8000000000000000_AssumeEnabled() \
-        McTemplateU0(&ProviderSym2_Context, &ProviderSym2_EVENT_0x3_0_10_0_0_0_8000000000000000)
+#define EventWriteProviderSym2_EVENT_0x3_0_10_2_0_0_8000000000000000() \
+        MCGEN_EVENT_ENABLED(ProviderSym2_EVENT_0x3_0_10_2_0_0_8000000000000000) \
+        ? McTemplateU0(&ProviderSym2_Context, &ProviderSym2_EVENT_0x3_0_10_2_0_0_8000000000000000) : 0
+#define EventWriteProviderSym2_EVENT_0x3_0_10_2_0_0_8000000000000000_AssumeEnabled() \
+        McTemplateU0(&ProviderSym2_Context, &ProviderSym2_EVENT_0x3_0_10_2_0_0_8000000000000000)
 
 //
-// Enablement check macro for ProviderSym2_EVENT_0x4_0_11_0_0_0_4000000000000000
+// Enablement check macro for ProviderSym2_EVENT_0x4_0_11_2_0_0_4000000000000000
 //
-#define EventEnabledProviderSym2_EVENT_0x4_0_11_0_0_0_4000000000000000() MCGEN_EVENT_BIT_SET(ProviderName2EnableBits, 1)
+#define EventEnabledProviderSym2_EVENT_0x4_0_11_2_0_0_4000000000000000() MCGEN_EVENT_BIT_SET(ProviderName2EnableBits, 1)
 
 //
-// Event write macros for ProviderSym2_EVENT_0x4_0_11_0_0_0_4000000000000000
+// Event write macros for ProviderSym2_EVENT_0x4_0_11_2_0_0_4000000000000000
 //
-#define EventWriteProviderSym2_EVENT_0x4_0_11_0_0_0_4000000000000000() \
-        MCGEN_EVENT_ENABLED(ProviderSym2_EVENT_0x4_0_11_0_0_0_4000000000000000) \
-        ? McTemplateU0(&ProviderSym2_Context, &ProviderSym2_EVENT_0x4_0_11_0_0_0_4000000000000000) : 0
-#define EventWriteProviderSym2_EVENT_0x4_0_11_0_0_0_4000000000000000_AssumeEnabled() \
-        McTemplateU0(&ProviderSym2_Context, &ProviderSym2_EVENT_0x4_0_11_0_0_0_4000000000000000)
+#define EventWriteProviderSym2_EVENT_0x4_0_11_2_0_0_4000000000000000() \
+        MCGEN_EVENT_ENABLED(ProviderSym2_EVENT_0x4_0_11_2_0_0_4000000000000000) \
+        ? McTemplateU0(&ProviderSym2_Context, &ProviderSym2_EVENT_0x4_0_11_2_0_0_4000000000000000) : 0
+#define EventWriteProviderSym2_EVENT_0x4_0_11_2_0_0_4000000000000000_AssumeEnabled() \
+        McTemplateU0(&ProviderSym2_Context, &ProviderSym2_EVENT_0x4_0_11_2_0_0_4000000000000000)
 
 //
 // Enablement check macro for ProviderSym2_EVENT_0x5_0_12_0_0_0_2000000000000000

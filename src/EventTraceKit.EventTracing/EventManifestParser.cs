@@ -214,6 +214,11 @@ namespace EventTraceKit.EventTracing
 
             ResolveImportedChannels(manifest);
 
+            // Checking of events must be delayed until after imported channels
+            // have been resolved because the actual channel type is required.
+            foreach (var evt in manifest.Providers.SelectMany(x => x.Events))
+                manifestSpec.IsSatisfiedBy(evt);
+
             if (trap.ErrorOccurred)
                 return null;
 
@@ -1057,8 +1062,6 @@ namespace EventTraceKit.EventTracing
                     evt.Keywords.Add(keyword);
                 }
             }
-
-            manifestSpec.IsSatisfiedBy(evt);
 
             return evt;
         }

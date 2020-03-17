@@ -11,10 +11,10 @@
     <events>
       <provider name="ProviderName2" guid="{00000000-0000-0000-0000-000000000002}" symbol="ProviderSym2" resourceFileName="p2.dll" messageFileName="p2.dll">
         <events>
-          <event value="1" channel="P2/MyChannel1" message="$(string.event.2.1)"/>
-          <event value="2" channel="P2/MyChannel2" message="$(string.event.2.2)"/>
-          <event value="3" channel="MainChannelId" message="$(string.event.2.3)"/>
-          <event value="4" channel="P1/MainChannel" message="$(string.event.2.4)"/>
+          <event value="1" channel="P2/MyChannel1" level="win:Error" message="$(string.event.2.1)"/>
+          <event value="2" channel="P2/MyChannel2" level="win:Error" message="$(string.event.2.2)"/>
+          <event value="3" channel="MainChannelId" level="win:Error" message="$(string.event.2.3)"/>
+          <event value="4" channel="P1/MainChannel" level="win:Error" message="$(string.event.2.4)"/>
           <event value="5" channel="P1/Channel2" message="$(string.event.2.5)"/>
           <event value="6" channel="P1C2" message="$(string.event.2.6)"/>
           <event value="7" channel="P1C3" message="$(string.event.2.7)"/>

@@ -1577,7 +1577,7 @@ __declspec(selectany) __declspec(allocate(""EMCGEN$__z"")) EmcGenStaticProviderL
             ow.WriteLine("#define EMCGEN_ENLIST_STATIC_PROVIDER(ProviderSymbol, MangledProviderNs, RegisterFunc, UnregisterFunc) \\");
             ow.WriteLine("    EMCGEN_PROVIDER_ENTRY_PRAGMA(ProviderSymbol, MangledProviderNs); \\");
             ow.WriteLine($"    __declspec(selectany) {entryType} ProviderSymbol ## Entry = {{RegisterFunc, UnregisterFunc}}; \\");
-            ow.WriteLine($"    extern __declspec(allocate(\"EMCGEN$__m\")) __declspec(selectany) {entryType} const* const Provider ## Slot = &Provider ## Entry");
+            ow.WriteLine($"    extern __declspec(allocate(\"EMCGEN$__m\")) __declspec(selectany) {entryType} const* const ProviderSymbol ## Slot = &ProviderSymbol ## Entry");
             ow.WriteLine();
             ow.WriteLine("#endif // EMCGEN_REGISTRATION");
             ow.WriteLine();

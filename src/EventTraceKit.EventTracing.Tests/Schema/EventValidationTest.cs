@@ -1,6 +1,7 @@
 namespace EventTraceKit.EventTracing.Tests.Schema
 {
     using System.Xml.Linq;
+    using EventTraceKit.EventTracing.Schema;
     using EventTraceKit.EventTracing.Support;
     using Xunit;
 
@@ -162,6 +163,57 @@ namespace EventTraceKit.EventTracing.Tests.Schema
 
             Assert.Single(diags.Errors);
             Assert.Equal(@event.Attribute("message").GetLocation(), diags.Errors[0].Location);
+        }
+
+        [Fact]
+        public void AdminChannelEvent_RequiresMessage()
+        {
+            var provider = CreateProvider(
+                E("events", E("event", A("value", 1), A("channel", "Admin"), A("level", "win:Error"))),
+                E("channels", E("channel", A("name", "Admin"), A("type", "Admin"))));
+
+            var input = CreateInput(ref provider);
+            var @event = provider.Element(EventManifestSchema.Namespace + "events").Element(EventManifestSchema.Namespace + "event");
+
+            parser.ParseManifest(input, "<stdin>");
+
+            Assert.Single(diags.Errors);
+            Assert.Contains("admin channel", diags.Errors[0].FormattedMessage);
+            Assert.Contains("must have a message", diags.Errors[0].FormattedMessage);
+            Assert.Equal(@event.GetLocation(), diags.Errors[0].Location);
+        }
+
+        [Theory]
+        [InlineData(null, false)]
+        [InlineData("win:Critical", true)]
+        [InlineData("win:Error", true)]
+        [InlineData("win:Warning", true)]
+        [InlineData("win:Informational", true)]
+        [InlineData("win:Verbose", false)]
+        [InlineData("CustomLevel", false)]
+        public void AdminChannelEvent_MustNotBeVerbose(string level, bool valid)
+        {
+            var provider = CreateProvider(
+                E("events",
+                    E("event",
+                        A("value", 1), A("channel", "Admin"), A("message", "$(string.msg.1)"),
+                        level != null ? A("level", level) : null)),
+                E("channels", E("channel", A("name", "Admin"), A("type", "Admin"))),
+                E("levels", E("level", A("name", "CustomLevel"), A("value", "16"))));
+
+            var input = CreateInput(ref provider);
+            var @event = provider.Element(EventManifestSchema.Namespace + "events").Element(EventManifestSchema.Namespace + "event");
+
+            parser.ParseManifest(input, "<stdin>");
+
+            if (valid) {
+                Assert.Empty(diags.Errors);
+            } else {
+                Assert.Single(diags.Errors);
+                Assert.Contains("admin channel", diags.Errors[0].FormattedMessage);
+                Assert.Contains("must have a level of", diags.Errors[0].FormattedMessage);
+                Assert.Equal(@event.GetLocation(), diags.Errors[0].Location);
+            }
         }
 
         private void ParseInput(ref XElement elem1)
