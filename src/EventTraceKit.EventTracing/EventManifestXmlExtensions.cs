@@ -124,12 +124,25 @@ namespace EventTraceKit.EventTracing
 
         public static XElement ToXml(this Channel channel)
         {
+            if (channel.Imported) {
+                var importedElem = new XElement(
+                    EventManifestSchema.Namespace + "importChannel",
+                    new XAttribute("name", channel.Name));
+                if (channel.Id != null)
+                    importedElem.Add(new XAttribute("chid", channel.Id));
+                if (channel.Symbol != null)
+                    importedElem.Add(new XAttribute("symbol", channel.Symbol));
+                return importedElem;
+            }
+
             var elem = new XElement(
                 EventManifestSchema.Namespace + "channel",
                 new XAttribute("name", channel.Name),
                 new XAttribute("type", ToXml(channel.Type)));
             if (channel.Value != null)
                 elem.Add(new XAttribute("value", channel.Value));
+            if (channel.Id != null)
+                elem.Add(new XAttribute("chid", channel.Id));
             if (channel.Symbol != null)
                 elem.Add(new XAttribute("symbol", channel.Symbol));
             AddOptionalMessage(elem, channel.Message);
