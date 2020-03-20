@@ -1454,6 +1454,9 @@ EmcGenEventRegisterContext(
     if (ec != 0)
         return ec;
 
+    (void)EmcGenEventSetInformation(
+        context.RegistrationHandle, EventProviderBinaryTrackInfo, nullptr, 0);
+
     if (context.ProviderTraits) {
         void const* providerTraits = const_cast<void*>(context.ProviderTraits);
 
