@@ -1,6 +1,6 @@
 #include "TraceDataContext.h"
 
-#include "BinaryFind.h"
+#include "etk/Support/BinaryFind.h"
 #include "etk/Support/ErrorHandling.h"
 
 #include <tdh.h>

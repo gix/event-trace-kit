@@ -6,7 +6,7 @@
 #include <array>
 #include <cstddef>
 #include <iterator>
-#include <vector>
+#include <utility>
 
 namespace etk
 {
@@ -59,14 +59,30 @@ struct IsContainerElementTypeCompatible<
           ElementType (*)[]>
 {};
 
-template<typename Container, typename ElementType, typename ContainerRef>
-using IsContainerCompatible =
-    std::enable_if_t<!IsSpan<Container>::value && !IsStdArray<Container>::value &&
-                     IsContainer<Container>::value &&
-                     IsContainerElementTypeCompatible<ContainerRef, ElementType>::value>;
+template<typename ContainerRef, typename Container, typename ElementType>
+constexpr bool IsContainerCompatibleImpl =
+    !IsSpan<Container>::value && !IsStdArray<Container>::value &&
+    !std::is_array_v<Container> && IsContainer<Container>::value &&
+    IsContainerElementTypeCompatible<ContainerRef, ElementType>::value;
+
+template<typename ContainerRef, typename ElementType>
+using IsContainerCompatible = std::enable_if_t<IsContainerCompatibleImpl<
+    ContainerRef, std::remove_cv_t<std::remove_reference_t<ContainerRef>>, ElementType>>;
 
 } // namespace details
 
+/// <summary>
+///   The class template <c>span</c> describes an object that can refer to a
+///   contiguous sequence of objects with the first element of the sequence at
+///   position zero. A span can either have a static extent, in which case the
+///   number of elements in the sequence is known and encoded in the type, or a
+///   dynamic extent.
+/// </summary>
+/// <devdoc>
+///   Supported since C++20. Not yet provided by the STL. Implementation based
+///   on the latest C++20 working draft N4800 (2019-01-21) including changes
+///   from the adopted P1227R1 (2019-01-21) and P1024R2 (2019-01-20) proposals.
+/// </devdoc>
 template<typename ElementType, std::size_t Extent>
 class span
 {
@@ -83,7 +99,8 @@ public:
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
     static constexpr index_type extent = Extent;
 
-    // 26.7.3.1, Overview
+    // [ISO] 21.7.3.1, Overview
+
     static_assert(Extent == dynamic_extent || Extent >= 0,
                   "A span must have an extent >= 0, or a dynamic extent");
     static_assert(std::is_object<ElementType>::value,
@@ -93,7 +110,8 @@ public:
     static_assert(!std::is_abstract<ElementType>::value,
                   "span's ElementType cannot be an abstract class type");
 
-    // 26.7.3.2, constructors, copy, and assignment
+    // 21.7.3.2, constructors, copy, and assignment
+
     template<std::size_t E = Extent, typename = std::enable_if_t<E <= 0>>
     constexpr span() noexcept
     {}
@@ -110,12 +128,13 @@ public:
         ETK_ASSERT(last - first == Extent);
     }
 
-    template<typename = std::enable_if_t<Extent == 1>>
+    template<std::size_t E = Extent, typename = std::enable_if_t<E == 1>>
     constexpr span(element_type& elem)
         : data_(&elem)
     {}
 
-    constexpr span(element_type (&arr)[Extent]) noexcept
+    template<std::size_t E = Extent, typename = std::enable_if_t<E >= Extent>>
+    constexpr span(element_type (&arr)[E]) noexcept
         : data_(arr)
     {}
 
@@ -131,15 +150,15 @@ public:
         : data_(arr.data())
     {}
 
-    template<typename Container, typename = details::IsContainerCompatible<
-                                     Container, ElementType, Container&>>
-    constexpr span(Container& container)
+    template<typename Container,
+             typename = details::IsContainerCompatible<Container const&, ElementType>>
+    constexpr span(Container const& container)
         : data_(std::data(container))
     {}
 
-    template<typename Container, typename = details::IsContainerCompatible<
-                                     Container, ElementType, Container const&>>
-    constexpr span(Container const& container)
+    template<typename Container,
+             typename = details::IsContainerCompatible<Container&, ElementType>>
+    constexpr span(Container& container)
         : data_(std::data(container))
     {}
 
@@ -152,97 +171,90 @@ public:
              typename = std::enable_if_t<
                  Extent == OtherExtent &&
                  std::is_convertible_v<OtherElementType (*)[], ElementType (*)[]>>>
-    constexpr span(span<OtherElementType> const& s) noexcept
+    constexpr span(span<OtherElementType, OtherExtent> const& s) noexcept
         : data_(s.data())
     {}
 
-    // 26.7.3.3, subviews
+    // 21.7.3.3, subviews
+
     template<std::size_t Count>
     constexpr span<element_type, Count> first() const
     {
-        ETK_ASSERT(Count < size_);
+        static_assert(Count <= size_);
         return {data_, Count};
     }
 
     template<std::size_t Count>
     constexpr span<element_type, Count> last() const
     {
-        ETK_ASSERT(Count < size_);
-        return {data_, (size_ - Count)};
+        static_assert(Count <= size_);
+        return {data_ + (size_ - Count), Count};
     }
 
     constexpr span<element_type> first(index_type count) const
     {
-        ETK_ASSERT(count >= 0 && count < size_);
+        ETK_ASSERT(count <= size_);
         return {data_, count};
     }
 
     constexpr span<element_type> last(index_type count) const
     {
-        ETK_ASSERT(count >= 0 && count < size_);
+        ETK_ASSERT(count <= size_);
         return {data_ + (size_ - count), count};
     }
 
     template<std::size_t Offset, std::size_t Count = dynamic_extent>
     constexpr span<element_type, Count> subspan() const
     {
-        ETK_ASSERT_MSG(Offset + Count <= size_, "Sliced range not in array.");
-        return {data_ + Offset, Count != dynamic_extent ? Count : size() - Offset};
+        static_assert(Offset <= size_ &&
+                          (Count == dynamic_extent || Count <= size_ - Offset),
+                      "Sliced range not in array.");
+        return {data_ + Offset, Count == dynamic_extent ? size_ - Offset : Count};
     }
 
     constexpr span<element_type> subspan(index_type offset,
                                          index_type count = dynamic_extent) const
     {
-        ETK_ASSERT_MSG(offset + count <= size_, "Sliced range not in array.");
-        return {data_ + offset, count};
+        ETK_ASSERT_MSG(offset <= size_ &&
+                           (count == dynamic_extent || offset + count <= size_),
+                       "Sliced range not in array.");
+        return {data_ + offset, count == dynamic_extent ? size_ - offset : count};
     }
 
-    constexpr reference front() const
-    {
-        static_assert(!empty());
-        return data_[0];
-    }
-
-    constexpr reference back() const
-    {
-        static_assert(!empty());
-        return data_[size_ - 1];
-    }
-
-    constexpr span<ElementType> slice(index_type offset) const
-    {
-        ETK_ASSERT_MSG(offset <= size(), "Cannot slice past end of array.");
-        return {data_ + offset, size_ - offset};
-    }
-
-    constexpr span<ElementType> slice(index_type offset, index_type count) const
-    {
-        ETK_ASSERT_MSG(offset + count <= size(), "Sliced range not in array.");
-        return {data_ + offset, count};
-    }
-
-    // 26.7.3.4, observers
+    // 21.7.3.4, observers
 
     constexpr index_type size() const noexcept { return size_; }
 
     constexpr index_type size_bytes() const noexcept
     {
-        return size_ * static_cast<index_type>(sizeof(ElementType));
+        return size_ * static_cast<index_type>(sizeof(element_type));
     }
 
     [[nodiscard]] constexpr bool empty() const noexcept { return size_ == 0; }
 
-    // 26.7.3.5, element access
+    // 21.7.3.5, element access
 
     constexpr reference operator[](index_type idx) const
     {
-        ETK_ASSERT(idx < size() && "Index out or range");
+        ETK_ASSERT_MSG(idx < size(), "Index out or range");
         return data_[idx];
+    }
+
+    constexpr reference front() const
+    {
+        static_assert(size_ != 0);
+        return data_[0];
+    }
+
+    constexpr reference back() const
+    {
+        static_assert(size_ != 0);
+        return data_[size_ - 1];
     }
 
     constexpr pointer data() const noexcept { return data_; }
 
-    // 26.7.3.6, iterator support
+    // 21.7.3.6, iterator support
 
     constexpr iterator begin() const noexcept { return data_; }
 
@@ -293,7 +305,8 @@ public:
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
     static constexpr index_type extent = dynamic_extent;
 
-    // 26.7.3.2, constructors, copy, and assignment
+    // 21.7.3.2, constructors, copy, and assignment
+
     constexpr span() noexcept = default;
 
     constexpr span(pointer ptr, index_type count)
@@ -331,33 +344,16 @@ public:
         , size_(N)
     {}
 
-#if 0
-    // Crashes MSVC 19.14.26430 and earlier when the check for the presence of
-    // std::data encounters a type with a "data[N]" member.
-
-    template<typename Container, typename = details::IsContainerCompatible<
-                                     Container, ElementType, Container&>>
-    constexpr span(Container& container)
-        : data_(std::data(container))
-        , size_(std::size(container))
-    {
-    }
-
-    template<typename Container, typename = details::IsContainerCompatible<
-                                     Container, ElementType, Container const&>>
+    template<typename Container,
+             typename = details::IsContainerCompatible<Container const&, ElementType>>
     constexpr span(Container const& container)
-        : data_(std::data(container))
-        , size_(std::size(container))
-    {
-    }
-#endif
-
-    constexpr span(std::vector<value_type>& container)
         : data_(std::data(container))
         , size_(std::size(container))
     {}
 
-    constexpr span(std::vector<value_type> const& container)
+    template<typename Container,
+             typename = details::IsContainerCompatible<Container&, ElementType>>
+    constexpr span(Container& container)
         : data_(std::data(container))
         , size_(std::size(container))
     {}
@@ -370,62 +366,60 @@ public:
     template<typename OtherElementType, std::size_t OtherExtent,
              typename = std::enable_if_t<
                  std::is_convertible_v<OtherElementType (*)[], ElementType (*)[]>>>
-    constexpr span(span<OtherElementType> const& s) noexcept
+    constexpr span(span<OtherElementType, OtherExtent> const& s) noexcept
         : data_(s.data())
         , size_(s.size())
     {}
 
-    // 26.7.3.3, subviews
+    // 21.7.3.3, subviews
+
     template<std::size_t Count>
     constexpr span<element_type, Count> first() const
     {
-        ETK_ASSERT(Count >= 0 && Count < size_);
+        ETK_ASSERT(Count <= size_);
         return {data_, Count};
     }
 
     template<std::size_t Count>
     constexpr span<element_type, Count> last() const
     {
-        ETK_ASSERT(Count >= 0 && Count < size_);
-        return {data_, (size_ - Count)};
+        ETK_ASSERT(Count <= size_);
+        return {data_ + (size_ - Count), Count};
     }
 
     constexpr span<element_type> first(index_type count) const
     {
-        ETK_ASSERT(count >= 0 && count < size_);
+        ETK_ASSERT(count <= size_);
         return {data_, count};
     }
 
     constexpr span<element_type> last(index_type count) const
     {
-        ETK_ASSERT(count >= 0 && count < size_);
+        ETK_ASSERT(count <= size_);
         return {data_ + (size_ - count), count};
     }
 
     template<std::size_t Offset, std::size_t Count = dynamic_extent>
     constexpr span<element_type, Count> subspan() const
     {
-        ETK_ASSERT_MSG(Offset + Count <= size_, "Sliced range not in array.");
-        return {data_ + Offset, Count != dynamic_extent ? Count : size() - Offset};
+        ETK_ASSERT_MSG(Offset <= size_ &&
+                           (Count == dynamic_extent || Count <= size_ - Offset),
+                       "Sliced range not in array.");
+        return {data_ + Offset, Count == dynamic_extent ? size_ - Offset : Count};
     }
 
-    constexpr span<element_type> subspan(index_type offset,
-                                         index_type count = dynamic_extent) const
+    constexpr span<element_type> subspan(index_type offset) const
     {
-        ETK_ASSERT_MSG(offset + count <= size_, "Sliced range not in array.");
-        return {data_ + offset, count};
+        ETK_ASSERT_MSG(offset <= size_, "Cannot slice past end of array.");
+        return {data_ + offset, size_ - offset};
     }
 
-    constexpr reference front() const
+    constexpr span<element_type> subspan(index_type offset, index_type count) const
     {
-        ETK_ASSERT(!empty());
-        return data_[0];
-    }
-
-    constexpr reference back() const
-    {
-        ETK_ASSERT(!empty());
-        return data_[size_ - 1];
+        ETK_ASSERT_MSG(offset <= size_ &&
+                           (count == dynamic_extent || offset + count <= size_),
+                       "Sliced range not in array.");
+        return {data_ + offset, count == dynamic_extent ? size_ - offset : count};
     }
 
     constexpr void remove_prefix(index_type n)
@@ -441,30 +435,18 @@ public:
         size_ -= n;
     }
 
-    constexpr span<ElementType> slice(index_type offset) const
-    {
-        ETK_ASSERT_MSG(offset <= size(), "Cannot slice past end of array.");
-        return {data_ + offset, size_ - offset};
-    }
-
-    constexpr span<ElementType> slice(index_type offset, index_type count) const
-    {
-        ETK_ASSERT_MSG(offset + count <= size(), "Sliced range not in array.");
-        return {data_ + offset, count};
-    }
-
-    // 26.7.3.4, observers
+    // 21.7.3.4, observers
 
     constexpr index_type size() const noexcept { return size_; }
 
     constexpr index_type size_bytes() const noexcept
     {
-        return size_ * sizeof(ElementType);
+        return size_ * static_cast<index_type>(sizeof(element_type));
     }
 
     [[nodiscard]] constexpr bool empty() const noexcept { return size_ == 0; }
 
-    // 26.7.3.5, element access
+    // 21.7.3.5, element access
 
     constexpr reference operator[](index_type idx) const
     {
@@ -472,9 +454,21 @@ public:
         return data_[idx];
     }
 
+    constexpr reference front() const
+    {
+        ETK_ASSERT(!empty());
+        return data_[0];
+    }
+
+    constexpr reference back() const
+    {
+        ETK_ASSERT(!empty());
+        return data_[size_ - 1];
+    }
+
     constexpr pointer data() const noexcept { return data_; }
 
-    // 26.7.3.6, iterator support
+    // 21.7.3.6, iterator support
 
     constexpr iterator begin() const noexcept { return data_; }
 
@@ -516,15 +510,15 @@ template<typename T, std::size_t N>
 span(std::array<T, N>&)->span<T, N>;
 
 template<typename T, std::size_t N>
-span(std::array<T, N> const&)->span<const T, N>;
+span(std::array<T, N> const&)->span<T const, N>;
 
 template<typename Container>
 span(Container&)->span<typename Container::value_type>;
 
 template<typename Container>
-span(Container const&)->span<const typename Container::value_type>;
+span(Container const&)->span<typename Container::value_type const>;
 
-// 26.7.3.7, Comparison operators
+// 21.7.3.7, Comparison operators
 template<typename T, std::size_t X, typename U, std::size_t Y>
 constexpr bool operator==(span<T, X> l, span<U, Y> r)
 {
@@ -588,3 +582,39 @@ constexpr cspan<T> make_cspan(T const (&array)[N])
 }
 
 } // namespace etk
+
+namespace std
+{
+
+// [P1024r2] Tuple interface to span
+
+template<typename ElementType, size_t Extent>
+struct tuple_size<::etk::span<ElementType, Extent>> : integral_constant<size_t, Extent>
+{};
+
+template<typename ElementType>
+struct tuple_size<::etk::span<ElementType, ::etk::dynamic_extent>>; // not defined
+
+template<size_t Index, typename ElementType, size_t Extent>
+struct tuple_element<Index, ::etk::span<ElementType, Extent>>
+{
+    static_assert(Index < Extent, "span index out of bounds");
+    using type = ElementType;
+};
+
+template<size_t Index, typename ElementType>
+struct tuple_element<Index,
+                     ::etk::span<ElementType, ::etk::dynamic_extent>>; // not defined
+
+template<size_t Index, typename ElementType, size_t Extent>
+[[nodiscard]] constexpr ElementType& get(::etk::span<ElementType, Extent> span) noexcept
+{
+    static_assert(Index < Extent, "span index out of bounds");
+    return span[Index];
+}
+
+template<size_t Index, typename ElementType>
+[[nodiscard]] constexpr ElementType& get(
+    ::etk::span<ElementType, ::etk::dynamic_extent> span) noexcept = delete;
+
+} // namespace std

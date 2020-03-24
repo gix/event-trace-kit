@@ -1,18 +1,31 @@
 #pragma once
 #include "etk/Support/CompilerSupport.h"
-#include "etk/Support/Debug.h"
 #include <utility>
 #include <windows.h>
 
 namespace etk
 {
 
+/// <summary>Owns and manages a native handle.</summary>
+/// <remarks>
+///   The handle is described via traits that
+///   must have the following members:
+///   <code>
+///   struct MyTraits
+///   {
+///       using HandleType = HANDLE;
+///       static constexpr HandleType InvalidHandle() noexcept { return nullptr; }
+///       static constexpr bool IsValid(HandleType h) noexcept { return h != InvalidHandle(); }
+///       static void Close(HandleType h) noexcept { ::CloseHandle(h); }
+///   };
+///   </code>
+/// </remarks>
 template<typename Traits>
 class Handle
 {
+public:
     using HandleType = typename Traits::HandleType;
 
-public:
     constexpr Handle() noexcept
         : handle(Traits::InvalidHandle())
     {}
@@ -29,7 +42,6 @@ public:
 
     Handle& operator=(Handle&& source) noexcept
     {
-        ETK_ASSERT(this != &source);
         Reset(source.Detach());
         return *this;
     }
@@ -37,19 +49,28 @@ public:
     Handle(Handle const&) = delete;
     Handle& operator=(Handle const&) = delete;
 
-    constexpr static HandleType InvalidHandle() noexcept
+    template<typename IncompatibleTraits>
+    Handle(Handle<IncompatibleTraits> const& source) = delete;
+    template<typename IncompatibleTraits>
+    Handle& operator=(Handle<IncompatibleTraits> const& source) = delete;
+
+    template<typename IncompatibleTraits>
+    Handle(Handle<IncompatibleTraits> const&& source) = delete;
+    template<typename IncompatibleTraits>
+    Handle& operator=(Handle<IncompatibleTraits> const&& source) = delete;
+
+    static constexpr HandleType InvalidHandle() noexcept
     {
         return Traits::InvalidHandle();
     }
 
     constexpr bool IsValid() const noexcept { return Traits::IsValid(handle); }
 
-    void Close() noexcept
+    auto Close() noexcept
     {
-        if (Traits::IsValid(handle)) {
-            Traits::Close(handle);
-            handle = Traits::InvalidHandle();
-        }
+        if (Traits::IsValid(handle))
+            return Traits::Close(std::exchange(handle, Traits::InvalidHandle()));
+        return decltype(Traits::Close(handle))();
     }
 
     bool Reset(HandleType handle = Traits::InvalidHandle()) noexcept
@@ -101,11 +122,11 @@ template<typename T = HANDLE>
 struct MinusOneIsInvalidHandleTraits
 {
     using HandleType = T;
-    constexpr static HandleType InvalidHandle() noexcept
+    static constexpr HandleType InvalidHandle() noexcept
     {
-        return static_cast<HandleType>(-1);
+        return reinterpret_cast<HandleType>(-1);
     }
-    constexpr static bool IsValid(HandleType h) noexcept { return h != InvalidHandle(); }
+    static constexpr bool IsValid(HandleType h) noexcept { return h != InvalidHandle(); }
     static void Close(HandleType h) noexcept { ::CloseHandle(h); }
 };
 
@@ -113,8 +134,8 @@ template<typename T = HANDLE>
 struct NullIsInvalidHandleTraits
 {
     using HandleType = T;
-    constexpr static HandleType InvalidHandle() noexcept { return nullptr; }
-    constexpr static bool IsValid(HandleType h) noexcept { return h != InvalidHandle(); }
+    static constexpr HandleType InvalidHandle() noexcept { return nullptr; }
+    static constexpr bool IsValid(HandleType h) noexcept { return h != InvalidHandle(); }
     static void Close(HandleType h) noexcept { ::CloseHandle(h); }
 };
 

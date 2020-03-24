@@ -1,4 +1,5 @@
 #pragma once
+#include "etk/Support/CompilerSupport.h"
 ETK_DIAGNOSTIC_PUSH()
 ETK_DIAGNOSTIC_DISABLE_MSVC(4996)
 #include <absl/container/inlined_vector.h>

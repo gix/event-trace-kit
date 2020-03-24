@@ -84,7 +84,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ItemGroup>
     <ClInclude Include="Public\etk\ADT\Span.h" />
-    <ClInclude Include="Source\BinaryFind.h" />
+    <ClInclude Include="Public\etk\Support\BinaryFind.h" />
     <ClCompile Include="Source\Support\StringConversions.cpp" />
     <ClCompile Include="Source\TdhMessageFormatter.cpp" />
     <ClCompile Include="Source\EtwTraceLog.cpp" />
@@ -117,9 +117,7 @@
     <ClInclude Include="Source\EtwTraceProcessor.h" />
     <ClInclude Include="Public\etk\ITraceSession.h" />
     <ClInclude Include="Public\etk\Support\ByteCount.h" />
-    <ClInclude Include="Public\etk\Support\CompilerConfig.h" />
     <ClInclude Include="Public\etk\Support\CompilerSupport.h" />
-    <ClInclude Include="Public\etk\Support\CountOf.h" />
     <ClInclude Include="Public\etk\Support\Debug.h" />
     <ClInclude Include="Public\etk\Support\ErrorHandling.h" />
     <ClInclude Include="Public\etk\Support\RangeAdaptors.h" />

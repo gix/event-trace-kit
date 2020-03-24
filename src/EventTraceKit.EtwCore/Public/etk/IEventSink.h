@@ -1,6 +1,7 @@
 #pragma once
-#include <evntcons.h>
 #include <windows.h>
+
+#include <evntcons.h>
 
 namespace etk
 {

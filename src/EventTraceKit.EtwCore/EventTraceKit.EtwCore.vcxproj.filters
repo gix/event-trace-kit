@@ -19,9 +19,7 @@
     <ClInclude Include="Public\etk\ADT\VarStructPtr.h" />
     <ClInclude Include="Public\etk\Support\Allocator.h" />
     <ClInclude Include="Public\etk\Support\ByteCount.h" />
-    <ClInclude Include="Public\etk\Support\CompilerConfig.h" />
     <ClInclude Include="Public\etk\Support\CompilerSupport.h" />
-    <ClInclude Include="Public\etk\Support\CountOf.h" />
     <ClInclude Include="Public\etk\Support\Debug.h" />
     <ClInclude Include="Public\etk\Support\ErrorHandling.h" />
     <ClInclude Include="Public\etk\Support\Hashing.h" />
@@ -33,7 +31,6 @@
     <ClInclude Include="Public\etk\Support\StringConversions.h" />
     <ClInclude Include="Public\etk\Support\StringFormat.h" />
     <ClInclude Include="Public\etk\Support\ThreadpoolTimer.h" />
-    <ClInclude Include="Source\BinaryFind.h" />
     <ClInclude Include="Source\EtwTraceProcessor.h" />
     <ClInclude Include="Source\EventInfoCache.h" />
     <ClInclude Include="Source\ManualResetEventSlim.h" />
@@ -44,6 +41,7 @@
     <ClInclude Include="Public\etk\TdhMessageFormatter.h" />
     <ClInclude Include="Public\etk\ITraceProcessor.h" />
     <ClInclude Include="Public\etk\ITraceSession.h" />
+    <ClInclude Include="Public\etk\Support\BinaryFind.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

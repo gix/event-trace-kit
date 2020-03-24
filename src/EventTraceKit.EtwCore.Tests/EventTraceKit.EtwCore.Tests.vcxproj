@@ -71,7 +71,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ADT\SpanTest.cpp" />
-    <ClCompile Include="Support\CountOfTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

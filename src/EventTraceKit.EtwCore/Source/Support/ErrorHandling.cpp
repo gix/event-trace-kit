@@ -1,8 +1,6 @@
 #include "etk/Support/ErrorHandling.h"
 
-#include "etk/Support/CountOf.h"
-
-#include <Windows.h>
+#include <algorithm>
 #include <cstdio>
 #include <strsafe.h>
 
@@ -15,7 +13,7 @@ wchar_t const* StringFromError(wchar_t* buffer, size_t size, long ec)
     DWORD cb = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, nullptr, static_cast<DWORD>(ec),
                               0, buffer, static_cast<DWORD>(size), nullptr);
     wchar_t const unk[] = L"<unknown>";
-    if (!cb && size > etk::lengthof(unk))
+    if (!cb && size > std::size(unk))
         (void)StringCchCopyW(buffer, size, unk);
     return buffer;
 }
@@ -25,7 +23,7 @@ HRESULT TraceHResult(HRESULT result, char const* file, int lineNumber,
 {
     if (FAILED(result)) {
         wchar_t errorMessage[128];
-        StringFromError(errorMessage, etk::countof(errorMessage), result);
+        StringFromError(errorMessage, std::size(errorMessage), result);
         fwprintf(stderr, L"%hs(%d): %hs: HResult=0x%x: %ls\n", file, lineNumber, function,
                  result, errorMessage);
     }

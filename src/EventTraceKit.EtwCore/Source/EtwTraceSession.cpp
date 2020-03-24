@@ -1,8 +1,7 @@
-#include "etk/ITraceSession.h"
-
 #include "etk/ADT/Handle.h"
 #include "etk/ADT/SmallVector.h"
 #include "etk/ADT/Span.h"
+#include "etk/ITraceSession.h"
 #include "etk/Support/ByteCount.h"
 #include "etk/Support/ErrorHandling.h"
 #include "etk/Support/Hashing.h"
