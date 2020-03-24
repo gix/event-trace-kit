@@ -3,4 +3,7 @@
   <ItemGroup>
     <ClCompile Include="..\TraceLaunch.x86\Main.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
 </Project>
