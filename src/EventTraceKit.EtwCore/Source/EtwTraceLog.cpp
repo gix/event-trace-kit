@@ -1,10 +1,10 @@
-#include "ITraceLog.h"
+#include "etk/ITraceLog.h"
 
 #include "EventInfoCache.h"
 #include "ManualResetEventSlim.h"
-#include "Support/Allocator.h"
-#include "Support/SetThreadDescription.h"
 #include "TraceDataContext.h"
+#include "etk/Support/Allocator.h"
+#include "etk/Support/SetThreadDescription.h"
 
 #include <atomic>
 #include <deque>

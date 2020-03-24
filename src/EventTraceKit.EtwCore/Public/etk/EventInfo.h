@@ -1,6 +1,6 @@
 #pragma once
-#include "ADT/Span.h"
-#include "Support/CompilerSupport.h"
+#include "etk/ADT/Span.h"
+#include "etk/Support/CompilerSupport.h"
 
 #include <windows.h>
 

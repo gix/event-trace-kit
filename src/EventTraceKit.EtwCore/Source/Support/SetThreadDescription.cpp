@@ -1,6 +1,6 @@
-#include "SetThreadDescription.h"
+#include "etk/Support/SetThreadDescription.h"
 
-#include "StringConversions.h"
+#include "etk/Support/StringConversions.h"
 #include <Windows.h>
 
 namespace etk

@@ -1,6 +1,6 @@
 #pragma once
-#include "ADT/Span.h"
-#include "Support/ErrorHandling.h"
+#include "etk/ADT/Span.h"
+#include "etk/Support/ErrorHandling.h"
 
 #include <algorithm>
 #include <iterator>

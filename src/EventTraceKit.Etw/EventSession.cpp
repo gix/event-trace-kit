@@ -1,11 +1,11 @@
 #include "Descriptors.h"
 #include "TraceLog.h"
 #include "WatchDog.h"
-
 #include "InteropHelper.h"
-#include "ITraceLog.h"
-#include "ITraceProcessor.h"
-#include "ITraceSession.h"
+
+#include "etk/ITraceLog.h"
+#include "etk/ITraceProcessor.h"
+#include "etk/ITraceSession.h"
 
 #include <memory>
 #include <string>

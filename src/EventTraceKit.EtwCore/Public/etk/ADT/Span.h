@@ -1,7 +1,7 @@
 #pragma once
-#include "Support/CompilerSupport.h"
-#include "Support/Debug.h"
-#include "Support/IsComplete.h"
+#include "etk/Support/CompilerSupport.h"
+#include "etk/Support/Debug.h"
+#include "etk/Support/IsComplete.h"
 
 #include <array>
 #include <cstddef>

@@ -1,7 +1,7 @@
 #include "Descriptors.h"
 #include "IMessageFormatter.h"
 
-#include "TdhMessageFormatter.h"
+#include "etk/TdhMessageFormatter.h"
 
 namespace EventTraceKit
 {

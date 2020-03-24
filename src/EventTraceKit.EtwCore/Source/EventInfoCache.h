@@ -1,9 +1,9 @@
 #pragma once
-#include "EventInfo.h"
+#include "etk/EventInfo.h"
 
-#include "ADT/VarStructPtr.h"
-#include "Support/Allocator.h"
-#include "Support/CompilerSupport.h"
+#include "etk/ADT/VarStructPtr.h"
+#include "etk/Support/Allocator.h"
+#include "etk/Support/CompilerSupport.h"
 
 ETK_DIAGNOSTIC_PUSH()
 ETK_DIAGNOSTIC_DISABLE_MSVC(4127)

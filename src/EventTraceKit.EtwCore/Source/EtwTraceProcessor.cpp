@@ -1,10 +1,10 @@
 #define INITGUID
 #include "EtwTraceProcessor.h"
 
-#include "IEventSink.h"
-#include "ITraceSession.h"
-#include "Support/ErrorHandling.h"
-#include "Support/SetThreadDescription.h"
+#include "etk/IEventSink.h"
+#include "etk/ITraceSession.h"
+#include "etk/Support/ErrorHandling.h"
+#include "etk/Support/SetThreadDescription.h"
 
 #include <system_error>
 

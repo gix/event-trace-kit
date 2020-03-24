@@ -1,6 +1,7 @@
-#include "StringConversions.h"
+#include "etk/Support/StringConversions.h"
 
 #include <Windows.h>
+#include <type_traits>
 
 namespace etk
 {

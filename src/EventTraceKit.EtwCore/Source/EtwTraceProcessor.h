@@ -1,8 +1,8 @@
 #pragma once
-#include "ADT/Handle.h"
-#include "ADT/SmallVector.h"
-#include "ADT/Span.h"
-#include "ITraceProcessor.h"
+#include "etk/ADT/Handle.h"
+#include "etk/ADT/SmallVector.h"
+#include "etk/ADT/Span.h"
+#include "etk/ITraceProcessor.h"
 
 #include <atomic>
 #include <thread>

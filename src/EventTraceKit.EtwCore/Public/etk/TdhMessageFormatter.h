@@ -1,6 +1,6 @@
 #pragma once
-#include "EventInfoCache.h"
-#include "ADT/SmallVector.h"
+#include "etk/EventInfo.h"
+#include "etk/ADT/SmallVector.h"
 #include <vector>
 
 namespace etk

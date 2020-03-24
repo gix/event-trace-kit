@@ -1,6 +1,6 @@
 #pragma once
-#include "Support/Debug.h"
-#include "Support/CompilerSupport.h"
+#include "etk/Support/Debug.h"
+#include "etk/Support/CompilerSupport.h"
 #include <utility>
 #include <windows.h>
 

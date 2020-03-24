@@ -1,5 +1,5 @@
 #pragma once
-#include "Support/CompilerConfig.h"
+#include "etk/Support/CompilerConfig.h"
 
 #ifdef ETK_CLANG
   #define ETK_GCC_DIAG_DO_PRAGMA(x) _Pragma(#x)

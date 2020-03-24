@@ -1,6 +1,6 @@
 #pragma once
 #if __cplusplus_cli
-#include "ITraceLog.h"
+#include "etk/ITraceLog.h"
 #include "Descriptors.h"
 
 namespace EventTraceKit::Tracing

@@ -1,7 +1,8 @@
-#include "TdhMessageFormatter.h"
+#include "etk/TdhMessageFormatter.h"
 
-#include "ADT/Span.h"
-#include "Support/ErrorHandling.h"
+#include "etk/ADT/Span.h"
+#include "etk/Support/ErrorHandling.h"
+
 #include <evntcons.h>
 #include <in6addr.h>
 #include <strsafe.h>

@@ -2,8 +2,8 @@
 #undef _WIN32_WINNT
 #define _WIN32_WINNT _WIN32_WINNT_WINBLUE
 
-#include "ADT/VarStructPtr.h"
-#include "Support/CompilerSupport.h"
+#include "etk/ADT/VarStructPtr.h"
+#include "etk/Support/CompilerSupport.h"
 #include "InteropHelper.h"
 
 #include <memory>

@@ -1,5 +1,5 @@
 #pragma once
-#include "ADT/Span.h"
+#include "etk/ADT/Span.h"
 #include "ITraceSession.h"
 
 #include <evntrace.h>

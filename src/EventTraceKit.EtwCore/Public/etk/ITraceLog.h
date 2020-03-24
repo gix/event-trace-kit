@@ -1,6 +1,6 @@
 #pragma once
-#include "EventInfo.h"
-#include "IEventSink.h"
+#include "etk/EventInfo.h"
+#include "etk/IEventSink.h"
 
 #include <string>
 #include <memory>

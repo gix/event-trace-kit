@@ -1,7 +1,8 @@
-#include "ErrorHandling.h"
+#include "etk/Support/ErrorHandling.h"
 
-#include "Support/CountOf.h"
+#include "etk/Support/CountOf.h"
 
+#include <Windows.h>
 #include <cstdio>
 #include <strsafe.h>
 

@@ -1,6 +1,6 @@
 #pragma once
-#include "Support/CompilerSupport.h"
-#include "Windows.h"
+#include "etk/Support/CompilerSupport.h"
+#include <Windows.h>
 #include <comdef.h>
 
 namespace etk
