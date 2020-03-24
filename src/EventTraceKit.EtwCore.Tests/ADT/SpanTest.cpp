@@ -35,7 +35,7 @@ TEST(SpanTest, DefaultConstructor)
     span<int> const s1;
 
     EXPECT_EQ(nullptr, s1.data());
-    EXPECT_EQ(0, s1.size());
+    EXPECT_EQ(0u, s1.size());
 }
 
 TEST(SpanTest, Constructor_FromItem)
@@ -44,7 +44,7 @@ TEST(SpanTest, Constructor_FromItem)
     span<int> const s(value);
 
     EXPECT_EQ(&value, s.data());
-    EXPECT_EQ(1, s.size());
+    EXPECT_EQ(1u, s.size());
 }
 
 TEST(SpanTest, Constructor_FromArray)
@@ -53,7 +53,7 @@ TEST(SpanTest, Constructor_FromArray)
     span<int> const s(values, 3);
 
     EXPECT_EQ(values, s.data());
-    EXPECT_EQ(3, s.size());
+    EXPECT_EQ(3u, s.size());
 }
 
 TEST(SpanTest, Constructor_FromStdArray)
@@ -82,7 +82,7 @@ TEST(SpanTest, CopyConstructor)
     span<int> const copy(s);
 
     EXPECT_EQ(values, s.data());
-    EXPECT_EQ(2, s.size());
+    EXPECT_EQ(2u, s.size());
     EXPECT_EQ(s.data(), copy.data());
     EXPECT_EQ(s.size(), copy.size());
 }
@@ -96,7 +96,7 @@ TEST(SpanTest, CopyAssignment)
     copy = src;
 
     EXPECT_EQ(values, src.data());
-    EXPECT_EQ(2, src.size());
+    EXPECT_EQ(2u, src.size());
     EXPECT_EQ(src.data(), copy.data());
     EXPECT_EQ(src.size(), copy.size());
 }
@@ -109,7 +109,7 @@ TEST(SpanTest, MoveConstructor)
     span<int> const moved(std::move(src));
 
     EXPECT_EQ(values, src.data());
-    EXPECT_EQ(2, src.size());
+    EXPECT_EQ(2u, src.size());
     EXPECT_EQ(src.data(), moved.data());
     EXPECT_EQ(src.size(), moved.size());
 }
@@ -123,7 +123,7 @@ TEST(SpanTest, MoveAssignment)
     moved = std::move(src);
 
     EXPECT_EQ(values, src.data());
-    EXPECT_EQ(2, src.size());
+    EXPECT_EQ(2u, src.size());
     EXPECT_EQ(src.data(), moved.data());
     EXPECT_EQ(src.size(), moved.size());
 }
@@ -133,7 +133,7 @@ TEST(SpanTest, size_bytes)
     int values[] = {1, 2};
     span<int> s(values, 2);
 
-    EXPECT_EQ(8, s.size_bytes());
+    EXPECT_EQ(8u, s.size_bytes());
 }
 
 TEST(SpanTest, empty)
@@ -154,7 +154,7 @@ TEST(SpanTest, SubscriptOperator)
     src[0] = 42;
 
     EXPECT_EQ(values, src.data());
-    EXPECT_EQ(2, src.size());
+    EXPECT_EQ(2u, src.size());
     EXPECT_EQ(42, values[0]);
     EXPECT_EQ(2, values[1]);
 
@@ -445,7 +445,7 @@ TEST(SpanTest, as_bytes)
     span<std::byte const> b = as_bytes(s);
 
     EXPECT_EQ((uintptr_t)values, (uintptr_t)b.data());
-    EXPECT_EQ(8, b.size());
+    EXPECT_EQ(8u, b.size());
     EXPECT_EQ(0x44, (uint8_t)b[0]);
     EXPECT_EQ(0x55, (uint8_t)b[7]);
 }
@@ -454,7 +454,7 @@ TEST(SpanTest_StaticExtent, DefaultConstructor)
 {
     span<int, 0> const s1;
     EXPECT_EQ(nullptr, s1.data());
-    EXPECT_EQ(0, s1.size());
+    EXPECT_EQ(0u, s1.size());
 
     static_assert(!std::is_default_constructible_v<span<int, 1>>);
 }
@@ -465,7 +465,7 @@ TEST(SpanTest_StaticExtent, Constructor_FromItem)
     span<int, 1> const s(value);
 
     EXPECT_EQ(&value, s.data());
-    EXPECT_EQ(1, s.size());
+    EXPECT_EQ(1u, s.size());
 }
 
 TEST(SpanTest_StaticExtent, Constructor_FromArray)
@@ -474,7 +474,7 @@ TEST(SpanTest_StaticExtent, Constructor_FromArray)
     span<int, 3> const s(values, 3);
 
     EXPECT_EQ(values, s.data());
-    EXPECT_EQ(3, s.size());
+    EXPECT_EQ(3u, s.size());
 }
 
 TEST(SpanTest_StaticExtent, Constructor_FromStdArray)
@@ -496,7 +496,7 @@ TEST(SpanTest_StaticExtent, CopyConstructor)
     span<int, 2> const copy(s);
 
     EXPECT_EQ(values, s.data());
-    EXPECT_EQ(2, s.size());
+    EXPECT_EQ(2u, s.size());
     EXPECT_EQ(s.data(), copy.data());
     EXPECT_EQ(s.size(), copy.size());
 }
@@ -511,7 +511,7 @@ TEST(SpanTest_StaticExtent, CopyAssignment)
     copy = src;
 
     EXPECT_EQ(values, src.data());
-    EXPECT_EQ(2, src.size());
+    EXPECT_EQ(2u, src.size());
     EXPECT_EQ(src.data(), copy.data());
     EXPECT_EQ(src.size(), copy.size());
 }
@@ -524,7 +524,7 @@ TEST(SpanTest_StaticExtent, MoveConstructor)
     span<int, 2> const moved(std::move(src));
 
     EXPECT_EQ(values, src.data());
-    EXPECT_EQ(2, src.size());
+    EXPECT_EQ(2u, src.size());
     EXPECT_EQ(src.data(), moved.data());
     EXPECT_EQ(src.size(), moved.size());
 }
@@ -539,7 +539,7 @@ TEST(SpanTest_StaticExtent, MoveAssignment)
     moved = std::move(src);
 
     EXPECT_EQ(values, src.data());
-    EXPECT_EQ(2, src.size());
+    EXPECT_EQ(2u, src.size());
     EXPECT_EQ(src.data(), moved.data());
     EXPECT_EQ(src.size(), moved.size());
 }
@@ -549,7 +549,7 @@ TEST(SpanTest_StaticExtent, size_bytes)
     int values[] = {1, 2};
     span<int, 2> s(values, 2);
 
-    EXPECT_EQ(8, s.size_bytes());
+    EXPECT_EQ(8u, s.size_bytes());
 }
 
 TEST(SpanTest_StaticExtent, empty)
@@ -570,7 +570,7 @@ TEST(SpanTest_StaticExtent, SubscriptOperator)
     src[0] = 42;
 
     EXPECT_EQ(values, src.data());
-    EXPECT_EQ(2, src.size());
+    EXPECT_EQ(2u, src.size());
     EXPECT_EQ(42, values[0]);
     EXPECT_EQ(2, values[1]);
 
@@ -860,7 +860,7 @@ TEST(SpanTest_StaticExtent, as_bytes)
     span<std::byte const, 8> b = as_bytes(s);
 
     EXPECT_EQ((uintptr_t)values, (uintptr_t)b.data());
-    EXPECT_EQ(8, b.size());
+    EXPECT_EQ(8u, b.size());
     EXPECT_EQ(0x44, (uint8_t)b[0]);
     EXPECT_EQ(0x55, (uint8_t)b[7]);
 }
