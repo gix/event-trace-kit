@@ -2,14 +2,14 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="Win32Exception.cpp" />
     <ClCompile Include="WaitEvent.cpp" />
+    <ClCompile Include="Win32Exception.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Win32Exception.h" />
     <ClInclude Include="WaitEvent.h" />
+    <ClInclude Include="Win32Exception.h" />
   </ItemGroup>
 </Project>

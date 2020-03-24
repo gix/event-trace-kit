@@ -5,11 +5,11 @@
     <ClCompile Include="Source\EtwTraceProcessor.cpp" />
     <ClCompile Include="Source\EtwTraceSession.cpp" />
     <ClCompile Include="Source\EventInfoCache.cpp" />
+    <ClCompile Include="Source\Support\ErrorHandling.cpp" />
+    <ClCompile Include="Source\Support\SetThreadDescription.cpp" />
+    <ClCompile Include="Source\Support\StringConversions.cpp" />
     <ClCompile Include="Source\TdhMessageFormatter.cpp" />
     <ClCompile Include="Source\TraceDataContext.cpp" />
-    <ClCompile Include="Source\Support\StringConversions.cpp" />
-    <ClCompile Include="Source\Support\SetThreadDescription.cpp" />
-    <ClCompile Include="Source\Support\ErrorHandling.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Public\etk\ADT\Handle.h" />
@@ -17,7 +17,13 @@
     <ClInclude Include="Public\etk\ADT\SmallVector.h" />
     <ClInclude Include="Public\etk\ADT\Span.h" />
     <ClInclude Include="Public\etk\ADT\VarStructPtr.h" />
+    <ClInclude Include="Public\etk\EventInfo.h" />
+    <ClInclude Include="Public\etk\IEventSink.h" />
+    <ClInclude Include="Public\etk\ITraceLog.h" />
+    <ClInclude Include="Public\etk\ITraceProcessor.h" />
+    <ClInclude Include="Public\etk\ITraceSession.h" />
     <ClInclude Include="Public\etk\Support\Allocator.h" />
+    <ClInclude Include="Public\etk\Support\BinaryFind.h" />
     <ClInclude Include="Public\etk\Support\ByteCount.h" />
     <ClInclude Include="Public\etk\Support\CompilerSupport.h" />
     <ClInclude Include="Public\etk\Support\Debug.h" />
@@ -31,17 +37,11 @@
     <ClInclude Include="Public\etk\Support\StringConversions.h" />
     <ClInclude Include="Public\etk\Support\StringFormat.h" />
     <ClInclude Include="Public\etk\Support\ThreadpoolTimer.h" />
+    <ClInclude Include="Public\etk\TdhMessageFormatter.h" />
     <ClInclude Include="Source\EtwTraceProcessor.h" />
     <ClInclude Include="Source\EventInfoCache.h" />
     <ClInclude Include="Source\ManualResetEventSlim.h" />
     <ClInclude Include="Source\TraceDataContext.h" />
-    <ClInclude Include="Public\etk\ITraceLog.h" />
-    <ClInclude Include="Public\etk\EventInfo.h" />
-    <ClInclude Include="Public\etk\IEventSink.h" />
-    <ClInclude Include="Public\etk\TdhMessageFormatter.h" />
-    <ClInclude Include="Public\etk\ITraceProcessor.h" />
-    <ClInclude Include="Public\etk\ITraceSession.h" />
-    <ClInclude Include="Public\etk\Support\BinaryFind.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

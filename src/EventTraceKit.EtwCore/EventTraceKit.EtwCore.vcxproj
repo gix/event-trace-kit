@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -10,30 +10,24 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{3EDE8E61-F8E3-4645-A940-337F91A9DF65}</ProjectGuid>
-    <RootNamespace>EventTraceKitLogger</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <RootNamespace>EventTraceKitLogger</RootNamespace>
     <VcpkgTriplet>x86-windows-etk</VcpkgTriplet>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
+    <UseDebugLibraries>true</UseDebugLibraries>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
+    <UseDebugLibraries>false</UseDebugLibraries>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -44,85 +38,60 @@
     <Import Project="EventTraceKit.EtwCore.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkKeyFile>
-    </LinkKeyFile>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LinkKeyFile>
-    </LinkKeyFile>
-  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
-    <Link>
-      <AdditionalDependencies>dbghelp.lib;tdh.lib;wevtapi.lib;ntdll.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\EventTraceKit.Logger\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
-    <Link>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>dbghelp.lib;tdh.lib;wevtapi.lib;ntdll.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <Profile>true</Profile>
-    </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ItemGroup>
-    <ClInclude Include="Public\etk\ADT\Span.h" />
-    <ClInclude Include="Public\etk\Support\BinaryFind.h" />
-    <ClCompile Include="Source\Support\StringConversions.cpp" />
-    <ClCompile Include="Source\TdhMessageFormatter.cpp" />
     <ClCompile Include="Source\EtwTraceLog.cpp" />
     <ClCompile Include="Source\EtwTraceProcessor.cpp" />
     <ClCompile Include="Source\EtwTraceSession.cpp" />
     <ClCompile Include="Source\EventInfoCache.cpp" />
     <ClCompile Include="Source\Support\ErrorHandling.cpp" />
     <ClCompile Include="Source\Support\SetThreadDescription.cpp" />
+    <ClCompile Include="Source\Support\StringConversions.cpp" />
+    <ClCompile Include="Source\TdhMessageFormatter.cpp" />
     <ClCompile Include="Source\TraceDataContext.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Public\etk\ADT\SmallVector.h" />
-    <ClInclude Include="Source\ManualResetEventSlim.h" />
-    <ClInclude Include="Public\etk\Support\IsComplete.h" />
-    <ClInclude Include="Public\etk\Support\OSVersionInfo.h" />
-    <ClInclude Include="Public\etk\Support\Rtl.h" />
-    <ClInclude Include="Public\etk\Support\StringConversions.h" />
-    <ClInclude Include="Public\etk\Support\ThreadpoolTimer.h" />
-    <ClInclude Include="Public\etk\TdhMessageFormatter.h" />
-    <ClInclude Include="Public\etk\ITraceLog.h" />
-    <ClInclude Include="Public\etk\EventInfo.h" />
-    <ClInclude Include="Source\EventInfoCache.h" />
-    <ClInclude Include="Public\etk\IEventSink.h" />
-    <ClInclude Include="Public\etk\Support\Allocator.h" />
-    <ClInclude Include="Public\etk\Support\Hashing.h" />
-    <ClInclude Include="Public\etk\ITraceProcessor.h" />
     <ClInclude Include="Public\etk\ADT\Handle.h" />
     <ClInclude Include="Public\etk\ADT\LruCache.h" />
+    <ClInclude Include="Public\etk\ADT\SmallVector.h" />
+    <ClInclude Include="Public\etk\ADT\Span.h" />
     <ClInclude Include="Public\etk\ADT\VarStructPtr.h" />
-    <ClInclude Include="Source\EtwTraceProcessor.h" />
+    <ClInclude Include="Public\etk\EventInfo.h" />
+    <ClInclude Include="Public\etk\IEventSink.h" />
+    <ClInclude Include="Public\etk\ITraceLog.h" />
+    <ClInclude Include="Public\etk\ITraceProcessor.h" />
     <ClInclude Include="Public\etk\ITraceSession.h" />
+    <ClInclude Include="Public\etk\Support\Allocator.h" />
+    <ClInclude Include="Public\etk\Support\BinaryFind.h" />
     <ClInclude Include="Public\etk\Support\ByteCount.h" />
     <ClInclude Include="Public\etk\Support\CompilerSupport.h" />
     <ClInclude Include="Public\etk\Support\Debug.h" />
     <ClInclude Include="Public\etk\Support\ErrorHandling.h" />
+    <ClInclude Include="Public\etk\Support\Hashing.h" />
+    <ClInclude Include="Public\etk\Support\IsComplete.h" />
+    <ClInclude Include="Public\etk\Support\OSVersionInfo.h" />
     <ClInclude Include="Public\etk\Support\RangeAdaptors.h" />
+    <ClInclude Include="Public\etk\Support\Rtl.h" />
     <ClInclude Include="Public\etk\Support\SetThreadDescription.h" />
+    <ClInclude Include="Public\etk\Support\StringConversions.h" />
     <ClInclude Include="Public\etk\Support\StringFormat.h" />
+    <ClInclude Include="Public\etk\Support\ThreadpoolTimer.h" />
+    <ClInclude Include="Public\etk\TdhMessageFormatter.h" />
+    <ClInclude Include="Source\EtwTraceProcessor.h" />
+    <ClInclude Include="Source\EventInfoCache.h" />
+    <ClInclude Include="Source\ManualResetEventSlim.h" />
     <ClInclude Include="Source\TraceDataContext.h" />
   </ItemGroup>
   <ItemGroup>

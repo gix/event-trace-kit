@@ -18,10 +18,24 @@
     <BuildRoot Condition="'$(BuildRoot)' == ''">$(RepoRoot)build\</BuildRoot>
     <OutDir>$(BuildRoot)$(BuildFolder)\bin\$(MSBuildProjectName)\</OutDir>
     <IntDir>$(BuildRoot)$(BuildFolder)\obj\$(MSBuildProjectName)\</IntDir>
+    <IsDebugBuild Condition="'$(IsDebugBuild)' == '' and $([System.Text.RegularExpressions.Regex]::IsMatch('$(Configuration)', 'Debug'))">true</IsDebugBuild>
+    <IsDebugBuild Condition="'$(IsDebugBuild)' == ''">false</IsDebugBuild>
   </PropertyGroup>
 
   <ItemDefinitionGroup>
     <ClCompile>
+      <!-- Optimization -->
+      <Optimization Condition="'$(IsDebugBuild)' != 'false'">Disabled</Optimization>
+      <InlineFunctionExpansion Condition="'$(IsDebugBuild)' != 'false'">Disabled</InlineFunctionExpansion>
+      <WholeProgramOptimization Condition="'$(IsDebugBuild)' != 'false'">false</WholeProgramOptimization>
+
+      <Optimization Condition="'$(IsDebugBuild)' == 'false'">MaxSpeed</Optimization>
+      <InlineFunctionExpansion Condition="'$(IsDebugBuild)' == 'false'">Default</InlineFunctionExpansion>
+      <AdditionalOptions Condition="'$(IsDebugBuild)' == 'false'">%(AdditionalOptions) /Ob3</AdditionalOptions>
+      <OmitFramePointers Condition="'$(IsDebugBuild)' == 'false'">false</OmitFramePointers>
+      <WholeProgramOptimization Condition="'$(IsDebugBuild)' == 'false'">true</WholeProgramOptimization>
+
+      <!-- Diagnostics -->
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4200;4251;4275;4324;4351;4458;4481;4505;4512;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <TreatSpecificWarningsAsErrors>4013;4099;4150;4172;4477;4715;%(TreatSpecificWarningsAsErrors)</TreatSpecificWarningsAsErrors>
@@ -49,12 +63,31 @@
       <AdditionalOptions Condition="'$(CLRSupport)' != 'false'">%(AdditionalOptions) -Zc:twoPhase-</AdditionalOptions>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
     </ClCompile>
+
+    <Lib>
+      <TargetMachine Condition="'$(Platform)'=='Win32'">MachineX86</TargetMachine>
+      <TargetMachine Condition="'$(Platform)'=='x64'">MachineX64</TargetMachine>
+    </Lib>
+    <Lib Condition="'$(IsDebugBuild)'=='false'">
+      <LinkTimeCodeGeneration>true</LinkTimeCodeGeneration>
+    </Lib>
+
+    <Link Condition="'$(IsDebugBuild)'!='false'">
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+    </Link>
+    <Link Condition="'$(IsDebugBuild)'=='false'">
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <ImageHasSafeExceptionHandlers Condition="'$(Platform)'=='Win32'">true</ImageHasSafeExceptionHandlers>
+      <SetChecksum>true</SetChecksum>
+    </Link>
+
     <FxCompile>
       <ObjectFileOutput>$(IntDir)%(RelativeDir)%(Filename).cso</ObjectFileOutput>
     </FxCompile>
-    <Link>
-      <ImageHasSafeExceptionHandlers Condition="'$(Platform)'=='Win32' and '$(UseDebugLibraries)'!='true'">true</ImageHasSafeExceptionHandlers>
-    </Link>
+
     <ResourceCompile>
       <ResourceOutputFileName>$(IntDir)%(RelativeDir)%(Filename).res</ResourceOutputFileName>
     </ResourceCompile>
