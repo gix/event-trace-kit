@@ -7,7 +7,7 @@
   <PropertyGroup>
     <RepoRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\'))</RepoRoot>
     <DeveloperBuild>false</DeveloperBuild>
-    <DeveloperBuild Condition="'$(OfficialBuild)' != 'true' AND '$(JenkinsBuild)' != 'true'">true</DeveloperBuild>
+    <DeveloperBuild Condition="'$(OfficialBuild)' != 'true' AND '$(ContinuousIntegrationBuild)' != 'true'">true</DeveloperBuild>
   </PropertyGroup>
 
   <Import Project="Versions.props" />
