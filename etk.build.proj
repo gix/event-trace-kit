@@ -54,7 +54,7 @@
       <NuGetRestoreTarget Include="$(MSBuildThisFileDirectory)src\EventTraceKit.sln"/>
     </ItemGroup>
     <Exec Condition="'@(NuGetRestoreTarget)'!=''"
-          Command="set NUGET_RESTORE_MSBUILD_ARGS=/p:Configuration=$(Configuration) &amp; &quot;$(NuGetExecutable)&quot; restore -NonInteractive -Source &quot;$(NuGetPackageSource)&quot; &quot;%(NuGetRestoreTarget.Identity)&quot;"/>
+          Command="set NUGET_RESTORE_MSBUILD_ARGS=/p:Configuration=$(Configuration) &amp; &quot;$(NuGetExecutable)&quot; restore -NonInteractive -PackagesDirectory &quot;$(NuGetPackagesDirectory)\&quot; &quot;%(NuGetRestoreTarget.Identity)&quot;"/>
   </Target>
 
   <Target Name="Build" DependsOnTargets="Restore" Condition="'$(Build)' != 'false'">
