@@ -41,7 +41,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="EventTraceKit.Logger, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="PresentationFramework.Aero" />
@@ -126,6 +125,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\EventTraceKit.Etw\EventTraceKit.Etw.vcxproj">
+      <Project>{bb8fb23e-f2de-4d62-9c83-64dd9e5a5272}</Project>
+      <Name>EventTraceKit.Etw</Name>
+    </ProjectReference>
     <ProjectReference Include="..\EventTraceKit.EventTracing\EventTraceKit.EventTracing.csproj">
       <Project>{7595AD97-5122-4569-A087-910FBBCB2DDC}</Project>
       <Name>EventManifestFramework</Name>

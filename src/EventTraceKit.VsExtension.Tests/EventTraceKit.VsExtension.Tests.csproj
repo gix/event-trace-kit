@@ -42,7 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\EventTraceKit.EventTracing\EventTraceKit.EventTracing.csproj" />
-    <ProjectReference Include="..\EventTraceKit.Logger\EventTraceKit.Logger.vcxproj" />
+    <ProjectReference Include="..\EventTraceKit.Etw\EventTraceKit.Etw.vcxproj" />
     <ProjectReference Include="..\EventTraceKit.VsExtension\EventTraceKit.VsExtension.csproj" />
   </ItemGroup>
 </Project>

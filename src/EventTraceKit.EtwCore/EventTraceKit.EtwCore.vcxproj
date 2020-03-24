@@ -1,0 +1,146 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{3EDE8E61-F8E3-4645-A940-337F91A9DF65}</ProjectGuid>
+    <RootNamespace>EventTraceKitLogger</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <VcpkgTriplet>x86-windows-etk</VcpkgTriplet>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="EventTraceKit.EtwCore.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkKeyFile>
+    </LinkKeyFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkKeyFile>
+    </LinkKeyFile>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>dbghelp.lib;tdh.lib;wevtapi.lib;ntdll.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)..\EventTraceKit.Logger\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>dbghelp.lib;tdh.lib;wevtapi.lib;ntdll.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <Profile>true</Profile>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ItemGroup>
+    <ClCompile Include="ADT\WaitEvent.cpp" />
+    <ClInclude Include="ADT\Span.h" />
+    <ClInclude Include="BinaryFind.h" />
+    <ClCompile Include="Support\StringConversions.cpp" />
+    <ClCompile Include="TdhMessageFormatter.cpp" />
+    <ClCompile Include="EtwTraceLog.cpp" />
+    <ClCompile Include="EtwTraceProcessor.cpp" />
+    <ClCompile Include="EtwTraceSession.cpp" />
+    <ClCompile Include="EventInfoCache.cpp" />
+    <ClCompile Include="Support\ErrorHandling.cpp" />
+    <ClCompile Include="Support\SetThreadDescription.cpp" />
+    <ClCompile Include="TraceDataContext.cpp" />
+    <ClCompile Include="Win32Exception.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ADT\SmallVector.h" />
+    <ClInclude Include="ManualResetEventSlim.h" />
+    <ClInclude Include="Support\IsComplete.h" />
+    <ClInclude Include="Support\OSVersionInfo.h" />
+    <ClInclude Include="Support\Rtl.h" />
+    <ClInclude Include="Support\StringConversions.h" />
+    <ClInclude Include="Support\ThreadpoolTimer.h" />
+    <ClInclude Include="TdhMessageFormatter.h" />
+    <ClInclude Include="ITraceLog.h" />
+    <ClInclude Include="EventInfo.h" />
+    <ClInclude Include="EventInfoCache.h" />
+    <ClInclude Include="IEventSink.h" />
+    <ClInclude Include="Support\Allocator.h" />
+    <ClInclude Include="Support\Hashing.h" />
+    <ClInclude Include="ITraceProcessor.h" />
+    <ClInclude Include="ADT\Handle.h" />
+    <ClInclude Include="ADT\LruCache.h" />
+    <ClInclude Include="ADT\VarStructPtr.h" />
+    <ClInclude Include="ADT\WaitEvent.h" />
+    <ClInclude Include="EtwTraceProcessor.h" />
+    <ClInclude Include="ITraceSession.h" />
+    <ClInclude Include="Support\ByteCount.h" />
+    <ClInclude Include="Support\CompilerConfig.h" />
+    <ClInclude Include="Support\CompilerSupport.h" />
+    <ClInclude Include="Support\CountOf.h" />
+    <ClInclude Include="Support\Debug.h" />
+    <ClInclude Include="Support\ErrorHandling.h" />
+    <ClInclude Include="Support\RangeAdaptors.h" />
+    <ClInclude Include="Support\SetThreadDescription.h" />
+    <ClInclude Include="Support\StringFormat.h" />
+    <ClInclude Include="TraceDataContext.h" />
+    <ClInclude Include="Win32Exception.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\etk-deps.1.0.0\build\native\etk-deps.targets" Condition="Exists('..\packages\etk-deps.1.0.0\build\native\etk-deps.targets')" />
+  </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\etk-deps.1.0.0\build\native\etk-deps.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\etk-deps.1.0.0\build\native\etk-deps.targets'))" />
+  </Target>
+</Project>

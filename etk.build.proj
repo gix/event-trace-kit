@@ -4,7 +4,7 @@
   <ItemGroup>
     <ProjectItem Include="src\EventTraceKit.EventTracing\EventTraceKit.EventTracing.csproj"/>
     <ProjectItem Include="src\EventTraceKit.EventTracing.Tests\EventTraceKit.EventTracing.Tests.csproj"/>
-    <ProjectItem Include="src\EventTraceKit.Logger.Tests\EventTraceKit.Logger.Tests.vcxproj"/>
+    <ProjectItem Include="src\EventTraceKit.EtwCore.Tests\EventTraceKit.EtwCore.Tests.vcxproj"/>
     <ProjectItem Include="src\TraceLaunch.Windows\TraceLaunch.Windows.vcxproj"/>
     <ProjectItem Include="src\TraceLaunch.x86\TraceLaunch.x86.vcxproj"/>
     <ProjectItem64 Include="src\TraceLaunch.x64\TraceLaunch.x64.vcxproj"/>
@@ -80,7 +80,7 @@
     <ItemGroup>
       <TestAssemblies Include="build\release\bin\EventTraceKit.EventTracing.Tests\**\EventTraceKit.EventTracing.Tests.dll"/>
       <TestAssemblies Include="build\release\bin\EventTraceKit.VsExtension.Tests\**\EventTraceKit.VsExtension.Tests.dll"/>
-      <TestExecutables Include="build\release\bin\EventTraceKit.Logger.Tests\EventTraceKit.Logger.Tests.exe"/>
+      <TestExecutables Include="build\release\bin\EventTraceKit.Etw.Tests\EventTraceKit.Etw.Tests.exe"/>
     </ItemGroup>
     <Exec Command="&quot;$(XunitRunner32)&quot; @(TestAssemblies, ' ')"/>
     <Exec Command="&quot;%(TestExecutables.Identity)&quot;"/>

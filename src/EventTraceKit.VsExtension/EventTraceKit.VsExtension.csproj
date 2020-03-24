@@ -539,17 +539,17 @@
   <ItemGroup>
     <ProjectReference Include="..\EventTraceKit.EventTracing\EventTraceKit.EventTracing.csproj">
       <Project>{7595ad97-5122-4569-a087-910fbbcb2ddc}</Project>
-      <Name>EventManifestFramework</Name>
+      <Name>EventTraceKit.EventTracing</Name>
     </ProjectReference>
-    <ProjectReference Include="..\EventTraceKit.Logger\EventTraceKit.Logger.vcxproj">
-      <Project>{3EDE8E61-F8E3-4645-A940-337F91A9DF65}</Project>
-      <Name>EventTraceKit.Logger</Name>
+    <ProjectReference Include="..\EventTraceKit.Etw\EventTraceKit.Etw.vcxproj">
+      <Project>{bb8fb23e-f2de-4d62-9c83-64dd9e5a5272}</Project>
+      <Name>EventTraceKit.Etw</Name>
       <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
       <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
     </ProjectReference>
-    <ProjectReference Include="..\EventTraceKit.Logger.WatchDog\EventTraceKit.Logger.WatchDog.vcxproj">
+    <ProjectReference Include="..\EventTraceKit.EtwWatchDog\EventTraceKit.EtwWatchDog.vcxproj">
       <Project>{32c0585a-5db9-457c-9e69-1621bc3547a5}</Project>
-      <Name>EventTraceKit.Logger.WatchDog</Name>
+      <Name>EventTraceKit.EtwWatchDog</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>

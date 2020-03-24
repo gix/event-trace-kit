@@ -74,9 +74,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\EventTraceKit.Logger\EventTraceKit.Logger.vcxproj">
-      <Project>{3ede8e61-f8e3-4645-a940-337f91a9df65}</Project>
-      <Name>EventTraceKit.Logger</Name>
+    <ProjectReference Include="..\EventTraceKit.Etw\EventTraceKit.Etw.vcxproj">
+      <Project>{bb8fb23e-f2de-4d62-9c83-64dd9e5a5272}</Project>
+      <Name>EventTraceKit.Etw</Name>
     </ProjectReference>
     <ProjectReference Include="..\EventTraceKit.VsExtension\EventTraceKit.VsExtension.csproj">
       <Project>{6D3D2D02-2D86-4FBF-9CC6-A0D7D37D5BA1}</Project>

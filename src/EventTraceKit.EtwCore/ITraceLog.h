@@ -2,6 +2,7 @@
 #include "EventInfo.h"
 #include "IEventSink.h"
 
+#include <string>
 #include <memory>
 #include <tuple>
 

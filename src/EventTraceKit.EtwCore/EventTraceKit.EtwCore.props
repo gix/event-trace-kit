@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_PropertySheetDisplayName>EventTraceKit.EtwCore</_PropertySheetDisplayName>
+    <_Imported_EventTraceKit_EtwCore>true</_Imported_EventTraceKit_EtwCore>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>%(AdditionalDependencies);tdh.lib;ntdll.lib</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup Condition="'$(MSBuildProjectName)' != 'EventTraceKit.EtwCore'">
+    <ProjectReference Include="$(MSBuildThisFileDirectory)$(MSBuildThisFileName).vcxproj">
+      <Project>{3ede8e61-f8e3-4645-a940-337f91a9df65}</Project>
+    </ProjectReference>
+  </ItemGroup>
+</Project>

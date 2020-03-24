@@ -13,9 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventManifestCompiler.Build
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventManifestCompiler.Tests", "EventManifestCompiler.Tests\EventManifestCompiler.Tests.csproj", "{A2DF0A84-0825-4521-BA83-D14F1A22633C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EventTraceKit.Logger", "EventTraceKit.Logger\EventTraceKit.Logger.vcxproj", "{3EDE8E61-F8E3-4645-A940-337F91A9DF65}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EventTraceKit.Logger.WatchDog", "EventTraceKit.Logger.WatchDog\EventTraceKit.Logger.WatchDog.vcxproj", "{32C0585A-5DB9-457C-9E69-1621BC3547A5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EventTraceKit.EtwWatchDog", "EventTraceKit.EtwWatchDog\EventTraceKit.EtwWatchDog.vcxproj", "{32C0585A-5DB9-457C-9E69-1621BC3547A5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventTraceKit.VsExtension", "EventTraceKit.VsExtension\EventTraceKit.VsExtension.csproj", "{6D3D2D02-2D86-4FBF-9CC6-A0D7D37D5BA1}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -36,7 +34,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TraceLaunchTester", "TraceL
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PerfRunner", "PerfRunner\PerfRunner.csproj", "{13031697-54EA-4F2C-89DB-F1A314976839}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EventTraceKit.Logger.Tests", "EventTraceKit.Logger.Tests\EventTraceKit.Logger.Tests.vcxproj", "{837E39A8-4379-4DEB-9889-7369EA7771BB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EventTraceKit.EtwCore.Tests", "EventTraceKit.EtwCore.Tests\EventTraceKit.EtwCore.Tests.vcxproj", "{837E39A8-4379-4DEB-9889-7369EA7771BB}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TraceLaunch.Windows", "TraceLaunch.Windows\TraceLaunch.Windows.vcxproj", "{49E2662A-1940-4523-A9F3-BFDC37CF361E}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -44,6 +42,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TraceLaunch.Windows", "Trac
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventManifestCompiler.Build.Tasks.Tests", "EventManifestCompiler.Build.Tasks.Tests\EventManifestCompiler.Build.Tasks.Tests.csproj", "{3A789D80-BAC1-4A89-B474-BA1CCFA77863}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EventTraceKit.Etw", "EventTraceKit.Etw\EventTraceKit.Etw.vcxproj", "{BB8FB23E-F2DE-4D62-9C83-64DD9E5A5272}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EventTraceKit.EtwCore", "EventTraceKit.EtwCore\EventTraceKit.EtwCore.vcxproj", "{3EDE8E61-F8E3-4645-A940-337F91A9DF65}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -71,10 +73,6 @@ Global
 		{A2DF0A84-0825-4521-BA83-D14F1A22633C}.Debug|x86.Build.0 = Debug|Any CPU
 		{A2DF0A84-0825-4521-BA83-D14F1A22633C}.Release|x86.ActiveCfg = Release|Any CPU
 		{A2DF0A84-0825-4521-BA83-D14F1A22633C}.Release|x86.Build.0 = Release|Any CPU
-		{3EDE8E61-F8E3-4645-A940-337F91A9DF65}.Debug|x86.ActiveCfg = Debug|Win32
-		{3EDE8E61-F8E3-4645-A940-337F91A9DF65}.Debug|x86.Build.0 = Debug|Win32
-		{3EDE8E61-F8E3-4645-A940-337F91A9DF65}.Release|x86.ActiveCfg = Release|Win32
-		{3EDE8E61-F8E3-4645-A940-337F91A9DF65}.Release|x86.Build.0 = Release|Win32
 		{32C0585A-5DB9-457C-9E69-1621BC3547A5}.Debug|x86.ActiveCfg = Debug|Win32
 		{32C0585A-5DB9-457C-9E69-1621BC3547A5}.Debug|x86.Build.0 = Debug|Win32
 		{32C0585A-5DB9-457C-9E69-1621BC3547A5}.Release|x86.ActiveCfg = Release|Win32
@@ -119,6 +117,14 @@ Global
 		{3A789D80-BAC1-4A89-B474-BA1CCFA77863}.Debug|x86.Build.0 = Debug|Any CPU
 		{3A789D80-BAC1-4A89-B474-BA1CCFA77863}.Release|x86.ActiveCfg = Release|Any CPU
 		{3A789D80-BAC1-4A89-B474-BA1CCFA77863}.Release|x86.Build.0 = Release|Any CPU
+		{BB8FB23E-F2DE-4D62-9C83-64DD9E5A5272}.Debug|x86.ActiveCfg = Debug|Win32
+		{BB8FB23E-F2DE-4D62-9C83-64DD9E5A5272}.Debug|x86.Build.0 = Debug|Win32
+		{BB8FB23E-F2DE-4D62-9C83-64DD9E5A5272}.Release|x86.ActiveCfg = Release|Win32
+		{BB8FB23E-F2DE-4D62-9C83-64DD9E5A5272}.Release|x86.Build.0 = Release|Win32
+		{3EDE8E61-F8E3-4645-A940-337F91A9DF65}.Debug|x86.ActiveCfg = Debug|Win32
+		{3EDE8E61-F8E3-4645-A940-337F91A9DF65}.Debug|x86.Build.0 = Debug|Win32
+		{3EDE8E61-F8E3-4645-A940-337F91A9DF65}.Release|x86.ActiveCfg = Release|Win32
+		{3EDE8E61-F8E3-4645-A940-337F91A9DF65}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

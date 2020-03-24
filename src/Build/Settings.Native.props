@@ -46,6 +46,7 @@
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalOptions>-Zc:inline -Zc:strictStrings -Zc:throwingNew -Zc:externConstexpr -Gw %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(CLRSupport)' != 'false'">%(AdditionalOptions) -Zc:twoPhase-</AdditionalOptions>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
     </ClCompile>
     <FxCompile>
