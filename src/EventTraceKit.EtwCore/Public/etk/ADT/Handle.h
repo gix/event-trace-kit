@@ -1,6 +1,6 @@
 #pragma once
-#include "etk/Support/Debug.h"
 #include "etk/Support/CompilerSupport.h"
+#include "etk/Support/Debug.h"
 #include <utility>
 #include <windows.h>
 
@@ -15,25 +15,19 @@ class Handle
 public:
     constexpr Handle() noexcept
         : handle(Traits::InvalidHandle())
-    {
-    }
+    {}
 
     constexpr explicit Handle(HandleType handle) noexcept
         : handle(handle)
-    {
-    }
+    {}
 
-    ~Handle() noexcept
-    {
-        Close();
-    }
+    ~Handle() noexcept { Close(); }
 
     constexpr Handle(Handle&& source) noexcept
         : handle(source.Detach())
-    {
-    }
+    {}
 
-    Handle& operator =(Handle&& source) noexcept
+    Handle& operator=(Handle&& source) noexcept
     {
         ETK_ASSERT(this != &source);
         Reset(source.Detach());
@@ -41,17 +35,14 @@ public:
     }
 
     Handle(Handle const&) = delete;
-    Handle& operator =(Handle const&) = delete;
+    Handle& operator=(Handle const&) = delete;
 
     constexpr static HandleType InvalidHandle() noexcept
     {
         return Traits::InvalidHandle();
     }
 
-    constexpr bool IsValid() const noexcept
-    {
-        return Traits::IsValid(handle);
-    }
+    constexpr bool IsValid() const noexcept { return Traits::IsValid(handle); }
 
     void Close() noexcept
     {
@@ -76,16 +67,13 @@ public:
         return std::exchange(handle, Traits::InvalidHandle());
     }
 
-    Handle& operator =(HandleType source)
+    Handle& operator=(HandleType source)
     {
         Reset(source);
         return *this;
     }
 
-    constexpr explicit operator bool() const noexcept
-    {
-        return Traits::IsValid(handle);
-    }
+    constexpr explicit operator bool() const noexcept { return Traits::IsValid(handle); }
 
     constexpr HandleType Get() const noexcept { return handle; }
 
@@ -109,12 +97,14 @@ using ::CloseHandle;
 template<typename Traits>
 void CloseHandle(Handle<Traits> const&) = delete;
 
-
 template<typename T = HANDLE>
 struct MinusOneIsInvalidHandleTraits
 {
     using HandleType = T;
-    constexpr static HandleType InvalidHandle() noexcept { return static_cast<HandleType>(-1); }
+    constexpr static HandleType InvalidHandle() noexcept
+    {
+        return static_cast<HandleType>(-1);
+    }
     constexpr static bool IsValid(HandleType h) noexcept { return h != InvalidHandle(); }
     static void Close(HandleType h) noexcept { ::CloseHandle(h); }
 };
@@ -128,20 +118,24 @@ struct NullIsInvalidHandleTraits
     static void Close(HandleType h) noexcept { ::CloseHandle(h); }
 };
 
-
-struct FileHandleTraits : MinusOneIsInvalidHandleTraits<> {};
+struct FileHandleTraits : MinusOneIsInvalidHandleTraits<>
+{};
 using FileHandle = Handle<FileHandleTraits>;
 
-struct ProcessHandleTraits : NullIsInvalidHandleTraits<> {};
+struct ProcessHandleTraits : NullIsInvalidHandleTraits<>
+{};
 using ProcessHandle = Handle<ProcessHandleTraits>;
 
-struct ThreadHandleTraits : NullIsInvalidHandleTraits<> {};
+struct ThreadHandleTraits : NullIsInvalidHandleTraits<>
+{};
 using ThreadHandle = Handle<ThreadHandleTraits>;
 
-struct TimerHandleTraits : NullIsInvalidHandleTraits<> {};
+struct TimerHandleTraits : NullIsInvalidHandleTraits<>
+{};
 using TimerHandle = Handle<TimerHandleTraits>;
 
-struct TokenHandleTraits : NullIsInvalidHandleTraits<> {};
+struct TokenHandleTraits : NullIsInvalidHandleTraits<>
+{};
 using TokenHandle = Handle<TokenHandleTraits>;
 
 } // namespace etk

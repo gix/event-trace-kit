@@ -19,8 +19,7 @@ public:
         : record(record)
         , info(info)
         , infoSize(infoSize)
-    {
-    }
+    {}
 
     explicit operator bool() const { return info != nullptr; }
     TRACE_EVENT_INFO const* operator->() const { return info; }

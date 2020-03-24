@@ -1,6 +1,6 @@
 #pragma once
-#include "etk/EventInfo.h"
 #include "etk/ADT/SmallVector.h"
+#include "etk/EventInfo.h"
 #include <vector>
 
 namespace etk
@@ -9,12 +9,12 @@ namespace etk
 class TdhMessageFormatter
 {
 public:
-    bool FormatEventMessage(
-        EventInfo info, size_t pointerSize, wchar_t* buffer, size_t bufferSize);
+    bool FormatEventMessage(EventInfo info, size_t pointerSize, wchar_t* buffer,
+                            size_t bufferSize);
 
 private:
-    bool FormatMofEvent(
-        EventInfo const& info, size_t pointerSize, wchar_t* buffer, size_t bufferSize);
+    bool FormatMofEvent(EventInfo const& info, size_t pointerSize, wchar_t* buffer,
+                        size_t bufferSize);
 
     std::vector<wchar_t> propertyBuffer;
     std::vector<BYTE> mapBuffer;

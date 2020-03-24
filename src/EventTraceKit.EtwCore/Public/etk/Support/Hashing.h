@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
-#include <utility>
 #include <guiddef.h>
+#include <utility>
 
 namespace etk
 {
@@ -20,7 +20,7 @@ namespace std
 template<>
 struct hash<GUID>
 {
-    size_t operator ()(GUID const& guid) const
+    size_t operator()(GUID const& guid) const
     {
         static_assert(sizeof(GUID) == 2 * sizeof(uint64_t), "Invariant violated");
 

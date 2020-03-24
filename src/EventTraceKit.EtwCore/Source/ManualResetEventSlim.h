@@ -9,8 +9,7 @@ class ManualResetEventSlim
 public:
     explicit ManualResetEventSlim(bool signaled = false)
         : signaled(signaled)
-    {
-    }
+    {}
 
     void Set()
     {

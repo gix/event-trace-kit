@@ -5,8 +5,7 @@
 namespace etk
 {
 
-class Win32Exception
-    : public std::exception
+class Win32Exception : public std::exception
 {
 public:
     Win32Exception();

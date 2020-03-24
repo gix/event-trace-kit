@@ -7,47 +7,46 @@ namespace etk
 {
 
 template<typename SinglePassRange, typename UnaryPredicate>
-inline typename SinglePassRange::difference_type
-count_if(SinglePassRange& container, UnaryPredicate pred)
+inline typename SinglePassRange::difference_type count_if(SinglePassRange& container,
+                                                          UnaryPredicate pred)
 {
     return std::count_if(std::begin(container), std::end(container),
                          std::forward<UnaryPredicate>(pred));
 }
 
 template<typename SinglePassRange, typename UnaryPredicate>
-inline typename SinglePassRange::difference_type
-count_if(SinglePassRange const& container, UnaryPredicate pred)
+inline typename SinglePassRange::difference_type count_if(
+    SinglePassRange const& container, UnaryPredicate pred)
 {
     return std::count_if(std::begin(container), std::end(container),
                          std::forward<UnaryPredicate>(pred));
 }
 
 template<typename SinglePassRange, typename UnaryPredicate>
-inline typename SinglePassRange::iterator
-  find_if(SinglePassRange& container, UnaryPredicate pred)
+inline typename SinglePassRange::iterator find_if(SinglePassRange& container,
+                                                  UnaryPredicate pred)
 {
     return std::find_if(std::begin(container), std::end(container),
                         std::forward<UnaryPredicate>(pred));
 }
 
 template<typename SinglePassRange, typename UnaryPredicate>
-inline typename SinglePassRange::const_iterator
-  find_if(SinglePassRange const& container, UnaryPredicate pred)
+inline typename SinglePassRange::const_iterator find_if(SinglePassRange const& container,
+                                                        UnaryPredicate pred)
 {
     return std::find_if(std::begin(container), std::end(container),
                         std::forward<UnaryPredicate>(pred));
 }
 
 template<typename SinglePassRange, typename T>
-inline typename SinglePassRange::iterator
-  find(SinglePassRange& container, T const& value)
+inline typename SinglePassRange::iterator find(SinglePassRange& container, T const& value)
 {
     return std::find(std::begin(container), std::end(container), value);
 }
 
 template<typename SinglePassRange, typename T>
-inline typename SinglePassRange::const_iterator
-  find(SinglePassRange const& container, T const& value)
+inline typename SinglePassRange::const_iterator find(SinglePassRange const& container,
+                                                     T const& value)
 {
     return std::find(std::begin(container), std::end(container), value);
 }

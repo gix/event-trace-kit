@@ -15,8 +15,7 @@ class Exception : public std::exception
 public:
     Exception(char const* msg)
         : msg(msg)
-    {
-    }
+    {}
 
     virtual char const* what() const noexcept override { return msg; }
 
@@ -29,8 +28,7 @@ class ArgumentException : public Exception
 public:
     ArgumentException(char const* msg)
         : Exception(msg)
-    {
-    }
+    {}
 };
 
 class ArgumentNullException : public ArgumentException
@@ -38,8 +36,7 @@ class ArgumentNullException : public ArgumentException
 public:
     ArgumentNullException(char const* msg)
         : ArgumentException(msg)
-    {
-    }
+    {}
 };
 
 class NotSupportedException : public Exception
@@ -47,8 +44,7 @@ class NotSupportedException : public Exception
 public:
     NotSupportedException(char const* msg)
         : Exception(msg)
-    {
-    }
+    {}
 };
 
 class AbandonedMutexException : public Exception
@@ -56,8 +52,7 @@ class AbandonedMutexException : public Exception
 public:
     AbandonedMutexException()
         : Exception("Abandoned mutex.")
-    {
-    }
+    {}
 };
 
 WaitEvent::WaitEvent(bool initialState, bool manualReset)

@@ -1,6 +1,6 @@
 #pragma once
-#include "etk/ADT/Span.h"
 #include "ITraceSession.h"
+#include "etk/ADT/Span.h"
 
 #include <evntrace.h>
 #include <memory>
@@ -23,7 +23,7 @@ public:
     virtual TRACE_LOGFILE_HEADER const* GetLogFileHeader() const = 0;
 };
 
-std::unique_ptr<ITraceProcessor>
-CreateEtwTraceProcessor(cspan<std::wstring_view> loggerNames);
+std::unique_ptr<ITraceProcessor> CreateEtwTraceProcessor(
+    cspan<std::wstring_view> loggerNames);
 
 } // namespace etk

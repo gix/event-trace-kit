@@ -112,8 +112,7 @@ void Log(char const* format, ...)
 }
 #else
 void Log(char const* /*format*/, ...)
-{
-}
+{}
 #endif
 
 void LogCreateProcessFailed(DWORD ec)

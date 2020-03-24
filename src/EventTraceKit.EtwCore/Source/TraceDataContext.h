@@ -67,8 +67,7 @@ public:
 
     explicit TraceDataToken(std::shared_ptr<TraceDataContext> context)
         : context(std::move(context))
-    {
-    }
+    {}
 
     ~TraceDataToken() { Invalidate(); }
 
@@ -125,8 +124,7 @@ private:
                    cspan<std::wstring> eventManifests)
         : context(std::move(context))
         , eventManifests(eventManifests.begin(), eventManifests.end())
-    {
-    }
+    {}
 
     std::shared_ptr<TraceDataContext> context;
     std::unordered_set<std::wstring> eventManifests;

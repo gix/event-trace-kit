@@ -14,8 +14,7 @@ class Alignment
 public:
     explicit constexpr Alignment(size_t alignment)
         : alignment((assert(alignment > 0), alignment))
-    {
-    }
+    {}
 
     template<typename T>
     constexpr T Align(T value) const
@@ -93,8 +92,7 @@ public:
 
     BumpPtrAllocator(Allocator&& allocator)
         : allocator(std::move(allocator))
-    {
-    }
+    {}
 
     ~BumpPtrAllocator()
     {

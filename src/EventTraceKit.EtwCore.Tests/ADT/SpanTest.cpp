@@ -15,8 +15,7 @@ struct X
 {
     X(int value)
         : value(value)
-    {
-    }
+    {}
 
     bool operator==(X const& other) const { return value == other.value; }
     bool operator!=(X const& other) const { return value != other.value; }
@@ -160,7 +159,8 @@ TEST(SpanTest, SubscriptOperator)
     EXPECT_EQ(2, values[1]);
 
     static_assert(std::is_same_v<int&, decltype(std::declval<span<int>>()[0])>);
-    static_assert(std::is_same_v<int const&, decltype(std::declval<span<int const>>()[0])>);
+    static_assert(
+        std::is_same_v<int const&, decltype(std::declval<span<int const>>()[0])>);
 }
 
 TEST(SpanTest, data)
@@ -177,7 +177,8 @@ TEST(SpanTest, data)
     EXPECT_EQ(2, values[1]);
 
     static_assert(std::is_same_v<int*, decltype(std::declval<span<int>>().data())>);
-    static_assert(std::is_same_v<int const*, decltype(std::declval<span<int const>>().data())>);
+    static_assert(
+        std::is_same_v<int const*, decltype(std::declval<span<int const>>().data())>);
 }
 
 TEST(SpanTest, EqualityOperator)
@@ -449,7 +450,6 @@ TEST(SpanTest, as_bytes)
     EXPECT_EQ(0x55, (uint8_t)b[7]);
 }
 
-
 TEST(SpanTest_StaticExtent, DefaultConstructor)
 {
     span<int, 0> const s1;
@@ -592,7 +592,8 @@ TEST(SpanTest_StaticExtent, data)
     EXPECT_EQ(2, values[1]);
 
     static_assert(std::is_same_v<int*, decltype(std::declval<span<int, 2>>().data())>);
-    static_assert(std::is_same_v<int const*, decltype(std::declval<span<int const, 2>>().data())>);
+    static_assert(
+        std::is_same_v<int const*, decltype(std::declval<span<int const, 2>>().data())>);
 }
 
 TEST(SpanTest_StaticExtent, EqualityOperator)

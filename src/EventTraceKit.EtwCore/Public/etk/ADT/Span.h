@@ -21,28 +21,23 @@ namespace details
 
 template<typename T>
 struct IsSpan : std::false_type
-{
-};
+{};
 
 template<typename T, std::size_t E>
 struct IsSpan<span<T, E>> : std::true_type
-{
-};
+{};
 
 template<typename T>
 struct IsStdArray : std::false_type
-{
-};
+{};
 
 template<typename T, std::size_t N>
 struct IsStdArray<std::array<T, N>> : std::true_type
-{
-};
+{};
 
 template<typename T, typename _ = void>
 struct IsContainer : std::false_type
-{
-};
+{};
 
 template<typename T>
 struct IsContainer<T,
@@ -50,13 +45,11 @@ struct IsContainer<T,
                                       std::void_t<decltype(std::data(std::declval<T>())),
                                                   decltype(std::size(std::declval<T>()))>,
                                       void>> : std::true_type
-{
-};
+{};
 
 template<typename Container, typename ElementType, typename = void>
 struct IsContainerElementTypeCompatible : std::false_type
-{
-};
+{};
 
 template<typename Container, typename ElementType>
 struct IsContainerElementTypeCompatible<
@@ -64,8 +57,7 @@ struct IsContainerElementTypeCompatible<
     : std::is_convertible<
           std::remove_pointer_t<decltype(std::data(std::declval<Container>()))> (*)[],
           ElementType (*)[]>
-{
-};
+{};
 
 template<typename Container, typename ElementType, typename ContainerRef>
 using IsContainerCompatible =
@@ -104,8 +96,7 @@ public:
     // 26.7.3.2, constructors, copy, and assignment
     template<std::size_t E = Extent, typename = std::enable_if_t<E <= 0>>
     constexpr span() noexcept
-    {
-    }
+    {}
 
     constexpr span(pointer ptr, index_type count)
         : data_(ptr)
@@ -122,41 +113,35 @@ public:
     template<typename = std::enable_if_t<Extent == 1>>
     constexpr span(element_type& elem)
         : data_(&elem)
-    {
-    }
+    {}
 
     constexpr span(element_type (&arr)[Extent]) noexcept
         : data_(arr)
-    {
-    }
+    {}
 
     template<typename = std::enable_if_t<
                  std::is_convertible_v<value_type (*)[], element_type (*)[]>>>
     constexpr span(std::array<value_type, Extent>& arr) noexcept
         : data_(arr.data())
-    {
-    }
+    {}
 
     template<typename = std::enable_if_t<
                  std::is_convertible_v<value_type (*)[], element_type (*)[]>>>
     constexpr span(std::array<value_type, Extent> const& arr) noexcept
         : data_(arr.data())
-    {
-    }
+    {}
 
     template<typename Container, typename = details::IsContainerCompatible<
                                      Container, ElementType, Container&>>
     constexpr span(Container& container)
         : data_(std::data(container))
-    {
-    }
+    {}
 
     template<typename Container, typename = details::IsContainerCompatible<
                                      Container, ElementType, Container const&>>
     constexpr span(Container const& container)
         : data_(std::data(container))
-    {
-    }
+    {}
 
     constexpr span(span const& source) noexcept = default;
     constexpr span& operator=(span const& source) noexcept = default;
@@ -169,8 +154,7 @@ public:
                  std::is_convertible_v<OtherElementType (*)[], ElementType (*)[]>>>
     constexpr span(span<OtherElementType> const& s) noexcept
         : data_(s.data())
-    {
-    }
+    {}
 
     // 26.7.3.3, subviews
     template<std::size_t Count>
@@ -315,43 +299,37 @@ public:
     constexpr span(pointer ptr, index_type count)
         : data_(ptr)
         , size_(count)
-    {
-    }
+    {}
 
     constexpr span(pointer first, pointer last)
         : data_(first)
         , size_(last - first)
-    {
-    }
+    {}
 
     constexpr span(element_type& elem)
         : data_(&elem)
         , size_(1)
-    {
-    }
+    {}
 
     template<std::size_t N>
     constexpr span(element_type (&arr)[N]) noexcept
         : data_(arr)
         , size_(N)
-    {
-    }
+    {}
 
     template<std::size_t N, typename = std::enable_if_t<std::is_convertible_v<
                                 value_type (*)[], element_type (*)[]>>>
     constexpr span(std::array<value_type, N>& arr) noexcept
         : data_(arr.data())
         , size_(N)
-    {
-    }
+    {}
 
     template<std::size_t N, typename = std::enable_if_t<std::is_convertible_v<
                                 value_type (*)[], element_type (*)[]>>>
     constexpr span(std::array<value_type, N> const& arr) noexcept
         : data_(arr.data())
         , size_(N)
-    {
-    }
+    {}
 
 #if 0
     // Crashes MSVC 19.14.26430 and earlier when the check for the presence of
@@ -377,14 +355,12 @@ public:
     constexpr span(std::vector<value_type>& container)
         : data_(std::data(container))
         , size_(std::size(container))
-    {
-    }
+    {}
 
     constexpr span(std::vector<value_type> const& container)
         : data_(std::data(container))
         , size_(std::size(container))
-    {
-    }
+    {}
 
     constexpr span(span const& source) noexcept = default;
     constexpr span& operator=(span const& source) noexcept = default;
@@ -397,8 +373,7 @@ public:
     constexpr span(span<OtherElementType> const& s) noexcept
         : data_(s.data())
         , size_(s.size())
-    {
-    }
+    {}
 
     // 26.7.3.3, subviews
     template<std::size_t Count>

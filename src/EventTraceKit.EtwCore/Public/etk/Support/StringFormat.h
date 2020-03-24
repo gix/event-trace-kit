@@ -5,7 +5,8 @@
 namespace etk
 {
 
-inline bool vsprintf(std::wstring& sink, size_t expectedLength, wchar_t const* format, va_list args)
+inline bool vsprintf(std::wstring& sink, size_t expectedLength, wchar_t const* format,
+                     va_list args)
 {
     size_t currSize = sink.size();
 

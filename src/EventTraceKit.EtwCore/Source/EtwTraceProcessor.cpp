@@ -61,8 +61,7 @@ public:
 
     explicit string_back_insert_iterator(Container& container)
         : container(std::addressof(container))
-    {
-    }
+    {}
 
     template<typename T>
     string_back_insert_iterator& operator=(T const& value)
@@ -224,8 +223,8 @@ TRACE_LOGFILE_HEADER const* EtwTraceProcessor::GetLogFileHeader() const
     return &traceLogFiles.front().LogfileHeader;
 }
 
-std::unique_ptr<ITraceProcessor>
-CreateEtwTraceProcessor(cspan<std::wstring_view> loggerName)
+std::unique_ptr<ITraceProcessor> CreateEtwTraceProcessor(
+    cspan<std::wstring_view> loggerName)
 {
     return std::make_unique<EtwTraceProcessor>(loggerName);
 }

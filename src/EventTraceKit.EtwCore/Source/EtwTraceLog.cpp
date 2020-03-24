@@ -84,8 +84,7 @@ EVENT_RECORD* CopyEvent(Allocator& alloc, EVENT_RECORD const* record)
 }
 
 void NullCallback(size_t, void*)
-{
-}
+{}
 
 class FilteredTraceLog : public IFilteredTraceLog
 {
@@ -262,8 +261,7 @@ EtwTraceLog::EtwTraceLog(TraceDataToken traceDataToken)
     : traceDataToken(std::move(traceDataToken))
     , changedCallback(&NullCallback)
     , changedCallbackState()
-{
-}
+{}
 
 void EtwTraceLog::ProcessEvent(EVENT_RECORD const& record)
 {

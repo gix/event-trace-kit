@@ -10,7 +10,6 @@
 #include <strsafe.h>
 #include <windows.h>
 
-
 namespace etk
 {
 
@@ -61,28 +60,23 @@ char const* Win32Exception::what() const noexcept
 void Win32Exception::Format()
 {
     wchar_t* errMessageBuffer;
-    DWORD result = FormatMessageW(
-        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-        nullptr,
-        error,
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        reinterpret_cast<LPWSTR>(&errMessageBuffer),
-        0,
-        nullptr);
+    DWORD result =
+        FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+                           FORMAT_MESSAGE_IGNORE_INSERTS,
+                       nullptr, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                       reinterpret_cast<LPWSTR>(&errMessageBuffer), 0, nullptr);
 
     if (result == 0) {
         DWORD err = GetLastError();
-        result = FormatMessageW(
-            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-            nullptr,
-            err,
-            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-            reinterpret_cast<LPWSTR>(&errMessageBuffer),
-            0,
-            nullptr);
+        result =
+            FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+                               FORMAT_MESSAGE_IGNORE_INSERTS,
+                           nullptr, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                           reinterpret_cast<LPWSTR>(&errMessageBuffer), 0, nullptr);
 
         if (result == 0) {
-            message = L"Unknown error occurred. Additionally, an error occurred formatting the error code.";
+            message =
+                L"Unknown error occurred. Additionally, an error occurred formatting the error code.";
         }
     }
 
@@ -92,24 +86,25 @@ void Win32Exception::Format()
         message.append(L"[%d] %ls");
 
     std::wstring messageBuffer(wcslen(errMessageBuffer) + 40, 0);
-    HRESULT hr = StringCchPrintfW(
-        &messageBuffer[0],
-        messageBuffer.length(),
-        message.c_str(),
-        error,
-        errMessageBuffer);
+    HRESULT hr = StringCchPrintfW(&messageBuffer[0], messageBuffer.length(),
+                                  message.c_str(), error, errMessageBuffer);
     LocalFree(errMessageBuffer);
 
     if (FAILED(hr)) {
-        message = L"Unknown error occurred. Additionally, an error occurred formatting the error code.";
-        ansiMessage = "Unknown error occurred. Additionally, an error occurred formatting the error code.";
+        message =
+            L"Unknown error occurred. Additionally, an error occurred formatting the error code.";
+        ansiMessage =
+            "Unknown error occurred. Additionally, an error occurred formatting the error code.";
         return;
     }
 
-    int cch = WideCharToMultiByte(CP_ACP, 0, messageBuffer.c_str(), -1, nullptr, 0, "?", nullptr);
+    int cch = WideCharToMultiByte(CP_ACP, 0, messageBuffer.c_str(), -1, nullptr, 0, "?",
+                                  nullptr);
     if (cch == 0) {
-        message = L"Unknown error occurred. Additionally, an error occurred formatting the error code.";
-        ansiMessage = "Unknown error occurred. Additionally, an error occurred formatting the error code.";
+        message =
+            L"Unknown error occurred. Additionally, an error occurred formatting the error code.";
+        ansiMessage =
+            "Unknown error occurred. Additionally, an error occurred formatting the error code.";
         return;
     }
 
@@ -121,4 +116,4 @@ void Win32Exception::Format()
     ansiMessage = std::move(ansiBuffer);
 }
 
-} // namespace ffmf
+} // namespace etk

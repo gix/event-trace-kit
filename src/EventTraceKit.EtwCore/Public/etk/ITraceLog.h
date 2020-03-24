@@ -2,8 +2,8 @@
 #include "etk/EventInfo.h"
 #include "etk/IEventSink.h"
 
-#include <string>
 #include <memory>
+#include <string>
 #include <tuple>
 
 namespace etk
@@ -23,7 +23,9 @@ using TraceLogFilterEvent = bool(void* record, void* info, size_t infoSize);
 class TraceLogFilter
 {
 public:
-    TraceLogFilter(TraceLogFilterEvent* filter) : Filter(filter) {}
+    TraceLogFilter(TraceLogFilterEvent* filter)
+        : Filter(filter)
+    {}
     virtual ~TraceLogFilter() = default;
     TraceLogFilterEvent* Filter;
 };
@@ -45,7 +47,6 @@ using TraceLogEventsChangedCallback = void(size_t, void*);
 std::unique_ptr<ITraceLog> CreateEtwTraceLog(TraceLogEventsChangedCallback* callback);
 
 std::tuple<std::unique_ptr<ITraceLog>, std::unique_ptr<IFilteredTraceLog>>
-CreateFilteredTraceLog(TraceLogEventsChangedCallback* callback,
-                       TraceLogFilter* filter);
+CreateFilteredTraceLog(TraceLogEventsChangedCallback* callback, TraceLogFilter* filter);
 
 } // namespace etk

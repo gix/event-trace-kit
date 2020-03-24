@@ -176,9 +176,8 @@ private:
 
 } // namespace
 
-std::unique_ptr<EventTraceProperties>
-EventTraceProperties::Create(std::wstring const& loggerName,
-                             std::wstring const& logFileName)
+std::unique_ptr<EventTraceProperties> EventTraceProperties::Create(
+    std::wstring const& loggerName, std::wstring const& logFileName)
 {
     size_t const loggerNameBytes = ZStringByteCount(loggerName);
     size_t const logFileNameBytes =

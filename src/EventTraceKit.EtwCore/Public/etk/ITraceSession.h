@@ -28,8 +28,7 @@ struct TraceProperties
         , MaximumBuffers(MinimumBuffers + 20)
         , FlushPeriod(std::chrono::seconds(1))
         , ClockResolution(ClockResolutionType::QPC)
-    {
-    }
+    {}
 
     GUID Id;
     unsigned BufferSize;
@@ -75,8 +74,7 @@ public:
         , MatchAnyKeyword(anyKeywordMask)
         , MatchAllKeyword(allKeywordMask)
         , Level(level)
-    {
-    }
+    {}
 
     GUID Id;
     uint64_t MatchAnyKeyword;

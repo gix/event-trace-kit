@@ -21,8 +21,7 @@ public:
     ThreadpoolTimer(PTP_TIMER_CALLBACK callback, void* context,
                     PTP_CALLBACK_ENVIRON cbe = nullptr)
         : ThreadpoolTimer(CreateThreadpoolTimer(callback, context, cbe))
-    {
-    }
+    {}
 
     void Start(std::chrono::duration<unsigned, std::milli> period)
     {

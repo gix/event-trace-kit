@@ -80,8 +80,7 @@ public:
     explicit TlogEventMetadataKey(uint8_t const* metadata, uint16_t size)
         : metadata_(metadata)
         , size_(size)
-    {
-    }
+    {}
 
     uint8_t const* data() const { return metadata_; }
     uint16_t size() const { return size_; }

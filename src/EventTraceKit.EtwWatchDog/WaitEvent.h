@@ -50,8 +50,7 @@ protected:
 private:
     WaitEvent(WaitHandle handle)
         : handle(std::move(handle))
-    {
-    }
+    {}
 
     WaitHandle handle;
 };
@@ -124,13 +123,11 @@ class AutoResetEvent : public WaitEvent
 public:
     AutoResetEvent(bool initialState = false, std::wstring const& name = Empty)
         : WaitEvent(initialState, false, name)
-    {
-    }
+    {}
 
     AutoResetEvent(AutoResetEvent&& source) noexcept
         : WaitEvent(std::move(source))
-    {
-    }
+    {}
 
     AutoResetEvent& operator=(AutoResetEvent&& source) noexcept
     {
@@ -147,13 +144,11 @@ class ManualResetEvent : public WaitEvent
 public:
     ManualResetEvent(bool initialState = false, std::wstring const& name = Empty)
         : WaitEvent(initialState, true, name)
-    {
-    }
+    {}
 
     ManualResetEvent(ManualResetEvent&& source) noexcept
         : WaitEvent(std::move(source))
-    {
-    }
+    {}
 
     ManualResetEvent& operator=(ManualResetEvent&& source) noexcept
     {
