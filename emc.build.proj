@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
-         ToolsVersion="15.0" DefaultTargets="Pack">
+         DefaultTargets="Pack">
   <ItemGroup>
     <ProjectItem Include="src\EventManifestCompiler\EventManifestCompiler.csproj"/>
     <ProjectItem Include="src\EventManifestCompiler.Tests\EventManifestCompiler.Tests.csproj"/>
@@ -11,21 +11,22 @@
   </ItemGroup>
   <PropertyGroup>
     <Configuration Condition="'$(Configuration)' == ''">Release</Configuration>
-    <PackageDir>$(MSBuildThisFileDirectory)dist</PackageDir>
-    <BuildQuality Condition="'$(BuildQuality)' == ''">PerBuildPreRelease</BuildQuality>
+    <OfficialBuildId Condition="'$(OfficialBuildId)' == '' and '$(OfficialBuild)' == 'true'">$([System.DateTime]::UtcNow.ToString(`yyyyMMdd.HHmm`))</OfficialBuildId>
 
-    <BuildNumber Condition="'$(BuildNumber)' == ''">$(BUILD_BUILDNUMBER)</BuildNumber>
-    <BuildNumber Condition="'$(BuildNumber)' == '' AND '$(OfficialBuild)' != 'true'">$([System.DateTime]::UtcNow.ToString(`yyyyMMdd.HHmm`))</BuildNumber>
-
-    <BuildProperties>Configuration=$(Configuration);Platform=AnyCPU;BuildNumber=$(BuildNumber)</BuildProperties>
+    <BuildPropertiesCommon>Configuration=$(Configuration);OfficialBuildId=$(OfficialBuildId)</BuildPropertiesCommon>
+    <BuildProperties>$(BuildPropertiesCommon);Platform=AnyCPU</BuildProperties>
     <PackProperties>$(BuildProperties);IncludeSource=true</PackProperties>
-
+    <PackageDir>$(MSBuildThisFileDirectory)build\publish\</PackageDir>
     <ToolsDir>$(MSBuildThisFileDirectory)tools\</ToolsDir>
   </PropertyGroup>
 
-  <Import Project="src\Build\Settings.props" />
+  <Import Project="src\Build\ProjectInfo.props"/>
+  <Import Project="src\Build\Common.props"/>
+  <Import Project="src\Build\Version.props"/>
+  <Import Project="src\Build\RepoLayout.props" />
+  <Import Project="src\Build\ProjectLayout.props" />
 
-  <Target Name="Clean" Condition="'$(Clean)' != 'false'">
+  <Target Name="Clean" Condition="'$(Clean)'!='false'">
     <MSBuild Projects="@(ProjectItem)"
              Properties="$(BuildProperties)"
              Targets="Clean"
@@ -35,17 +36,26 @@
     <RemoveDir Directories="build\release"/>
   </Target>
 
-  <Target Name="Restore" Condition="'$(Restore)' != 'false'">
+  <Target Name="Restore" Condition="'$(Restore)'!='false'">
+    <!-- Parallel restore is not threadsafe and cannot be used reliably for CI
+         builds. See https://github.com/NuGet/Home/issues/7648 -->
     <MSBuild Projects="@(ProjectItem)"
              Properties="$(BuildProperties)"
              Targets="Restore"
-             BuildInParallel="true"
+             BuildInParallel="false"
              StopOnFirstFailure="true"/>
   </Target>
 
-  <Target Name="Build" DependsOnTargets="Restore" Condition="'$(Build)' != 'false'">
+  <Target Name="Build" DependsOnTargets="Restore" Condition="'$(Build)'!='false'">
+    <!--
+      Force re-evaluation of any native project by passing in a different set of
+      global properties. A dummy property is enough. This is necessary since the
+      project might have been loaded before restoring its NuGet packages. The
+      seemingly useful MSBuild task property 'UnloadProjectsOnCompletion' cannot
+      be used since it does not do anything.
+    -->
     <MSBuild Projects="@(ProjectItem)"
-             Properties="$(BuildProperties)"
+             Properties="$(BuildProperties);Dummy=ForceReload"
              BuildInParallel="true"
              StopOnFirstFailure="true"/>
   </Target>
@@ -68,31 +78,16 @@
 
   <Target Name="Pack" DependsOnTargets="Build;Test">
     <PropertyGroup>
-      <PackArgs>-Symbols -NoPackageAnalysis -OutputDirectory "$(PackageDir)"</PackArgs>
-      <PackArgs Condition="'$(BuildQuality)' == 'Release'">$(PackArgs) -Version "$(NuGetReleaseVersion)"</PackArgs>
-      <PackArgs Condition="'$(BuildQuality)' == 'PreRelease'">$(PackArgs) -Version "$(NuGetPreReleaseVersion)"</PackArgs>
-      <PackArgs Condition="'$(BuildQuality)' == 'PerBuildPreRelease'">$(PackArgs) -Version "$(NuGetPerBuildPreReleaseVersion)"</PackArgs>
+      <PackArgs>-Symbols -NoPackageAnalysis -OutputDirectory "$(PackageDir)\" -Version "$(Version)"</PackArgs>
     </PropertyGroup>
+    <Message Importance="High" Text="Version: $(Version)"/>
+    <Message Importance="High" Text="VersionPrefix: $(VersionPrefix)"/>
+    <Message Importance="High" Text="OfficialBuild: $(OfficialBuild)"/>
+    <Message Importance="High" Text="OfficialBuildId: $(OfficialBuildId)"/>
+    <Message Importance="High" Text="PreReleaseVersionLabel: $(PreReleaseVersionLabel)"/>
+    <Message Importance="High" Text="_PreReleaseLabel: $(_PreReleaseLabel)"/>
+    <Message Importance="High" Text="FinalVersionKind: $(FinalVersionKind)"/>
     <MakeDir Directories="$(PackageDir)"/>
     <Exec Command="nuget.exe pack $(PackArgs) src\EventManifestCompiler.Build.Tasks.nuspec"/>
-  </Target>
-
-  <Target Name="BuildDocs">
-    <Exec Command="docfx.exe Docs/docfx.json -f"/>
-  </Target>
-
-  <Target Name="EnsureCleanWorkingDir">
-    <Exec Command="git diff --cached --exit-code &gt; NUL" ContinueOnError="true">
-      <Output TaskParameter="ExitCode" PropertyName="ErrorCode"/>
-    </Exec>
-    <Error Text="Working directory has staged changes." Condition="'$(ErrorCode)' != '0'"/>
-  </Target>
-
-  <Target Name="Publish" DependsOnTargets="Build;GetVersion">
-    <PropertyGroup>
-      <PushArgs>&quot;dist/EventManifestCompiler.Build.Tasks.$(NuGetReleaseVersion).nupkg&quot;</PushArgs>
-      <PushArgs>$(PushArgs) -Source https://www.nuget.org/api/v2/package</PushArgs>
-    </PropertyGroup>
-    <Exec Command="nuget push $(PushArgs)"/>
   </Target>
 </Project>

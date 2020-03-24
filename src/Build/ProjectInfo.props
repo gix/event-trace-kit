@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <Company></Company>
+    <Copyright></Copyright>
+    <Authors>Nico Rieck</Authors>
+    <Product>EventTraceKit</Product>
+    <VersionPrefix>0.3.0</VersionPrefix>
+  </PropertyGroup>
+</Project>

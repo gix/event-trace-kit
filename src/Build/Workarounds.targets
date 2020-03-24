@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup Condition="'$(IsWpfTempProject)' == 'true'">
+    <DocumentationFile></DocumentationFile>
+
+    <!-- The XAML compiler generates a temporary project with a randomized name.
+         Without setting a hardcoded name every build will leave a new file behind. -->
+    <GeneratedAssemblyInfoFile>$(IntermediateOutputPath)_WpfTemporaryTarget.AssemblyInfo$(DefaultLanguageSourceExtension)</GeneratedAssemblyInfoFile>
+  </PropertyGroup>
+
+  <!-- Place the generated AssemblyAttributes source file into IntDir. By
+       default it is generated in the user's temp directory. -->
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.vcxproj' and '$(CLRSupport)' != 'false'">
+    <TargetFrameworkMonikerAssemblyAttributesPath>$([System.IO.Path]::Combine('$(IntDir)','$(TargetFrameworkMoniker).AssemblyAttributes$(DefaultLanguageSourceExtension)'))</TargetFrameworkMonikerAssemblyAttributesPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
+    <TargetFrameworkMonikerAssemblyAttributesPath>$([System.IO.Path]::Combine('$(IntermediateOutputPath)','$(TargetFrameworkMoniker).AssemblyAttributes$(DefaultLanguageSourceExtension)'))</TargetFrameworkMonikerAssemblyAttributesPath>
+  </PropertyGroup>
+
+  <!-- The TargetFrameworkMonikerAssemblyAttributesPath source file is added as
+       a ClCompile item using the path as-is. If this path is absolute, using
+       %(RelativeDir) for ClCompile properties can result in invalid paths
+       (e.g., when ObjectFileName is set to '$(IntDir)%(RelativeDir)', the
+       resulting path looks like 'C:\path\to\C:\path\to\file.obj'). To avoid
+       this, affected properties are explicitly overwritten here. -->
+  <Target Name="UpdateTargetFrameworkMonikerAttributeCompile"
+          BeforeTargets="ComputeReferenceCLInput;ClCompile"
+          DependsOnTargets="GenerateTargetFrameworkMonikerAttribute"
+          AfterTargets="GenerateTargetFrameworkMonikerAttribute"
+          Condition="'$(GenerateTargetFrameworkAttribute)' == 'true'">
+    <ItemGroup>
+      <ClCompile Condition="'%(ClCompile.Identity)' == '$(TargetFrameworkMonikerAssemblyAttributesPath)'">
+        <AssemblerListingLocation>$(TargetFrameworkMonikerAssemblyAttributesPath).asm</AssemblerListingLocation>
+        <ObjectFileName>$(TargetFrameworkMonikerAssemblyAttributesPath).obj</ObjectFileName>
+        <!--<AdditionalOptions>%(AdditionalOptions) -Zc:twoPhase-</AdditionalOptions>-->
+      </ClCompile>
+    </ItemGroup>
+  </Target>
+</Project>

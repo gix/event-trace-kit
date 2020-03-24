@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <BuildRoot Condition="'$(BuildRoot)' == ''">$(RepoRoot)build\</BuildRoot>
+    <BuildFolder Condition="'$(BuildFolder)' == ''">$(Configuration.ToLowerInvariant())</BuildFolder>
+    <IsDebugBuild Condition="'$(IsDebugBuild)' == '' and $([System.Text.RegularExpressions.Regex]::IsMatch('$(Configuration)', 'Debug'))">true</IsDebugBuild>
+    <IsDebugBuild Condition="'$(IsDebugBuild)' == ''">false</IsDebugBuild>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+    <BaseOutputPath Condition="'$(BaseOutputPath)' == ''">$(BuildRoot)$(BuildFolder)\bin\$(MSBuildProjectName)\</BaseOutputPath>
+    <BaseIntermediateOutputPath Condition="'$(BaseIntermediateOutputPath)' == ''">$(BuildRoot)$(BuildFolder)\obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <OutputPath>$(BaseOutputPath)</OutputPath>
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.vcxproj'">
+    <OutDir>$(BuildRoot)$(BuildFolder)\bin\$(MSBuildProjectName)\</OutDir>
+    <IntDir>$(BuildRoot)$(BuildFolder)\obj\$(MSBuildProjectName)\</IntDir>
+  </PropertyGroup>
+</Project>

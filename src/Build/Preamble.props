@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <Import Project="ProjectInfo.props" />
+
+  <Import Project="Common.props" />
+  <Import Project="Workarounds.props" />
+  <Import Project="Version.props"/>
+  <Import Project="RepoLayout.props" />
+  <Import Project="ProjectLayout.props" />
+  <Import Project="DeterministicBuild.props" />
+
+  <Import Condition="'$(MSBuildProjectExtension)' == '.csproj'" Project="SharedManagedProperties.props" />
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.vcxproj'">
+    <ForceImportAfterCppProps>$(MSBuildThisFileDirectory)SharedCppProperties.props</ForceImportAfterCppProps>
+  </PropertyGroup>
+</Project>

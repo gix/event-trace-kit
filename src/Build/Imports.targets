@@ -1,36 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project>
   <PropertyGroup>
-    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
-    <IsWpfTempProject>false</IsWpfTempProject>
-    <IsWpfTempProject Condition="'$(MSBuildProjectExtension)' == '.tmp_proj' or $(MSBuildProjectFile.Contains('_wpftmp.csproj'))">true</IsWpfTempProject>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <HighEntropyVA>true</HighEntropyVA>
-    <Deterministic>true</Deterministic>
-
-    <DocumentationFile Condition="'$(IsWpfTempProject)' == 'true'"></DocumentationFile>
-    <DocumentationFile Condition="'$(IsWpfTempProject)' != 'true'">$(OutputPath)$(AssemblyName).xml</DocumentationFile>
-
-    <!-- The XAML compiler generates a temporary project with a randomized name.
-         Without setting a hardcoded name every build will leave a new file behind. -->
-    <GeneratedAssemblyInfoFile Condition="'$(IsWpfTempProject)' == 'true'">$(IntermediateOutputPath)_WpfTemporaryTarget.AssemblyInfo$(DefaultLanguageSourceExtension)</GeneratedAssemblyInfoFile>
-
-    <TargetFrameworkMonikerAssemblyAttributesPath>$([System.IO.Path]::Combine('$(IntermediateOutputPath)','$(TargetFrameworkMoniker).AssemblyAttributes$(DefaultLanguageSourceExtension)'))</TargetFrameworkMonikerAssemblyAttributesPath>
+    <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
 
   <!-- Returns the current build version. Used in .vsixmanifests to substitute our build version into them -->
-  <Target Name="GetBuildVersion" Returns="$(VsixVersion)"/>
+  <Target Name="GetVsixVersion" Returns="$(VsixVersion)"/>
 
-  <Target Name="ValidateBuildNumber" BeforeTargets="Build">
-    <Error Condition="'$(BuildNumber)' == '' AND '$(OfficialBuild)' == 'true'"
-           Text="A build number must be specified for an official build."/>
-  </Target>
-
-  <Import Project="$(MSBuildThisFileDirectory)GenerateAssemblyInfo.targets" />
-  <Import Project="$(MSBuildThisFileDirectory)ReplaceFileText.targets" />
+  <Import Project="GenerateAssemblyInfo.targets" />
+  <Import Project="ReplaceFileText.targets" />
 </Project>

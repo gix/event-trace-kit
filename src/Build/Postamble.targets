@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <ImportGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
+    <Import Project="Imports.targets"/>
+  </ImportGroup>
+
+  <ImportGroup Condition="'$(MSBuildProjectExtension)' == '.vcxproj'">
+    <Import Project="GenerateVersionInfo.targets"/>
+  </ImportGroup>
+
+  <Import Project="DeterministicBuild.targets"/>
+  <Import Project="Workarounds.targets" />
+</Project>

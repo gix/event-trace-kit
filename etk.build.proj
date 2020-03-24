@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
-         ToolsVersion="15.0" DefaultTargets="Pack">
+         DefaultTargets="Pack">
   <ItemGroup>
     <ProjectItem Include="src\EventTraceKit.EventTracing\EventTraceKit.EventTracing.csproj"/>
     <ProjectItem Include="src\EventTraceKit.EventTracing.Tests\EventTraceKit.EventTracing.Tests.csproj"/>
+    <ProjectItem Include="src\EventTraceKit.Etw\EventTraceKit.Etw.vcxproj"/>
+    <ProjectItem Include="src\EventTraceKit.EtwCore\EventTraceKit.EtwCore.vcxproj"/>
     <ProjectItem Include="src\EventTraceKit.EtwCore.Tests\EventTraceKit.EtwCore.Tests.vcxproj"/>
+    <ProjectItem Include="src\EventTraceKit.EtwWatchDog\EventTraceKit.EtwWatchDog.vcxproj"/>
     <ProjectItem Include="src\TraceLaunch.Windows\TraceLaunch.Windows.vcxproj"/>
     <ProjectItem Include="src\TraceLaunch.x86\TraceLaunch.x86.vcxproj"/>
     <ProjectItem64 Include="src\TraceLaunch.x64\TraceLaunch.x64.vcxproj"/>
@@ -13,22 +16,22 @@
   </ItemGroup>
   <PropertyGroup>
     <Configuration Condition="'$(Configuration)' == ''">Release</Configuration>
-    <PackageDir>$(MSBuildThisFileDirectory)dist</PackageDir>
-    <BuildQuality Condition="'$(BuildQuality)' == ''">PerBuildPreRelease</BuildQuality>
+    <OfficialBuildId Condition="'$(OfficialBuildId)' == '' and '$(OfficialBuild)' == 'true'">$([System.DateTime]::UtcNow.ToString(`yyyyMMdd.HHmm`))</OfficialBuildId>
 
-    <BuildNumber Condition="'$(BuildNumber)' == ''">$(BUILD_BUILDNUMBER)</BuildNumber>
-    <BuildNumber Condition="'$(BuildNumber)' == '' AND '$(OfficialBuild)' != 'true'">$([System.DateTime]::UtcNow.ToString(`yyyyMMdd.HHmm`))</BuildNumber>
-
-    <BuildPropertiesCommon>Configuration=$(Configuration);DeployExtension=false;BuildNumber=$(BuildNumber)</BuildPropertiesCommon>
+    <BuildPropertiesCommon>Configuration=$(Configuration);OfficialBuildId=$(OfficialBuildId);DeployExtension=false</BuildPropertiesCommon>
     <BuildProperties>$(BuildPropertiesCommon);Platform=x86</BuildProperties>
     <BuildProperties64>$(BuildPropertiesCommon);Platform=x64</BuildProperties64>
-
+    <PackageDir>$(MSBuildThisFileDirectory)build\publish\</PackageDir>
     <ToolsDir>$(MSBuildThisFileDirectory)tools\</ToolsDir>
   </PropertyGroup>
 
-  <Import Project="src\Build\Settings.props" />
+  <Import Project="src\Build\ProjectInfo.props"/>
+  <Import Project="src\Build\Common.props"/>
+  <Import Project="src\Build\Version.props"/>
+  <Import Project="src\Build\RepoLayout.props" />
+  <Import Project="src\Build\ProjectLayout.props" />
 
-  <Target Name="Clean" Condition="'$(Clean)' != 'false'">
+  <Target Name="Clean" Condition="'$(Clean)'!='false'">
     <MSBuild Projects="@(ProjectItem)"
              Properties="$(BuildProperties)"
              Targets="Clean"
@@ -39,13 +42,11 @@
              Targets="Clean"
              BuildInParallel="true"
              StopOnFirstFailure="true"/>
-    <RemoveDir Directories="build\x86" ContinueOnError="WarnAndContinue"/>
-    <RemoveDir Directories="build\x64" ContinueOnError="WarnAndContinue"/>
-    <RemoveDir Directories="build\x86"/>
-    <RemoveDir Directories="build\x64"/>
+    <RemoveDir Directories="build\release" ContinueOnError="WarnAndContinue"/>
+    <RemoveDir Directories="build\release"/>
   </Target>
 
-  <Target Name="Restore" Condition="'$(Restore)' != 'false'">
+  <Target Name="Restore" Condition="'$(Restore)'!='false'">
     <PropertyGroup>
       <NuGetExecutable Condition="'$(NuGetExecutable)'==''">nuget.exe</NuGetExecutable>
       <NuGetPackagesDirectory>$(MSBuildThisFileDirectory)src\packages\</NuGetPackagesDirectory>
@@ -57,13 +58,20 @@
           Command="set NUGET_RESTORE_MSBUILD_ARGS=/p:Configuration=$(Configuration) &amp; &quot;$(NuGetExecutable)&quot; restore -NonInteractive -PackagesDirectory &quot;$(NuGetPackagesDirectory)\&quot; &quot;%(NuGetRestoreTarget.Identity)&quot;"/>
   </Target>
 
-  <Target Name="Build" DependsOnTargets="Restore" Condition="'$(Build)' != 'false'">
+  <Target Name="Build" DependsOnTargets="Restore" Condition="'$(Build)'!='false'">
+    <!--
+      Force re-evaluation of any native project by passing in a different set of
+      global properties. A dummy property is enough. This is necessary since the
+      project might have been loaded before restoring its NuGet packages. The
+      seemingly useful MSBuild task property 'UnloadProjectsOnCompletion' cannot
+      be used since it does not do anything.
+    -->
     <MSBuild Projects="@(ProjectItem64)"
-             Properties="$(BuildProperties64)"
+             Properties="$(BuildProperties64);Dummy=ForceReload"
              BuildInParallel="true"
              StopOnFirstFailure="true"/>
     <MSBuild Projects="@(ProjectItem)"
-             Properties="$(BuildProperties)"
+             Properties="$(BuildProperties);Dummy=ForceReload"
              BuildInParallel="true"
              StopOnFirstFailure="true"/>
   </Target>
@@ -80,7 +88,7 @@
     <ItemGroup>
       <TestAssemblies Include="build\release\bin\EventTraceKit.EventTracing.Tests\**\EventTraceKit.EventTracing.Tests.dll"/>
       <TestAssemblies Include="build\release\bin\EventTraceKit.VsExtension.Tests\**\EventTraceKit.VsExtension.Tests.dll"/>
-      <TestExecutables Include="build\release\bin\EventTraceKit.Etw.Tests\EventTraceKit.Etw.Tests.exe"/>
+      <TestExecutables Include="build\release\bin\EventTraceKit.EtwCore.Tests\EventTraceKit.EtwCore.Tests.exe"/>
     </ItemGroup>
     <Exec Command="&quot;$(XunitRunner32)&quot; @(TestAssemblies, ' ')"/>
     <Exec Command="&quot;%(TestExecutables.Identity)&quot;"/>

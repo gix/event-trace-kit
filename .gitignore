@@ -1,10 +1,11 @@
-bin/
-obj/
-Debug/
-Release/
+/build/
 /dist/
 /src/packages/
 /tools/
+/test/**/bin/
+/test/**/obj/
+/test/**/Debug/
+/test/**/Release/
 
 .vs/
 *.VC.db
