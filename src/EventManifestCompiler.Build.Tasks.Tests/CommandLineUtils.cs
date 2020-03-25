@@ -3,7 +3,7 @@ namespace EventManifestCompiler.Build.Tasks.Tests
     using System.Collections.Generic;
     using System.Text;
 
-    public class CommandLineUtils
+    public static class CommandLineUtils
     {
         public static IEnumerable<string> EnumerateCommandLineArgs(string commandLine)
         {

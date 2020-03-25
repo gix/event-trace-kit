@@ -84,6 +84,12 @@ namespace EventManifestCompiler.Build.Tasks.Tests
         private List<string> GetExecutedCommandLineArgs()
         {
             var commandLine = GetExecutedCommandLine();
+            int idx = commandLine.IndexOf("emc.exe", StringComparison.OrdinalIgnoreCase);
+            if (idx != -1) {
+                idx += "emc.exe".Length;
+                commandLine = '"' + commandLine.Substring(0, idx) + '"' + commandLine.Substring(idx);
+            }
+
             return CommandLineUtils.EnumerateCommandLineArgs(commandLine).ToList();
         }
 
