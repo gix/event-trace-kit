@@ -7,7 +7,6 @@
     <TargetFramework>net46</TargetFramework>
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DebugType>full</DebugType>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\Build\EventTraceKit.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
