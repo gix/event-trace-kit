@@ -41,7 +41,7 @@ WatchDog::WatchDog(String^ loggerName)
         exitEventName);
 
     watchDogExe = Path::Combine(
-        GetCurrentAssemblyDir(), "EventTraceKit.Logger.WatchDog.exe");
+        GetCurrentAssemblyDir(), "EventTraceKit.EtwWatchDog.exe");
 
     if (!File::Exists(watchDogExe))
         throw gcnew InvalidOperationException("WatchDog executable not found.");
