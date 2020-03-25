@@ -23,6 +23,7 @@
     <UseCodebase>true</UseCodebase>
     <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>..\Build\EventTraceKit.snk</AssemblyOriginatorKeyFile>
+    <DevEnvDir Condition="'$(DevEnvDir)'==''">C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE\</DevEnvDir>
   </PropertyGroup>
   <PropertyGroup>
     <StartAction>Program</StartAction>
