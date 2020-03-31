@@ -5,6 +5,10 @@ Abbreviations:
 - VS: VisualStudio extension
 - EMC: Event Manifest Compiler and accompanying libraries
 
+## [0.4.1] - 2020-03-31
+### Fixed
+- EMC: Activity stop events are now properly logged.
+
 ## [0.4.0] - 2020-03-31
 ### Added
 - EMC: Added support for activities (cxx code generator). Activities are pairs

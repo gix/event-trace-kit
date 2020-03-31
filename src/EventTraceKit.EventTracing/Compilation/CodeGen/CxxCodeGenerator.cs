@@ -1018,19 +1018,32 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
                 ow.WriteLine("[[nodiscard]] EMCGEN_NOINLINE");
                 ow.WriteLine("explicit {0}(", templateId);
                 using (ow.IndentScope()) {
-                    ow.WriteLine("_In_ EmcGenTraceContext const& {0},", naming.ContextId);
+                    ow.WriteLine("_In_ EmcGenTraceContext const& context,");
                     ow.WriteLine("_In_ EVENT_DESCRIPTOR const& startEvent,");
                     ow.Write("_In_ EVENT_DESCRIPTOR const& stopEvent");
                     AppendArgs(ow, parameters);
                     ow.WriteLine(") noexcept");
+                    ow.WriteLine(": context(context)");
+                    ow.WriteLine(", stopEvent(stopEvent)");
                 }
                 ow.WriteLine("{");
                 ow.WriteLine("    {0}({1}, {2}, &activityId, &relatedActivityId{3});",
                     naming.GetTemplateId(template),
-                    naming.ContextId,
+                    "context",
                     "startEvent",
                     FormatAsTemplateArgs(parameters));
                 ow.WriteLine("}");
+                ow.WriteLine();
+                ow.WriteLine("~{0}() noexcept", templateId);
+                ow.WriteLine("{");
+                ow.WriteLine("    {0}({1}, {2}, &activityId, nullptr);",
+                    naming.GetTemplateId(DefaultTemplate),
+                    "context",
+                    "stopEvent");
+                ow.WriteLine("}");
+                ow.WriteLine();
+                ow.WriteLine("EmcGenTraceContext const& context;");
+                ow.WriteLine("EVENT_DESCRIPTOR const& stopEvent;");
             }
             ow.WriteLine("};");
             ow.WriteLine("#endif // {0}", guardId);
