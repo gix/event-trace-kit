@@ -1019,7 +1019,7 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
 
 // EMCGEN_GETLENGTHSID macro: Override to use a custom API.
 #ifndef EMCGEN_GETLENGTHSID
-#define EMCGEN_GETLENGTHSID(p)      GetLengthSid((PSID)(p))
+#define EMCGEN_GETLENGTHSID(p)      GetLengthSid(reinterpret_cast<PSID>(p))
 #endif // EMCGEN_GETLENGTHSID
 
 //
@@ -1054,7 +1054,7 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
 #define EMCGEN_ENABLE_CHECK(Context, Descriptor) (Context.IsEnabled && EmcGenEventEnabled(Context, Descriptor))
 #endif
 
-#if !defined(EMCGEN_TRACE_CONTEXT_DEF)
+#ifndef EMCGEN_TRACE_CONTEXT_DEF
 #define EMCGEN_TRACE_CONTEXT_DEF
 struct EmcGenTraceContext
 {
@@ -1072,7 +1072,7 @@ struct EmcGenTraceContext
 };
 #endif // EMCGEN_TRACE_CONTEXT_DEF
 
-#if !defined(EMCGEN_LEVEL_KEYWORD_ENABLED_DEF)
+#ifndef EMCGEN_LEVEL_KEYWORD_ENABLED_DEF
 #define EMCGEN_LEVEL_KEYWORD_ENABLED_DEF
 /// <summary>
 ///   Determines whether an event with a given level and keyword would be
@@ -1101,7 +1101,7 @@ bool EmcGenLevelKeywordEnabled(
 }
 #endif // EMCGEN_LEVEL_KEYWORD_ENABLED_DEF
 
-#if !defined(EMCGEN_EVENT_ENABLED_DEF)
+#ifndef EMCGEN_EVENT_ENABLED_DEF
 #define EMCGEN_EVENT_ENABLED_DEF
 /// <summary>
 ///   Determines whether the specified event would be considered as enabled
@@ -2056,8 +2056,8 @@ __declspec(selectany) __declspec(allocate(""EMCGEN$__z"")) EmcGenStaticProviderL
 
             protected override string ArgType => Property.InType.Name.LocalName switch
             {
-                "CountedUnicodeString" => "const WCHAR*",
-                "CountedAnsiString" => "const char*",
+                "CountedUnicodeString" => "wchar_t const*",
+                "CountedAnsiString" => "char const*",
                 _ => throw new InternalException("unhandled type '{0}'", Property.InType),
             };
 
@@ -2075,9 +2075,9 @@ __declspec(selectany) __declspec(allocate(""EMCGEN$__z"")) EmcGenStaticProviderL
                 if (Property.Count.IsSpecified && Property.Length.IsSpecified)
                     countExpr = GetCountExpr();
 
-                string type = Property.InType.Name == WinEventSchema.CountedUnicodeString ? "WCHAR" : "char";
+                string type = Property.InType.Name == WinEventSchema.CountedUnicodeString ? "wchar_t" : "char";
 
-                return $"(USHORT)(sizeof({type}){countExpr}*{lengthExpr})";
+                return $"static_cast<USHORT>(sizeof({type}){countExpr}*{lengthExpr})";
             }
         }
 
@@ -2105,8 +2105,8 @@ __declspec(selectany) __declspec(allocate(""EMCGEN$__z"")) EmcGenStaticProviderL
             protected override string GetDataSizeExpr()
             {
                 if (Property.Count.IsSpecified)
-                    return $"(USHORT)(sizeof(char){GetLengthExpr()})";
-                return $"(USHORT)(sizeof(char){GetLengthExpr()}{GetCountExpr()})";
+                    return $"static_cast<USHORT>(sizeof(char){GetLengthExpr()})";
+                return $"static_cast<USHORT>(sizeof(char){GetLengthExpr()}{GetCountExpr()})";
             }
 
             protected override string GetLengthExpr(string prefix = "*")
