@@ -17,5 +17,21 @@ namespace EventTraceKit.EventTracing.Tests.Internal.Extensions
             Assert.Equal(expected, input.EscapeFormatting());
             Assert.Equal(input, string.Format(input.EscapeFormatting(), new object[0]));
         }
+
+        [Theory]
+        [InlineData(null, null, "")]
+        [InlineData("abc", null, "")]
+        [InlineData(null, "abc", "")]
+        [InlineData("", "", "")]
+        [InlineData("abc", "", "")]
+        [InlineData("", "abc", "")]
+        [InlineData("abc", "abc", "abc")]
+        [InlineData("abcX", "abc", "abc")]
+        [InlineData("abc", "abcX", "abc")]
+        [InlineData("abcX", "abcY", "abc")]
+        public static void LongestCommonPrefix(string input1, string input2, string expected)
+        {
+            Assert.Equal(expected, StringExtensions.LongestCommonPrefix(input1, input2));
+        }
     }
 }

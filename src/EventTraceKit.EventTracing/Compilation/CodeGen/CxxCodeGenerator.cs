@@ -8,6 +8,7 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
     using System.Text;
     using System.Xml.Schema;
     using EventTraceKit.EventTracing.Compilation.Support;
+    using EventTraceKit.EventTracing.Internal.Extensions;
     using EventTraceKit.EventTracing.Schema;
     using EventTraceKit.EventTracing.Schema.Base;
     using EventTraceKit.EventTracing.Support;
@@ -54,10 +55,12 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             Located.Create("(null)"));
 
         private readonly CxxCodeGenOptions options;
-        private readonly ICodeGenNaming naming;
+        private readonly Naming naming;
         private readonly string etwNamespacePrefix = string.Empty;
         private readonly string etwMacroPrefix = string.Empty;
         private readonly string loggingPrefix;
+        private readonly Dictionary<Provider, List<Activity>> activitiesByProvider =
+            new Dictionary<Provider, List<Activity>>();
 
         private IndentableTextWriter ow;
 
@@ -78,6 +81,14 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
                 return item.Symbol;
             }
 
+            public override string GetTemplateSuffix(Template template)
+            {
+                var suffix = base.GetTemplateSuffix(template);
+                if (suffix.Length != 0)
+                    return "_" + suffix;
+                return suffix;
+            }
+
             public override string GetTemplateId(Template template)
             {
                 return "EmcTemplate" + GetTemplateSuffix(template);
@@ -87,7 +98,19 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             {
                 var prefix = etwMacroPrefix;
                 var suffix = GetTemplateSuffix(template);
-                return $"{prefix}EMC_TEMPLATE_{suffix}_DEFINED";
+                return $"{prefix}EMC_TEMPLATE{suffix}_DEFINED";
+            }
+
+            public string GetActivityId(Template template)
+            {
+                return "Activity" + GetTemplateSuffix(template);
+            }
+
+            public string GetActivityGuardId(Template template)
+            {
+                var prefix = etwMacroPrefix;
+                var suffix = GetTemplateSuffix(template);
+                return $"{prefix}EMC_ACTIVITY{suffix}_DEFINED";
             }
 
             public override string GetEventDescriptorId(Event evt)
@@ -267,9 +290,78 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             ow.Flush();
         }
 
+        private static readonly QName StartOpcode = new QName("Start", "win", WinEventSchema.Namespace);
+        private static readonly QName StopOpcode = new QName("Stop", "win", WinEventSchema.Namespace);
+
+        private sealed class Activity
+        {
+            public Activity(string symbol, Event startEvent, Event stopEvent)
+            {
+                Symbol = symbol;
+                StartEvent = startEvent;
+                StopEvent = stopEvent;
+            }
+
+            public string Symbol { get; }
+            public Event StartEvent { get; }
+            public Event StopEvent { get; }
+        }
+
+        private static List<Activity> FindActivities(Provider provider)
+        {
+            var startStopEvents = provider.Events
+                .Where(x => !x.NotLogged.GetValueOrDefault())
+                .Where(x => x.Opcode?.Name == StartOpcode || x.Opcode?.Name == StopOpcode)
+                .OrderBy(x => x.Value)
+                .ToList();
+
+            var lookup = startStopEvents.ToDictionary(x => x.Value.Value);
+
+            var activities = new List<Activity>();
+            foreach (var stopEvent in startStopEvents.Where(x => x.Opcode.Name == StopOpcode)) {
+                uint startValue = stopEvent.Value.Value - 1;
+
+                if (!lookup.TryGetValue(startValue, out var startEvent) ||
+                    startEvent.Opcode.Name != StartOpcode)
+                    continue;
+
+                // Start and stop event must be similar.
+                if (startEvent.Channel != stopEvent.Channel ||
+                    startEvent.Level != stopEvent.Level ||
+                    startEvent.Task != stopEvent.Task ||
+                    startEvent.KeywordMask != stopEvent.KeywordMask)
+                    continue;
+
+                // Stop event must not have properties.
+                if (stopEvent.Template != null && stopEvent.Template.Properties.Count != 0)
+                    continue;
+
+                string symbol = StringExtensions.LongestCommonPrefix(startEvent.Symbol, stopEvent.Symbol);
+                activities.Add(new Activity(symbol, startEvent, stopEvent));
+            }
+
+            return activities;
+        }
+
+        private Activity TryGetActivity(Event stopEvent)
+        {
+            var activities = activitiesByProvider[stopEvent.Provider];
+            return activities.FirstOrDefault(x => x.StopEvent == stopEvent);
+        }
+
         private void WriteManifest(EventManifest manifest)
         {
+            activitiesByProvider.Clear();
+
+            foreach (var provider in manifest.Providers) {
+                var activities = FindActivities(provider);
+                activitiesByProvider.Add(provider, activities);
+            }
+
+            WriteNamespaceBegin(options.EtwNamespace);
             WriteTemplates(manifest.Providers);
+            WriteActivityTemplates(manifest.Providers);
+            WriteNamespaceEnd(options.EtwNamespace);
 
             foreach (var provider in manifest.Providers)
                 WriteProvider(provider);
@@ -287,7 +379,7 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             WriteNamespaceBegin(ns, inlineNS);
 
             ow.WriteLine("//");
-            ow.WriteLine("// Provider \"{0}\" ({1:D})", provider.Name, provider.Id);
+            ow.WriteLine("// Provider \"{0}\" {1:B}", provider.Name, provider.Id);
             ow.WriteLine("//");
             ow.WriteLine(
                 "{0} {1} = {2};",
@@ -670,6 +762,7 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             ow.WriteLine("//");
             ow.WriteLine("// Event Descriptors");
             ow.WriteLine("//");
+            ow.WriteLine();
             foreach (var evt in provider.Events)
                 WriteEventDescriptor(evt);
             ow.WriteLine();
@@ -708,6 +801,37 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
                 WriteEvent(evt);
         }
 
+        private void WriteActivity(Activity activity)
+        {
+            var provider = activity.StartEvent.Provider;
+            var providerContextId = naming.GetProviderContextId(provider);
+
+            var template = activity.StartEvent.Template ?? DefaultTemplate;
+            var symbol = activity.Symbol + "Activity";
+            var baseSymbol = etwNamespacePrefix + "Activity" + naming.GetTemplateSuffix(template);
+            var properties = template.Properties;
+            var parameters = properties.Select(x => CodeParameter.Create(naming, x)).ToList();
+
+            string logParams = FormatAsParams(parameters);
+            string logArgs = FormatAsArgs(parameters);
+
+            ow.WriteLine("struct {0} : {1}", symbol, baseSymbol);
+            ow.WriteLine("{");
+            using (ow.IndentScope()) {
+                ow.WriteLine("[[nodiscard]] EMCGEN_FORCEINLINE");
+                ow.WriteLine("explicit {0}({1}) noexcept", symbol, logParams);
+                ow.WriteLine("    : {0}({1}, {2}, {3}{4})",
+                             baseSymbol,
+                             providerContextId,
+                             naming.GetEventDescriptorId(activity.StartEvent),
+                             naming.GetEventDescriptorId(activity.StopEvent),
+                             logArgs);
+                ow.WriteLine("{}");
+            }
+            ow.WriteLine("};");
+            ow.WriteLine();
+        }
+
         private void WriteEvent(Event evt)
         {
             if (evt.NotLogged.GetValueOrDefault())
@@ -716,15 +840,16 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             var template = evt.Template ?? DefaultTemplate;
             var properties = template.Properties;
             var enableFuncId = naming.GetEventFuncId(evt, "EventEnabled");
-            var providerHandleId = naming.GetProviderHandleId(evt.Provider);
             var providerContextId = naming.GetProviderContextId(evt.Provider);
             var descriptorId = naming.GetEventDescriptorId(evt);
             var symbol = naming.GetIdentifier(evt);
             var parameters = properties.Select(x => CodeParameter.Create(naming, x)).ToList();
 
             ow.WriteLine("//");
-            ow.WriteLine("// Enablement check for {0}", symbol);
+            ow.WriteLine("// Event {0}", symbol);
             ow.WriteLine("//");
+            ow.WriteLine();
+
             ow.WriteLine("EMCGEN_FORCEINLINE bool {0}() noexcept", enableFuncId);
             ow.WriteLine("{");
             using (ow.IndentScope()) {
@@ -736,26 +861,8 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             ow.WriteLine("}");
             ow.WriteLine();
 
-            var argsBuilder = new StringBuilder();
-            foreach (var p in parameters.SelectMany(x => x.ParameterNames(true, honorOutType: true)))
-                argsBuilder.AppendFormat(", {0}", p);
-            string args = argsBuilder.ToString();
-
-            var paramsBuilder = new StringBuilder();
-            using (var w = new StringWriter(paramsBuilder)) {
-                int i = 0;
-                foreach (var p in parameters.SelectMany(x => x.Parameters(true, honorOutType: true))) {
-                    if (i++ > 0)
-                        paramsBuilder.Append(", ");
-                    paramsBuilder.Append(p);
-                }
-            }
-            string logParams = paramsBuilder.ToString();
-
-            ow.WriteLine("//");
-            ow.WriteLine("// Event write macros for {0}", symbol);
-            ow.WriteLine("//");
-            ow.WriteLine();
+            string logParams = FormatAsParams(parameters);
+            string logArgs = FormatAsArgs(parameters);
 
             if (evt.Message != null)
                 ow.WriteLine("// Message: {0}", evt.Message.Value);
@@ -772,15 +879,21 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             ow.WriteLine("{");
             using (ow.IndentScope()) {
                 ow.WriteLine("return {0}({1}, {2}) ?", "EMCGEN_ENABLE_CHECK", providerContextId, descriptorId);
-                ow.WriteLine("       {0}{1}({2}, {3}{4}) : 0;",
+                ow.WriteLine("       {0}{1}({2}, {3}, nullptr, nullptr{4}) : 0;",
                              etwNamespacePrefix,
                              naming.GetTemplateId(template),
                              providerContextId,
                              descriptorId,
-                             args);
+                             logArgs);
             }
             ow.WriteLine("}");
             ow.WriteLine();
+
+            if (evt.Opcode?.Name == StopOpcode) {
+                var activity = TryGetActivity(evt);
+                if (activity != null)
+                    WriteActivity(activity);
+            }
         }
 
         private void WriteTemplates(IEnumerable<Provider> providers)
@@ -806,13 +919,11 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             ow.WriteLine("// Template Functions");
             ow.WriteLine("//");
             ow.WriteLine();
-            WriteNamespaceBegin(options.EtwNamespace);
 
             foreach (var template in allTemplates.OrderBy(x => x.Key, StringComparer.Ordinal).Select(x => x.Value)) {
                 WriteTemplate(template);
             }
 
-            WriteNamespaceEnd(options.EtwNamespace);
             ow.WriteLine();
         }
 
@@ -835,9 +946,10 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             ow.WriteLine("{0}(", templateId);
             using (ow.IndentScope()) {
                 ow.WriteLine("_In_ EmcGenTraceContext const& {0},", naming.ContextId);
-                ow.WriteLine("_In_ EVENT_DESCRIPTOR const& {0}{1}",
-                             naming.EventDescriptorId,
-                             properties.Count > 0 ? "," : string.Empty);
+                ow.WriteLine("_In_ EVENT_DESCRIPTOR const& {0},",
+                             naming.EventDescriptorId);
+                ow.WriteLine("_In_opt_ GUID const* activityId,");
+                ow.Write("_In_opt_ GUID const* relatedActivityId");
                 AppendArgs(ow, parameters);
                 ow.WriteLine(")");
             }
@@ -845,7 +957,8 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             using (ow.IndentScope()) {
                 ow.WriteLine("{0} {1} = {2};", ConstantDecl("size_t"), countMacroName, dataDescriptorCount);
                 ow.WriteLine();
-                ow.WriteLine("EVENT_DATA_DESCRIPTOR {0}[{1} + 1];", naming.EventDataDescriptorId, countMacroName);
+                ow.WriteLine("EVENT_DATA_DESCRIPTOR {0}[{1} + 1];",
+                             naming.EventDataDescriptorId, countMacroName);
                 ow.WriteLine();
                 int index = 0;
                 foreach (var property in parameters) {
@@ -854,7 +967,7 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
                 }
 
                 ow.WriteLine(
-                    "return EmcGenEventWrite({0}, {1}, nullptr, {2} + 1, {3});",
+                    "return EmcGenEventWrite({0}, {1}, activityId, relatedActivityId, {2} + 1, {3});",
                     naming.ContextId,
                     naming.EventDescriptorId,
                     countMacroName,
@@ -865,35 +978,101 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             ow.WriteLine();
         }
 
-        private string FormatGuid(Guid guid)
+        private void WriteActivityTemplates(IEnumerable<Provider> providers)
+        {
+            var allTemplates = new Dictionary<string, Template>();
+            foreach (var activity in providers.SelectMany(x => activitiesByProvider[x])) {
+                Template template = activity.StartEvent.Template ?? DefaultTemplate;
+                string name = naming.GetActivityId(template);
+                if (allTemplates.ContainsKey(name))
+                    continue;
+                allTemplates.Add(name, template);
+            }
+
+            if (allTemplates.Count == 0)
+                return;
+
+            ow.WriteLine("//");
+            ow.WriteLine("// Activity templates");
+            ow.WriteLine("//");
+            ow.WriteLine();
+
+            foreach (var template in allTemplates.OrderBy(x => x.Key, StringComparer.Ordinal).Select(x => x.Value)) {
+                WriteActivityTemplate(template);
+            }
+
+            ow.WriteLine();
+        }
+
+        private void WriteActivityTemplate(Template template)
+        {
+            string templateId = naming.GetActivityId(template);
+            string guardId = naming.GetActivityGuardId(template);
+            var parameters = template.Properties.Select(x => CodeParameter.Create(naming, x)).ToList();
+
+            ow.WriteLine("#ifndef {0}", guardId);
+            ow.WriteLine("#define {0}", guardId);
+            ow.WriteLine("struct {0} : ScopedActivityId", templateId);
+            ow.WriteLine("{");
+            using (ow.IndentScope()) {
+                ow.WriteLine("[[nodiscard]] EMCGEN_NOINLINE");
+                ow.WriteLine("explicit {0}(", templateId);
+                using (ow.IndentScope()) {
+                    ow.WriteLine("_In_ EmcGenTraceContext const& {0},", naming.ContextId);
+                    ow.WriteLine("_In_ EVENT_DESCRIPTOR const& startEvent,");
+                    ow.Write("_In_ EVENT_DESCRIPTOR const& stopEvent");
+                    AppendArgs(ow, parameters);
+                    ow.WriteLine(") noexcept");
+                }
+                ow.WriteLine("{");
+                ow.WriteLine("    {0}({1}, {2}, &activityId, &relatedActivityId{3});",
+                    naming.GetTemplateId(template),
+                    naming.ContextId,
+                    "startEvent",
+                    FormatAsTemplateArgs(parameters));
+                ow.WriteLine("}");
+            }
+            ow.WriteLine("};");
+            ow.WriteLine("#endif // {0}", guardId);
+            ow.WriteLine();
+        }
+
+        private static string FormatGuid(Guid guid)
         {
             return guid.ToString("X").Replace(",", ", ");
         }
 
-        private void AppendArgs(TextWriter writer, IList<CodeParameter> properties)
+        private static string FormatAsParams(IEnumerable<CodeParameter> parameters)
         {
-            int index = 0;
-            foreach (var p in properties.SelectMany(x => x.Parameters(false))) {
-                if (index++ != 0) {
-                    writer.Write(',');
-                    writer.WriteLine();
-                }
+            return string.Join(", ", parameters.SelectMany(x => x.Parameters(true, honorOutType: true)));
+        }
 
+        private static string FormatAsArgs(IEnumerable<CodeParameter> parameters)
+        {
+            return string.Concat(
+                parameters.SelectMany(x => x.ParameterNames(true, honorOutType: true)).Select(x => $", {x}"));
+        }
+
+        private static string FormatAsTemplateArgs(IEnumerable<CodeParameter> parameters)
+        {
+            return string.Concat(
+                parameters.SelectMany(x => x.ParameterNames(false)).Select(x => $", {x}"));
+        }
+
+        private static void AppendArgs(TextWriter writer, IReadOnlyList<CodeParameter> properties)
+        {
+            foreach (var p in properties.SelectMany(x => x.Parameters(false))) {
+                writer.WriteLine(',');
                 writer.Write(p);
             }
-
-            if (index != 0)
-                writer.WriteLine();
         }
 
         private void WriteSharedDefinitions()
         {
-            string preamble = @"//**********************************************************************`
-//* This is an include file generated by Event Manifest Compiler.      *`
-//**********************************************************************`
+            string preamble = @"//**********************************************************************
+//* This is an include file generated by Event Manifest Compiler.      *
+//**********************************************************************
 
-//*****************************************************************************
-//
 // Notes on the ETW event code generated by EMC:
 //
 // - Structures and arrays of structures are treated as an opaque binary blob.
@@ -931,11 +1110,9 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
 //   many bytes of data. When providing the array to the generated macro, you
 //   must provide the total size of the packed array data, including the UINT16
 //   sizes for each item. In the case of win:CountedUnicodeString, the data
-//   size is specified in WCHAR (16-bit) units. In the case of
+//   size is specified in wchar_t (16-bit) units. In the case of
 //   win:CountedAnsiString and win:CountedBinary, the data size is specified in
 //   bytes.
-//
-//*****************************************************************************
 
 #include <windows.h>
 
@@ -987,10 +1164,10 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
   #endif
 #endif // EMCGEN_HAVE_EVENTSETINFORMATION
 
-// EMCGEN_EVENTWRITETRANSFER macro: Override to use a custom API.
-#ifndef EMCGEN_EVENTWRITETRANSFER
-#define EMCGEN_EVENTWRITETRANSFER   EventWriteTransfer
-#endif // EMCGEN_EVENTWRITETRANSFER
+// EMCGEN_EVENTWRITEEX macro: Override to use a custom API.
+#ifndef EMCGEN_EVENTWRITEEX
+#define EMCGEN_EVENTWRITEEX   EventWriteEx
+#endif // EMCGEN_EVENTWRITEEX
 
 // EMCGEN_EVENTREGISTER macro: Override to use a custom API.
 #ifndef EMCGEN_EVENTREGISTER
@@ -1220,11 +1397,13 @@ EmcGenEventWrite(
     _In_ EmcGenTraceContext const& context,
     _In_ EVENT_DESCRIPTOR const& descriptor,
     _In_opt_ GUID const* activityId,
+    _In_opt_ GUID const* relatedActivityId,
     _In_range_(1, 128) ULONG eventDataCount,
     _Inout_updates_(eventDataCount) EVENT_DATA_DESCRIPTOR* eventData)
 {
-    // Some customized EMCGEN_EVENTWRITETRANSFER macros might ignore ActivityId.
+    // Some customized EMCGEN_EVENTWRITEEX macros might ignore advanced parameters.
     UNREFERENCED_PARAMETER(activityId);
+    UNREFERENCED_PARAMETER(relatedActivityId);
 
     auto* traits = reinterpret_cast<USHORT UNALIGNED const*>(context.ProviderTraits);
 
@@ -1238,11 +1417,13 @@ EmcGenEventWrite(
         eventData[0].Type = EVENT_DATA_DESCRIPTOR_TYPE_PROVIDER_METADATA;
     }
 
-    return EMCGEN_EVENTWRITETRANSFER(
+    return EMCGEN_EVENTWRITEEX(
         context.RegistrationHandle,
         &descriptor,
+        0,
+        0,
         activityId,
-        nullptr,
+        relatedActivityId,
         eventDataCount,
         eventData);
 }
@@ -1499,6 +1680,31 @@ EmcGenEventUnregister(_Inout_ PREGHANDLE regHandle)
 
     return ec;
 }
+
+/// <summary>
+///   Creates and sets a new ambient thread-local activity id.
+/// </summary>
+struct ScopedActivityId
+{
+    EMCGEN_FORCEINLINE ScopedActivityId() noexcept
+    {
+        // Create a new id for this activity.
+        EventActivityIdControl(EVENT_ACTIVITY_CTRL_CREATE_ID, &activityId);
+
+        // Set the new activity id, receiving back the previous activity id.
+        relatedActivityId = activityId;
+        EventActivityIdControl(EVENT_ACTIVITY_CTRL_GET_SET_ID, &relatedActivityId);
+    }
+
+    EMCGEN_FORCEINLINE ~ScopedActivityId() noexcept
+    {
+        // Restore the parent activity id.
+        EventActivityIdControl(EVENT_ACTIVITY_CTRL_SET_ID, &relatedActivityId);
+    }
+
+    GUID activityId;
+    GUID relatedActivityId;
+};
 
 // Linker sections for the list of static providers.
 #pragma section(""EMCGEN$__a"", read)

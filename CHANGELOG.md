@@ -5,6 +5,13 @@ Abbreviations:
 - VS: VisualStudio extension
 - EMC: Event Manifest Compiler and accompanying libraries
 
+## [0.4.0] - 2020-03-31
+### Added
+- EMC: Added support for activities (cxx code generator). Activities are pairs
+  of related win:Start/win:Stop events. The code generator adds machinery so
+  that activities automatically create a new activity id and can be logged using
+  a RAII activity class.
+
 ## [0.3.0] - 2020-03-24
 ### Added
 - VS: Support for VisualBasic.NET projects
