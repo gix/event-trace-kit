@@ -54,7 +54,7 @@
       </EventManifestCompile>
     </ItemGroup>
 
-    <Error Code="EMC0001" Condition="'@(EventManifestCompile->Count())' == 0 and '@(ResGenOnlyEventManifestCompile->Count())' != 0"
+    <Error Code="EMC0001" Condition="'$(ConfigurationType)' != 'StaticLibrary' and '@(EventManifestCompile->Count())' == 0 and '@(ResGenOnlyEventManifestCompile->Count())' != 0"
            Text="Project '$(MSBuildProjectName)' requires an event manifest because it has static dependencies with event manifests.%0DTo solve this error, add an empty manifest to the project.%0DReferenced manifests: @(ResGenOnlyEventManifestCompile, ' ')."/>
 
     <Emc Condition="'%(EventManifestCompile.ExcludedFromBuild)' != 'true' and '@(EventManifestCompile->Count())' != 0"

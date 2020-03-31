@@ -12,6 +12,10 @@ Abbreviations:
   that activities automatically create a new activity id and can be logged using
   a RAII activity class.
 
+### Fixed
+- EMC: Do not generate error EMC0001 (Project requires manifest due to manifest
+  in dependencies) for static libraries.
+
 ## [0.3.0] - 2020-03-24
 ### Added
 - VS: Support for VisualBasic.NET projects
