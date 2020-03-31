@@ -124,7 +124,7 @@ namespace EventTraceKit.VsExtension.Debugging
 
             // At least one target launches without a debugger and requires
             // interception. Console targets will be launched via cmd.exe to
-            // show the standard output even after the has process exited. The
+            // show the standard output even after the process has exited. The
             // process ids reported in the launch results will be of the cmd.exe
             // process which is useless for trace filtering. Instead we
             // intercept the target launch by inserting our own TraceLaunch
@@ -166,7 +166,7 @@ namespace EventTraceKit.VsExtension.Debugging
         ///   paused targets are resumed by sending a 1-byte "1" value to the
         ///   TraceLaunch processes.
         /// </devdoc>
-        private static unsafe InterceptionContext InterceptTargets(VsDebugTargetInfo4[] debugTargets)
+        private static InterceptionContext InterceptTargets(VsDebugTargetInfo4[] debugTargets)
         {
             var interceptedTargets = (VsDebugTargetInfo4[])debugTargets.Clone();
             var pipes = new List<NamedPipeServerStream>(debugTargets.Length);

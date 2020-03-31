@@ -1,6 +1,5 @@
 namespace EventTraceKit.EventTracing.Compilation.CodeGen
 {
-    using System.Collections.Generic;
     using System.Globalization;
     using EventTraceKit.EventTracing.Internal.Extensions;
     using EventTraceKit.EventTracing.Schema;
@@ -13,6 +12,7 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
         {
             if (property.Kind == PropertyKind.Data)
                 return MangleProperty((DataProperty)property);
+
             string t = "n";
             if (property.Count.IsFixedMultiple) {
                 t = t.ToUpperInvariant();
@@ -26,9 +26,6 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
 
         public static string MangleProperty(DataProperty data)
         {
-            if (data.InType.Name.Namespace != WinEventSchema.Namespace)
-                throw new InternalException("Cannot mangle type '{0}'", data.InType);
-
             string t = MangleType(data.InType);
 
             if (data.InType.Name != WinEventSchema.UnicodeString &&
@@ -55,8 +52,7 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
                 t = t.ToUpperInvariant();
 
             if (hasFixedCount && hasFixedLength) {
-                len = (data.Count.Value.Value * data.Length.Value.Value).ToString(
-                    CultureInfo.InvariantCulture);
+                len = (data.Count.Value.Value * data.Length.Value.Value).ToString();
             } else if (hasVarCount && hasVarLength) {
                 len = "r" + data.Length.DataProperty.Index;
                 len += "R" + data.Count.DataProperty.Index;
