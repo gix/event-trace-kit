@@ -286,6 +286,7 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
             ow.WriteLine("// clang-format off");
             WriteSharedDefinitions();
             WriteManifest(manifest);
+            ow.WriteLine("#pragma warning(pop)");
             ow.WriteLine("// clang-format on");
             ow.Flush();
         }
@@ -1138,6 +1139,12 @@ namespace EventTraceKit.EventTracing.Compilation.CodeGen
 
 #pragma comment(lib, ""advapi32.lib"")
 
+// Disable all warnings since this is generated code which will be used in
+// projects with unknown warning settings. Apart from this, the generated code
+// is mostly /Wall-clean with CL 19.25.28614, save for some spectre and
+// optimizer infos.
+#pragma warning(push, 0)
+
 #ifndef EMCGEN_NOINLINE
 #define EMCGEN_NOINLINE inline DECLSPEC_NOINLINE
 #endif // EMCGEN_NOINLINE
@@ -1521,13 +1528,14 @@ namespace emcgen_details
 
 inline std::string EmcGenU16To8(wchar_t const* const str, size_t const size)
 {
-    int ret = WideCharToMultiByte(CP_UTF8, 0, str, size, nullptr, 0, nullptr, nullptr);
-    if (ret == 0)
+    int ret = WideCharToMultiByte(CP_UTF8, 0, str, static_cast<int>(size), nullptr,
+                                  0, nullptr, nullptr);
+    if (ret <= 0)
         return std::string();
 
-    std::string buffer(ret, '\0');
+    std::string buffer(static_cast<unsigned>(ret), '\0');
 
-    ret = WideCharToMultiByte(CP_UTF8, 0, str, size, &buffer[0],
+    ret = WideCharToMultiByte(CP_UTF8, 0, str, static_cast<int>(size), &buffer[0],
                               static_cast<int>(buffer.size() + 1), nullptr, nullptr);
     if (ret == 0)
         return std::string();
