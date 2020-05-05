@@ -77,21 +77,7 @@ namespace EventManifestCompiler.Build.Tasks
         protected override List<OptSpecifier> OptionOrder { get; }
 
         /// <inheritdoc/>
-        protected override ITaskItem[] TrackedInputFiles => Concat(Source, ResourceGenOnlySources);
-
-        private static T[] Concat<T>(T item, T[] items)
-        {
-            if (item == null && items == null)
-                return null;
-            if (item == null)
-                return items;
-            if (items == null)
-                return new[] { item };
-            var allItems = new T[1 + items.Length];
-            allItems[0] = item;
-            Array.Copy(items, 0, allItems, 1, items.Length);
-            return allItems;
-        }
+        protected override ITaskItem[] TrackedInputFiles => new[] { Source };
 
         /// <inheritdoc/>
         protected override string[] ReadTLogNames =>
