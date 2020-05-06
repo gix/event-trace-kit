@@ -63,9 +63,8 @@ namespace EventManifestCompiler.Build.Tasks
             get { return false; }
         }
 
-        /// <summary>
-        ///
-        /// </summary>
+        public bool TrackCommandLines { get; set; } = true;
+
         protected abstract string[] ReadTLogNames { get; }
         protected abstract string[] WriteTLogNames { get; }
         protected abstract string CommandTLogName { get; }
@@ -77,6 +76,7 @@ namespace EventManifestCompiler.Build.Tasks
         }
 
         protected CanonicalTrackedInputFiles SourceDependencies { get; set; }
+        protected CanonicalTrackedOutputFiles SourceOutputs { get; set; }
         protected string RootSource { get; set; }
         protected string CancelEventName { get; private set; }
 
@@ -158,51 +158,53 @@ namespace EventManifestCompiler.Build.Tasks
             try {
                 exitCode = TrackerExecuteTool(toolPath, responseFileCommands, commandLineCommands);
             } finally {
-                FinishExecute(exitCode);
+                exitCode = PostExecuteTool(exitCode);
             }
             return exitCode;
         }
 
-        private void FinishExecute(int exitCode)
+        protected virtual int PostExecuteTool(int exitCode)
         {
             if (!MinimalRebuildFromTracking && !TrackFileAccess)
-                return;
+                return exitCode;
 
-            var outputs = new CanonicalTrackedOutputFiles(TLogWriteFiles);
-            var compactInputs = new CanonicalTrackedInputFiles(
+            SourceOutputs = new CanonicalTrackedOutputFiles(TLogWriteFiles);
+            SourceDependencies = new CanonicalTrackedInputFiles(
                 TLogReadFiles,
                 TrackedInputFiles,
                 ExcludedInputPaths,
-                outputs,
+                SourceOutputs,
                 false,
                 MaintainCompositeRootingMarkers);
 
             IDictionary<string, string> sourcesToCommandLines = MapSourcesToCommandLines();
             if (exitCode != 0) {
-                outputs.RemoveEntriesForSource(SourcesCompiled);
-                outputs.SaveTlog();
-                compactInputs.RemoveEntriesForSource(SourcesCompiled);
-                compactInputs.SaveTlog();
-                if (MaintainCompositeRootingMarkers) {
-                    sourcesToCommandLines.Remove(
-                        FileTracker.FormatRootingMarker(SourcesCompiled));
-                } else {
-                    foreach (ITaskItem item in SourcesCompiled) {
+                SourceOutputs.RemoveEntriesForSource(SourcesCompiled);
+                SourceOutputs.SaveTlog();
+                SourceDependencies.RemoveEntriesForSource(SourcesCompiled);
+                SourceDependencies.SaveTlog();
+                if (TrackCommandLines) {
+                    if (MaintainCompositeRootingMarkers) {
                         sourcesToCommandLines.Remove(
-                            FileTracker.FormatRootingMarker(item));
+                            FileTracker.FormatRootingMarker(SourcesCompiled));
+                    } else {
+                        foreach (ITaskItem item in SourcesCompiled) {
+                            sourcesToCommandLines.Remove(
+                                FileTracker.FormatRootingMarker(item));
+                        }
                     }
+                    WriteSourcesToCommandLinesTable(sourcesToCommandLines);
                 }
-                WriteSourcesToCommandLinesTable(sourcesToCommandLines);
             } else {
-                AddTaskSpecificOutputs(SourcesCompiled, outputs);
-                RemoveTaskSpecificOutputs(outputs);
-                outputs.RemoveDependenciesFromEntryIfMissing(SourcesCompiled);
+                AddTaskSpecificOutputs(SourcesCompiled, SourceOutputs);
+                RemoveTaskSpecificOutputs(SourceOutputs);
+                SourceOutputs.RemoveDependenciesFromEntryIfMissing(SourcesCompiled);
 
                 string[] roots = null;
                 if (MaintainCompositeRootingMarkers) {
-                    roots = outputs.RemoveRootsWithSharedOutputs(SourcesCompiled);
+                    roots = SourceOutputs.RemoveRootsWithSharedOutputs(SourcesCompiled);
                     foreach (string marker in roots)
-                        compactInputs.RemoveEntryForSourceRoot(marker);
+                        SourceDependencies.RemoveEntryForSourceRoot(marker);
                 }
 
                 if (TrackedOutputFilesToIgnore != null && (TrackedOutputFilesToIgnore.Length > 0)) {
@@ -210,23 +212,23 @@ namespace EventManifestCompiler.Build.Tasks
                         StringComparer.OrdinalIgnoreCase);
                     foreach (ITaskItem item in TrackedOutputFilesToIgnore)
                         trackedOutputFilesToRemove.Add(item.GetMetadata("FullPath"), item);
-                    outputs.SaveTlog(
+                    SourceOutputs.SaveTlog(
                         fullTrackedPath => !trackedOutputFilesToRemove.ContainsKey(fullTrackedPath));
                 } else
-                    outputs.SaveTlog();
+                    SourceOutputs.SaveTlog();
 
                 FileUtilities.DeleteEmptyFile(TLogWriteFiles);
-                RemoveTaskSpecificInputs(compactInputs);
-                compactInputs.RemoveDependenciesFromEntryIfMissing(SourcesCompiled);
+                RemoveTaskSpecificInputs(SourceDependencies);
+                SourceDependencies.RemoveDependenciesFromEntryIfMissing(SourcesCompiled);
                 if (TrackedInputFilesToIgnore != null && TrackedInputFilesToIgnore.Length > 0) {
                     var trackedInputFilesToRemove = new Dictionary<string, ITaskItem>(
                         StringComparer.OrdinalIgnoreCase);
                     foreach (ITaskItem item in TrackedInputFilesToIgnore)
                         trackedInputFilesToRemove.Add(item.GetMetadata("FullPath"), item);
-                    compactInputs.SaveTlog(
+                    SourceDependencies.SaveTlog(
                         fullTrackedPath => !trackedInputFilesToRemove.ContainsKey(fullTrackedPath));
                 } else
-                    compactInputs.SaveTlog();
+                    SourceDependencies.SaveTlog();
 
                 FileUtilities.DeleteEmptyFile(TLogReadFiles);
                 if (MaintainCompositeRootingMarkers) {
@@ -247,6 +249,8 @@ namespace EventManifestCompiler.Build.Tasks
 
                 WriteSourcesToCommandLinesTable(sourcesToCommandLines);
             }
+
+            return exitCode;
         }
 
         protected override string GenerateCommandLineCommands()
@@ -508,13 +512,13 @@ namespace EventManifestCompiler.Build.Tasks
                 AssignDefaultTLogPaths();
 
             if (MinimalRebuildFromTracking && !ForcedRebuildRequired()) {
-                var outputs = new CanonicalTrackedOutputFiles(this, TLogWriteFiles);
+                SourceOutputs = new CanonicalTrackedOutputFiles(this, TLogWriteFiles);
                 SourceDependencies = new CanonicalTrackedInputFiles(
                     this,
                     TLogReadFiles,
                     TrackedInputFiles,
                     ExcludedInputPaths,
-                    outputs,
+                    SourceOutputs,
                     UseMinimalRebuildOptimization,
                     MaintainCompositeRootingMarkers);
 
@@ -535,8 +539,8 @@ namespace EventManifestCompiler.Build.Tasks
                 SourcesCompiled = AssignOutOfDateSources(SourcesCompiled);
                 SourceDependencies.RemoveEntriesForSource(SourcesCompiled);
                 SourceDependencies.SaveTlog();
-                outputs.RemoveEntriesForSource(SourcesCompiled);
-                outputs.SaveTlog();
+                SourceOutputs.RemoveEntriesForSource(SourcesCompiled);
+                SourceOutputs.SaveTlog();
             } else {
                 SourcesCompiled = TrackedInputFiles;
                 if (SourcesCompiled == null || SourcesCompiled.Length == 0) {
