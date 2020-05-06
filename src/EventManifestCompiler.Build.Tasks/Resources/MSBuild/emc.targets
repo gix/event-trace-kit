@@ -34,12 +34,21 @@
     </ItemGroup>
   </Target>
 
+  <PropertyGroup>
+    <BuildGenerateSourcesTargets>
+      $(BuildGenerateSourcesTargets);
+      _EventManifestCompile;
+    </BuildGenerateSourcesTargets>
+  </PropertyGroup>
+
+  <Target Name="_EventManifestCompile"
+          DependsOnTargets="$(BeforeEventManifestCompileTargets);EventManifestCompile;$(AfterEventManifestCompileTargets)">
+  </Target>
+
   <!-- EventManifestCompile -->
-  <Target
-      Name             = "EventManifestCompile"
-      Condition        = "'@(EventManifestCompile)' != ''"
-      BeforeTargets    = "BeforeClCompile"
-      DependsOnTargets = "SelectEventManifestCompile">
+  <Target Name="EventManifestCompile"
+          Condition="'@(EventManifestCompile)' != ''"
+          DependsOnTargets="SelectEventManifestCompile">
     <ItemGroup>
       <EventManifestCompile>
         <MinimalRebuildFromTracking Condition="'$(BuildType)' != 'Build' or '$(ForceRebuild)' == 'true'">false</MinimalRebuildFromTracking>
@@ -77,7 +86,7 @@
         LoggingPrefix              = "%(EventManifestCompile.LoggingPrefix)"
         GenerateDefines            = "%(EventManifestCompile.GenerateDefines)"
 
-         AdditionalOptions          = "%(EventManifestCompile.AdditionalOptions)"
+        AdditionalOptions          = "%(EventManifestCompile.AdditionalOptions)"
 
         TrackerLogDirectory        = "%(EventManifestCompile.TrackerLogDirectory)"
         TrackFileAccess            = "$(TrackFileAccess)"

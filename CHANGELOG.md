@@ -8,6 +8,10 @@ Abbreviations:
 ## [0.4.3] - 2020-05-07
 ### Fixed
 - EMC: Fix incremental builds with resgen-only manifest
+### Changed
+- EMC: The MSBuild EventManifestCompile target is now invoked by being added to
+  the BuildGenerateSourcesTargets property which includes other source-generating
+  targets and includes Before- and AfterEventManifestCompileTargets hooks.
 
 ## [0.4.2] - 2020-04-22
 ### Fixed
