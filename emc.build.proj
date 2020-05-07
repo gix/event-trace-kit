@@ -78,15 +78,8 @@
 
   <Target Name="Pack" DependsOnTargets="Build;Test">
     <PropertyGroup>
-      <PackArgs>-Symbols -NoPackageAnalysis -OutputDirectory "$(PackageDir)\" -Version "$(Version)"</PackArgs>
+      <PackArgs>-Symbols -SymbolPackageFormat snupkg -NoPackageAnalysis -OutputDirectory "$(PackageDir)\" -Version "$(Version)"</PackArgs>
     </PropertyGroup>
-    <Message Importance="High" Text="Version: $(Version)"/>
-    <Message Importance="High" Text="VersionPrefix: $(VersionPrefix)"/>
-    <Message Importance="High" Text="OfficialBuild: $(OfficialBuild)"/>
-    <Message Importance="High" Text="OfficialBuildId: $(OfficialBuildId)"/>
-    <Message Importance="High" Text="PreReleaseVersionLabel: $(PreReleaseVersionLabel)"/>
-    <Message Importance="High" Text="_PreReleaseLabel: $(_PreReleaseLabel)"/>
-    <Message Importance="High" Text="FinalVersionKind: $(FinalVersionKind)"/>
     <MakeDir Directories="$(PackageDir)"/>
     <Exec Command="nuget.exe pack $(PackArgs) src\EventManifestCompiler.Build.Tasks.nuspec"/>
   </Target>
