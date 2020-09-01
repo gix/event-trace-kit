@@ -1747,7 +1747,7 @@ struct EmcGenStaticProviderList
     static inline ULONG RegisterAll()
     {
         ULONG result = 0;
-        for (auto it = &first + 1; it != &last; ++it) {
+        for (auto it = &first + 1; it < &last; ++it) {
             if (*it) {
                 ULONG const ec = (*it)->Register();
                 if (ec != 0 && result == 0)
@@ -1763,7 +1763,7 @@ struct EmcGenStaticProviderList
     static ULONG UnregisterAll()
     {
         ULONG result = 0;
-        for (auto it = &first + 1; it != &last; ++it) {
+        for (auto it = &first + 1; it < &last; ++it) {
             if (*it) {
                 ULONG const ec = (*it)->Unregister();
                 if (ec != 0 && result == 0)

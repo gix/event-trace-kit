@@ -5,6 +5,10 @@ Abbreviations:
 - VS: VisualStudio extension
 - EMC: Event Manifest Compiler and accompanying libraries
 
+## [0.4.4] - 2020-09-01
+### Fixed
+- EMC: Avoid miscompilation due to broken jump-threading optimization in MSVC 14.25+.
+
 ## [0.4.3] - 2020-05-07
 ### Fixed
 - EMC: Fix incremental builds with resgen-only manifest
