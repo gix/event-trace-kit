@@ -5,6 +5,6 @@
     <Copyright></Copyright>
     <Authors>Nico Rieck</Authors>
     <Product>EventTraceKit</Product>
-    <VersionPrefix>0.4.3</VersionPrefix>
+    <VersionPrefix>0.4.4</VersionPrefix>
   </PropertyGroup>
 </Project>
