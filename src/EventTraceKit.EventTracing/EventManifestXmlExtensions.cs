@@ -292,6 +292,8 @@ namespace EventTraceKit.EventTracing
                 elem.Add(new XAttribute("length", property.Length));
             if (property.Count.IsSpecified)
                 elem.Add(new XAttribute("count", property.Count));
+            if (property.Map != null)
+                elem.Add(new XAttribute("map", property.Map.Name));
             return elem;
         }
 
