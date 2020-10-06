@@ -151,6 +151,25 @@ namespace EventTraceKit.EventTracing.Tests.Schema
             return stream;
         }
 
+        protected XDocument CreateManifest()
+        {
+            XNamespace ns = EventManifestSchema.Namespace;
+
+            var doc = new XDocument(
+                new XDeclaration("1.0", "UTF-8", "yes"),
+                new XElement(ns + "instrumentationManifest",
+                    new XAttribute(XNamespace.Xmlns + "win", WinEventSchema.Namespace),
+                    new XAttribute(XNamespace.Xmlns + "test", "urn:uuid:23787556-8924-4834-80C0-45C883D0501B"),
+                    new XElement(ns + "instrumentation",
+                        new XElement(ns + "events")),
+                    new XElement(ns + "localization",
+                        new XElement(ns + "resources",
+                            new XAttribute("culture", "en-US"),
+                            new XElement(ns + "stringTable")))));
+
+            return doc;
+        }
+
         protected XElement CreateProvider(params object[] content)
         {
             XNamespace ns = EventManifestSchema.Namespace;
@@ -175,35 +194,35 @@ namespace EventTraceKit.EventTracing.Tests.Schema
 
             provider.Add(content);
 
-            var doc = new XDocument(
-                new XDeclaration("1.0", "UTF-8", "yes"),
-                new XElement(ns + "instrumentationManifest",
-                    new XAttribute(XNamespace.Xmlns + "win", WinEventSchema.Namespace),
-                    new XAttribute(XNamespace.Xmlns + "test", "urn:uuid:23787556-8924-4834-80C0-45C883D0501B"),
-                    new XElement(ns + "instrumentation",
-                        new XElement(ns + "events", provider)),
-                    new XElement(ns + "localization",
-                        new XElement(ns + "resources",
-                            new XAttribute("culture", "en-US"),
-                            new XElement(ns + "stringTable",
-                                new XElement(ns + "string",
-                                    new XAttribute("id", "msg.1"),
-                                    new XAttribute("value", "text1")))))));
+            var doc = CreateManifest();
+
+            doc.Element(ns + "instrumentationManifest")
+                .Element(ns + "instrumentation")
+                .Element(ns + "events")
+                .Add(provider);
+
+            doc.Element(ns + "instrumentationManifest")
+                .Element(ns + "localization")
+                .Element(ns + "resources")
+                .Element(ns + "stringTable")
+                .Add(new XElement(ns + "string",
+                    new XAttribute("id", "msg.1"),
+                    new XAttribute("value", "text1")));
 
             return provider;
         }
 
-        protected XElement E(string name, params object[] content)
+        protected static XElement E(string name, params object[] content)
         {
             return new XElement(EventManifestSchema.Namespace + name, content);
         }
 
-        protected XAttribute A(XName name, object value)
+        protected static XAttribute A(XName name, object value)
         {
             return new XAttribute(name, value);
         }
 
-        private static MemoryStream CreateInputStream(XDocument doc)
+        protected static MemoryStream CreateInputStream(XDocument doc)
         {
             var stream = new MemoryStream();
             using (var writer = new StreamWriter(stream, new UTF8Encoding(false, true), 0x400, true))

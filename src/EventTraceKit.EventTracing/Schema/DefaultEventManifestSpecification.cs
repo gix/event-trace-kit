@@ -132,6 +132,94 @@ namespace EventTraceKit.EventTracing.Schema
                     @event.Value);
             }
 
+            if (@event.Message != null && !ValidateEventMessage(@event, @event.Message)) {
+                result = false;
+            }
+
+            return result;
+        }
+
+        private static bool ReadDigit(string str, ref int pos, out int index)
+        {
+            index = 0;
+
+            bool readAnyDigit = false;
+            while (pos < str.Length && str[pos] >= '0' && str[pos] <= '9') {
+                index = (index * 10) + (str[pos] - '0');
+                ++pos;
+                readAnyDigit = true;
+            }
+
+            return readAnyDigit;
+        }
+
+        private bool ValidateEventMessage(Event @event, LocalizedString localizedString)
+        {
+            string str = localizedString.Value;
+            bool result = false;
+
+            for (int pos = 0; pos < str.Length;) {
+                char c = str[pos];
+                if (c != '%') {
+                    ++pos;
+                    continue;
+                }
+
+                if (++pos >= str.Length)
+                    break; // Trailing '%'
+
+                int propertyIndex;
+                if (!ReadDigit(str, ref pos, out propertyIndex))
+                    // Skip non-placeholder escape sequences
+                    continue;
+
+                int formatStart = -1;
+                int formatEnd = -1;
+                if (pos < str.Length && str[pos] == '!') {
+                    // Placeholder with explicit format spec. Skip until the
+                    // next '!' which signals end of it.
+                    formatStart = pos;
+                    formatEnd = str.IndexOf('!', pos + 1);
+
+                    if (formatEnd == -1)
+                        pos = str.Length;
+                    else
+                        pos = formatEnd + 1;
+                }
+
+                if (formatStart != -1 && formatEnd == -1) {
+                    // Unterminated format spec
+                    string placeHolder = $"%{propertyIndex}!";
+                    string formatted = $"%{propertyIndex}!4d!";
+                    string escaped = $"%{propertyIndex}%!";
+                    diags.ReportError(
+                        localizedString.Location,
+                        "Message of event '{0}' ({1}) has unterminated format specification '{2}'. " +
+                        "Exclamation marks following a placeholder enclose a format string (\"{3}\"), " +
+                        "otherwise they must be escaped (\"{4}\"). " +
+                        "Refer to the documentation of the Win32 FormatMessage() function for more details.",
+                        @event.Symbol ?? "<no symbol>",
+                        @event.Value,
+                        placeHolder,
+                        formatted,
+                        escaped);
+                }
+
+                int propertyCount = @event.Template?.Properties.Count ?? 0;
+                if (propertyIndex > 0 && propertyIndex > propertyCount) {
+                    // Placeholder index is out-of-bounds.
+                    result = false;
+                    diags.ReportError(
+                        localizedString.Location,
+                        "Message of event '{0}' ({1}) references non-existent property %{2} (Message has only {3}{4}).",
+                        @event.Symbol ?? "<no symbol>",
+                        @event.Value,
+                        propertyIndex,
+                        propertyCount,
+                        propertyCount == 1 ? "property" : "properties");
+                }
+            }
+
             return result;
         }
 

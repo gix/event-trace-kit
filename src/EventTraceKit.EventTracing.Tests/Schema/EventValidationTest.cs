@@ -1,5 +1,6 @@
 namespace EventTraceKit.EventTracing.Tests.Schema
 {
+    using System.Linq;
     using System.Xml.Linq;
     using EventTraceKit.EventTracing.Schema;
     using EventTraceKit.EventTracing.Support;
@@ -214,6 +215,134 @@ namespace EventTraceKit.EventTracing.Tests.Schema
                 Assert.Contains("must have a level of", diags.Errors[0].FormattedMessage);
                 Assert.Equal(@event.GetLocation(), diags.Errors[0].Location);
             }
+        }
+
+        [Theory]
+        [InlineData("abc %1!")]
+        [InlineData("abc %1!sss")]
+        [InlineData("%1 %2!")]
+        [InlineData("%3 %2!  ")]
+        public void Message_UnterminatedFormatSpec(string message)
+        {
+            XNamespace ns = EventManifestSchema.Namespace;
+
+            var provider = CreateProvider();
+            AddEvent(provider, message, 1,
+                E("data", A("name", "p1"), A("inType", "win:Int32")),
+                E("data", A("name", "p2"), A("inType", "win:Int32")),
+                E("data", A("name", "p3"), A("inType", "win:Int32")));
+
+            var input = CreateInput(ref provider);
+            var localizedString = provider.Document.Element(ns + "instrumentationManifest")
+                .Element(ns + "localization")
+                .Element(ns + "resources")
+                .Element(ns + "stringTable")
+                .Elements(ns + "string")
+                .Single(x => x.Attribute("id")?.Value == "str.1");
+
+            parser.ParseManifest(input, "<stdin>");
+
+            Assert.Single(diags.Errors);
+            Assert.Contains("unterminated format specification", diags.Errors[0].FormattedMessage);
+            Assert.Equal(localizedString.GetLocation(), diags.Errors[0].Location);
+        }
+
+        [Theory]
+        [InlineData("abc %1%!")]
+        [InlineData("abc %1%!!")]
+        public void Message_EscapedFormatSpec(string message)
+        {
+            var provider = CreateProvider();
+            AddEvent(provider, message, 1,
+                E("data", A("name", "p1"), A("inType", "win:Int32")),
+                E("data", A("name", "p2"), A("inType", "win:Int32")),
+                E("data", A("name", "p3"), A("inType", "win:Int32")));
+
+            var input = CreateInput(ref provider);
+            parser.ParseManifest(input, "<stdin>");
+
+            Assert.Empty(diags.Errors);
+        }
+
+        [Fact]
+        public void Message_OutOfBoundsPlaceholder()
+        {
+            XNamespace ns = EventManifestSchema.Namespace;
+
+            var provider = CreateProvider();
+            AddEvent(provider, "abc %2 %% %3", 1,
+                E("data", A("name", "threadId"), A("inType", "win:Int32")));
+
+            var input = CreateInput(ref provider);
+            var localizedString = provider.Document.Element(ns + "instrumentationManifest")
+                .Element(ns + "localization")
+                .Element(ns + "resources")
+                .Element(ns + "stringTable")
+                .Elements(ns + "string")
+                .Single(x => x.Attribute("id")?.Value == "str.1");
+
+            parser.ParseManifest(input, "<stdin>");
+
+            Assert.Equal(2, diags.Errors.Count);
+            Assert.Contains("references non-existent property", diags.Errors[0].FormattedMessage);
+            Assert.Contains("references non-existent property", diags.Errors[1].FormattedMessage);
+            Assert.Equal(localizedString.GetLocation(), diags.Errors[0].Location);
+            Assert.Equal(localizedString.GetLocation(), diags.Errors[1].Location);
+        }
+
+        [Fact]
+        public void Message_OutOfBoundsPlaceholder_NoTemplate()
+        {
+            XNamespace ns = EventManifestSchema.Namespace;
+
+            var provider = CreateProvider();
+            AddEvent(provider, "abc %2 %%", 1);
+
+            var input = CreateInput(ref provider);
+            var localizedString = provider.Document.Element(ns + "instrumentationManifest")
+                .Element(ns + "localization")
+                .Element(ns + "resources")
+                .Element(ns + "stringTable")
+                .Elements(ns + "string")
+                .Single(x => x.Attribute("id")?.Value == "str.1");
+
+            parser.ParseManifest(input, "<stdin>");
+
+            Assert.Single(diags.Errors);
+            Assert.Contains("references non-existent property", diags.Errors[0].FormattedMessage);
+            Assert.Equal(localizedString.GetLocation(), diags.Errors[0].Location);
+        }
+
+        private static void AddEvent(
+            XElement provider, string message, int eventId, params object[] templateFields)
+        {
+            XNamespace ns = EventManifestSchema.Namespace;
+
+            string stringId = $"str.{eventId}";
+            string templateId = $"EventTemplate{eventId}";
+            var events = provider.GetOrCreateElement(ns + "events");
+            bool useTemplate = templateFields != null && templateFields.Length != 0;
+
+            events.Add(
+                E("event",
+                    A("value", eventId),
+                    useTemplate ? A("template", templateId) : null,
+                    A("message", $"$(string.{stringId})"))
+                );
+
+            if (useTemplate) {
+                var templates = provider.GetOrCreateElement(ns + "templates");
+                templates.Add(E("template", A("tid", templateId), templateFields));
+            }
+
+            var stringTable = provider.Document.Element(ns + "instrumentationManifest")
+                .Element(ns + "localization")
+                .Element(ns + "resources")
+                .Element(ns + "stringTable");
+
+            stringTable.Add(new XElement(ns + "string",
+                    new XAttribute("id", stringId),
+                    new XAttribute("value", message)));
         }
 
         private void ParseInput(ref XElement elem1)
