@@ -4,7 +4,7 @@ namespace EventTraceKit.EventTracing.Schema
     using System.Diagnostics;
     using EventTraceKit.EventTracing.Support;
 
-    [DebuggerDisplay("{Name}({Id,h}) = '{Value}'")]
+    [DebuggerDisplay("{Name}({Id,h}) = {Value}")]
     public sealed class LocalizedString : SourceItem
     {
         public const uint UnusedId = uint.MaxValue;

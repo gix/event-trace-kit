@@ -117,7 +117,7 @@ namespace EventTraceKit.EventTracing.Schema
                 result = false;
                 diags.ReportError(
                     @event.Location,
-                    "Event '{0}' ('{1}') is written to an admin channel and must have a message.",
+                    "Event '{0}' ({1}) is written to an admin channel and must have a message.",
                     @event.Symbol ?? "<no symbol>",
                     @event.Value);
             }
@@ -127,7 +127,7 @@ namespace EventTraceKit.EventTracing.Schema
                 result = false;
                 diags.ReportError(
                     @event.Location,
-                    "Event '{0}' ('{1}') is written to an admin channel and must have a level of Critical, Error, Warning, or Informational.",
+                    "Event '{0}' ({1}) is written to an admin channel and must have a level of Critical, Error, Warning, or Informational.",
                     @event.Symbol ?? "<no symbol>",
                     @event.Value);
             }
